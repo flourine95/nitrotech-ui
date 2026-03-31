@@ -213,6 +213,50 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* ── Blog preview ── */}
+        <section className="py-16 bg-slate-50 border-t border-slate-100">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="flex items-end justify-between mb-8">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-900">Tin tức & Review</h2>
+                <p className="text-slate-400 text-sm mt-1">Cập nhật công nghệ mới nhất từ đội ngũ NitroTech</p>
+              </div>
+              <Link href="/blog" className="text-sm text-blue-600 hover:text-blue-700 font-medium cursor-pointer flex items-center gap-1">
+                Xem tất cả
+                <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </Link>
+            </div>
+            <div className="grid sm:grid-cols-3 gap-5">
+              {[
+                { slug: "review-macbook-pro-m4", cat: "Review", catColor: "bg-blue-100 text-blue-700", title: "Review MacBook Pro M4: Hiệu năng vượt trội, pin trâu nhất từ trước đến nay", date: "15 tháng 1, 2025", readTime: "12 phút đọc" },
+                { slug: "chon-ram-ddr5", cat: "Hướng dẫn", catColor: "bg-amber-100 text-amber-700", title: "Hướng dẫn chọn RAM DDR5 2025: Tốc độ nào là đủ?", date: "13 tháng 1, 2025", readTime: "8 phút đọc" },
+                { slug: "ai-pc-2025", cat: "Tin tức", catColor: "bg-emerald-100 text-emerald-700", title: "AI PC 2025: Kỷ nguyên mới của máy tính cá nhân", date: "10 tháng 1, 2025", readTime: "6 phút đọc" },
+              ].map((post) => (
+                <Link key={post.slug} href={`/blog/${post.slug}`} className="group bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-200 cursor-pointer flex flex-col">
+                  <div className="aspect-video bg-slate-100 flex items-center justify-center">
+                    <svg viewBox="0 0 80 45" className="w-20 h-auto text-slate-300" fill="none" stroke="currentColor" strokeWidth="1" aria-hidden="true">
+                      <rect width="80" height="45" rx="4" fill="#F1F5F9"/>
+                      <rect x="20" y="10" width="40" height="25" rx="3" fill="white" fillOpacity="0.6"/>
+                      <rect x="25" y="15" width="30" height="3" rx="1.5" fill="currentColor" fillOpacity="0.3"/>
+                      <rect x="25" y="21" width="22" height="3" rx="1.5" fill="currentColor" fillOpacity="0.2"/>
+                      <rect x="25" y="27" width="26" height="3" rx="1.5" fill="currentColor" fillOpacity="0.15"/>
+                    </svg>
+                  </div>
+                  <div className="p-5 flex flex-col flex-1">
+                    <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full w-fit mb-3 ${post.catColor}`}>{post.cat}</span>
+                    <h3 className="font-semibold text-slate-900 text-sm leading-snug mb-3 group-hover:text-blue-600 transition-colors duration-200 line-clamp-2">{post.title}</h3>
+                    <div className="mt-auto flex items-center gap-2 text-xs text-slate-400">
+                      <span>{post.date}</span>
+                      <span>·</span>
+                      <span>{post.readTime}</span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* ── Newsletter CTA ── */}
         <section className="py-16 bg-white border-t border-slate-100">
           <div className="max-w-7xl mx-auto px-6">

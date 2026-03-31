@@ -9,6 +9,7 @@ const navLinks = [
   { label: "Màn hình", href: "/products?cat=monitors" },
   { label: "Phụ kiện", href: "/products?cat=accessories" },
   { label: "Khuyến mãi", href: "/products?sale=true" },
+  { label: "Blog", href: "/blog" },
 ]
 
 const categories = [
@@ -75,12 +76,12 @@ export function SiteHeader({ cartCount = 0 }: { cartCount?: number }) {
         {/* Actions */}
         <div className="flex items-center gap-2">
           {/* Search */}
-          <button className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-full text-sm text-slate-400 bg-slate-100 hover:bg-slate-200 transition-colors duration-200 cursor-pointer" aria-label="Tìm kiếm">
+          <Link href="/search" className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-full text-sm text-slate-400 bg-slate-100 hover:bg-slate-200 transition-colors duration-200 cursor-pointer" aria-label="Tìm kiếm">
             <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
               <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
             </svg>
             <span className="text-xs">Tìm kiếm...</span>
-          </button>
+          </Link>
           {/* Cart */}
           <Link href="/cart" className="relative p-2 rounded-full text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors duration-200 cursor-pointer" aria-label={`Giỏ hàng (${cartCount} sản phẩm)`}>
             <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
@@ -135,6 +136,24 @@ export function SiteHeader({ cartCount = 0 }: { cartCount?: number }) {
                           {item.label}
                         </Link>
                       ))}
+                    </div>
+                    <div className="border-t border-slate-100 py-1.5">
+                      <Link
+                        href="/about"
+                        onClick={() => setAccountOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors duration-150 cursor-pointer"
+                      >
+                        <svg viewBox="0 0 24 24" className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                        Về NitroTech
+                      </Link>
+                      <Link
+                        href="/contact"
+                        onClick={() => setAccountOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors duration-150 cursor-pointer"
+                      >
+                        <svg viewBox="0 0 24 24" className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                        Liên hệ
+                      </Link>
                     </div>
                     <div className="border-t border-slate-100 py-1.5">
                       <Link
