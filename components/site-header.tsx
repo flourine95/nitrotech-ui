@@ -25,23 +25,47 @@ const categories = [
   { label: "Tai nghe", href: "/products?cat=audio" },
 ]
 
+const announcements = [
+  { text: "Miễn phí giao hàng cho đơn từ 500K", href: "/products" },
+  { text: "Flash Sale hôm nay — Giảm đến 20% linh kiện PC", href: "/products?sale=true" },
+  { text: "Trả góp 0% lãi suất — Áp dụng cho tất cả sản phẩm", href: "/products" },
+  { text: "Giao hàng trong 2 giờ tại TP.HCM & Hà Nội", href: "/shipping" },
+  { text: "Bảo hành chính hãng toàn quốc — Đổi trả trong 30 ngày", href: "/warranty" },
+]
+
 export function SiteHeader({ cartCount = 0 }: { cartCount?: number }) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [accountOpen, setAccountOpen] = useState(false)
   const pathname = usePathname()
 
-  // Giả lập đã đăng nhập — thực tế lấy từ auth context
   const isLoggedIn = true
   const userName = "Nguyễn Văn A"
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
-      {/* Top bar */}
-      <div className="bg-slate-900 text-slate-300 text-xs py-2 text-center px-4">
-        Miễn phí giao hàng cho đơn từ 500K —{" "}
-        <Link href="/products?sale=true" className="text-blue-400 font-medium hover:text-blue-300 transition-colors duration-150 cursor-pointer">
-          Xem ngay
-        </Link>
+      {/* Top bar — marquee */}
+      <div className="bg-slate-800 text-slate-200 text-xs py-2 overflow-hidden relative">
+        <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-slate-800 to-transparent z-10 pointer-events-none" aria-hidden="true" />
+        <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-slate-800 to-transparent z-10 pointer-events-none" aria-hidden="true" />
+
+        <div
+          className="flex whitespace-nowrap"
+          style={{ animation: "marquee 35s linear infinite" }}
+          onMouseEnter={(e) => (e.currentTarget.style.animationPlayState = "paused")}
+          onMouseLeave={(e) => (e.currentTarget.style.animationPlayState = "running")}
+          aria-live="off"
+        >
+          {[...announcements, ...announcements].map((a, i) => (
+            <Link
+              key={i}
+              href={a.href}
+              className="inline-flex items-center gap-3 px-8 hover:text-white transition-colors duration-150 cursor-pointer shrink-0"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" aria-hidden="true" />
+              {a.text}
+            </Link>
+          ))}
+        </div>
       </div>
 
       {/* Main nav */}
