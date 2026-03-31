@@ -100,6 +100,38 @@ export default function CartPage() {
                 <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
                 Tiếp tục mua sắm
               </Link>
+
+              {/* Gợi ý thêm vào giỏ */}
+              <div className="pt-2">
+                <h2 className="font-bold text-slate-900 mb-4">Có thể bạn cũng thích</h2>
+                <div className="space-y-3">
+                  {[
+                    { slug: "corsair-32gb-ddr5", name: "Corsair Vengeance 32GB DDR5", cat: "RAM", price: "2.490.000₫", old: "2.990.000₫" },
+                    { slug: "samsung-990-pro-1tb", name: "Samsung 990 Pro 1TB NVMe", cat: "SSD", price: "1.890.000₫", old: "2.190.000₫" },
+                    { slug: "lg-ultragear-27", name: "LG UltraGear 27\" 4K 144Hz", cat: "Màn hình", price: "12.990.000₫", old: "14.500.000₫" },
+                  ].map((p) => (
+                    <div key={p.slug} className="flex items-center gap-4 p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+                      <Link href={`/products/${p.slug}`} className="w-14 h-14 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center flex-shrink-0 cursor-pointer">
+                        <svg viewBox="0 0 40 30" className="w-9 h-auto text-slate-300" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+                          <rect x="2" y="2" width="36" height="26" rx="2"/>
+                          <rect x="5" y="5" width="30" height="20" rx="1" fill="rgba(59,130,246,0.04)" stroke="rgba(59,130,246,0.15)"/>
+                        </svg>
+                      </Link>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs text-slate-400 mb-0.5">{p.cat}</div>
+                        <Link href={`/products/${p.slug}`} className="text-sm font-semibold text-slate-900 hover:text-blue-600 transition-colors duration-150 cursor-pointer truncate block">{p.name}</Link>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="text-sm font-bold text-slate-900">{p.price}</span>
+                          <span className="text-xs text-slate-300 line-through">{p.old}</span>
+                        </div>
+                      </div>
+                      <button className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border border-slate-200 text-slate-700 hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-colors duration-200 cursor-pointer">
+                        Thêm
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
 
             {/* ── Order summary ── */}
