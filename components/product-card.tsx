@@ -39,15 +39,27 @@ export function ProductCard({ slug, name, cat, price, old, badge, badgeColor, ac
           <rect x="12" y="12" width="56" height="36" rx="2" fill="rgba(59,130,246,0.04)" stroke="rgba(59,130,246,0.15)"/>
         </svg>
         <span className={`absolute top-3 left-3 text-xs font-semibold px-3 py-1 rounded-full ${badgeColor}`}>{badge}</span>
-        <button
-          onClick={(e) => e.preventDefault()}
-          className="absolute top-3 right-3 p-1.5 rounded-full bg-white border border-slate-200 text-slate-400 hover:text-rose-500 hover:border-rose-200 transition-colors duration-200 cursor-pointer"
-          aria-label="Yêu thích"
-        >
-          <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-            <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
-          </svg>
-        </button>
+        <div className="absolute top-3 right-3 flex items-center gap-1">
+          <button
+            onClick={(e) => e.preventDefault()}
+            className="p-1.5 rounded-full bg-white border border-slate-200 text-slate-400 hover:text-blue-500 hover:border-blue-200 transition-colors duration-200 cursor-pointer"
+            aria-label="So sánh"
+          >
+            <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <rect x="3" y="3" width="7" height="18" rx="1"/>
+              <rect x="14" y="3" width="7" height="18" rx="1"/>
+            </svg>
+          </button>
+          <button
+            onClick={(e) => e.preventDefault()}
+            className="p-1.5 rounded-full bg-white border border-slate-200 text-slate-400 hover:text-rose-500 hover:border-rose-200 transition-colors duration-200 cursor-pointer"
+            aria-label="Yêu thích"
+          >
+            <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+            </svg>
+          </button>
+        </div>
       </div>
       <div className="p-5 flex flex-col flex-1">
         <div className="text-sm text-slate-400 mb-1">{cat}</div>

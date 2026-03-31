@@ -11,6 +11,12 @@ const relatedProducts = [
   { slug: "corsair-32gb-ddr5", name: "Corsair 32GB DDR5", cat: "RAM", price: "2.490.000₫", old: "2.990.000₫", rating: 4.8 },
 ]
 
+const recentlyViewed = [
+  { slug: "rtx-4080-super", name: "RTX 4080 Super", cat: "Card đồ họa", price: "22.500.000₫", old: "25.000.000₫", rating: 4.7 },
+  { slug: "samsung-990-pro-2tb", name: "Samsung 990 Pro 2TB", cat: "SSD NVMe", price: "3.290.000₫", old: "3.890.000₫", rating: 4.9 },
+  { slug: "lg-ultragear-27", name: "LG UltraGear 27\" 4K", cat: "Màn hình", price: "12.990.000₫", old: "14.500.000₫", rating: 4.7 },
+]
+
 const specs = [
   { label: "Chip", value: "Apple M4 Pro 14-core CPU, 20-core GPU" },
   { label: "RAM", value: "24GB Unified Memory" },
@@ -266,10 +272,38 @@ export default function ProductDetailPage() {
           </div>
 
           {/* ── Related products ── */}
-          <div>
+          <div className="mb-16">
             <h2 className="text-xl font-bold text-slate-900 mb-6">Sản phẩm liên quan</h2>
             <div className="grid sm:grid-cols-3 gap-5">
               {relatedProducts.map((p) => (
+                <Link key={p.slug} href={`/products/${p.slug}`} className="group rounded-3xl bg-white border border-slate-200 hover:border-slate-300 transition-all duration-200 cursor-pointer overflow-hidden shadow-sm hover:shadow-lg flex flex-col">
+                  <div className="h-40 bg-slate-50 flex items-center justify-center border-b border-slate-100">
+                    <svg viewBox="0 0 80 60" className="w-20 h-auto text-slate-300" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+                      <rect x="5" y="5" width="70" height="50" rx="4"/>
+                      <rect x="12" y="12" width="56" height="36" rx="2" fill="rgba(59,130,246,0.04)" stroke="rgba(59,130,246,0.15)"/>
+                    </svg>
+                  </div>
+                  <div className="p-4">
+                    <div className="text-xs text-slate-400 mb-1">{p.cat}</div>
+                    <div className="font-semibold text-sm text-slate-900 mb-3">{p.name}</div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-bold text-sm text-slate-900">{p.price}</div>
+                        <div className="text-xs text-slate-300 line-through">{p.old}</div>
+                      </div>
+                      <button onClick={(e) => e.preventDefault()} className="px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-900 text-white hover:bg-slate-700 transition-colors duration-200 cursor-pointer">Mua</button>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* ── Recently viewed ── */}
+          <div>
+            <h2 className="text-xl font-bold text-slate-900 mb-6">Đã xem gần đây</h2>
+            <div className="grid sm:grid-cols-3 gap-5">
+              {recentlyViewed.map((p) => (
                 <Link key={p.slug} href={`/products/${p.slug}`} className="group rounded-3xl bg-white border border-slate-200 hover:border-slate-300 transition-all duration-200 cursor-pointer overflow-hidden shadow-sm hover:shadow-lg flex flex-col">
                   <div className="h-40 bg-slate-50 flex items-center justify-center border-b border-slate-100">
                     <svg viewBox="0 0 80 60" className="w-20 h-auto text-slate-300" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">

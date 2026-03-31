@@ -20,7 +20,8 @@ const footerLinks = {
     { label: "Về NitroTech", href: "/about" },
     { label: "Tuyển dụng", href: "/about" },
     { label: "Tin tức & Review", href: "/blog" },
-    { label: "Chính sách bảo mật", href: "#" },
+    { label: "Chính sách bảo mật", href: "/privacy" },
+    { label: "Điều khoản sử dụng", href: "/terms" },
   ],
 }
 
