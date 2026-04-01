@@ -4,6 +4,7 @@ import "./globals.css"
 import { cn } from "@/lib/utils"
 import { ProgressBar } from "@/components/progress-bar"
 import { ScrollToTop } from "@/components/scroll-to-top"
+import { CompareProvider } from "@/components/compare-bar"
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ["latin", "vietnamese"],
@@ -21,7 +22,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="vi" suppressHydrationWarning className={beVietnamPro.variable}>
       <body className="antialiased font-sans bg-[#F8FAFC] text-[#0F172A]">
         <ProgressBar />
-        {children}
+        <CompareProvider>
+          {children}
+        </CompareProvider>
         <ScrollToTop />
       </body>
     </html>

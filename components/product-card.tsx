@@ -1,5 +1,6 @@
 "use client"
 import Link from "next/link"
+import { useCompare } from "@/components/compare-bar"
 
 interface ProductCardProps {
   slug: string
@@ -28,6 +29,9 @@ function Stars({ rating }: { rating: number }) {
 }
 
 export function ProductCard({ slug, name, cat, price, old, badge, badgeColor, accent = "", rating, reviews, specs }: ProductCardProps) {
+  const { toggle, has } = useCompare()
+  const inCompare = has(slug)
+
   return (
     <Link
       href={`/products/${slug}`}
@@ -40,18 +44,21 @@ export function ProductCard({ slug, name, cat, price, old, badge, badgeColor, ac
         </svg>
         <span className={`absolute top-3 left-3 text-xs font-semibold px-3 py-1 rounded-full ${badgeColor}`}>{badge}</span>
         <div className="absolute top-3 right-3 flex items-center gap-1">
-          <Link
-            href={`/compare?add=${slug}`}
-            onClick={(e) => e.stopPropagation()}
-            className="p-1.5 rounded-full bg-white border border-slate-200 text-slate-400 hover:text-blue-500 hover:border-blue-200 transition-colors duration-200 cursor-pointer"
-            aria-label="So sánh sản phẩm này"
-            title="So sánh"
+          <button
+            onClick={(e) => { e.preventDefault(); toggle({ slug, name, cat }) }}
+            className={`p-1.5 rounded-full border transition-colors duration-200 cursor-pointer ${
+              inCompare
+                ? "bg-blue-500 border-blue-500 text-white"
+                : "bg-white border-slate-200 text-slate-400 hover:text-blue-500 hover:border-blue-200"
+            }`}
+            aria-label={inCompare ? "Bỏ so sánh" : "So sánh sản phẩm này"}
+            title={inCompare ? "Bỏ so sánh" : "So sánh"}
           >
             <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
               <rect x="3" y="3" width="7" height="18" rx="1"/>
               <rect x="14" y="3" width="7" height="18" rx="1"/>
             </svg>
-          </Link>
+          </button>
           <button
             onClick={(e) => e.preventDefault()}
             className="p-1.5 rounded-full bg-white border border-slate-200 text-slate-400 hover:text-rose-500 hover:border-rose-200 transition-colors duration-200 cursor-pointer"
