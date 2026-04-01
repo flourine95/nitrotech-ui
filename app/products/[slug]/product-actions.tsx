@@ -70,7 +70,7 @@ export function ProductActions({ slug, price, old, discount, variants, colors, s
         <div className="flex items-center gap-3">
           <div className="flex items-center border border-slate-200 rounded-full overflow-hidden">
             <button onClick={() => setQty(q => Math.max(1, q - 1))} className="px-4 py-2 text-slate-600 hover:bg-slate-100 transition-colors duration-200 cursor-pointer text-lg leading-none" aria-label="Giảm">−</button>
-            <span className="px-4 py-2 text-sm font-semibold text-slate-900 min-w-[3rem] text-center" aria-live="polite">{qty}</span>
+            <span className="px-4 py-2 text-sm font-semibold text-slate-900 min-w-12 text-center" aria-live="polite">{qty}</span>
             <button onClick={() => setQty(q => Math.min(stockCount, q + 1))} className="px-4 py-2 text-slate-600 hover:bg-slate-100 transition-colors duration-200 cursor-pointer text-lg leading-none" aria-label="Tăng">+</button>
           </div>
           <span className="text-xs text-slate-400">Còn {stockCount} sản phẩm</span>
@@ -108,7 +108,7 @@ export function ProductActions({ slug, price, old, discount, variants, colors, s
           { icon: <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>, text: "Trả góp 0% lãi suất" },
         ].map((b) => (
           <div key={b.text} className="flex items-center gap-2 p-3 rounded-xl bg-slate-50 border border-slate-100 text-xs text-slate-600">
-            <span className="text-blue-600 flex-shrink-0">{b.icon}</span>{b.text}
+            <span className="text-blue-600 shrink-0">{b.icon}</span>{b.text}
           </div>
         ))}
       </div>

@@ -101,7 +101,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       >
         {/* Logo */}
         <div className={`flex items-center gap-3 px-4 py-5 border-b border-slate-800 ${collapsed ? "justify-center" : ""}`}>
-          <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center flex-shrink-0">
+          <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center shrink-0">
             <svg viewBox="0 0 24 24" className="w-4 h-4 text-white fill-current" aria-hidden="true">
               <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
             </svg>
@@ -136,7 +136,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     {item.icon}
                     {!collapsed && <span>{item.label}</span>}
                     {!collapsed && item.badge && (
-                      <span className="ml-auto bg-blue-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                      <span className="ml-auto bg-blue-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-4.5 text-center">
                         {item.badge}
                       </span>
                     )}
@@ -165,7 +165,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {!collapsed && <span>Thu gọn</span>}
           </button>
           <div className={`flex items-center gap-2.5 px-2 py-2 ${collapsed ? "justify-center" : ""}`}>
-            <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">A</div>
+            <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-xs font-bold text-white shrink-0">A</div>
             {!collapsed && (
               <div className="min-w-0">
                 <div className="text-sm font-medium text-white truncate">Admin</div>

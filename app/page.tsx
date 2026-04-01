@@ -119,7 +119,7 @@ export default function HomePage() {
               { icon: <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>, title: "Trả góp 0%", desc: "Nhiều hình thức TT", color: "text-purple-600", bg: "bg-purple-50" },
             ].map((f) => (
               <div key={f.title} className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-xl ${f.bg} ${f.color} flex items-center justify-center flex-shrink-0`}>{f.icon}</div>
+                <div className={`w-10 h-10 rounded-xl ${f.bg} ${f.color} flex items-center justify-center shrink-0`}>{f.icon}</div>
                 <div>
                   <div className="font-semibold text-sm text-slate-900">{f.title}</div>
                   <div className="text-xs text-slate-400">{f.desc}</div>
@@ -169,7 +169,7 @@ export default function HomePage() {
         {/* ── Flash sale banner ── */}
         <section className="py-16 bg-white border-t border-slate-100">
           <div className="max-w-7xl mx-auto px-6">
-            <div className="rounded-3xl bg-gradient-to-r from-slate-900 to-slate-800 p-8 sm:p-12 flex flex-col sm:flex-row items-center justify-between gap-6">
+            <div className="rounded-3xl bg-linear-to-r from-slate-900 to-slate-800 p-8 sm:p-12 flex flex-col sm:flex-row items-center justify-between gap-6">
               <div>
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-400/20 text-amber-400 text-xs font-semibold mb-3">
                   <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current" aria-hidden="true"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
@@ -178,7 +178,7 @@ export default function HomePage() {
                 <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">Giảm đến <span className="text-amber-400">20%</span> linh kiện PC</h2>
                 <p className="text-slate-400 text-sm">Số lượng có hạn — Kết thúc lúc 23:59 hôm nay</p>
               </div>
-              <Link href="/products?sale=true" className="flex-shrink-0 px-8 py-3.5 rounded-full text-sm font-semibold bg-amber-400 text-slate-900 hover:bg-amber-300 transition-colors duration-200 cursor-pointer">
+              <Link href="/products?sale=true" className="shrink-0 px-8 py-3.5 rounded-full text-sm font-semibold bg-amber-400 text-slate-900 hover:bg-amber-300 transition-colors duration-200 cursor-pointer">
                 Xem ngay
               </Link>
             </div>
@@ -201,7 +201,7 @@ export default function HomePage() {
                   </div>
                   <p className="text-slate-600 text-sm leading-relaxed mb-5">"{t.text}"</p>
                   <footer className="flex items-center gap-3">
-                    <div className={`w-9 h-9 rounded-full ${t.color} flex items-center justify-center text-white text-xs font-bold flex-shrink-0`} aria-hidden="true">{t.avatar}</div>
+                    <div className={`w-9 h-9 rounded-full ${t.color} flex items-center justify-center text-white text-xs font-bold shrink-0`} aria-hidden="true">{t.avatar}</div>
                     <div>
                       <cite className="not-italic font-semibold text-slate-900 text-sm">{t.name}</cite>
                       <div className="text-slate-400 text-xs">{t.role}</div>

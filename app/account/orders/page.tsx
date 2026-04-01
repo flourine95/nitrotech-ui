@@ -62,7 +62,7 @@ export default function OrdersPage() {
               <div className="space-y-2 mb-4">
                 {order.items.map((item) => (
                   <div key={item.name} className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center shrink-0">
                       <svg viewBox="0 0 24 24" className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
                         <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
                       </svg>

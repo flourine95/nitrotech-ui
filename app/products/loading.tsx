@@ -6,7 +6,7 @@ export default function ProductsLoading() {
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="flex gap-8">
           {/* Sidebar placeholder */}
-          <div className="hidden lg:block w-60 flex-shrink-0" aria-hidden="true">
+          <div className="hidden lg:block w-60 shrink-0" aria-hidden="true">
             <div className="sticky top-36 space-y-4">
               <div className="h-4 w-20 animate-pulse rounded-full bg-slate-200" />
               {Array.from({ length: 6 }).map((_, i) => (

@@ -87,7 +87,7 @@ export default function ComparePage() {
           {/* Mixed category warning */}
           {mixedCategories && (
             <div className="flex items-start gap-3 p-4 rounded-2xl bg-amber-50 border border-amber-200 mb-6">
-              <svg viewBox="0 0 24 24" className="w-5 h-5 text-amber-500 fill-current flex-shrink-0 mt-0.5" aria-hidden="true">
+              <svg viewBox="0 0 24 24" className="w-5 h-5 text-amber-500 fill-current shrink-0 mt-0.5" aria-hidden="true">
                 <path d="M12 2L1 21h22L12 2zm0 3.5L20.5 19h-17L12 5.5zM11 10v4h2v-4h-2zm0 6v2h2v-2h-2z"/>
               </svg>
               <div>
@@ -115,7 +115,7 @@ export default function ComparePage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[560px]">
+              <table className="w-full min-w-140">
                 <thead>
                   <tr>
                     {/* Label col */}
@@ -138,18 +138,18 @@ export default function ComparePage() {
                                 <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
                               </button>
                               {/* Image */}
-                              <div className="w-full h-24 bg-slate-50 rounded-xl mb-3 flex items-center justify-center border border-slate-100 flex-shrink-0">
+                              <div className="w-full h-24 bg-slate-50 rounded-xl mb-3 flex items-center justify-center border border-slate-100 shrink-0">
                                 <svg viewBox="0 0 60 45" className="w-12 h-auto text-slate-300" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
                                   <rect x="3" y="3" width="54" height="39" rx="3"/>
                                   <rect x="8" y="8" width="44" height="29" rx="2" fill="rgba(59,130,246,0.04)" stroke="rgba(59,130,246,0.15)"/>
                                 </svg>
                               </div>
-                              <div className="text-xs text-slate-400 mb-0.5 flex-shrink-0">{p.cat}</div>
+                              <div className="text-xs text-slate-400 mb-0.5 shrink-0">{p.cat}</div>
                               <div className="font-semibold text-sm text-slate-900 leading-snug mb-1 flex-1 line-clamp-2">{p.name}</div>
-                              <div className="font-bold text-blue-600 text-sm mb-3 flex-shrink-0">{p.price}</div>
+                              <div className="font-bold text-blue-600 text-sm mb-3 shrink-0">{p.price}</div>
                               <Link
                                 href={`/products/${p.slug}`}
-                                className="block w-full py-1.5 rounded-full text-xs font-semibold bg-slate-900 text-white hover:bg-slate-700 transition-colors duration-200 cursor-pointer text-center flex-shrink-0"
+                                className="block w-full py-1.5 rounded-full text-xs font-semibold bg-slate-900 text-white hover:bg-slate-700 transition-colors duration-200 cursor-pointer text-center shrink-0"
                               >
                                 Xem chi tiết
                               </Link>

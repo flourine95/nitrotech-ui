@@ -52,7 +52,7 @@ export default function SecurityPage() {
           </div>
           <button
             onClick={() => setTwoFA(!twoFA)}
-            className={`inline-flex items-center w-11 h-6 rounded-full transition-colors duration-200 cursor-pointer flex-shrink-0 ${twoFA ? "bg-green-500" : "bg-slate-200"}`}
+            className={`inline-flex items-center w-11 h-6 rounded-full transition-colors duration-200 cursor-pointer shrink-0 ${twoFA ? "bg-green-500" : "bg-slate-200"}`}
             role="switch"
             aria-checked={twoFA}
             aria-label="Bật/tắt xác thực 2 bước"
@@ -62,7 +62,7 @@ export default function SecurityPage() {
         </div>
         {twoFA && (
           <div className="mt-4 p-4 rounded-2xl bg-green-50 border border-green-200 text-sm text-green-700 flex items-center gap-2">
-            <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current flex-shrink-0" aria-hidden="true"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current shrink-0" aria-hidden="true"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             Xác thực 2 bước đã được bật. Tài khoản của bạn được bảo vệ tốt hơn.
           </div>
         )}
@@ -79,7 +79,7 @@ export default function SecurityPage() {
           ].map((s) => (
             <div key={s.device} className="flex items-center justify-between p-4 rounded-2xl border border-slate-100 bg-slate-50/50">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-white border border-slate-200 flex items-center justify-center flex-shrink-0">
+                <div className="w-9 h-9 rounded-xl bg-white border border-slate-200 flex items-center justify-center shrink-0">
                   <svg viewBox="0 0 24 24" className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
                 </div>
                 <div>

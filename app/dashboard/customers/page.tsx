@@ -91,7 +91,7 @@ export default function DashboardCustomersPage() {
                 <tr key={c.id} className="hover:bg-slate-50 transition-colors">
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-sm font-bold text-blue-600 flex-shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-sm font-bold text-blue-600 shrink-0">
                         {c.name.split(" ").pop()?.[0]}
                       </div>
                       <div>

@@ -109,7 +109,7 @@ export default function ReturnsPage() {
             <div className="space-y-4">
               {returnSteps.map((s) => (
                 <div key={s.step} className="flex gap-4 bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
-                  <div className="w-10 h-10 rounded-full bg-slate-900 text-white flex items-center justify-center text-sm font-bold flex-shrink-0">{s.step}</div>
+                  <div className="w-10 h-10 rounded-full bg-slate-900 text-white flex items-center justify-center text-sm font-bold shrink-0">{s.step}</div>
                   <div>
                     <div className="font-semibold text-slate-900 mb-1">{s.title}</div>
                     <div className="text-sm text-slate-600">{s.desc}</div>

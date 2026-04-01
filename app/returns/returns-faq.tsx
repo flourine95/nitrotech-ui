@@ -21,7 +21,7 @@ export function ReturnsFaq() {
             aria-expanded={openFaq === i}
           >
             <span className="font-medium text-slate-900 text-sm">{faq.q}</span>
-            <svg viewBox="0 0 24 24" className={`w-5 h-5 text-slate-400 flex-shrink-0 transition-transform duration-200 ${openFaq === i ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+            <svg viewBox="0 0 24 24" className={`w-5 h-5 text-slate-400 shrink-0 transition-transform duration-200 ${openFaq === i ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
           </button>
           {openFaq === i && (
             <div className="px-6 pb-4 border-t border-slate-100 pt-3 text-sm text-slate-600 leading-relaxed">

@@ -42,7 +42,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
             <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
             <Link href={`/products?cat=${product.catSlug}`} className="hover:text-slate-700 transition-colors duration-150 cursor-pointer">{product.cat}</Link>
             <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
-            <span className="text-slate-700 font-medium truncate max-w-[200px]">{product.name}</span>
+            <span className="text-slate-700 font-medium truncate max-w-52">{product.name}</span>
           </div>
         </div>
 
@@ -147,7 +147,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                 {[[5,80],[4,15],[3,3],[2,1],[1,1]].map(([star,pct]) => (
                   <div key={star} className="flex items-center gap-3">
                     <span className="text-xs text-slate-500 w-4">{star}</span>
-                    <svg viewBox="0 0 24 24" className="w-3 h-3 text-amber-400 fill-current flex-shrink-0" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    <svg viewBox="0 0 24 24" className="w-3 h-3 text-amber-400 fill-current shrink-0" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
                     <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden"><div className="h-full bg-amber-400 rounded-full" style={{width:`${pct}%`}}/></div>
                     <span className="text-xs text-slate-400 w-8">{pct}%</span>
                   </div>
@@ -159,7 +159,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                 <article key={r.name} className="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0" aria-hidden="true">{r.name.split(" ").map(n=>n[0]).slice(-2).join("")}</div>
+                      <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold shrink-0" aria-hidden="true">{r.name.split(" ").map(n=>n[0]).slice(-2).join("")}</div>
                       <div><div className="font-semibold text-sm text-slate-900">{r.name}</div><div className="text-xs text-slate-400">{r.role}</div></div>
                     </div>
                     <span className="text-xs text-slate-400">{r.date}</span>

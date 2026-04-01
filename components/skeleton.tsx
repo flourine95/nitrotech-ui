@@ -49,7 +49,7 @@ export function SkeletonText({ lines = 3, className }: { lines?: number; classNa
 
 // ── Avatar skeleton ────────────────────────────────────────────
 export function SkeletonAvatar({ size = 10 }: { size?: number }) {
-  return <div className={`animate-pulse rounded-full bg-slate-200 w-${size} h-${size} flex-shrink-0`} />
+  return <div className={`animate-pulse rounded-full bg-slate-200 w-${size} h-${size} shrink-0`} />
 }
 
 // ── Banner skeleton ────────────────────────────────────────────

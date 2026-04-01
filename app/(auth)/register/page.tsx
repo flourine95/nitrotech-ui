@@ -20,7 +20,7 @@ export default function RegisterPage() {
           {["Thông tin", "Bảo mật"].map((s, i) => (
             <div key={s} className="flex items-center flex-1">
               <div className={`flex items-center gap-2 flex-1 ${i < step - 1 ? "text-green-600" : i === step - 1 ? "text-slate-900" : "text-slate-300"}`}>
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 transition-colors duration-200 ${i < step - 1 ? "bg-green-100 text-green-600" : i === step - 1 ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-400"}`}>
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-colors duration-200 ${i < step - 1 ? "bg-green-100 text-green-600" : i === step - 1 ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-400"}`}>
                   {i < step - 1
                     ? <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current" aria-hidden="true"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     : i + 1
@@ -110,7 +110,7 @@ export default function RegisterPage() {
                 </div>
               </div>
               <div className="flex items-start gap-2">
-                <input id="terms" type="checkbox" required className="w-4 h-4 mt-0.5 rounded accent-slate-900 cursor-pointer flex-shrink-0"/>
+                <input id="terms" type="checkbox" required className="w-4 h-4 mt-0.5 rounded accent-slate-900 cursor-pointer shrink-0"/>
                 <label htmlFor="terms" className="text-sm text-slate-600 cursor-pointer leading-relaxed">
                   Tôi đồng ý với{" "}
                   <Link href="/terms" className="text-blue-600 hover:underline">Điều khoản sử dụng</Link>

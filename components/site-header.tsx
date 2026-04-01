@@ -46,8 +46,8 @@ export function SiteHeader({ cartCount = 0 }: { cartCount?: number }) {
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
       {/* Top bar — marquee */}
       <div className="bg-slate-800 text-slate-200 text-xs py-2 overflow-hidden relative">
-        <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-slate-800 to-transparent z-10 pointer-events-none" aria-hidden="true" />
-        <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-slate-800 to-transparent z-10 pointer-events-none" aria-hidden="true" />
+        <div className="absolute left-0 top-0 bottom-0 w-12 bg-linear-to-r from-slate-800 to-transparent z-10 pointer-events-none" aria-hidden="true" />
+        <div className="absolute right-0 top-0 bottom-0 w-12 bg-linear-to-l from-slate-800 to-transparent z-10 pointer-events-none" aria-hidden="true" />
 
         <div
           className="flex whitespace-nowrap"
@@ -73,7 +73,7 @@ export function SiteHeader({ cartCount = 0 }: { cartCount?: number }) {
       <nav className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 cursor-pointer">
-          <div className="w-8 h-8 rounded-xl bg-slate-900 flex items-center justify-center flex-shrink-0">
+          <div className="w-8 h-8 rounded-xl bg-slate-900 flex items-center justify-center shrink-0">
             <svg viewBox="0 0 24 24" className="w-4 h-4 text-white fill-current" aria-hidden="true">
               <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
             </svg>
@@ -132,10 +132,10 @@ export function SiteHeader({ cartCount = 0 }: { cartCount?: number }) {
                 aria-expanded={accountOpen}
                 aria-haspopup="true"
               >
-                <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-[10px] font-bold flex-shrink-0" aria-hidden="true">
+                <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-[10px] font-bold shrink-0" aria-hidden="true">
                   {userName.split(" ").pop()?.[0]}
                 </div>
-                <span className="max-w-[80px] truncate">{userName.split(" ").pop()}</span>
+                <span className="max-w-20 truncate">{userName.split(" ").pop()}</span>
                 <svg viewBox="0 0 24 24" className={`w-3.5 h-3.5 transition-transform duration-200 ${accountOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
               </button>
 

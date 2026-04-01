@@ -68,7 +68,7 @@ export default function AddressesPage() {
                 </p>
               </div>
               {/* Actions */}
-              <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="flex items-center gap-2 shrink-0">
                 <button className="px-3 py-1.5 rounded-full text-xs font-medium border border-slate-200 text-slate-600 hover:bg-slate-100 transition-colors duration-200 cursor-pointer">
                   Sửa
                 </button>

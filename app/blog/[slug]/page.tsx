@@ -42,7 +42,7 @@ export default function BlogPostPage() {
               <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
               <Link href="/blog" className="hover:text-white transition-colors duration-150 cursor-pointer">Blog</Link>
               <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
-              <span className="text-slate-300 truncate max-w-[200px]">Review MacBook Pro M4</span>
+              <span className="text-slate-300 truncate max-w-52">Review MacBook Pro M4</span>
             </nav>
             <span className="text-xs font-semibold px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 mb-4 inline-block">Review</span>
             <h1 className="text-3xl md:text-4xl font-bold leading-tight mb-5">
@@ -130,7 +130,7 @@ export default function BlogPostPage() {
 
               {/* Author bio */}
               <div className="mt-12 bg-slate-50 rounded-2xl border border-slate-200 p-6 flex gap-4">
-                <div className="w-14 h-14 rounded-full bg-blue-500 flex items-center justify-center text-white text-xl font-bold flex-shrink-0" aria-hidden="true">M</div>
+                <div className="w-14 h-14 rounded-full bg-blue-500 flex items-center justify-center text-white text-xl font-bold shrink-0" aria-hidden="true">M</div>
                 <div>
                   <div className="font-bold text-slate-900 mb-1">Minh Khoa</div>
                   <div className="text-sm text-slate-500 mb-2">Editor-in-Chief tại NitroTech. Chuyên review laptop, PC và linh kiện với hơn 8 năm kinh nghiệm trong ngành công nghệ.</div>
@@ -158,7 +158,7 @@ export default function BlogPostPage() {
             </article>
 
             {/* Sidebar */}
-            <aside className="hidden lg:block w-64 flex-shrink-0">
+            <aside className="hidden lg:block w-64 shrink-0">
               <div className="sticky top-24 space-y-5">
                 {/* TOC */}
                 <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">

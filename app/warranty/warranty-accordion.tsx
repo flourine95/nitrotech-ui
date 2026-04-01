@@ -26,7 +26,7 @@ const accordionItems: { id: string; title: string; content: ReactNode }[] = [
       <ul className="space-y-2 text-slate-600 text-sm">
         {["Sản phẩm còn trong thời hạn bảo hành", "Tem bảo hành còn nguyên vẹn, không bị rách hoặc tẩy xóa", "Sản phẩm có hóa đơn mua hàng tại NitroTech", "Lỗi do nhà sản xuất, không phải do tác động bên ngoài", "Sản phẩm không bị ngấm nước, cháy nổ, hoặc va đập mạnh"].map((item) => (
           <li key={item} className="flex items-start gap-2">
-            <svg viewBox="0 0 24 24" className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+            <svg viewBox="0 0 24 24" className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
             {item}
           </li>
         ))}
@@ -66,7 +66,7 @@ const accordionItems: { id: string; title: string; content: ReactNode }[] = [
       <div className="space-y-4">
         {steps.map((s) => (
           <div key={s.step} className="flex gap-4">
-            <div className="w-10 h-10 rounded-full bg-slate-900 text-white flex items-center justify-center text-sm font-bold flex-shrink-0">{s.step}</div>
+            <div className="w-10 h-10 rounded-full bg-slate-900 text-white flex items-center justify-center text-sm font-bold shrink-0">{s.step}</div>
             <div>
               <div className="font-semibold text-slate-900 mb-1">{s.title}</div>
               <div className="text-sm text-slate-600">{s.desc}</div>
@@ -83,7 +83,7 @@ const accordionItems: { id: string; title: string; content: ReactNode }[] = [
       <ul className="space-y-2 text-slate-600 text-sm">
         {["Hư hỏng do va đập, rơi vỡ, bị ép lực", "Ngấm nước, ẩm ướt, tiếp xúc hóa chất", "Tự ý tháo lắp, sửa chữa không đúng kỹ thuật", "Tem bảo hành bị rách, tẩy xóa hoặc không còn", "Hư hỏng do thiên tai, hỏa hoạn, điện áp bất thường", "Sản phẩm hết hạn bảo hành"].map((item) => (
           <li key={item} className="flex items-start gap-2">
-            <svg viewBox="0 0 24 24" className="w-4 h-4 text-rose-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            <svg viewBox="0 0 24 24" className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
             {item}
           </li>
         ))}
@@ -119,7 +119,7 @@ export function WarrantyAccordion() {
             <span className="font-semibold text-slate-900">{item.title}</span>
             <svg
               viewBox="0 0 24 24"
-              className={`w-5 h-5 text-slate-400 flex-shrink-0 transition-transform duration-200 ${openId === item.id ? "rotate-180" : ""}`}
+              className={`w-5 h-5 text-slate-400 shrink-0 transition-transform duration-200 ${openId === item.id ? "rotate-180" : ""}`}
               fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"
             >
               <path d="M6 9l6 6 6-6"/>

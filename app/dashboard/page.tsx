@@ -173,7 +173,7 @@ export default function DashboardPage() {
           <div className="space-y-3">
             {topProducts.map((p, i) => (
               <div key={i} className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer">
-                <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-600 flex-shrink-0">
+                <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-600 shrink-0">
                   #{i + 1}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -205,7 +205,7 @@ export default function DashboardPage() {
                   <div className="text-xs text-slate-500 truncate">{o.customer} • {o.product}</div>
                   <div className="text-xs text-slate-400 mt-1">{o.time}</div>
                 </div>
-                <div className="text-sm font-bold text-slate-900 text-right flex-shrink-0">{o.amount}</div>
+                <div className="text-sm font-bold text-slate-900 text-right shrink-0">{o.amount}</div>
               </div>
             ))}
           </div>

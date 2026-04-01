@@ -141,7 +141,7 @@ export default function BlogPage() {
             </div>
 
             {/* Sidebar */}
-            <aside className="hidden lg:block w-72 flex-shrink-0 space-y-6">
+            <aside className="hidden lg:block w-72 shrink-0 space-y-6">
               {/* Categories */}
               <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
                 <h3 className="font-bold text-slate-900 mb-4">Danh mục</h3>
@@ -160,7 +160,7 @@ export default function BlogPage() {
                 <div className="space-y-4">
                   {popularPosts.map((p, i) => (
                     <Link key={p.slug} href={`/blog/${p.slug}`} className="flex gap-3 group cursor-pointer">
-                      <span className="text-2xl font-bold text-slate-200 leading-none w-6 flex-shrink-0">{i + 1}</span>
+                      <span className="text-2xl font-bold text-slate-200 leading-none w-6 shrink-0">{i + 1}</span>
                       <div>
                         <div className="text-sm font-medium text-slate-700 group-hover:text-blue-600 transition-colors duration-150 leading-snug line-clamp-2">{p.title}</div>
                         <div className="text-xs text-slate-400 mt-1">{p.date}</div>

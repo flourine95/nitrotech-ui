@@ -35,7 +35,7 @@ export default function WishlistPage() {
           {wishlist.map((item) => (
             <div key={item.slug} className="rounded-3xl bg-white border border-slate-200 shadow-sm overflow-hidden flex">
               {/* Image */}
-              <Link href={`/products/${item.slug}`} className="w-28 bg-slate-50 flex items-center justify-center flex-shrink-0 border-r border-slate-100 cursor-pointer hover:bg-slate-100 transition-colors duration-200">
+              <Link href={`/products/${item.slug}`} className="w-28 bg-slate-50 flex items-center justify-center shrink-0 border-r border-slate-100 cursor-pointer hover:bg-slate-100 transition-colors duration-200">
                 <svg viewBox="0 0 60 45" className="w-14 h-auto text-slate-300" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
                   <rect x="3" y="3" width="54" height="39" rx="3"/>
                   <rect x="8" y="8" width="44" height="29" rx="2" fill="rgba(59,130,246,0.04)" stroke="rgba(59,130,246,0.15)"/>
@@ -51,7 +51,7 @@ export default function WishlistPage() {
                       {item.name}
                     </Link>
                   </div>
-                  <button className="p-1.5 rounded-full text-rose-400 hover:bg-rose-50 transition-colors duration-200 cursor-pointer flex-shrink-0" aria-label="Xóa khỏi yêu thích">
+                  <button className="p-1.5 rounded-full text-rose-400 hover:bg-rose-50 transition-colors duration-200 cursor-pointer shrink-0" aria-label="Xóa khỏi yêu thích">
                     <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" aria-hidden="true">
                       <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
                     </svg>

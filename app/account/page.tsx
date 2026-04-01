@@ -21,7 +21,7 @@ export default function AccountPage() {
   return (
     <div className="space-y-6">
       {/* Welcome */}
-      <div className="rounded-3xl bg-gradient-to-r from-slate-900 to-slate-800 p-6 sm:p-8 text-white">
+      <div className="rounded-3xl bg-linear-to-r from-slate-900 to-slate-800 p-6 sm:p-8 text-white">
         <p className="text-slate-400 text-sm mb-1">Xin chào trở lại,</p>
         <h1 className="text-2xl font-bold mb-4">Nguyễn Văn A 👋</h1>
         <div className="grid grid-cols-3 gap-4">
@@ -72,7 +72,7 @@ export default function AccountPage() {
                 <div className="text-xs text-slate-400 truncate">{order.items}</div>
                 <div className="text-xs text-slate-400 mt-0.5">{order.date}</div>
               </div>
-              <div className="flex items-center gap-3 flex-shrink-0 ml-4">
+              <div className="flex items-center gap-3 shrink-0 ml-4">
                 <span className="font-bold text-sm text-slate-900">{order.total}</span>
                 <svg viewBox="0 0 24 24" className="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
               </div>

@@ -55,7 +55,7 @@ export default function DashboardInventoryPage() {
       {/* Low stock alert */}
       {lowStock.length > 0 && (
         <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3">
-          <svg viewBox="0 0 24 24" className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+          <svg viewBox="0 0 24 24" className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
             <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
             <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
           </svg>
@@ -103,7 +103,7 @@ export default function DashboardInventoryPage() {
                       </span>
                     </td>
                     <td className="px-5 py-4">
-                      <div className="w-full bg-slate-100 rounded-full h-2 min-w-[80px]">
+                      <div className="w-full bg-slate-100 rounded-full h-2 min-w-20">
                         <div
                           className={`h-2 rounded-full transition-all ${barColor}`}
                           style={{ width: `${pct}%` }}

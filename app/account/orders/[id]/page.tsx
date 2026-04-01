@@ -47,7 +47,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
             <div className="divide-y divide-slate-100">
               {orderItems.map((item) => (
                 <div key={item.slug} className="flex gap-4 px-6 py-4">
-                  <div className="w-16 h-16 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center flex-shrink-0">
+                  <div className="w-16 h-16 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
                     <svg viewBox="0 0 40 30" className="w-10 h-auto text-slate-300" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
                       <rect x="2" y="2" width="36" height="26" rx="2"/>
                       <rect x="5" y="5" width="30" height="20" rx="1" fill="rgba(59,130,246,0.04)" stroke="rgba(59,130,246,0.15)"/>
@@ -60,7 +60,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
                     <div className="text-xs text-slate-400 mt-0.5">{item.variant}</div>
                     <div className="text-xs text-slate-400 mt-0.5">Số lượng: {item.qty}</div>
                   </div>
-                  <div className="text-right flex-shrink-0">
+                  <div className="text-right shrink-0">
                     <div className="font-bold text-sm text-slate-900">{item.price}</div>
                     <button className="mt-2 text-xs text-blue-600 hover:text-blue-700 cursor-pointer transition-colors duration-150">
                       Đánh giá
@@ -79,7 +79,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
                 <li key={step.label} className={`flex gap-4 ${i < timeline.length - 1 ? "pb-5" : ""}`}>
                   {/* Line */}
                   <div className="flex flex-col items-center">
-                    <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 z-10 ${step.done ? "bg-green-500" : "bg-slate-200"}`}>
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 z-10 ${step.done ? "bg-green-500" : "bg-slate-200"}`}>
                       {step.done && (
                         <svg viewBox="0 0 24 24" className="w-3 h-3 text-white fill-current" aria-hidden="true">
                           <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>

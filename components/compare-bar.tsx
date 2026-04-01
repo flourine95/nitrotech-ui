@@ -69,18 +69,18 @@ function CompareBar() {
     >
       <div className="max-w-7xl mx-auto px-6 py-3 flex items-center gap-4">
         {/* Label */}
-        <div className="hidden sm:block flex-shrink-0">
+        <div className="hidden sm:block shrink-0">
           <div className="text-sm font-semibold text-slate-900">So sánh</div>
           <div className="text-xs text-slate-400">{items.length}/{MAX} sản phẩm</div>
           {mixedCategories && (
             <div className="flex items-center gap-1 text-xs text-amber-600 mt-0.5">
-              <svg viewBox="0 0 24 24" className="w-3 h-3 fill-current flex-shrink-0" aria-hidden="true"><path d="M12 2L1 21h22L12 2zm0 3.5L20.5 19h-17L12 5.5zM11 10v4h2v-4h-2zm0 6v2h2v-2h-2z"/></svg>
+              <svg viewBox="0 0 24 24" className="w-3 h-3 fill-current shrink-0" aria-hidden="true"><path d="M12 2L1 21h22L12 2zm0 3.5L20.5 19h-17L12 5.5zM11 10v4h2v-4h-2zm0 6v2h2v-2h-2z"/></svg>
               Khác danh mục
             </div>
           )}
         </div>
 
-        <div className="w-px h-8 bg-slate-200 hidden sm:block flex-shrink-0" aria-hidden="true" />
+        <div className="w-px h-8 bg-slate-200 hidden sm:block shrink-0" aria-hidden="true" />
 
         {/* Slots */}
         <div className="flex items-center gap-3 flex-1 overflow-x-auto">
@@ -89,7 +89,7 @@ function CompareBar() {
             return (
               <div
                 key={i}
-                className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-sm flex-shrink-0 min-w-[160px] ${
+                className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-sm shrink-0 min-w-40 ${
                   item
                     ? "bg-slate-50 border-slate-200"
                     : "border-dashed border-slate-200 text-slate-300"
@@ -103,7 +103,7 @@ function CompareBar() {
                     </div>
                     <button
                       onClick={() => toggle(item)}
-                      className="flex-shrink-0 w-5 h-5 rounded-full bg-slate-200 hover:bg-rose-100 hover:text-rose-500 text-slate-500 flex items-center justify-center transition-colors duration-150 cursor-pointer"
+                      className="shrink-0 w-5 h-5 rounded-full bg-slate-200 hover:bg-rose-100 hover:text-rose-500 text-slate-500 flex items-center justify-center transition-colors duration-150 cursor-pointer"
                       aria-label={`Xóa ${item.name}`}
                     >
                       <svg viewBox="0 0 24 24" className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
@@ -120,7 +120,7 @@ function CompareBar() {
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={clear}
             className="px-3 py-2 rounded-full text-sm text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors duration-200 cursor-pointer"

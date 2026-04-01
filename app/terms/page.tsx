@@ -109,7 +109,7 @@ export default function TermsPage() {
             </article>
 
             {/* Sidebar TOC */}
-            <aside className="hidden lg:block w-56 flex-shrink-0">
+            <aside className="hidden lg:block w-56 shrink-0">
               <div className="sticky top-36">
                 <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
                   <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">Mục lục</p>

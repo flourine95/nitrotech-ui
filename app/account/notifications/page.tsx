@@ -152,7 +152,7 @@ export default function NotificationsPage() {
                 }`}
               >
                 {/* Icon */}
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${cfg.bg} ${cfg.color}`}>
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${cfg.bg} ${cfg.color}`}>
                   {cfg.icon}
                 </div>
 
@@ -162,10 +162,10 @@ export default function NotificationsPage() {
                     <p className={`text-sm font-semibold leading-snug ${notif.read ? "text-slate-700" : "text-slate-900"}`}>
                       {notif.title}
                     </p>
-                    <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="flex items-center gap-2 shrink-0">
                       <span className="text-xs text-slate-400 whitespace-nowrap">{notif.time}</span>
                       {!notif.read && (
-                        <span className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0" aria-label="Chưa đọc" />
+                        <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" aria-label="Chưa đọc" />
                       )}
                     </div>
                   </div>

@@ -43,7 +43,7 @@ export default function CartPage() {
               {cartItems.map((item) => (
                 <div key={item.slug} className="flex gap-4 p-5 rounded-3xl bg-white border border-slate-200 shadow-sm">
                   {/* Image */}
-                  <Link href={`/products/${item.slug}`} className="w-24 h-24 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center flex-shrink-0 cursor-pointer hover:border-slate-300 transition-colors duration-200">
+                  <Link href={`/products/${item.slug}`} className="w-24 h-24 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 cursor-pointer hover:border-slate-300 transition-colors duration-200">
                     <svg viewBox="0 0 60 45" className="w-14 h-auto text-slate-300" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
                       <rect x="3" y="3" width="54" height="39" rx="3"/>
                       <rect x="8" y="8" width="44" height="29" rx="2" fill="rgba(59,130,246,0.04)" stroke="rgba(59,130,246,0.15)"/>
@@ -60,14 +60,14 @@ export default function CartPage() {
                       {/* Qty */}
                       <div className="flex items-center border border-slate-200 rounded-full overflow-hidden">
                         <button className="px-3 py-1.5 text-slate-600 hover:bg-slate-100 transition-colors duration-200 cursor-pointer text-base leading-none" aria-label="Giảm số lượng">−</button>
-                        <span className="px-3 py-1.5 text-sm font-semibold text-slate-900 min-w-[2.5rem] text-center" aria-live="polite">{item.qty}</span>
+                        <span className="px-3 py-1.5 text-sm font-semibold text-slate-900 min-w-10 text-center" aria-live="polite">{item.qty}</span>
                         <button className="px-3 py-1.5 text-slate-600 hover:bg-slate-100 transition-colors duration-200 cursor-pointer text-base leading-none" aria-label="Tăng số lượng">+</button>
                       </div>
                       <div className="font-bold text-base text-slate-900">{fmt(item.price * item.qty)}</div>
                     </div>
                   </div>
                   {/* Remove */}
-                  <button className="p-2 rounded-full text-slate-300 hover:text-rose-500 hover:bg-rose-50 transition-colors duration-200 cursor-pointer self-start flex-shrink-0" aria-label={`Xóa ${item.name}`}>
+                  <button className="p-2 rounded-full text-slate-300 hover:text-rose-500 hover:bg-rose-50 transition-colors duration-200 cursor-pointer self-start shrink-0" aria-label={`Xóa ${item.name}`}>
                     <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
                   </button>
                 </div>
@@ -111,7 +111,7 @@ export default function CartPage() {
                     { slug: "lg-ultragear-27", name: "LG UltraGear 27\" 4K 144Hz", cat: "Màn hình", price: "12.990.000₫", old: "14.500.000₫" },
                   ].map((p) => (
                     <div key={p.slug} className="flex items-center gap-4 p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-                      <Link href={`/products/${p.slug}`} className="w-14 h-14 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center flex-shrink-0 cursor-pointer">
+                      <Link href={`/products/${p.slug}`} className="w-14 h-14 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 cursor-pointer">
                         <svg viewBox="0 0 40 30" className="w-9 h-auto text-slate-300" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
                           <rect x="2" y="2" width="36" height="26" rx="2"/>
                           <rect x="5" y="5" width="30" height="20" rx="1" fill="rgba(59,130,246,0.04)" stroke="rgba(59,130,246,0.15)"/>
@@ -125,7 +125,7 @@ export default function CartPage() {
                           <span className="text-xs text-slate-300 line-through">{p.old}</span>
                         </div>
                       </div>
-                      <button className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border border-slate-200 text-slate-700 hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-colors duration-200 cursor-pointer">
+                      <button className="shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border border-slate-200 text-slate-700 hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-colors duration-200 cursor-pointer">
                         Thêm
                       </button>
                     </div>

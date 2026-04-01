@@ -39,7 +39,7 @@ export default function ProductsPage() {
         <div className="max-w-7xl mx-auto px-6 py-8">
           <div className="flex gap-8">
             {/* ── Sidebar filter ── */}
-            <aside className="hidden lg:block w-60 flex-shrink-0" aria-label="Bộ lọc sản phẩm">
+            <aside className="hidden lg:block w-60 shrink-0" aria-label="Bộ lọc sản phẩm">
               <div className="sticky top-36 space-y-6">
                 {/* Category */}
                 <div>

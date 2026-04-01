@@ -41,7 +41,7 @@ export default function CheckoutSuccessPage() {
                 { name: "RTX 4080 Super", variant: "16GB GDDR6X", price: "22.500.000₫" },
               ].map((item) => (
                 <div key={item.name} className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
                     <svg viewBox="0 0 24 24" className="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
                       <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
                     </svg>
@@ -50,7 +50,7 @@ export default function CheckoutSuccessPage() {
                     <div className="text-sm font-medium text-slate-900 truncate">{item.name}</div>
                     <div className="text-xs text-slate-400">{item.variant}</div>
                   </div>
-                  <div className="text-sm font-semibold text-slate-900 flex-shrink-0">{item.price}</div>
+                  <div className="text-sm font-semibold text-slate-900 shrink-0">{item.price}</div>
                 </div>
               ))}
             </div>
@@ -73,7 +73,7 @@ export default function CheckoutSuccessPage() {
 
           {/* Email notice */}
           <div className="flex items-center gap-3 p-4 rounded-2xl bg-blue-50 border border-blue-100 text-left mb-8">
-            <svg viewBox="0 0 24 24" className="w-5 h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+            <svg viewBox="0 0 24 24" className="w-5 h-5 text-blue-600 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
               <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
             </svg>
             <p className="text-sm text-blue-700">

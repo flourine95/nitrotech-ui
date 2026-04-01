@@ -57,11 +57,11 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
         <div className="max-w-7xl mx-auto px-6 py-8">
           <div className="flex gap-8">
             {/* Sidebar */}
-            <aside className="hidden lg:block w-56 flex-shrink-0">
+            <aside className="hidden lg:block w-56 shrink-0">
               <div className="sticky top-36">
                 {/* User info */}
                 <div className="flex items-center gap-3 p-4 rounded-2xl bg-white border border-slate-200 shadow-sm mb-4">
-                  <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-bold flex-shrink-0" aria-hidden="true">
+                  <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-bold shrink-0" aria-hidden="true">
                     NV
                   </div>
                   <div className="min-w-0">
