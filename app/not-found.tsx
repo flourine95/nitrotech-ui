@@ -13,40 +13,46 @@ export default function NotFound() {
   return (
     <>
       <SiteHeader />
-      <main className="min-h-screen bg-slate-50 flex flex-col items-center justify-center px-6 py-20">
+      <main className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-6 py-20">
         {/* 404 number */}
         <div
-          className="text-[120px] sm:text-[160px] font-black leading-none select-none mb-4"
-          style={{ background: "linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}
+          className="mb-4 text-[120px] leading-none font-black select-none sm:text-[160px]"
+          style={{
+            background: "linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+          }}
           aria-hidden="true"
         >
           404
         </div>
 
-        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-3 text-center">
+        <h1 className="mb-3 text-center text-2xl font-bold text-slate-900 sm:text-3xl">
           Trang không tìm thấy
         </h1>
-        <p className="text-slate-500 text-center max-w-md mb-10 leading-relaxed">
-          Trang bạn đang tìm kiếm có thể đã bị xóa, đổi tên hoặc tạm thời không khả dụng.
+        <p className="mb-10 max-w-md text-center leading-relaxed text-slate-500">
+          Trang bạn đang tìm kiếm có thể đã bị xóa, đổi tên hoặc tạm thời không
+          khả dụng.
         </p>
 
         {/* Action buttons */}
-        <div className="flex flex-wrap gap-3 justify-center mb-10">
+        <div className="mb-10 flex flex-wrap justify-center gap-3">
           <Link
             href="/"
-            className="px-6 py-3 rounded-full text-sm font-semibold bg-slate-900 text-white hover:bg-slate-700 transition-colors duration-200 cursor-pointer"
+            className="cursor-pointer rounded-full bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-slate-700"
           >
             Về trang chủ
           </Link>
           <Link
             href="/products"
-            className="px-6 py-3 rounded-full text-sm font-semibold border border-slate-200 text-slate-700 hover:bg-slate-100 transition-colors duration-200 cursor-pointer"
+            className="cursor-pointer rounded-full border border-slate-200 px-6 py-3 text-sm font-semibold text-slate-700 transition-colors duration-200 hover:bg-slate-100"
           >
             Xem sản phẩm
           </Link>
           <Link
             href="/contact"
-            className="px-6 py-3 rounded-full text-sm font-semibold border border-slate-200 text-slate-700 hover:bg-slate-100 transition-colors duration-200 cursor-pointer"
+            className="cursor-pointer rounded-full border border-slate-200 px-6 py-3 text-sm font-semibold text-slate-700 transition-colors duration-200 hover:bg-slate-100"
           >
             Liên hệ hỗ trợ
           </Link>
@@ -54,13 +60,15 @@ export default function NotFound() {
 
         {/* Quick links */}
         <div className="text-center">
-          <p className="text-xs text-slate-400 mb-3 uppercase tracking-wider font-medium">Khám phá nhanh</p>
-          <div className="flex flex-wrap gap-2 justify-center">
+          <p className="mb-3 text-xs font-medium tracking-wider text-slate-400 uppercase">
+            Khám phá nhanh
+          </p>
+          <div className="flex flex-wrap justify-center gap-2">
             {quickLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="px-4 py-2 rounded-full text-sm text-slate-600 bg-white border border-slate-200 hover:border-slate-400 hover:text-slate-900 transition-colors duration-200 cursor-pointer"
+                className="cursor-pointer rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-600 transition-colors duration-200 hover:border-slate-400 hover:text-slate-900"
               >
                 {link.label}
               </Link>

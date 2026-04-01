@@ -26,15 +26,22 @@ export function ProgressBar() {
     setProgress(0)
     const t1 = setTimeout(() => setProgress(80), 50)
     const t2 = setTimeout(() => setProgress(100), 300)
-    const t3 = setTimeout(() => { setVisible(false); setProgress(0) }, 600)
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3) }
+    const t3 = setTimeout(() => {
+      setVisible(false)
+      setProgress(0)
+    }, 600)
+    return () => {
+      clearTimeout(t1)
+      clearTimeout(t2)
+      clearTimeout(t3)
+    }
   }, [pathname])
 
   if (!visible && progress === 0) return null
 
   return (
     <div
-      className="fixed top-0 left-0 right-0 z-[9999] h-[3px] pointer-events-none"
+      className="pointer-events-none fixed top-0 right-0 left-0 z-[9999] h-[3px]"
       role="progressbar"
       aria-valuenow={Math.round(progress)}
       aria-valuemin={0}

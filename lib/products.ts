@@ -45,7 +45,7 @@ const products: Record<string, Product> = {
       { label: "Chip", value: "Apple M4 Pro 14-core CPU, 20-core GPU" },
       { label: "RAM", value: "16GB Unified Memory" },
       { label: "Bộ nhớ", value: "512GB SSD" },
-      { label: "Màn hình", value: "16.2\" Liquid Retina XDR, 3456×2234, 120Hz" },
+      { label: "Màn hình", value: '16.2" Liquid Retina XDR, 3456×2234, 120Hz' },
       { label: "Pin", value: "100Wh, sạc MagSafe 140W, đến 24 giờ" },
       { label: "Kết nối", value: "3x Thunderbolt 4, HDMI, SD card, MagSafe 3" },
       { label: "Hệ điều hành", value: "macOS Sequoia" },
@@ -58,7 +58,8 @@ const products: Record<string, Product> = {
       { name: "Silver", color: "bg-slate-300", ring: "ring-slate-400" },
     ],
     warranty: "12 tháng chính hãng Apple VN/A",
-    description: "MacBook Pro M4 với chip M4 Pro mạnh mẽ, màn hình Liquid Retina XDR tuyệt đẹp và thời lượng pin lên đến 24 giờ. Lý tưởng cho các chuyên gia sáng tạo và lập trình viên.",
+    description:
+      "MacBook Pro M4 với chip M4 Pro mạnh mẽ, màn hình Liquid Retina XDR tuyệt đẹp và thời lượng pin lên đến 24 giờ. Lý tưởng cho các chuyên gia sáng tạo và lập trình viên.",
     relatedSlugs: ["dell-xps-15", "asus-rog-strix-g16", "corsair-32gb-ddr5"],
   },
   "rtx-4080-super": {
@@ -91,8 +92,13 @@ const products: Record<string, Product> = {
     variants: ["16GB GDDR6X"],
     colors: [],
     warranty: "36 tháng chính hãng",
-    description: "RTX 4080 Super mang đến hiệu năng gaming 4K vượt trội với kiến trúc Ada Lovelace thế hệ mới. DLSS 3.5 và Frame Generation giúp tăng FPS đáng kể.",
-    relatedSlugs: ["intel-i9-14900k", "corsair-32gb-ddr5", "samsung-990-pro-2tb"],
+    description:
+      "RTX 4080 Super mang đến hiệu năng gaming 4K vượt trội với kiến trúc Ada Lovelace thế hệ mới. DLSS 3.5 và Frame Generation giúp tăng FPS đáng kể.",
+    relatedSlugs: [
+      "intel-i9-14900k",
+      "corsair-32gb-ddr5",
+      "samsung-990-pro-2tb",
+    ],
   },
   "asus-rog-strix-g16": {
     slug: "asus-rog-strix-g16",
@@ -116,7 +122,7 @@ const products: Record<string, Product> = {
       { label: "GPU", value: "NVIDIA RTX 4070 8GB" },
       { label: "RAM", value: "32GB DDR5 4800MHz" },
       { label: "Bộ nhớ", value: "1TB NVMe SSD PCIe 4.0" },
-      { label: "Màn hình", value: "16\" QHD 240Hz IPS, 3ms" },
+      { label: "Màn hình", value: '16" QHD 240Hz IPS, 3ms' },
       { label: "Pin", value: "90Wh, sạc 240W" },
       { label: "Hệ điều hành", value: "Windows 11 Home" },
       { label: "Trọng lượng", value: "2.5 kg" },
@@ -127,7 +133,8 @@ const products: Record<string, Product> = {
       { name: "Eclipse Gray", color: "bg-slate-700", ring: "ring-slate-700" },
     ],
     warranty: "24 tháng chính hãng ASUS",
-    description: "ASUS ROG Strix G16 là laptop gaming mạnh mẽ với CPU Intel Core i9 và GPU RTX 4070, màn hình QHD 240Hz cho trải nghiệm gaming đỉnh cao.",
+    description:
+      "ASUS ROG Strix G16 là laptop gaming mạnh mẽ với CPU Intel Core i9 và GPU RTX 4070, màn hình QHD 240Hz cho trải nghiệm gaming đỉnh cao.",
     relatedSlugs: ["macbook-pro-m4", "rtx-4080-super", "corsair-32gb-ddr5"],
   },
   "samsung-990-pro-2tb": {
@@ -160,7 +167,8 @@ const products: Record<string, Product> = {
     variants: ["1TB", "2TB", "4TB"],
     colors: [],
     warranty: "60 tháng chính hãng Samsung",
-    description: "Samsung 990 Pro là SSD NVMe PCIe 4.0 hàng đầu với tốc độ đọc 7.450 MB/s, lý tưởng cho gaming, sáng tạo nội dung và workstation.",
+    description:
+      "Samsung 990 Pro là SSD NVMe PCIe 4.0 hàng đầu với tốc độ đọc 7.450 MB/s, lý tưởng cho gaming, sáng tạo nội dung và workstation.",
     relatedSlugs: ["rtx-4080-super", "corsair-32gb-ddr5", "intel-i9-14900k"],
   },
   "intel-i9-14900k": {
@@ -193,12 +201,17 @@ const products: Record<string, Product> = {
     variants: ["i9-14900K", "i9-14900KF"],
     colors: [],
     warranty: "36 tháng chính hãng Intel",
-    description: "Intel Core i9-14900K là CPU flagship với 24 nhân, boost clock 6.0 GHz, hiệu năng đỉnh cao cho gaming và workstation.",
-    relatedSlugs: ["rtx-4080-super", "corsair-32gb-ddr5", "samsung-990-pro-2tb"],
+    description:
+      "Intel Core i9-14900K là CPU flagship với 24 nhân, boost clock 6.0 GHz, hiệu năng đỉnh cao cho gaming và workstation.",
+    relatedSlugs: [
+      "rtx-4080-super",
+      "corsair-32gb-ddr5",
+      "samsung-990-pro-2tb",
+    ],
   },
   "lg-ultragear-27": {
     slug: "lg-ultragear-27",
-    name: "LG UltraGear 27\" 4K 144Hz",
+    name: 'LG UltraGear 27" 4K 144Hz',
     cat: "Màn hình",
     catSlug: "monitors",
     price: "12.990.000₫",
@@ -220,15 +233,17 @@ const products: Record<string, Product> = {
       { label: "Thời gian phản hồi", value: "1ms GTG" },
       { label: "Tấm nền", value: "IPS Nano" },
       { label: "HDR", value: "VESA DisplayHDR 600" },
-      { label: "Kết nối", value: "2x HDMI 2.1, 1x DisplayPort 1.4, 4x USB 3.0" },
+      {
+        label: "Kết nối",
+        value: "2x HDMI 2.1, 1x DisplayPort 1.4, 4x USB 3.0",
+      },
       { label: "Bảo hành", value: "36 tháng" },
     ],
-    variants: ["27\" 4K 144Hz"],
-    colors: [
-      { name: "Black", color: "bg-slate-900", ring: "ring-slate-900" },
-    ],
+    variants: ['27" 4K 144Hz'],
+    colors: [{ name: "Black", color: "bg-slate-900", ring: "ring-slate-900" }],
     warranty: "36 tháng chính hãng LG",
-    description: "LG UltraGear 27GP950 là màn hình gaming 4K 144Hz với tấm nền IPS Nano, HDR600 và HDMI 2.1 — lý tưởng cho PS5, Xbox Series X và PC gaming.",
+    description:
+      "LG UltraGear 27GP950 là màn hình gaming 4K 144Hz với tấm nền IPS Nano, HDR600 và HDMI 2.1 — lý tưởng cho PS5, Xbox Series X và PC gaming.",
     relatedSlugs: ["rtx-4080-super", "asus-rog-strix-g16", "intel-i9-14900k"],
   },
   "corsair-32gb-ddr5": {
@@ -261,10 +276,15 @@ const products: Record<string, Product> = {
     variants: ["16GB (1×16GB)", "32GB (2×16GB)", "64GB (2×32GB)"],
     colors: [
       { name: "Black", color: "bg-slate-900", ring: "ring-slate-900" },
-      { name: "White", color: "bg-white ring-1 ring-slate-200", ring: "ring-slate-400" },
+      {
+        name: "White",
+        color: "bg-white ring-1 ring-slate-200",
+        ring: "ring-slate-400",
+      },
     ],
     warranty: "Bảo hành trọn đời",
-    description: "Corsair Vengeance DDR5-6000 với XMP 3.0, tốc độ cao và độ trễ thấp, lý tưởng cho Intel 12th/13th/14th Gen và AMD Ryzen 7000.",
+    description:
+      "Corsair Vengeance DDR5-6000 với XMP 3.0, tốc độ cao và độ trễ thấp, lý tưởng cho Intel 12th/13th/14th Gen và AMD Ryzen 7000.",
     relatedSlugs: ["intel-i9-14900k", "samsung-990-pro-2tb", "rtx-4080-super"],
   },
   "dell-xps-15": {
@@ -288,7 +308,7 @@ const products: Record<string, Product> = {
       { label: "CPU", value: "Intel Core i7-13700H" },
       { label: "RAM", value: "32GB DDR5 4800MHz" },
       { label: "Bộ nhớ", value: "1TB SSD PCIe 4.0" },
-      { label: "Màn hình", value: "15.6\" OLED 3.5K 60Hz, 100% DCI-P3" },
+      { label: "Màn hình", value: '15.6" OLED 3.5K 60Hz, 100% DCI-P3' },
       { label: "GPU", value: "NVIDIA RTX 4060 8GB" },
       { label: "Pin", value: "86Wh, đến 13 giờ" },
       { label: "Hệ điều hành", value: "Windows 11 Home" },
@@ -297,10 +317,15 @@ const products: Record<string, Product> = {
     ],
     variants: ["i7 / 32GB / 1TB", "i9 / 64GB / 2TB"],
     colors: [
-      { name: "Platinum Silver", color: "bg-slate-300", ring: "ring-slate-400" },
+      {
+        name: "Platinum Silver",
+        color: "bg-slate-300",
+        ring: "ring-slate-400",
+      },
     ],
     warranty: "12 tháng chính hãng Dell",
-    description: "Dell XPS 15 với màn hình OLED 3.5K sắc nét, thiết kế mỏng nhẹ và hiệu năng mạnh mẽ từ Intel Core i7 thế hệ 13.",
+    description:
+      "Dell XPS 15 với màn hình OLED 3.5K sắc nét, thiết kế mỏng nhẹ và hiệu năng mạnh mẽ từ Intel Core i7 thế hệ 13.",
     relatedSlugs: ["macbook-pro-m4", "asus-rog-strix-g16", "corsair-32gb-ddr5"],
   },
 }

@@ -15,19 +15,25 @@ const beVietnamPro = Be_Vietnam_Pro({
 })
 
 export const metadata: Metadata = {
-  title: { default: "NitroTech — Linh kiện điện tử, Laptop & Máy tính", template: "%s | NitroTech" },
-  description: "Mua sắm linh kiện điện tử, laptop, PC chính hãng với giá tốt nhất. Giao hàng nhanh, bảo hành uy tín.",
+  title: {
+    default: "NitroTech — Linh kiện điện tử, Laptop & Máy tính",
+    template: "%s | NitroTech",
+  },
+  description:
+    "Mua sắm linh kiện điện tử, laptop, PC chính hãng với giá tốt nhất. Giao hàng nhanh, bảo hành uy tín.",
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   return (
     <html lang="vi" suppressHydrationWarning className={beVietnamPro.variable}>
-      <body className="antialiased font-sans bg-[#F8FAFC] text-[#0F172A]">
+      <body className="bg-[#F8FAFC] font-sans text-[#0F172A] antialiased">
         <ProgressBar />
         <TooltipProvider>
-          <CompareProvider>
-            {children}
-          </CompareProvider>
+          <CompareProvider>{children}</CompareProvider>
         </TooltipProvider>
         <Toaster />
         <ScrollToTop />
