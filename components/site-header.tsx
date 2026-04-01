@@ -2,6 +2,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 const navLinks = [
   { label: "Laptop", href: "/products?cat=laptop" },
@@ -107,16 +108,21 @@ export function SiteHeader({ cartCount = 0 }: { cartCount?: number }) {
             <span className="text-xs">Tìm kiếm...</span>
           </Link>
           {/* Cart */}
-          <Link href="/cart" className="relative p-2 rounded-full text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors duration-200 cursor-pointer" aria-label={`Giỏ hàng (${cartCount} sản phẩm)`}>
-            <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-              <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
-            </svg>
-            {cartCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-blue-600 rounded-full text-[10px] font-bold text-white flex items-center justify-center">
-                {cartCount}
-              </span>
-            )}
-          </Link>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Link href="/cart" className="relative p-2 rounded-full text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors duration-200 cursor-pointer" aria-label={`Giỏ hàng (${cartCount} sản phẩm)`}>
+                <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                  <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
+                </svg>
+                {cartCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-blue-600 rounded-full text-[10px] font-bold text-white flex items-center justify-center">
+                    {cartCount}
+                  </span>
+                )}
+              </Link>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">Giỏ hàng ({cartCount})</TooltipContent>
+          </Tooltip>
           {/* Login / Account */}
           {isLoggedIn ? (
             <div className="relative hidden sm:block">

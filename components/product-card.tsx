@@ -1,6 +1,8 @@
 "use client"
 import Link from "next/link"
+import { toast } from "sonner"
 import { useCompare } from "@/components/compare-bar"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 interface ProductCardProps {
   slug: string
@@ -44,30 +46,44 @@ export function ProductCard({ slug, name, cat, price, old, badge, badgeColor, ac
         </svg>
         <span className={`absolute top-3 left-3 text-xs font-semibold px-3 py-1 rounded-full ${badgeColor}`}>{badge}</span>
         <div className="absolute top-3 right-3 flex items-center gap-1">
-          <button
-            onClick={(e) => { e.preventDefault(); toggle({ slug, name, cat }) }}
-            className={`p-1.5 rounded-full border transition-colors duration-200 cursor-pointer ${
-              inCompare
-                ? "bg-blue-500 border-blue-500 text-white"
-                : "bg-white border-slate-200 text-slate-400 hover:text-blue-500 hover:border-blue-200"
-            }`}
-            aria-label={inCompare ? "Bỏ so sánh" : "So sánh sản phẩm này"}
-            title={inCompare ? "Bỏ so sánh" : "So sánh"}
-          >
-            <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-              <rect x="3" y="3" width="7" height="18" rx="1"/>
-              <rect x="14" y="3" width="7" height="18" rx="1"/>
-            </svg>
-          </button>
-          <button
-            onClick={(e) => e.preventDefault()}
-            className="p-1.5 rounded-full bg-white border border-slate-200 text-slate-400 hover:text-rose-500 hover:border-rose-200 transition-colors duration-200 cursor-pointer"
-            aria-label="Yêu thích"
-          >
-            <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-              <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
-            </svg>
-          </button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={(e) => {
+                  e.preventDefault()
+                  toggle({ slug, name, cat })
+                  if (!inCompare) toast.success("Đã thêm vào so sánh", { description: name })
+                  else toast("Đã xóa khỏi so sánh", { description: name })
+                }}
+                className={`p-1.5 rounded-full border transition-colors duration-200 cursor-pointer ${
+                  inCompare
+                    ? "bg-blue-500 border-blue-500 text-white"
+                    : "bg-white border-slate-200 text-slate-400 hover:text-blue-500 hover:border-blue-200"
+                }`}
+                aria-label={inCompare ? "Bỏ so sánh" : "So sánh sản phẩm này"}
+              >
+                <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                  <rect x="3" y="3" width="7" height="18" rx="1"/>
+                  <rect x="14" y="3" width="7" height="18" rx="1"/>
+                </svg>
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="top">{inCompare ? "Bỏ so sánh" : "So sánh"}</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={(e) => { e.preventDefault(); toast.success("Đã thêm vào yêu thích", { description: name }) }}
+                className="p-1.5 rounded-full bg-white border border-slate-200 text-slate-400 hover:text-rose-500 hover:border-rose-200 transition-colors duration-200 cursor-pointer"
+                aria-label="Yêu thích"
+              >
+                <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                  <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+                </svg>
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="top">Yêu thích</TooltipContent>
+          </Tooltip>
         </div>
       </div>
       <div className="p-5 flex flex-col flex-1">
@@ -90,7 +106,7 @@ export function ProductCard({ slug, name, cat, price, old, badge, badgeColor, ac
             <div className="text-sm text-slate-300 line-through">{old}</div>
           </div>
           <button
-            onClick={(e) => e.preventDefault()}
+            onClick={(e) => { e.preventDefault(); toast.success("Đã thêm vào giỏ hàng", { description: name }) }}
             className="px-4 py-2 rounded-full text-sm font-semibold bg-slate-900 text-white hover:bg-slate-700 transition-colors duration-200 cursor-pointer"
           >
             Mua
