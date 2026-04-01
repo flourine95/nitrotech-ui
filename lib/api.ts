@@ -1,17 +1,6 @@
-/**
- * API client với auto token refresh.
- *
- * Web flow (X-Client-Type: web):
- *   - Login  → backend set refreshToken httpOnly cookie, trả accessToken trong body
- *   - Refresh → browser tự gửi cookie, không cần body
- *   - Logout  → browser tự gửi cookie, backend clear cookie
- *
- * Access token lưu trong Zustand memory only (không persist).
- */
+import { useAuthStore } from "@/store/auth"
 
 export const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000"
-
-// ── Types ─────────────────────────────────────────────────────────────────────
 
 export interface ApiError {
   status: number
@@ -27,21 +16,16 @@ export class ApiException extends Error {
   }
 }
 
-// ── Token helper ──────────────────────────────────────────────────────────────
-
 function getAccessToken(): string | null {
   if (typeof window === "undefined") return null
-  const { useAuthStore } = require("@/store/auth")
   return useAuthStore.getState().accessToken
 }
 
-// ── Refresh logic ─────────────────────────────────────────────────────────────
 
 let isRefreshing = false
 let refreshQueue: Array<(token: string | null) => void> = []
 
 async function refreshAccessToken(): Promise<string> {
-  // Web: không cần body — browser tự gửi httpOnly cookie
   const res = await fetch(`${BASE_URL}/api/auth/refresh`, {
     method: "POST",
     headers: { "Content-Type": "application/json", "X-Client-Type": "web" },
@@ -49,7 +33,7 @@ async function refreshAccessToken(): Promise<string> {
   })
 
   if (!res.ok) {
-    const { useAuthStore } = require("@/store/auth")
+
     useAuthStore.getState().clear()
     throw new ApiException({ status: 401, code: "UNAUTHORIZED", message: "Phiên đăng nhập hết hạn" })
   }
@@ -57,13 +41,12 @@ async function refreshAccessToken(): Promise<string> {
   const json = await res.json()
   const newToken: string = json.data.accessToken
 
-  const { useAuthStore } = require("@/store/auth")
+
   useAuthStore.getState().setAccessToken(newToken)
 
   return newToken
 }
 
-// ── Core fetch ────────────────────────────────────────────────────────────────
 
 interface FetchOptions extends RequestInit {
   skipAuth?: boolean

@@ -1,8 +1,6 @@
 import { apiFetch } from "./api"
 import { useAuthStore } from "@/store/auth"
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-
 export interface User {
   id: number
   name: string
@@ -13,11 +11,8 @@ export interface User {
   provider: string
 }
 
-// ── Auth API ──────────────────────────────────────────────────────────────────
 
 export async function login(email: string, password: string) {
-  // Web response: { data: { accessToken, tokenType, user } }
-  // refreshToken set as httpOnly cookie by backend (Path=/api/auth)
   const res = await apiFetch<{ data: { accessToken: string; tokenType: string; user: User } }>(
     "/api/auth/login",
     { method: "POST", body: JSON.stringify({ email, password }), skipAuth: true }
@@ -35,7 +30,6 @@ export async function register(name: string, email: string, password: string) {
 
 export async function logout() {
   try {
-    // Web: browser tự gửi cookie, không cần body
     await apiFetch("/api/auth/logout", { method: "POST" })
   } finally {
     useAuthStore.getState().clear()
