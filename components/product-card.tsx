@@ -68,7 +68,7 @@ export function ProductCard({ slug, name, cat, price, old, badge, badgeColor, ac
                 </svg>
               </button>
             </TooltipTrigger>
-            <TooltipContent side="top">{inCompare ? "Bỏ so sánh" : "So sánh"}</TooltipContent>
+            <TooltipContent>{inCompare ? "Bỏ so sánh" : "So sánh"}</TooltipContent>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
