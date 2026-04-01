@@ -1,11 +1,6 @@
 import { create } from "zustand"
 import type { User } from "@/lib/auth-api"
 
-/**
- * Access token và user chỉ lưu trong memory.
- * Refresh token được lưu trong httpOnly cookie (xử lý bởi Route Handlers).
- * Khi reload trang, gọi /api/auth/me để restore user nếu cookie còn hợp lệ.
- */
 interface AuthState {
   user: User | null
   accessToken: string | null

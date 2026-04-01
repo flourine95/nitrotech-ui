@@ -1,12 +1,11 @@
 "use client"
 import { useState } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
+import { usePathname, useRouter } from "next/navigation"
+import { toast } from "sonner"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { useAuthStore } from "@/store/auth"
+import { logout } from "@/lib/auth-api"
 
 const navLinks = [
   { label: "Laptop", href: "/products?cat=laptop" },
@@ -48,12 +47,22 @@ const announcements = [
 ]
 
 export function SiteHeader({ cartCount = 0 }: { cartCount?: number }) {
+  const router = useRouter()
+  const pathname = usePathname()
+  const user = useAuthStore((s) => s.user)
+  const isLoggedIn = !!user
+  const userName = user?.name ?? "Tài khoản"
   const [mobileOpen, setMobileOpen] = useState(false)
   const [accountOpen, setAccountOpen] = useState(false)
-  const pathname = usePathname()
 
-  const isLoggedIn = true
-  const userName = "Nguyễn Văn A"
+  async function handleLogout() {
+    try {
+      await logout()
+      router.push("/login")
+    } catch {
+      toast.error("Có lỗi xảy ra khi đăng xuất")
+    }
+  }
 
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur-md">
@@ -362,23 +371,15 @@ export function SiteHeader({ cartCount = 0 }: { cartCount?: number }) {
                       </Link>
                     </div>
                     <div className="border-t border-slate-100 py-1.5">
-                      <Link
-                        href="/login"
-                        onClick={() => setAccountOpen(false)}
-                        className="flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm text-rose-500 transition-colors duration-150 hover:bg-rose-50"
+                      <button
+                        onClick={() => { setAccountOpen(false); handleLogout() }}
+                        className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-sm text-rose-500 transition-colors duration-150 hover:bg-rose-50"
                       >
-                        <svg
-                          viewBox="0 0 24 24"
-                          className="h-4 w-4"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          aria-hidden="true"
-                        >
+                        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                           <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
                         </svg>
                         Đăng xuất
-                      </Link>
+                      </button>
                     </div>
                   </div>
                 </>
@@ -467,13 +468,12 @@ export function SiteHeader({ cartCount = 0 }: { cartCount?: number }) {
                   {l.label}
                 </Link>
               ))}
-              <Link
-                href="/login"
-                onClick={() => setMobileOpen(false)}
-                className="mt-1 block w-full cursor-pointer rounded-full border border-rose-200 py-2.5 text-center text-sm font-semibold text-rose-500"
+              <button
+                onClick={() => { setMobileOpen(false); handleLogout() }}
+                className="mt-1 w-full cursor-pointer rounded-full border border-rose-200 py-2.5 text-center text-sm font-semibold text-rose-500"
               >
                 Đăng xuất
-              </Link>
+              </button>
             </div>
           ) : (
             <Link
