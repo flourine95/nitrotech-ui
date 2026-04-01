@@ -1,7 +1,12 @@
 /**
  * API client với auto token refresh.
- * - Access token: Zustand memory only
- * - Refresh token: httpOnly cookie, chỉ được xử lý bởi Next.js Route Handlers
+ *
+ * Web flow (X-Client-Type: web):
+ *   - Login  → backend set refreshToken httpOnly cookie, trả accessToken trong body
+ *   - Refresh → browser tự gửi cookie, không cần body
+ *   - Logout  → browser tự gửi cookie, backend clear cookie
+ *
+ * Access token lưu trong Zustand memory only (không persist).
  */
 
 export const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000"
@@ -22,23 +27,26 @@ export class ApiException extends Error {
   }
 }
 
-// ── Token helpers (chỉ access token, từ Zustand) ──────────────────────────────
+// ── Token helper ──────────────────────────────────────────────────────────────
 
 function getAccessToken(): string | null {
   if (typeof window === "undefined") return null
-  // Import động để tránh circular dependency
   const { useAuthStore } = require("@/store/auth")
   return useAuthStore.getState().accessToken
 }
 
-// ── Refresh logic (gọi Next.js route handler — cookie được gửi tự động) ───────
+// ── Refresh logic ─────────────────────────────────────────────────────────────
 
 let isRefreshing = false
 let refreshQueue: Array<(token: string | null) => void> = []
 
 async function refreshAccessToken(): Promise<string> {
-  // Gọi route handler nội bộ — cookie httpOnly được gửi tự động bởi browser
-  const res = await fetch("/api/auth/refresh", { method: "POST" })
+  // Web: không cần body — browser tự gửi httpOnly cookie
+  const res = await fetch(`${BASE_URL}/api/auth/refresh`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Client-Type": "web" },
+    credentials: "include",
+  })
 
   if (!res.ok) {
     const { useAuthStore } = require("@/store/auth")
@@ -47,37 +55,34 @@ async function refreshAccessToken(): Promise<string> {
   }
 
   const json = await res.json()
-  const newAccessToken: string = json.data.accessToken
+  const newToken: string = json.data.accessToken
 
   const { useAuthStore } = require("@/store/auth")
-  useAuthStore.getState().setAccessToken(newAccessToken)
+  useAuthStore.getState().setAccessToken(newToken)
 
-  return newAccessToken
+  return newToken
 }
 
 // ── Core fetch ────────────────────────────────────────────────────────────────
 
 interface FetchOptions extends RequestInit {
-  /** Bỏ qua Authorization header (dùng cho login, register...) */
   skipAuth?: boolean
-  /** Gọi thẳng backend, bỏ qua BASE_URL prefix của Next.js */
-  external?: boolean
 }
 
 export async function apiFetch<T>(path: string, options: FetchOptions = {}): Promise<T> {
-  const { skipAuth = false, external = true, ...init } = options
-
-  const url = external ? `${BASE_URL}${path}` : path
+  const { skipAuth = false, ...init } = options
 
   const buildHeaders = (token?: string | null): Record<string, string> => ({
     "Content-Type": "application/json",
+    "X-Client-Type": "web",
     ...(init.headers as Record<string, string>),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   })
 
-  let res = await fetch(url, {
+  let res = await fetch(`${BASE_URL}${path}`, {
     ...init,
     headers: buildHeaders(skipAuth ? null : getAccessToken()),
+    credentials: "include", // gửi cookie cho refresh/logout
   })
 
   // Auto-refresh on 401
@@ -87,7 +92,11 @@ export async function apiFetch<T>(path: string, options: FetchOptions = {}): Pro
         refreshQueue.push(resolve)
       })
       if (!newToken) throw new ApiException({ status: 401, code: "UNAUTHORIZED", message: "Phiên đăng nhập hết hạn" })
-      res = await fetch(url, { ...init, headers: buildHeaders(newToken) })
+      res = await fetch(`${BASE_URL}${path}`, {
+        ...init,
+        headers: buildHeaders(newToken),
+        credentials: "include",
+      })
     } else {
       isRefreshing = true
       let newToken: string | null = null
@@ -101,7 +110,11 @@ export async function apiFetch<T>(path: string, options: FetchOptions = {}): Pro
         refreshQueue = []
         isRefreshing = false
       }
-      res = await fetch(url, { ...init, headers: buildHeaders(newToken) })
+      res = await fetch(`${BASE_URL}${path}`, {
+        ...init,
+        headers: buildHeaders(newToken),
+        credentials: "include",
+      })
     }
   }
 

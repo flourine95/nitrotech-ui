@@ -16,10 +16,11 @@ export interface User {
 // ── Auth API ──────────────────────────────────────────────────────────────────
 
 export async function login(email: string, password: string) {
-  // Gọi Next.js route handler — nó sẽ set httpOnly cookie cho refresh token
-  const res = await apiFetch<{ data: { accessToken: string; user: User } }>(
+  // Web response: { data: { accessToken, tokenType, user } }
+  // refreshToken set as httpOnly cookie by backend (Path=/api/auth)
+  const res = await apiFetch<{ data: { accessToken: string; tokenType: string; user: User } }>(
     "/api/auth/login",
-    { method: "POST", body: JSON.stringify({ email, password }), skipAuth: true, external: false }
+    { method: "POST", body: JSON.stringify({ email, password }), skipAuth: true }
   )
   useAuthStore.getState().setAuth(res.data.user, res.data.accessToken)
   return res.data
@@ -28,22 +29,14 @@ export async function login(email: string, password: string) {
 export async function register(name: string, email: string, password: string) {
   return apiFetch<{ data: { user: Pick<User, "id" | "name" | "email"> }; message: string }>(
     "/api/auth/register",
-    {
-      method: "POST",
-      body: JSON.stringify({ name, email, password }),
-      skipAuth: true,
-    }
+    { method: "POST", body: JSON.stringify({ name, email, password }), skipAuth: true }
   )
 }
 
 export async function logout() {
-  const token = useAuthStore.getState().accessToken
   try {
-    // Route handler sẽ xóa httpOnly cookie
-    await fetch("/api/auth/logout", {
-      method: "POST",
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    })
+    // Web: browser tự gửi cookie, không cần body
+    await apiFetch("/api/auth/logout", { method: "POST" })
   } finally {
     useAuthStore.getState().clear()
   }
