@@ -9,10 +9,34 @@ export function AuthInitializer() {
   useEffect(() => {
     if (ran.current) return
     ran.current = true
-    const { accessToken } = useAuthStore.getState()
-    if (accessToken) {
-      getMe().catch(() => useAuthStore.getState().clear())
+
+    async function init() {
+      const { accessToken } = useAuthStore.getState()
+
+      if (accessToken) {
+        // Token còn trong memory (SPA navigation) — chỉ cần fetch user
+        try {
+          await getMe()
+        } catch {
+          useAuthStore.getState().clear()
+        }
+        return
+      }
+
+      // Reload trang — gọi route handler để verify refreshToken cookie
+      // và nhận lại accessToken + set isLoggedIn cookie với Path=/
+      try {
+        const res = await fetch("/api/session", { method: "POST" })
+        if (!res.ok) return
+        const { accessToken: newToken } = await res.json()
+        useAuthStore.getState().setAccessToken(newToken)
+        await getMe()
+      } catch {
+        useAuthStore.getState().clear()
+      }
     }
+
+    init()
   }, [])
 
   return null

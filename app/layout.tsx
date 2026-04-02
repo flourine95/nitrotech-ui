@@ -6,7 +6,7 @@ import { ScrollToTop } from "@/components/scroll-to-top"
 import { CompareProvider } from "@/components/compare-bar"
 import { Toaster } from "@/components/toaster"
 import { TooltipProvider } from "@/components/ui/tooltip"
-import { AuthInitializer } from "@/components/auth-initializer"
+import { NextAuthProvider } from "@/components/session-provider"
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ["latin", "vietnamese"],
@@ -32,12 +32,13 @@ export default function RootLayout({
     <html lang="vi" suppressHydrationWarning className={beVietnamPro.variable}>
       <body className="bg-[#F8FAFC] font-sans text-[#0F172A] antialiased">
         <ProgressBar />
-        <AuthInitializer />
-        <TooltipProvider>
-          <CompareProvider>{children}</CompareProvider>
-        </TooltipProvider>
-        <Toaster />
-        <ScrollToTop />
+        <NextAuthProvider>
+          <TooltipProvider>
+            <CompareProvider>{children}</CompareProvider>
+          </TooltipProvider>
+          <Toaster />
+          <ScrollToTop />
+        </NextAuthProvider>
       </body>
     </html>
   )

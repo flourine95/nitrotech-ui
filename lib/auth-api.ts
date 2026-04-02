@@ -1,5 +1,5 @@
+import { signIn, signOut } from "next-auth/react"
 import { apiFetch } from "./api"
-import { useAuthStore } from "@/store/auth"
 
 export interface User {
   id: number
@@ -11,42 +11,26 @@ export interface User {
   provider: string
 }
 
-
 export async function login(email: string, password: string) {
-  const res = await apiFetch<{ data: { accessToken: string; tokenType: string; user: User } }>(
-    "/api/auth/login",
-    { method: "POST", body: JSON.stringify({ email, password }), skipAuth: true }
-  )
-  useAuthStore.getState().setAuth(res.data.user, res.data.accessToken)
-  return res.data
+  const result = await signIn("credentials", { email, password, redirect: false })
+  if (result?.error) throw new Error(result.error)
+  return result
 }
 
-export async function register(name: string, email: string, password: string) {
-  return apiFetch<{ data: { user: Pick<User, "id" | "name" | "email"> }; message: string }>(
-    "/api/auth/register",
-    { method: "POST", body: JSON.stringify({ name, email, password }), skipAuth: true }
-  )
-}
-
-export async function logout() {
-  try {
-    await apiFetch("/api/auth/logout", { method: "POST" })
-  } finally {
-    useAuthStore.getState().clear()
-  }
+export async function logout(redirectTo = "/login") {
+  await signOut({ callbackUrl: redirectTo })
 }
 
 export async function logoutAll() {
   try {
     await apiFetch("/api/auth/logout-all", { method: "POST" })
   } finally {
-    useAuthStore.getState().clear()
+    await signOut({ callbackUrl: "/login" })
   }
 }
 
 export async function getMe() {
   const res = await apiFetch<{ data: User }>("/api/auth/me")
-  useAuthStore.getState().setUser(res.data)
   return res.data
 }
 
@@ -55,7 +39,6 @@ export async function updateProfile(data: { name?: string; phone?: string; avata
     method: "PUT",
     body: JSON.stringify(data),
   })
-  useAuthStore.getState().setUser(res.data)
   return res.data
 }
 
@@ -96,4 +79,11 @@ export async function resendVerification(email: string) {
     body: JSON.stringify({ email }),
     skipAuth: true,
   })
+}
+
+export async function register(name: string, email: string, password: string) {
+  return apiFetch<{ data: { user: Pick<User, "id" | "name" | "email"> }; message: string }>(
+    "/api/auth/register",
+    { method: "POST", body: JSON.stringify({ name, email, password }), skipAuth: true }
+  )
 }

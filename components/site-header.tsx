@@ -4,7 +4,7 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
-import { useAuthStore } from "@/store/auth"
+import { useSession } from "next-auth/react"
 import { logout } from "@/lib/auth-api"
 
 const navLinks = [
@@ -49,7 +49,8 @@ const announcements = [
 export function SiteHeader({ cartCount = 0 }: { cartCount?: number }) {
   const router = useRouter()
   const pathname = usePathname()
-  const user = useAuthStore((s) => s.user)
+  const { data: session } = useSession()
+  const user = session?.user
   const isLoggedIn = !!user
   const userName = user?.name ?? "Tài khoản"
   const [mobileOpen, setMobileOpen] = useState(false)

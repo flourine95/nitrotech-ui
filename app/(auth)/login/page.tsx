@@ -1,16 +1,16 @@
 "use client"
-import { useState } from "react"
+import { useState, Suspense } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
 import { loginSchema, type LoginInput } from "@/lib/schemas/auth"
 import { login } from "@/lib/auth-api"
-import { ApiException } from "@/lib/api"
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [showPass, setShowPass] = useState(false)
 
   const {
@@ -24,20 +24,16 @@ export default function LoginPage() {
     try {
       await login(data.email, data.password)
       toast.success("Đăng nhập thành công")
-      router.push("/")
+      router.push(searchParams.get("from") ?? "/")
+      router.refresh()
     } catch (e) {
-      if (e instanceof ApiException) {
-        if (e.error.code === "VALIDATION_ERROR" && e.error.errors) {
-          Object.entries(e.error.errors).forEach(([field, msg]) =>
-            setError(field as keyof LoginInput, { message: msg })
-          )
-        } else if (e.error.code === "ACCOUNT_NOT_ACTIVE") {
-          toast.error("Tài khoản chưa xác thực email", {
-            description: "Vui lòng kiểm tra hộp thư và xác thực tài khoản.",
-          })
-        } else {
-          toast.error(e.error.message)
-        }
+      const msg = e instanceof Error ? e.message : "Đăng nhập thất bại"
+      if (msg.includes("ACCOUNT_NOT_ACTIVE")) {
+        toast.error("Tài khoản chưa xác thực email")
+      } else if (msg.includes("INVALID_CREDENTIALS") || msg.includes("incorrect")) {
+        toast.error("Email hoặc mật khẩu không đúng")
+      } else {
+        toast.error(msg)
       }
     }
   }
@@ -155,5 +151,13 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="w-full max-w-md h-96 animate-pulse rounded-3xl bg-slate-100" />}>
+      <LoginForm />
+    </Suspense>
   )
 }

@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { toast } from "sonner"
-import { useAuthStore } from "@/store/auth"
+import { useSession } from "next-auth/react"
 import { updateProfile, getMe } from "@/lib/auth-api"
 import { ApiException } from "@/lib/api"
 
@@ -15,7 +15,13 @@ const profileSchema = z.object({
 type ProfileInput = z.infer<typeof profileSchema>
 
 export default function ProfilePage() {
-  const user = useAuthStore((s) => s.user)
+  const { data: session, update } = useSession()
+  const user = session ? {
+    name: session.user.name ?? "",
+    email: session.user.email ?? "",
+    phone: null as string | null,
+    avatar: session.user.image ?? null,
+  } : null
 
   const { register, handleSubmit, reset, formState: { errors, isSubmitting, isDirty } } =
     useForm<ProfileInput>({ resolver: zodResolver(profileSchema) })
