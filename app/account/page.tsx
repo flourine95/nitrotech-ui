@@ -1,39 +1,39 @@
-import type { Metadata } from "next"
-import Link from "next/link"
+import type { Metadata } from 'next';
+import Link from 'next/link';
 
-export const metadata: Metadata = { title: "Tài khoản của tôi" }
+export const metadata: Metadata = { title: 'Tài khoản của tôi' };
 
 const recentOrders = [
   {
-    id: "NT-2025-0312",
-    date: "12/03/2025",
-    items: "MacBook Pro M4, RTX 4080",
-    total: "65.490.000₫",
-    status: "delivered",
+    id: 'NT-2025-0312',
+    date: '12/03/2025',
+    items: 'MacBook Pro M4, RTX 4080',
+    total: '65.490.000₫',
+    status: 'delivered',
   },
   {
-    id: "NT-2025-0289",
-    date: "28/02/2025",
-    items: "Samsung 990 Pro 2TB × 2",
-    total: "6.580.000₫",
-    status: "delivered",
+    id: 'NT-2025-0289',
+    date: '28/02/2025',
+    items: 'Samsung 990 Pro 2TB × 2',
+    total: '6.580.000₫',
+    status: 'delivered',
   },
   {
-    id: "NT-2025-0301",
-    date: "05/03/2025",
-    items: "Corsair 32GB DDR5",
-    total: "2.490.000₫",
-    status: "shipping",
+    id: 'NT-2025-0301',
+    date: '05/03/2025',
+    items: 'Corsair 32GB DDR5',
+    total: '2.490.000₫',
+    status: 'shipping',
   },
-]
+];
 
 const statusMap: Record<string, { label: string; color: string }> = {
-  pending: { label: "Chờ xác nhận", color: "bg-amber-100 text-amber-700" },
-  confirmed: { label: "Đã xác nhận", color: "bg-blue-100 text-blue-700" },
-  shipping: { label: "Đang giao", color: "bg-purple-100 text-purple-700" },
-  delivered: { label: "Đã nhận", color: "bg-green-100 text-green-700" },
-  cancelled: { label: "Đã hủy", color: "bg-slate-100 text-slate-500" },
-}
+  pending: { label: 'Chờ xác nhận', color: 'bg-amber-100 text-amber-700' },
+  confirmed: { label: 'Đã xác nhận', color: 'bg-blue-100 text-blue-700' },
+  shipping: { label: 'Đang giao', color: 'bg-purple-100 text-purple-700' },
+  delivered: { label: 'Đã nhận', color: 'bg-green-100 text-green-700' },
+  cancelled: { label: 'Đã hủy', color: 'bg-slate-100 text-slate-500' },
+};
 
 export default function AccountPage() {
   return (
@@ -44,14 +44,11 @@ export default function AccountPage() {
         <h1 className="mb-4 text-2xl font-bold">Nguyễn Văn A 👋</h1>
         <div className="grid grid-cols-3 gap-4">
           {[
-            { label: "Đơn hàng", value: "12" },
-            { label: "Yêu thích", value: "8" },
-            { label: "Điểm thưởng", value: "1.240" },
+            { label: 'Đơn hàng', value: '12' },
+            { label: 'Yêu thích', value: '8' },
+            { label: 'Điểm thưởng', value: '1.240' },
           ].map((s) => (
-            <div
-              key={s.label}
-              className="rounded-2xl bg-white/10 p-3 text-center"
-            >
+            <div key={s.label} className="rounded-2xl bg-white/10 p-3 text-center">
               <div className="text-xl font-bold">{s.value}</div>
               <div className="mt-0.5 text-xs text-slate-400">{s.label}</div>
             </div>
@@ -63,8 +60,8 @@ export default function AccountPage() {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
           {
-            href: "/account/orders",
-            label: "Đơn hàng",
+            href: '/account/orders',
+            label: 'Đơn hàng',
             icon: (
               <svg
                 viewBox="0 0 24 24"
@@ -78,11 +75,11 @@ export default function AccountPage() {
                 <path d="M16 10a4 4 0 01-8 0" />
               </svg>
             ),
-            color: "text-blue-600 bg-blue-50",
+            color: 'text-blue-600 bg-blue-50',
           },
           {
-            href: "/account/wishlist",
-            label: "Yêu thích",
+            href: '/account/wishlist',
+            label: 'Yêu thích',
             icon: (
               <svg
                 viewBox="0 0 24 24"
@@ -94,11 +91,11 @@ export default function AccountPage() {
                 <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
               </svg>
             ),
-            color: "text-rose-600 bg-rose-50",
+            color: 'text-rose-600 bg-rose-50',
           },
           {
-            href: "/account/addresses",
-            label: "Địa chỉ",
+            href: '/account/addresses',
+            label: 'Địa chỉ',
             icon: (
               <svg
                 viewBox="0 0 24 24"
@@ -111,11 +108,11 @@ export default function AccountPage() {
                 <circle cx="12" cy="10" r="3" />
               </svg>
             ),
-            color: "text-green-600 bg-green-50",
+            color: 'text-green-600 bg-green-50',
           },
           {
-            href: "/account/security",
-            label: "Bảo mật",
+            href: '/account/security',
+            label: 'Bảo mật',
             icon: (
               <svg
                 viewBox="0 0 24 24"
@@ -128,7 +125,7 @@ export default function AccountPage() {
                 <path d="M7 11V7a5 5 0 0110 0v4" />
               </svg>
             ),
-            color: "text-purple-600 bg-purple-50",
+            color: 'text-purple-600 bg-purple-50',
           },
         ].map((a) => (
           <Link
@@ -136,14 +133,10 @@ export default function AccountPage() {
             href={a.href}
             className="flex cursor-pointer flex-col items-center gap-2.5 rounded-2xl border border-slate-200 bg-white p-5 transition-all duration-200 hover:shadow-md"
           >
-            <div
-              className={`h-10 w-10 rounded-xl ${a.color} flex items-center justify-center`}
-            >
+            <div className={`h-10 w-10 rounded-xl ${a.color} flex items-center justify-center`}>
               {a.icon}
             </div>
-            <span className="text-sm font-medium text-slate-700">
-              {a.label}
-            </span>
+            <span className="text-sm font-medium text-slate-700">{a.label}</span>
           </Link>
         ))}
       </div>
@@ -168,26 +161,18 @@ export default function AccountPage() {
             >
               <div className="min-w-0 flex-1">
                 <div className="mb-0.5 flex items-center gap-2">
-                  <span className="text-sm font-semibold text-slate-900">
-                    {order.id}
-                  </span>
+                  <span className="text-sm font-semibold text-slate-900">{order.id}</span>
                   <span
                     className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusMap[order.status].color}`}
                   >
                     {statusMap[order.status].label}
                   </span>
                 </div>
-                <div className="truncate text-xs text-slate-400">
-                  {order.items}
-                </div>
-                <div className="mt-0.5 text-xs text-slate-400">
-                  {order.date}
-                </div>
+                <div className="truncate text-xs text-slate-400">{order.items}</div>
+                <div className="mt-0.5 text-xs text-slate-400">{order.date}</div>
               </div>
               <div className="ml-4 flex shrink-0 items-center gap-3">
-                <span className="text-sm font-bold text-slate-900">
-                  {order.total}
-                </span>
+                <span className="text-sm font-bold text-slate-900">{order.total}</span>
                 <svg
                   viewBox="0 0 24 24"
                   className="h-4 w-4 text-slate-300"
@@ -211,10 +196,7 @@ export default function AccountPage() {
           <span className="text-2xl font-bold text-blue-600">1.240 điểm</span>
         </div>
         <div className="mb-2 h-2.5 w-full overflow-hidden rounded-full bg-slate-100">
-          <div
-            className="h-full rounded-full bg-blue-500"
-            style={{ width: "62%" }}
-          />
+          <div className="h-full rounded-full bg-blue-500" style={{ width: '62%' }} />
         </div>
         <div className="flex justify-between text-xs text-slate-400">
           <span>1.240 / 2.000 điểm</span>
@@ -222,5 +204,5 @@ export default function AccountPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

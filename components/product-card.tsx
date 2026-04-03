@@ -1,25 +1,21 @@
-"use client"
-import Link from "next/link"
-import { toast } from "sonner"
-import { useCompare } from "@/components/compare-bar"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
+'use client';
+import Link from 'next/link';
+import { toast } from 'sonner';
+import { useCompare } from '@/components/compare-bar';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface ProductCardProps {
-  slug: string
-  name: string
-  cat: string
-  price: string
-  old: string
-  badge: string
-  badgeColor: string
-  accent?: string
-  rating: number
-  reviews: number
-  specs?: string[]
+  slug: string;
+  name: string;
+  cat: string;
+  price: string;
+  old: string;
+  badge: string;
+  badgeColor: string;
+  accent?: string;
+  rating: number;
+  reviews: number;
+  specs?: string[];
 }
 
 function Stars({ rating }: { rating: number }) {
@@ -29,14 +25,14 @@ function Stars({ rating }: { rating: number }) {
         <svg
           key={s}
           viewBox="0 0 24 24"
-          className={`h-3 w-3 ${s <= Math.floor(rating) ? "text-amber-400" : "text-slate-200"} fill-current`}
+          className={`h-3 w-3 ${s <= Math.floor(rating) ? 'text-amber-400' : 'text-slate-200'} fill-current`}
           aria-hidden="true"
         >
           <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
         </svg>
       ))}
     </div>
-  )
+  );
 }
 
 export function ProductCard({
@@ -47,13 +43,13 @@ export function ProductCard({
   old,
   badge,
   badgeColor,
-  accent = "",
+  accent = '',
   rating,
   reviews,
   specs,
 }: ProductCardProps) {
-  const { toggle, has } = useCompare()
-  const inCompare = has(slug)
+  const { toggle, has } = useCompare();
+  const inCompare = has(slug);
 
   return (
     <Link
@@ -90,18 +86,17 @@ export function ProductCard({
             <TooltipTrigger asChild>
               <button
                 onClick={(e) => {
-                  e.preventDefault()
-                  toggle({ slug, name, cat })
-                  if (!inCompare)
-                    toast.success("Đã thêm vào so sánh", { description: name })
-                  else toast("Đã xóa khỏi so sánh", { description: name })
+                  e.preventDefault();
+                  toggle({ slug, name, cat });
+                  if (!inCompare) toast.success('Đã thêm vào so sánh', { description: name });
+                  else toast('Đã xóa khỏi so sánh', { description: name });
                 }}
                 className={`cursor-pointer rounded-full border p-1.5 transition-colors duration-200 ${
                   inCompare
-                    ? "border-blue-500 bg-blue-500 text-white"
-                    : "border-slate-200 bg-white text-slate-400 hover:border-blue-200 hover:text-blue-500"
+                    ? 'border-blue-500 bg-blue-500 text-white'
+                    : 'border-slate-200 bg-white text-slate-400 hover:border-blue-200 hover:text-blue-500'
                 }`}
-                aria-label={inCompare ? "Bỏ so sánh" : "So sánh sản phẩm này"}
+                aria-label={inCompare ? 'Bỏ so sánh' : 'So sánh sản phẩm này'}
               >
                 <svg
                   viewBox="0 0 24 24"
@@ -116,16 +111,14 @@ export function ProductCard({
                 </svg>
               </button>
             </TooltipTrigger>
-            <TooltipContent>
-              {inCompare ? "Bỏ so sánh" : "So sánh"}
-            </TooltipContent>
+            <TooltipContent>{inCompare ? 'Bỏ so sánh' : 'So sánh'}</TooltipContent>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
               <button
                 onClick={(e) => {
-                  e.preventDefault()
-                  toast.success("Đã thêm vào yêu thích", { description: name })
+                  e.preventDefault();
+                  toast.success('Đã thêm vào yêu thích', { description: name });
                 }}
                 className="cursor-pointer rounded-full border border-slate-200 bg-white p-1.5 text-slate-400 transition-colors duration-200 hover:border-rose-200 hover:text-rose-500"
                 aria-label="Yêu thích"
@@ -148,9 +141,7 @@ export function ProductCard({
       </div>
       <div className="flex flex-1 flex-col p-5">
         <div className="mb-1 text-sm text-slate-400">{cat}</div>
-        <div className="mb-2 text-base leading-snug font-semibold text-slate-900">
-          {name}
-        </div>
+        <div className="mb-2 text-base leading-snug font-semibold text-slate-900">{name}</div>
         {specs && (
           <div className="mb-2 flex flex-wrap gap-1.5">
             {specs.map((s) => (
@@ -174,8 +165,8 @@ export function ProductCard({
           </div>
           <button
             onClick={(e) => {
-              e.preventDefault()
-              toast.success("Đã thêm vào giỏ hàng", { description: name })
+              e.preventDefault();
+              toast.success('Đã thêm vào giỏ hàng', { description: name });
             }}
             className="cursor-pointer rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:bg-slate-700"
           >
@@ -184,5 +175,5 @@ export function ProductCard({
         </div>
       </div>
     </Link>
-  )
+  );
 }

@@ -1,11 +1,11 @@
-import Link from "next/link"
-import { SiteHeader } from "@/components/site-header"
-import { SiteFooter } from "@/components/site-footer"
+import Link from 'next/link';
+import { SiteHeader } from '@/components/site-header';
+import { SiteFooter } from '@/components/site-footer';
 
 const sidebarLinks = [
   {
-    href: "/account",
-    label: "Tổng quan",
+    href: '/account',
+    label: 'Tổng quan',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -21,8 +21,8 @@ const sidebarLinks = [
     ),
   },
   {
-    href: "/account/orders",
-    label: "Đơn hàng",
+    href: '/account/orders',
+    label: 'Đơn hàng',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -39,8 +39,8 @@ const sidebarLinks = [
     ),
   },
   {
-    href: "/account/wishlist",
-    label: "Yêu thích",
+    href: '/account/wishlist',
+    label: 'Yêu thích',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -55,8 +55,8 @@ const sidebarLinks = [
     ),
   },
   {
-    href: "/account/profile",
-    label: "Thông tin cá nhân",
+    href: '/account/profile',
+    label: 'Thông tin cá nhân',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -72,8 +72,8 @@ const sidebarLinks = [
     ),
   },
   {
-    href: "/account/addresses",
-    label: "Địa chỉ",
+    href: '/account/addresses',
+    label: 'Địa chỉ',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -89,8 +89,8 @@ const sidebarLinks = [
     ),
   },
   {
-    href: "/account/security",
-    label: "Bảo mật",
+    href: '/account/security',
+    label: 'Bảo mật',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -106,8 +106,8 @@ const sidebarLinks = [
     ),
   },
   {
-    href: "/account/notifications",
-    label: "Thông báo",
+    href: '/account/notifications',
+    label: 'Thông báo',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -121,13 +121,9 @@ const sidebarLinks = [
       </svg>
     ),
   },
-]
+];
 
-export default function AccountLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function AccountLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
       <SiteHeader cartCount={3} />
@@ -172,9 +168,7 @@ export default function AccountLayout({
                     <div className="truncate text-sm font-semibold text-slate-900">
                       Nguyễn Văn A
                     </div>
-                    <div className="truncate text-xs text-slate-400">
-                      email@example.com
-                    </div>
+                    <div className="truncate text-xs text-slate-400">email@example.com</div>
                   </div>
                 </div>
 
@@ -222,5 +216,5 @@ export default function AccountLayout({
       </div>
       <SiteFooter />
     </>
-  )
+  );
 }

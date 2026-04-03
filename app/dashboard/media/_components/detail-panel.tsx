@@ -1,29 +1,29 @@
-"use client"
-import { useCopy } from "@/hooks/use-copy"
-import { formatBytes, formatDate } from "@/lib/utils"
-import { type CloudinaryResource } from "@/lib/upload-api"
+'use client';
+import { useCopy } from '@/hooks/use-copy';
+import { formatBytes, formatDate } from '@/lib/utils';
+import { type CloudinaryResource } from '@/lib/upload-api';
 
 const META_ROWS = (asset: CloudinaryResource) => [
-  { label: "Tên file", value: `${asset.display_name}.${asset.format}` },
-  { label: "Kích thước", value: `${asset.width} × ${asset.height}px` },
-  { label: "Dung lượng", value: formatBytes(asset.bytes) },
-  { label: "Định dạng", value: asset.format.toUpperCase() },
-  { label: "Ngày tạo", value: formatDate(asset.created_at) },
-  { label: "Folder", value: asset.asset_folder },
-]
+  { label: 'Tên file', value: `${asset.display_name}.${asset.format}` },
+  { label: 'Kích thước', value: `${asset.width} × ${asset.height}px` },
+  { label: 'Dung lượng', value: formatBytes(asset.bytes) },
+  { label: 'Định dạng', value: asset.format.toUpperCase() },
+  { label: 'Ngày tạo', value: formatDate(asset.created_at) },
+  { label: 'Folder', value: asset.asset_folder },
+];
 
 const COPY_FIELDS = (asset: CloudinaryResource) => [
-  { label: "URL", value: asset.secure_url, key: "url" },
-  { label: "Public ID", value: asset.public_id, key: "pid" },
-]
+  { label: 'URL', value: asset.secure_url, key: 'url' },
+  { label: 'Public ID', value: asset.public_id, key: 'pid' },
+];
 
 interface Props {
-  asset: CloudinaryResource
-  onClose: () => void
+  asset: CloudinaryResource;
+  onClose: () => void;
 }
 
 export function DetailPanel({ asset, onClose }: Props) {
-  const { copied, copy } = useCopy()
+  const { copied, copy } = useCopy();
 
   return (
     <aside className="flex w-72 shrink-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white">
@@ -78,10 +78,7 @@ export function DetailPanel({ asset, onClose }: Props) {
           </p>
           <div className="space-y-2">
             {META_ROWS(asset).map(({ label, value }) => (
-              <div
-                key={label}
-                className="flex items-start justify-between gap-2"
-              >
+              <div key={label} className="flex items-start justify-between gap-2">
                 <span className="shrink-0 text-xs text-slate-400">{label}</span>
                 <span className="max-w-[60%] truncate text-right text-xs font-medium text-slate-700">
                   {value}
@@ -92,17 +89,13 @@ export function DetailPanel({ asset, onClose }: Props) {
         </div>
 
         <div className="space-y-2">
-          <p className="text-xs font-semibold tracking-wide text-slate-400 uppercase">
-            Sao chép
-          </p>
+          <p className="text-xs font-semibold tracking-wide text-slate-400 uppercase">Sao chép</p>
           {COPY_FIELDS(asset).map(({ label, value, key }) => (
             <div
               key={key}
               className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2"
             >
-              <code className="flex-1 truncate text-xs text-slate-600">
-                {value}
-              </code>
+              <code className="flex-1 truncate text-xs text-slate-600">{value}</code>
               <button
                 onClick={() => copy(value, key)}
                 className="shrink-0 cursor-pointer rounded-lg p-1 text-slate-400 transition-colors hover:bg-slate-200 hover:text-slate-700"
@@ -136,5 +129,5 @@ export function DetailPanel({ asset, onClose }: Props) {
         </div>
       </div>
     </aside>
-  )
+  );
 }

@@ -1,9 +1,9 @@
-import type { Metadata } from "next"
-import Link from "next/link"
-import { SiteHeader } from "@/components/site-header"
-import { SiteFooter } from "@/components/site-footer"
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import { SiteHeader } from '@/components/site-header';
+import { SiteFooter } from '@/components/site-footer';
 
-export const metadata: Metadata = { title: "Đặt hàng thành công" }
+export const metadata: Metadata = { title: 'Đặt hàng thành công' };
 
 export default function CheckoutSuccessPage() {
   return (
@@ -22,12 +22,9 @@ export default function CheckoutSuccessPage() {
             </svg>
           </div>
 
-          <h1 className="mb-2 text-2xl font-bold text-slate-900">
-            Đặt hàng thành công!
-          </h1>
+          <h1 className="mb-2 text-2xl font-bold text-slate-900">Đặt hàng thành công!</h1>
           <p className="mb-8 text-slate-500">
-            Cảm ơn bạn đã mua hàng tại NitroTech. Đơn hàng của bạn đang được xử
-            lý.
+            Cảm ơn bạn đã mua hàng tại NitroTech. Đơn hàng của bạn đang được xử lý.
           </p>
 
           {/* Order info card */}
@@ -45,14 +42,14 @@ export default function CheckoutSuccessPage() {
             <div className="mb-4 space-y-3">
               {[
                 {
-                  name: "MacBook Pro M4",
-                  variant: "16GB / 512GB",
-                  price: "42.990.000₫",
+                  name: 'MacBook Pro M4',
+                  variant: '16GB / 512GB',
+                  price: '42.990.000₫',
                 },
                 {
-                  name: "RTX 4080 Super",
-                  variant: "16GB GDDR6X",
-                  price: "22.500.000₫",
+                  name: 'RTX 4080 Super',
+                  variant: '16GB GDDR6X',
+                  price: '22.500.000₫',
                 },
               ].map((item) => (
                 <div key={item.name} className="flex items-center gap-3">
@@ -70,14 +67,10 @@ export default function CheckoutSuccessPage() {
                     </svg>
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-medium text-slate-900">
-                      {item.name}
-                    </div>
+                    <div className="truncate text-sm font-medium text-slate-900">{item.name}</div>
                     <div className="text-xs text-slate-400">{item.variant}</div>
                   </div>
-                  <div className="shrink-0 text-sm font-semibold text-slate-900">
-                    {item.price}
-                  </div>
+                  <div className="shrink-0 text-sm font-semibold text-slate-900">{item.price}</div>
                 </div>
               ))}
             </div>
@@ -112,7 +105,7 @@ export default function CheckoutSuccessPage() {
               <polyline points="22,6 12,13 2,6" />
             </svg>
             <p className="text-sm text-blue-700">
-              Xác nhận đơn hàng đã được gửi đến{" "}
+              Xác nhận đơn hàng đã được gửi đến{' '}
               <span className="font-semibold">email@example.com</span>
             </p>
           </div>
@@ -136,5 +129,5 @@ export default function CheckoutSuccessPage() {
       </main>
       <SiteFooter />
     </>
-  )
+  );
 }

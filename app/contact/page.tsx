@@ -1,17 +1,17 @@
-import type { Metadata } from "next"
-import Link from "next/link"
-import { SiteHeader } from "@/components/site-header"
-import { SiteFooter } from "@/components/site-footer"
-import { ContactForm } from "./contact-form"
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import { SiteHeader } from '@/components/site-header';
+import { SiteFooter } from '@/components/site-footer';
+import { ContactForm } from './contact-form';
 
-export const metadata: Metadata = { title: "Liên hệ" }
+export const metadata: Metadata = { title: 'Liên hệ' };
 
 const channels = [
   {
-    title: "Live Chat",
-    desc: "Phản hồi trong vòng 2 phút",
-    detail: "Thứ 2 – CN, 8:00 – 22:00",
-    iconBg: "bg-blue-100 text-blue-600",
+    title: 'Live Chat',
+    desc: 'Phản hồi trong vòng 2 phút',
+    detail: 'Thứ 2 – CN, 8:00 – 22:00',
+    iconBg: 'bg-blue-100 text-blue-600',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -26,10 +26,10 @@ const channels = [
     ),
   },
   {
-    title: "Hotline",
-    desc: "1800 6789 (miễn phí)",
-    detail: "Thứ 2 – CN, 8:00 – 20:00",
-    iconBg: "bg-emerald-100 text-emerald-600",
+    title: 'Hotline',
+    desc: '1800 6789 (miễn phí)',
+    detail: 'Thứ 2 – CN, 8:00 – 20:00',
+    iconBg: 'bg-emerald-100 text-emerald-600',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -44,10 +44,10 @@ const channels = [
     ),
   },
   {
-    title: "Email",
-    desc: "support@nitrotech.vn",
-    detail: "Phản hồi trong 24 giờ",
-    iconBg: "bg-violet-100 text-violet-600",
+    title: 'Email',
+    desc: 'support@nitrotech.vn',
+    detail: 'Phản hồi trong 24 giờ',
+    iconBg: 'bg-violet-100 text-violet-600',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -62,7 +62,7 @@ const channels = [
       </svg>
     ),
   },
-]
+];
 
 export default function ContactPage() {
   return (
@@ -71,10 +71,7 @@ export default function ContactPage() {
       <main>
         {/* Breadcrumb */}
         <div className="mx-auto max-w-7xl px-6 py-3">
-          <nav
-            aria-label="Breadcrumb"
-            className="flex items-center gap-2 text-sm text-slate-400"
-          >
+          <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm text-slate-400">
             <Link
               href="/"
               className="cursor-pointer transition-colors duration-150 hover:text-slate-700"
@@ -96,12 +93,8 @@ export default function ContactPage() {
         </div>
 
         <div className="mx-auto max-w-7xl px-6 py-10">
-          <h1 className="mb-2 text-3xl font-bold text-slate-900">
-            Liên hệ với chúng tôi
-          </h1>
-          <p className="mb-10 text-slate-500">
-            Chúng tôi luôn sẵn sàng hỗ trợ bạn.
-          </p>
+          <h1 className="mb-2 text-3xl font-bold text-slate-900">Liên hệ với chúng tôi</h1>
+          <p className="mb-10 text-slate-500">Chúng tôi luôn sẵn sàng hỗ trợ bạn.</p>
 
           <div className="grid gap-12 lg:grid-cols-2">
             {/* Form */}
@@ -112,14 +105,12 @@ export default function ContactPage() {
             {/* Info */}
             <div className="space-y-8">
               <div>
-                <h2 className="mb-5 text-lg font-bold text-slate-900">
-                  Thông tin liên hệ
-                </h2>
+                <h2 className="mb-5 text-lg font-bold text-slate-900">Thông tin liên hệ</h2>
                 <div className="space-y-4">
                   {[
                     {
-                      label: "Địa chỉ",
-                      value: "123 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh",
+                      label: 'Địa chỉ',
+                      value: '123 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh',
                       icon: (
                         <svg
                           viewBox="0 0 24 24"
@@ -135,8 +126,8 @@ export default function ContactPage() {
                       ),
                     },
                     {
-                      label: "Điện thoại",
-                      value: "1800 6789 (miễn phí)",
+                      label: 'Điện thoại',
+                      value: '1800 6789 (miễn phí)',
                       icon: (
                         <svg
                           viewBox="0 0 24 24"
@@ -151,8 +142,8 @@ export default function ContactPage() {
                       ),
                     },
                     {
-                      label: "Email",
-                      value: "support@nitrotech.vn",
+                      label: 'Email',
+                      value: 'support@nitrotech.vn',
                       icon: (
                         <svg
                           viewBox="0 0 24 24"
@@ -168,8 +159,8 @@ export default function ContactPage() {
                       ),
                     },
                     {
-                      label: "Giờ làm việc",
-                      value: "Thứ 2 – Chủ nhật: 8:00 – 22:00",
+                      label: 'Giờ làm việc',
+                      value: 'Thứ 2 – Chủ nhật: 8:00 – 22:00',
                       icon: (
                         <svg
                           viewBox="0 0 24 24"
@@ -190,12 +181,8 @@ export default function ContactPage() {
                         {item.icon}
                       </div>
                       <div>
-                        <div className="mb-0.5 text-xs text-slate-400">
-                          {item.label}
-                        </div>
-                        <div className="text-sm font-medium text-slate-900">
-                          {item.value}
-                        </div>
+                        <div className="mb-0.5 text-xs text-slate-400">{item.label}</div>
+                        <div className="text-sm font-medium text-slate-900">{item.value}</div>
                       </div>
                     </div>
                   ))}
@@ -203,9 +190,7 @@ export default function ContactPage() {
               </div>
 
               <div>
-                <h2 className="mb-4 text-lg font-bold text-slate-900">
-                  Kênh hỗ trợ
-                </h2>
+                <h2 className="mb-4 text-lg font-bold text-slate-900">Kênh hỗ trợ</h2>
                 <div className="space-y-3">
                   {channels.map((c) => (
                     <div
@@ -218,9 +203,7 @@ export default function ContactPage() {
                         {c.icon}
                       </div>
                       <div>
-                        <div className="text-sm font-semibold text-slate-900">
-                          {c.title}
-                        </div>
+                        <div className="text-sm font-semibold text-slate-900">{c.title}</div>
                         <div className="text-sm text-slate-700">{c.desc}</div>
                         <div className="text-xs text-slate-400">{c.detail}</div>
                       </div>
@@ -234,5 +217,5 @@ export default function ContactPage() {
       </main>
       <SiteFooter />
     </>
-  )
+  );
 }

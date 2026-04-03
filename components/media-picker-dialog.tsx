@@ -1,45 +1,45 @@
-"use client"
-import { useEffect, useRef, useState, useCallback, useMemo } from "react"
-import { createPortal } from "react-dom"
-import { toast } from "sonner"
-import { getMediaAssets, type MediaAsset } from "@/lib/media-api"
+'use client';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import { createPortal } from 'react-dom';
+import { toast } from 'sonner';
+import { getMediaAssets, type MediaAsset } from '@/lib/media-api';
 import {
   uploadFile,
   getFolders,
   type AllowedFolder,
   type CloudinaryFolder,
-} from "@/lib/upload-api"
+} from '@/lib/upload-api';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export interface MediaPickerProps {
-  folder?: AllowedFolder
-  multiple?: boolean
-  onInsert: (urls: string[]) => void
-  onClose: () => void
+  folder?: AllowedFolder;
+  multiple?: boolean;
+  onInsert: (urls: string[]) => void;
+  onClose: () => void;
 }
 
-type Tab = "library" | "upload"
-type SortKey = "newest" | "oldest" | "largest" | "smallest"
-type DateFilter = "all" | "today" | "week" | "month"
+type Tab = 'library' | 'upload';
+type SortKey = 'newest' | 'oldest' | 'largest' | 'smallest';
+type DateFilter = 'all' | 'today' | 'week' | 'month';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function formatBytes(b: number) {
-  if (b < 1024) return `${b} B`
-  if (b < 1024 * 1024) return `${(b / 1024).toFixed(1)} KB`
-  return `${(b / (1024 * 1024)).toFixed(1)} MB`
+  if (b < 1024) return `${b} B`;
+  if (b < 1024 * 1024) return `${(b / 1024).toFixed(1)} KB`;
+  return `${(b / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 function isWithinRange(iso: string, filter: DateFilter): boolean {
-  if (filter === "all") return true
-  const d = new Date(iso)
-  const now = new Date()
-  const diff = now.getTime() - d.getTime()
-  if (filter === "today") return diff < 86400000
-  if (filter === "week") return diff < 7 * 86400000
-  if (filter === "month") return diff < 30 * 86400000
-  return true
+  if (filter === 'all') return true;
+  const d = new Date(iso);
+  const now = new Date();
+  const diff = now.getTime() - d.getTime();
+  if (filter === 'today') return diff < 86400000;
+  if (filter === 'week') return diff < 7 * 86400000;
+  if (filter === 'month') return diff < 30 * 86400000;
+  return true;
 }
 
 // ── Upload Tab ────────────────────────────────────────────────────────────────
@@ -48,25 +48,25 @@ function UploadTab({
   folder,
   onUploaded,
 }: {
-  folder: AllowedFolder
-  onUploaded: (asset: MediaAsset) => void
+  folder: AllowedFolder;
+  onUploaded: (asset: MediaAsset) => void;
 }) {
-  const [dragging, setDragging] = useState(false)
-  const [uploading, setUploading] = useState(false)
-  const [queue, setQueue] = useState<string[]>([])
-  const inputRef = useRef<HTMLInputElement>(null)
+  const [dragging, setDragging] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [queue, setQueue] = useState<string[]>([]);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   async function processFiles(files: FileList | File[]) {
-    const list = Array.from(files).filter((f) => f.type.startsWith("image/"))
+    const list = Array.from(files).filter((f) => f.type.startsWith('image/'));
     if (!list.length) {
-      toast.error("Chỉ chấp nhận file ảnh")
-      return
+      toast.error('Chỉ chấp nhận file ảnh');
+      return;
     }
-    setUploading(true)
-    setQueue(list.map((f) => f.name))
+    setUploading(true);
+    setQueue(list.map((f) => f.name));
     for (const file of list) {
       try {
-        const result = await uploadFile(file, folder)
+        const result = await uploadFile(file, folder);
         onUploaded({
           publicId: result.public_id,
           secureUrl: result.secure_url,
@@ -75,35 +75,35 @@ function UploadTab({
           format: result.format,
           bytes: file.size,
           createdAt: new Date().toISOString(),
-        })
-        setQueue((q) => q.filter((n) => n !== file.name))
+        });
+        setQueue((q) => q.filter((n) => n !== file.name));
       } catch {
-        toast.error(`Upload thất bại: ${file.name}`)
-        setQueue((q) => q.filter((n) => n !== file.name))
+        toast.error(`Upload thất bại: ${file.name}`);
+        setQueue((q) => q.filter((n) => n !== file.name));
       }
     }
-    setUploading(false)
+    setUploading(false);
   }
 
   return (
     <div className="p-5">
       <div
         onDragOver={(e) => {
-          e.preventDefault()
-          setDragging(true)
+          e.preventDefault();
+          setDragging(true);
         }}
         onDragLeave={() => setDragging(false)}
         onDrop={(e) => {
-          e.preventDefault()
-          setDragging(false)
-          processFiles(e.dataTransfer.files)
+          e.preventDefault();
+          setDragging(false);
+          processFiles(e.dataTransfer.files);
         }}
         onClick={() => !uploading && inputRef.current?.click()}
         className={`flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed py-12 transition-all ${
           dragging
-            ? "border-indigo-400 bg-indigo-50"
-            : "border-slate-200 hover:border-indigo-300 hover:bg-slate-50"
-        } ${uploading ? "pointer-events-none opacity-60" : ""}`}
+            ? 'border-indigo-400 bg-indigo-50'
+            : 'border-slate-200 hover:border-indigo-300 hover:bg-slate-50'
+        } ${uploading ? 'pointer-events-none opacity-60' : ''}`}
       >
         {uploading ? (
           <div className="flex flex-col items-center gap-3">
@@ -117,26 +117,21 @@ function UploadTab({
               <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" strokeOpacity=".2" />
               <path d="M21 12a9 9 0 00-9-9" />
             </svg>
-            <p className="text-sm text-slate-500">
-              Đang upload {queue.length} file...
-            </p>
+            <p className="text-sm text-slate-500">Đang upload {queue.length} file...</p>
             <div className="w-48 space-y-1">
               {queue.map((n) => (
-                <div
-                  key={n}
-                  className="h-1 w-full animate-pulse rounded-full bg-indigo-200"
-                />
+                <div key={n} className="h-1 w-full animate-pulse rounded-full bg-indigo-200" />
               ))}
             </div>
           </div>
         ) : (
           <>
             <div
-              className={`flex h-12 w-12 items-center justify-center rounded-2xl border transition-colors ${dragging ? "border-indigo-300 bg-indigo-100" : "border-slate-200 bg-white shadow-sm"}`}
+              className={`flex h-12 w-12 items-center justify-center rounded-2xl border transition-colors ${dragging ? 'border-indigo-300 bg-indigo-100' : 'border-slate-200 bg-white shadow-sm'}`}
             >
               <svg
                 viewBox="0 0 24 24"
-                className={`h-6 w-6 ${dragging ? "text-indigo-600" : "text-slate-400"}`}
+                className={`h-6 w-6 ${dragging ? 'text-indigo-600' : 'text-slate-400'}`}
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="1.5"
@@ -148,10 +143,10 @@ function UploadTab({
             </div>
             <div className="text-center">
               <p className="text-sm font-semibold text-slate-700">
-                {dragging ? "Thả ảnh vào đây" : "Kéo thả hoặc click để chọn"}
+                {dragging ? 'Thả ảnh vào đây' : 'Kéo thả hoặc click để chọn'}
               </p>
               <p className="mt-1 text-xs text-slate-400">
-                PNG, JPG, WebP, GIF · Folder:{" "}
+                PNG, JPG, WebP, GIF · Folder:{' '}
                 <span className="font-medium text-slate-600">{folder}</span>
               </p>
             </div>
@@ -167,7 +162,7 @@ function UploadTab({
         />
       </div>
     </div>
-  )
+  );
 }
 
 // ── Library Tab ───────────────────────────────────────────────────────────────
@@ -178,69 +173,66 @@ function LibraryTab({
   selected,
   onToggle,
 }: {
-  folder: string
-  multiple: boolean
-  selected: Set<string>
-  onToggle: (asset: MediaAsset) => void
+  folder: string;
+  multiple: boolean;
+  selected: Set<string>;
+  onToggle: (asset: MediaAsset) => void;
 }) {
-  const [assets, setAssets] = useState<MediaAsset[]>([])
-  const [loading, setLoading] = useState(true)
-  const [nextCursor, setNextCursor] = useState<string | undefined>()
-  const [loadingMore, setLoadingMore] = useState(false)
-  const [search, setSearch] = useState("")
-  const [sort, setSort] = useState<SortKey>("newest")
-  const [dateFilter, setDateFilter] = useState<DateFilter>("all")
+  const [assets, setAssets] = useState<MediaAsset[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [nextCursor, setNextCursor] = useState<string | undefined>();
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [search, setSearch] = useState('');
+  const [sort, setSort] = useState<SortKey>('newest');
+  const [dateFilter, setDateFilter] = useState<DateFilter>('all');
 
   const load = useCallback(async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const res = await getMediaAssets(folder)
-      setAssets(res.assets)
-      setNextCursor(res.nextCursor)
+      const res = await getMediaAssets(folder);
+      setAssets(res.assets);
+      setNextCursor(res.nextCursor);
     } catch {
-      toast.error("Không thể tải danh sách ảnh")
+      toast.error('Không thể tải danh sách ảnh');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [folder])
+  }, [folder]);
 
   useEffect(() => {
-    load()
-  }, [load])
+    load();
+  }, [load]);
 
   async function loadMore() {
-    if (!nextCursor) return
-    setLoadingMore(true)
+    if (!nextCursor) return;
+    setLoadingMore(true);
     try {
-      const res = await getMediaAssets(folder, nextCursor)
-      setAssets((prev) => [...prev, ...res.assets])
-      setNextCursor(res.nextCursor)
+      const res = await getMediaAssets(folder, nextCursor);
+      setAssets((prev) => [...prev, ...res.assets]);
+      setNextCursor(res.nextCursor);
     } finally {
-      setLoadingMore(false)
+      setLoadingMore(false);
     }
   }
 
   const filtered = useMemo(() => {
     let list = assets.filter((a) => {
-      const matchSearch =
-        !search || a.publicId.toLowerCase().includes(search.toLowerCase())
-      const matchDate = isWithinRange(a.createdAt, dateFilter)
-      return matchSearch && matchDate
-    })
-    if (sort === "newest")
+      const matchSearch = !search || a.publicId.toLowerCase().includes(search.toLowerCase());
+      const matchDate = isWithinRange(a.createdAt, dateFilter);
+      return matchSearch && matchDate;
+    });
+    if (sort === 'newest')
       list = [...list].sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      )
-    if (sort === "oldest")
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
+    if (sort === 'oldest')
       list = [...list].sort(
-        (a, b) =>
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-      )
-    if (sort === "largest") list = [...list].sort((a, b) => b.bytes - a.bytes)
-    if (sort === "smallest") list = [...list].sort((a, b) => a.bytes - b.bytes)
-    return list
-  }, [assets, search, sort, dateFilter])
+        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      );
+    if (sort === 'largest') list = [...list].sort((a, b) => b.bytes - a.bytes);
+    if (sort === 'smallest') list = [...list].sort((a, b) => a.bytes - b.bytes);
+    return list;
+  }, [assets, search, sort, dateFilter]);
 
   return (
     <div className="flex flex-col gap-0">
@@ -294,17 +286,11 @@ function LibraryTab({
       </div>
 
       {/* Grid */}
-      <div
-        className="overflow-y-auto p-4"
-        style={{ maxHeight: "calc(85vh - 220px)" }}
-      >
+      <div className="overflow-y-auto p-4" style={{ maxHeight: 'calc(85vh - 220px)' }}>
         {loading ? (
           <div className="grid grid-cols-4 gap-2.5">
             {Array.from({ length: 8 }).map((_, i) => (
-              <div
-                key={i}
-                className="aspect-square animate-pulse rounded-xl bg-slate-100"
-              />
+              <div key={i} className="aspect-square animate-pulse rounded-xl bg-slate-100" />
             ))}
           </div>
         ) : !filtered.length ? (
@@ -321,23 +307,21 @@ function LibraryTab({
               <polyline points="21 15 16 10 5 21" />
             </svg>
             <p className="text-sm">
-              {search || dateFilter !== "all"
-                ? "Không tìm thấy ảnh nào"
-                : "Chưa có ảnh nào"}
+              {search || dateFilter !== 'all' ? 'Không tìm thấy ảnh nào' : 'Chưa có ảnh nào'}
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-4 gap-2.5">
             {filtered.map((asset) => {
-              const isSel = selected.has(asset.secureUrl)
+              const isSel = selected.has(asset.secureUrl);
               return (
                 <button
                   key={asset.publicId}
                   onClick={() => onToggle(asset)}
                   className={`group relative aspect-square cursor-pointer overflow-hidden rounded-xl border-2 transition-all ${
                     isSel
-                      ? "border-indigo-500 ring-2 ring-indigo-200"
-                      : "border-transparent hover:border-slate-300"
+                      ? 'border-indigo-500 ring-2 ring-indigo-200'
+                      : 'border-transparent hover:border-slate-300'
                   }`}
                 >
                   <img
@@ -348,7 +332,7 @@ function LibraryTab({
                   />
                   {/* Overlay */}
                   <div
-                    className={`pointer-events-none absolute inset-0 transition-colors ${isSel ? "bg-indigo-500/20" : "bg-black/0 group-hover:bg-black/15"}`}
+                    className={`pointer-events-none absolute inset-0 transition-colors ${isSel ? 'bg-indigo-500/20' : 'bg-black/0 group-hover:bg-black/15'}`}
                   />
                   {/* Checkmark */}
                   {isSel && (
@@ -371,7 +355,7 @@ function LibraryTab({
                     </p>
                   </div>
                 </button>
-              )
+              );
             })}
           </div>
         )}
@@ -383,74 +367,74 @@ function LibraryTab({
               disabled={loadingMore}
               className="cursor-pointer rounded-full border border-slate-200 px-5 py-1.5 text-xs text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-50"
             >
-              {loadingMore ? "Đang tải..." : "Tải thêm"}
+              {loadingMore ? 'Đang tải...' : 'Tải thêm'}
             </button>
           </div>
         )}
       </div>
     </div>
-  )
+  );
 }
 
 // ── Dialog ────────────────────────────────────────────────────────────────────
 
 export default function MediaPickerDialog({
-  folder: defaultFolder = "brands",
+  folder: defaultFolder = 'brands',
   multiple = false,
   onInsert,
   onClose,
 }: MediaPickerProps) {
-  const [tab, setTab] = useState<Tab>("library")
-  const [selected, setSelected] = useState<Map<string, MediaAsset>>(new Map())
-  const [libraryKey, setLibraryKey] = useState(0)
-  const [folders, setFolders] = useState<CloudinaryFolder[]>([])
-  const [activeFolder, setActiveFolder] = useState<string>(defaultFolder)
+  const [tab, setTab] = useState<Tab>('library');
+  const [selected, setSelected] = useState<Map<string, MediaAsset>>(new Map());
+  const [libraryKey, setLibraryKey] = useState(0);
+  const [folders, setFolders] = useState<CloudinaryFolder[]>([]);
+  const [activeFolder, setActiveFolder] = useState<string>(defaultFolder);
 
   useEffect(() => {
     getFolders()
       .then(setFolders)
-      .catch(() => {})
-  }, [])
+      .catch(() => {});
+  }, []);
 
   // Esc to close
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose()
+      if (e.key === 'Escape') onClose();
     }
-    window.addEventListener("keydown", onKey)
-    return () => window.removeEventListener("keydown", onKey)
-  }, [onClose])
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
 
   function toggleAsset(asset: MediaAsset) {
     setSelected((prev) => {
-      const next = new Map(prev)
+      const next = new Map(prev);
       if (next.has(asset.secureUrl)) {
-        next.delete(asset.secureUrl)
+        next.delete(asset.secureUrl);
       } else {
-        if (!multiple) next.clear()
-        next.set(asset.secureUrl, asset)
+        if (!multiple) next.clear();
+        next.set(asset.secureUrl, asset);
       }
-      return next
-    })
+      return next;
+    });
   }
 
   function handleFolderChange(f: string) {
-    setActiveFolder(f)
-    setSelected(new Map())
-    setLibraryKey((k) => k + 1)
+    setActiveFolder(f);
+    setSelected(new Map());
+    setLibraryKey((k) => k + 1);
   }
 
   function handleUploaded(asset: MediaAsset) {
-    toggleAsset(asset)
-    setLibraryKey((k) => k + 1)
-    setTab("library")
-    toast.success("Upload thành công")
+    toggleAsset(asset);
+    setLibraryKey((k) => k + 1);
+    setTab('library');
+    toast.success('Upload thành công');
   }
 
   function handleInsert() {
-    if (!selected.size) return
-    onInsert(Array.from(selected.keys()))
-    onClose()
+    if (!selected.size) return;
+    onInsert(Array.from(selected.keys()));
+    onClose();
   }
 
   return createPortal(
@@ -461,30 +445,30 @@ export default function MediaPickerDialog({
     >
       <div
         className="flex w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
-        style={{ maxHeight: "85vh" }}
+        style={{ maxHeight: '85vh' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex shrink-0 items-center gap-3 border-b border-slate-100 px-5 py-3.5">
           {/* Tabs */}
           <div className="flex gap-0.5 rounded-xl bg-slate-100 p-1">
-            {(["library", "upload"] as Tab[]).map((t) => (
+            {(['library', 'upload'] as Tab[]).map((t) => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
                 className={`cursor-pointer rounded-lg px-4 py-1.5 text-sm font-medium transition-colors ${
                   tab === t
-                    ? "bg-white text-slate-900 shadow-sm"
-                    : "text-slate-500 hover:text-slate-700"
+                    ? 'bg-white text-slate-900 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
-                {t === "library" ? "Thư viện" : "Upload"}
+                {t === 'library' ? 'Thư viện' : 'Upload'}
               </button>
             ))}
           </div>
 
           {/* Folder pills — only in library */}
-          {tab === "library" && folders.length > 0 && (
+          {tab === 'library' && folders.length > 0 && (
             <div className="flex flex-1 items-center gap-1.5 overflow-x-auto">
               {folders.map((f) => (
                 <button
@@ -492,8 +476,8 @@ export default function MediaPickerDialog({
                   onClick={() => handleFolderChange(f.path)}
                   className={`shrink-0 cursor-pointer rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                     activeFolder === f.path
-                      ? "bg-indigo-600 text-white"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      ? 'bg-indigo-600 text-white'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                   }`}
                 >
                   {f.name}
@@ -521,7 +505,7 @@ export default function MediaPickerDialog({
 
         {/* Body */}
         <div className="min-h-0 flex-1 overflow-hidden">
-          {tab === "library" ? (
+          {tab === 'library' ? (
             <LibraryTab
               key={libraryKey}
               folder={activeFolder}
@@ -530,10 +514,7 @@ export default function MediaPickerDialog({
               onToggle={toggleAsset}
             />
           ) : (
-            <UploadTab
-              folder={activeFolder as AllowedFolder}
-              onUploaded={handleUploaded}
-            />
+            <UploadTab folder={activeFolder as AllowedFolder} onUploaded={handleUploaded} />
           )}
         </div>
 
@@ -541,11 +522,9 @@ export default function MediaPickerDialog({
         <div className="flex shrink-0 items-center justify-between border-t border-slate-100 px-5 py-3.5">
           <span className="text-sm text-slate-400">
             {selected.size > 0 ? (
-              <span className="font-medium text-slate-700">
-                {selected.size} ảnh đã chọn
-              </span>
+              <span className="font-medium text-slate-700">{selected.size} ảnh đã chọn</span>
             ) : (
-              "Chưa chọn ảnh nào"
+              'Chưa chọn ảnh nào'
             )}
           </span>
           <div className="flex gap-2.5">
@@ -560,12 +539,12 @@ export default function MediaPickerDialog({
               disabled={!selected.size}
               className="cursor-pointer rounded-xl bg-indigo-600 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-indigo-700 disabled:opacity-40"
             >
-              Chèn {selected.size > 0 ? `(${selected.size})` : ""}
+              Chèn {selected.size > 0 ? `(${selected.size})` : ''}
             </button>
           </div>
         </div>
       </div>
     </div>,
-    document.body
-  )
+    document.body,
+  );
 }

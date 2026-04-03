@@ -1,10 +1,10 @@
-import type { Metadata } from "next"
-import Link from "next/link"
-import { SiteHeader } from "@/components/site-header"
-import { SiteFooter } from "@/components/site-footer"
-import { WarrantyAccordion } from "./warranty-accordion"
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import { SiteHeader } from '@/components/site-header';
+import { SiteFooter } from '@/components/site-footer';
+import { WarrantyAccordion } from './warranty-accordion';
 
-export const metadata: Metadata = { title: "Chính sách bảo hành" }
+export const metadata: Metadata = { title: 'Chính sách bảo hành' };
 
 export default function WarrantyPage() {
   return (
@@ -13,10 +13,7 @@ export default function WarrantyPage() {
       <main>
         {/* Breadcrumb */}
         <div className="mx-auto max-w-7xl px-6 py-3">
-          <nav
-            aria-label="Breadcrumb"
-            className="flex items-center gap-2 text-sm text-slate-400"
-          >
+          <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm text-slate-400">
             <Link
               href="/"
               className="cursor-pointer transition-colors duration-150 hover:text-slate-700"
@@ -33,9 +30,7 @@ export default function WarrantyPage() {
             >
               <path d="M9 18l6-6-6-6" />
             </svg>
-            <span className="font-medium text-slate-700">
-              Chính sách bảo hành
-            </span>
+            <span className="font-medium text-slate-700">Chính sách bảo hành</span>
           </nav>
         </div>
 
@@ -54,12 +49,9 @@ export default function WarrantyPage() {
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
               </svg>
             </div>
-            <h1 className="mb-3 text-3xl font-bold text-slate-900">
-              Chính sách bảo hành
-            </h1>
+            <h1 className="mb-3 text-3xl font-bold text-slate-900">Chính sách bảo hành</h1>
             <p className="text-slate-500">
-              NitroTech cam kết bảo hành chính hãng, minh bạch và nhanh chóng
-              cho tất cả sản phẩm.
+              NitroTech cam kết bảo hành chính hãng, minh bạch và nhanh chóng cho tất cả sản phẩm.
             </p>
           </div>
         </div>
@@ -72,9 +64,7 @@ export default function WarrantyPage() {
         {/* CTA */}
         <div className="bg-slate-900 px-6 py-12">
           <div className="mx-auto max-w-xl text-center">
-            <h2 className="mb-3 text-xl font-bold text-white">
-              Cần hỗ trợ bảo hành?
-            </h2>
+            <h2 className="mb-3 text-xl font-bold text-white">Cần hỗ trợ bảo hành?</h2>
             <p className="mb-6 text-slate-400">
               Đội ngũ kỹ thuật của chúng tôi luôn sẵn sàng hỗ trợ bạn.
             </p>
@@ -89,5 +79,5 @@ export default function WarrantyPage() {
       </main>
       <SiteFooter />
     </>
-  )
+  );
 }

@@ -1,134 +1,127 @@
-"use client"
-import { useEffect, useMemo, useRef, useState } from "react"
-import { toast } from "sonner"
+'use client';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import {
   type AllowedFolder,
   type CloudinaryFolder,
   type CloudinaryResource,
   getFolders,
-} from "@/lib/upload-api"
-import { useAuthStore } from "@/store/auth"
-import { useMediaAssets } from "@/hooks/use-media-assets"
-import { useCopy } from "@/hooks/use-copy"
-import { formatBytes } from "@/lib/utils"
-import { UploadZone } from "./_components/upload-zone"
-import { DetailPanel } from "./_components/detail-panel"
-import { AssetGrid } from "./_components/asset-grid"
-import { AssetList } from "./_components/asset-list"
+} from '@/lib/upload-api';
+import { useAuthStore } from '@/store/auth';
+import { useMediaAssets } from '@/hooks/use-media-assets';
+import { useCopy } from '@/hooks/use-copy';
+import { formatBytes } from '@/lib/utils';
+import { UploadZone } from './_components/upload-zone';
+import { DetailPanel } from './_components/detail-panel';
+import { AssetGrid } from './_components/asset-grid';
+import { AssetList } from './_components/asset-list';
 
 const FALLBACK_FOLDERS: AllowedFolder[] = [
-  "brands",
-  "products",
-  "categories",
-  "avatars",
-  "banners",
-]
+  'brands',
+  'products',
+  'categories',
+  'avatars',
+  'banners',
+];
 
 export default function MediaPage() {
-  const accessToken = useAuthStore((s) => s.accessToken)
-  const { assets, loading, loadingMore, nextCursor, load } = useMediaAssets()
-  const { copied, copy } = useCopy()
+  const accessToken = useAuthStore((s) => s.accessToken);
+  const { assets, loading, loadingMore, nextCursor, load } = useMediaAssets();
+  const { copied, copy } = useCopy();
 
-  const [folders, setFolders] = useState<CloudinaryFolder[]>([])
-  const [activeFolder, setActiveFolder] = useState<AllowedFolder>("brands")
-  const [activeAsset, setActiveAsset] = useState<CloudinaryResource | null>(
-    null
-  )
-  const [selected, setSelected] = useState<Set<string>>(new Set())
-  const [showUpload, setShowUpload] = useState(false)
-  const [view, setView] = useState<"grid" | "list">("grid")
-  const [search, setSearch] = useState("")
-  const searchRef = useRef<HTMLInputElement>(null)
+  const [folders, setFolders] = useState<CloudinaryFolder[]>([]);
+  const [activeFolder, setActiveFolder] = useState<AllowedFolder>('brands');
+  const [activeAsset, setActiveAsset] = useState<CloudinaryResource | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [showUpload, setShowUpload] = useState(false);
+  const [view, setView] = useState<'grid' | 'list'>('grid');
+  const [search, setSearch] = useState('');
+  const searchRef = useRef<HTMLInputElement>(null);
 
   // Stable keyboard handler via ref — avoids re-subscribing on every render
-  const onKeyRef = useRef<(e: KeyboardEvent) => void>(() => {})
+  const onKeyRef = useRef<(e: KeyboardEvent) => void>(() => {});
   onKeyRef.current = (e: KeyboardEvent) => {
-    if (e.key === "/" && document.activeElement?.tagName !== "INPUT") {
-      e.preventDefault()
-      searchRef.current?.focus()
+    if (e.key === '/' && document.activeElement?.tagName !== 'INPUT') {
+      e.preventDefault();
+      searchRef.current?.focus();
     }
-    if (e.key === "Escape") {
-      setActiveAsset(null)
-      setSearch("")
+    if (e.key === 'Escape') {
+      setActiveAsset(null);
+      setSearch('');
     }
-  }
+  };
 
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => onKeyRef.current(e)
-    window.addEventListener("keydown", handler)
-    return () => window.removeEventListener("keydown", handler)
-  }, []) // stable — never re-subscribes
+    const handler = (e: KeyboardEvent) => onKeyRef.current(e);
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []); // stable — never re-subscribes
 
   // Load folders + initial assets in parallel
   useEffect(() => {
-    if (!accessToken) return
+    if (!accessToken) return;
     Promise.all([
       getFolders().then((data) => {
-        setFolders(data)
-        if (data.length) setActiveFolder(data[0].path as AllowedFolder)
-        return data
+        setFolders(data);
+        if (data.length) setActiveFolder(data[0].path as AllowedFolder);
+        return data;
       }),
       load(activeFolder),
-    ]).catch(() => {})
-  }, [accessToken]) // eslint-disable-line
+    ]).catch(() => {});
+  }, [accessToken]); // eslint-disable-line
 
   // Reload when folder changes (skip initial — handled above)
-  const isFirstRender = useRef(true)
+  const isFirstRender = useRef(true);
   useEffect(() => {
     if (isFirstRender.current) {
-      isFirstRender.current = false
-      return
+      isFirstRender.current = false;
+      return;
     }
-    if (!accessToken) return
-    setSelected(new Set())
-    setActiveAsset(null)
-    setSearch("")
-    load(activeFolder)
-  }, [activeFolder]) // eslint-disable-line
+    if (!accessToken) return;
+    setSelected(new Set());
+    setActiveAsset(null);
+    setSearch('');
+    load(activeFolder);
+  }, [activeFolder]); // eslint-disable-line
 
   // Memoized derived state
   const filtered = useMemo(
     () =>
       !search
         ? assets
-        : assets.filter((a) =>
-            a.display_name.toLowerCase().includes(search.toLowerCase())
-          ),
-    [assets, search]
-  )
+        : assets.filter((a) => a.display_name.toLowerCase().includes(search.toLowerCase())),
+    [assets, search],
+  );
 
-  const totalSize = useMemo(
-    () => assets.reduce((s, a) => s + a.bytes, 0),
-    [assets]
-  )
+  const totalSize = useMemo(() => assets.reduce((s, a) => s + a.bytes, 0), [assets]);
 
   const folderList = useMemo(
     () =>
       folders.length
         ? folders.map((f) => ({ name: f.name, path: f.path as AllowedFolder }))
         : FALLBACK_FOLDERS.map((f) => ({ name: f, path: f })),
-    [folders]
-  )
+    [folders],
+  );
 
   function toggleSelect(id: string) {
     setSelected((prev) => {
-      const next = new Set(prev)
-      next.has(id) ? next.delete(id) : next.add(id)
-      return next
-    })
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
   }
 
   function handleSelectAsset(a: CloudinaryResource) {
-    setActiveAsset((prev) => (prev?.asset_id === a.asset_id ? null : a))
+    setActiveAsset((prev) => (prev?.asset_id === a.asset_id ? null : a));
   }
 
   function copySelected() {
     const urls = filtered
       .filter((a) => selected.has(a.asset_id))
       .map((a) => a.secure_url)
-      .join("\n")
-    navigator.clipboard.writeText(urls)
-    toast.success(`Đã copy ${selected.size} URL`)
+      .join('\n');
+    navigator.clipboard.writeText(urls);
+    toast.success(`Đã copy ${selected.size} URL`);
   }
 
   return (
@@ -136,9 +129,7 @@ export default function MediaPage() {
       {/* Top bar */}
       <div className="flex shrink-0 items-center justify-between gap-4 border-b border-slate-200 bg-white px-6 py-3">
         <div className="flex items-center gap-3">
-          <h1 className="text-base font-bold text-slate-900">
-            Thư viện hình ảnh
-          </h1>
+          <h1 className="text-base font-bold text-slate-900">Thư viện hình ảnh</h1>
           <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">
             {assets.length} ảnh · {formatBytes(totalSize)}
           </span>
@@ -166,7 +157,7 @@ export default function MediaPage() {
             />
             {search && (
               <button
-                onClick={() => setSearch("")}
+                onClick={() => setSearch('')}
                 className="absolute top-1/2 right-2 -translate-y-1/2 cursor-pointer text-slate-400 hover:text-slate-700"
               >
                 <svg
@@ -184,13 +175,13 @@ export default function MediaPage() {
 
           {/* View toggle */}
           <div className="flex overflow-hidden rounded-xl border border-slate-200">
-            {(["grid", "list"] as const).map((v) => (
+            {(['grid', 'list'] as const).map((v) => (
               <button
                 key={v}
                 onClick={() => setView(v)}
-                className={`cursor-pointer px-2.5 py-1.5 transition-colors ${view === v ? "bg-slate-900 text-white" : "bg-white text-slate-500 hover:bg-slate-50"}`}
+                className={`cursor-pointer px-2.5 py-1.5 transition-colors ${view === v ? 'bg-slate-900 text-white' : 'bg-white text-slate-500 hover:bg-slate-50'}`}
               >
-                {v === "grid" ? (
+                {v === 'grid' ? (
                   <svg
                     viewBox="0 0 24 24"
                     className="h-4 w-4"
@@ -226,7 +217,7 @@ export default function MediaPage() {
           {/* Upload toggle */}
           <button
             onClick={() => setShowUpload((v) => !v)}
-            className={`flex cursor-pointer items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-sm font-semibold transition-colors ${showUpload ? "bg-slate-100 text-slate-700 hover:bg-slate-200" : "bg-indigo-600 text-white hover:bg-indigo-700"}`}
+            className={`flex cursor-pointer items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-sm font-semibold transition-colors ${showUpload ? 'bg-slate-100 text-slate-700 hover:bg-slate-200' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}
           >
             <svg
               viewBox="0 0 24 24"
@@ -239,7 +230,7 @@ export default function MediaPage() {
               <polyline points="17 8 12 3 7 8" />
               <line x1="12" y1="3" x2="12" y2="15" />
             </svg>
-            {showUpload ? "Đóng" : "Upload"}
+            {showUpload ? 'Đóng' : 'Upload'}
           </button>
         </div>
       </div>
@@ -257,13 +248,13 @@ export default function MediaPage() {
               onClick={() => setActiveFolder(f.path)}
               className={`flex w-full cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2 text-sm transition-colors ${
                 activeFolder === f.path
-                  ? "bg-indigo-50 font-semibold text-indigo-700"
-                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                  ? 'bg-indigo-50 font-semibold text-indigo-700'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
               }`}
             >
               <svg
                 viewBox="0 0 24 24"
-                className={`h-4 w-4 shrink-0 ${activeFolder === f.path ? "text-indigo-500" : "text-slate-400"}`}
+                className={`h-4 w-4 shrink-0 ${activeFolder === f.path ? 'text-indigo-500' : 'text-slate-400'}`}
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2"
@@ -318,9 +309,7 @@ export default function MediaPage() {
                 Bỏ chọn
               </button>
               <button
-                onClick={() =>
-                  setSelected(new Set(filtered.map((a) => a.asset_id)))
-                }
+                onClick={() => setSelected(new Set(filtered.map((a) => a.asset_id)))}
                 className="cursor-pointer text-xs text-indigo-500 transition-colors hover:text-indigo-700"
               >
                 Chọn tất cả ({filtered.length})
@@ -335,8 +324,8 @@ export default function MediaPage() {
                 <UploadZone
                   folder={activeFolder}
                   onUploaded={() => {
-                    load(activeFolder)
-                    setShowUpload(false)
+                    load(activeFolder);
+                    setShowUpload(false);
                   }}
                 />
               )}
@@ -344,27 +333,26 @@ export default function MediaPage() {
               {search && (
                 <p className="text-xs text-slate-500">
                   {filtered.length} kết quả cho "
-                  <span className="font-semibold text-slate-700">{search}</span>
-                  "
+                  <span className="font-semibold text-slate-700">{search}</span>"
                 </p>
               )}
 
               {loading ? (
                 <div
                   className={
-                    view === "grid"
-                      ? "grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6"
-                      : "space-y-2"
+                    view === 'grid'
+                      ? 'grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6'
+                      : 'space-y-2'
                   }
                 >
                   {Array.from({ length: 12 }).map((_, i) => (
                     <div
                       key={i}
-                      className={`animate-pulse rounded-xl bg-slate-100 ${view === "grid" ? "aspect-square" : "h-14"}`}
+                      className={`animate-pulse rounded-xl bg-slate-100 ${view === 'grid' ? 'aspect-square' : 'h-14'}`}
                     />
                   ))}
                 </div>
-              ) : view === "grid" ? (
+              ) : view === 'grid' ? (
                 <AssetGrid
                   assets={filtered}
                   selected={selected}
@@ -389,7 +377,7 @@ export default function MediaPage() {
                     disabled={loadingMore}
                     className="cursor-pointer rounded-full border border-slate-200 bg-white px-6 py-2 text-sm text-slate-600 shadow-sm transition-colors hover:bg-slate-50 disabled:opacity-50"
                   >
-                    {loadingMore ? "Đang tải..." : "Tải thêm ảnh"}
+                    {loadingMore ? 'Đang tải...' : 'Tải thêm ảnh'}
                   </button>
                 </div>
               )}
@@ -397,15 +385,12 @@ export default function MediaPage() {
 
             {activeAsset && (
               <div className="shrink-0 border-l border-slate-200 p-3">
-                <DetailPanel
-                  asset={activeAsset}
-                  onClose={() => setActiveAsset(null)}
-                />
+                <DetailPanel asset={activeAsset} onClose={() => setActiveAsset(null)} />
               </div>
             )}
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }

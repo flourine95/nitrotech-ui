@@ -1,47 +1,33 @@
-"use client"
-import { useCopy } from "@/hooks/use-copy"
-import { formatBytes, formatDate } from "@/lib/utils"
-import { type AssetViewProps } from "./types"
+'use client';
+import { useCopy } from '@/hooks/use-copy';
+import { formatBytes, formatDate } from '@/lib/utils';
+import { type AssetViewProps } from './types';
 
-export function AssetList({
-  assets,
-  selected,
-  active,
-  onToggle,
-  onSelect,
-}: AssetViewProps) {
-  const { copied, copy } = useCopy()
+export function AssetList({ assets, selected, active, onToggle, onSelect }: AssetViewProps) {
+  const { copied, copy } = useCopy();
 
   if (!assets.length)
-    return (
-      <div className="py-16 text-center text-sm text-slate-400">
-        Chưa có ảnh nào
-      </div>
-    )
+    return <div className="py-16 text-center text-sm text-slate-400">Chưa có ảnh nào</div>;
 
   return (
     <div className="divide-y divide-slate-100">
       {assets.map((a) => {
-        const isSel = selected.has(a.asset_id)
-        const isActive = active === a.asset_id
+        const isSel = selected.has(a.asset_id);
+        const isActive = active === a.asset_id;
         return (
           <div
             key={a.asset_id}
             onClick={() => onSelect(a)}
             className={`flex cursor-pointer items-center gap-3 px-3 py-2.5 transition-colors ${
-              isActive
-                ? "bg-indigo-50"
-                : isSel
-                  ? "bg-indigo-50/50"
-                  : "hover:bg-slate-50"
+              isActive ? 'bg-indigo-50' : isSel ? 'bg-indigo-50/50' : 'hover:bg-slate-50'
             }`}
           >
             <input
               type="checkbox"
               checked={isSel}
               onChange={(e) => {
-                e.stopPropagation()
-                onToggle(a.asset_id)
+                e.stopPropagation();
+                onToggle(a.asset_id);
               }}
               onClick={(e) => e.stopPropagation()}
               className="h-4 w-4 shrink-0 cursor-pointer accent-indigo-600"
@@ -55,12 +41,9 @@ export function AssetList({
               />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-slate-800">
-                {a.display_name}
-              </p>
+              <p className="truncate text-sm font-medium text-slate-800">{a.display_name}</p>
               <p className="text-xs text-slate-400">
-                {a.width}×{a.height} · {formatBytes(a.bytes)} ·{" "}
-                {formatDate(a.created_at)}
+                {a.width}×{a.height} · {formatBytes(a.bytes)} · {formatDate(a.created_at)}
               </p>
             </div>
             <span className="shrink-0 rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-slate-500 uppercase">
@@ -68,8 +51,8 @@ export function AssetList({
             </span>
             <button
               onClick={(e) => {
-                e.stopPropagation()
-                copy(a.secure_url, a.asset_id)
+                e.stopPropagation();
+                copy(a.secure_url, a.asset_id);
               }}
               className="shrink-0 cursor-pointer rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-indigo-600"
               title="Copy URL"
@@ -98,8 +81,8 @@ export function AssetList({
               )}
             </button>
           </div>
-        )
+        );
       })}
     </div>
-  )
+  );
 }

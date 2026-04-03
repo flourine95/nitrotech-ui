@@ -1,17 +1,11 @@
-"use client"
-import { useCopy } from "@/hooks/use-copy"
-import { formatBytes } from "@/lib/utils"
-import { type CloudinaryResource } from "@/lib/upload-api"
-import { type AssetViewProps } from "./types"
+'use client';
+import { useCopy } from '@/hooks/use-copy';
+import { formatBytes } from '@/lib/utils';
+import { type CloudinaryResource } from '@/lib/upload-api';
+import { type AssetViewProps } from './types';
 
-export function AssetGrid({
-  assets,
-  selected,
-  active,
-  onToggle,
-  onSelect,
-}: AssetViewProps) {
-  const { copied, copy } = useCopy()
+export function AssetGrid({ assets, selected, active, onToggle, onSelect }: AssetViewProps) {
+  const { copied, copy } = useCopy();
 
   if (!assets.length)
     return (
@@ -28,27 +22,25 @@ export function AssetGrid({
           <polyline points="21 15 16 10 5 21" />
         </svg>
         <p className="text-sm font-medium text-slate-500">Chưa có ảnh nào</p>
-        <p className="mt-1 text-xs text-slate-400">
-          Upload ảnh đầu tiên vào folder này
-        </p>
+        <p className="mt-1 text-xs text-slate-400">Upload ảnh đầu tiên vào folder này</p>
       </div>
-    )
+    );
 
   return (
     <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
       {assets.map((a) => {
-        const isSel = selected.has(a.asset_id)
-        const isActive = active === a.asset_id
+        const isSel = selected.has(a.asset_id);
+        const isActive = active === a.asset_id;
         return (
           <div
             key={a.asset_id}
             onClick={() => onSelect(a)}
             className={`group relative aspect-square cursor-pointer overflow-hidden rounded-xl transition-all duration-150 ${
               isActive
-                ? "ring-2 ring-indigo-500 ring-offset-2"
+                ? 'ring-2 ring-indigo-500 ring-offset-2'
                 : isSel
-                  ? "ring-2 ring-indigo-400 ring-offset-1"
-                  : "hover:ring-2 hover:ring-slate-300 hover:ring-offset-1"
+                  ? 'ring-2 ring-indigo-400 ring-offset-1'
+                  : 'hover:ring-2 hover:ring-slate-300 hover:ring-offset-1'
             }`}
           >
             <img
@@ -62,13 +54,13 @@ export function AssetGrid({
             {/* Checkbox */}
             <button
               onClick={(e) => {
-                e.stopPropagation()
-                onToggle(a.asset_id)
+                e.stopPropagation();
+                onToggle(a.asset_id);
               }}
               className={`absolute top-2 left-2 z-10 flex h-5 w-5 cursor-pointer items-center justify-center rounded-md border-2 transition-all duration-150 ${
                 isSel
-                  ? "border-indigo-500 bg-indigo-500 opacity-100"
-                  : "border-white/80 bg-black/20 opacity-0 group-hover:opacity-100"
+                  ? 'border-indigo-500 bg-indigo-500 opacity-100'
+                  : 'border-white/80 bg-black/20 opacity-0 group-hover:opacity-100'
               }`}
               aria-label="Chọn ảnh"
             >
@@ -88,8 +80,8 @@ export function AssetGrid({
             {/* Copy URL */}
             <button
               onClick={(e) => {
-                e.stopPropagation()
-                copy(a.secure_url, a.asset_id)
+                e.stopPropagation();
+                copy(a.secure_url, a.asset_id);
               }}
               className="absolute top-2 right-2 z-10 flex h-6 w-6 cursor-pointer items-center justify-center rounded-lg bg-black/30 text-white opacity-0 backdrop-blur-sm transition-all duration-150 group-hover:opacity-100 hover:bg-black/50"
               title="Copy URL"
@@ -120,16 +112,14 @@ export function AssetGrid({
 
             {/* Info bar */}
             <div className="absolute right-0 bottom-0 left-0 z-10 translate-y-full bg-gradient-to-t from-black/70 to-transparent px-2 pt-4 pb-2 transition-transform duration-200 group-hover:translate-y-0">
-              <p className="truncate text-xs font-medium text-white">
-                {a.display_name}
-              </p>
+              <p className="truncate text-xs font-medium text-white">{a.display_name}</p>
               <p className="text-[10px] text-white/70">
                 {a.width}×{a.height} · {formatBytes(a.bytes)}
               </p>
             </div>
           </div>
-        )
+        );
       })}
     </div>
-  )
+  );
 }

@@ -1,34 +1,34 @@
-"use client"
-import { useState } from "react"
-import Link from "next/link"
-import { SiteHeader } from "@/components/site-header"
+'use client';
+import { useState } from 'react';
+import Link from 'next/link';
+import { SiteHeader } from '@/components/site-header';
 
 export default function CheckoutPage() {
-  const [payMethod, setPayMethod] = useState("cod")
-  const [step, setStep] = useState(1)
+  const [payMethod, setPayMethod] = useState('cod');
+  const [step, setStep] = useState(1);
 
   const orderItems = [
     {
-      name: "MacBook Pro M4",
-      variant: "16GB / 512GB",
-      price: "42.990.000₫",
+      name: 'MacBook Pro M4',
+      variant: '16GB / 512GB',
+      price: '42.990.000₫',
       qty: 1,
     },
     {
-      name: "RTX 4080 Super",
-      variant: "16GB GDDR6X",
-      price: "22.500.000₫",
+      name: 'RTX 4080 Super',
+      variant: '16GB GDDR6X',
+      price: '22.500.000₫',
       qty: 1,
     },
     {
-      name: "Samsung 990 Pro 2TB",
-      variant: "PCIe 4.0",
-      price: "3.290.000₫",
+      name: 'Samsung 990 Pro 2TB',
+      variant: 'PCIe 4.0',
+      price: '3.290.000₫',
       qty: 2,
     },
-  ]
+  ];
 
-  const steps = ["Thông tin", "Vận chuyển", "Thanh toán"]
+  const steps = ['Thông tin', 'Vận chuyển', 'Thanh toán'];
 
   return (
     <>
@@ -44,18 +44,14 @@ export default function CheckoutPage() {
               <div key={s} className="flex items-center">
                 <button
                   onClick={() => setStep(i + 1)}
-                  className={`flex cursor-pointer items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors duration-200 ${step === i + 1 ? "bg-slate-900 text-white" : step > i + 1 ? "text-green-600" : "text-slate-400"}`}
-                  aria-current={step === i + 1 ? "step" : undefined}
+                  className={`flex cursor-pointer items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors duration-200 ${step === i + 1 ? 'bg-slate-900 text-white' : step > i + 1 ? 'text-green-600' : 'text-slate-400'}`}
+                  aria-current={step === i + 1 ? 'step' : undefined}
                 >
                   <span
-                    className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold ${step === i + 1 ? "bg-white text-slate-900" : step > i + 1 ? "bg-green-100 text-green-600" : "bg-slate-100 text-slate-400"}`}
+                    className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold ${step === i + 1 ? 'bg-white text-slate-900' : step > i + 1 ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-400'}`}
                   >
                     {step > i + 1 ? (
-                      <svg
-                        viewBox="0 0 24 24"
-                        className="h-3 w-3 fill-current"
-                        aria-hidden="true"
-                      >
+                      <svg viewBox="0 0 24 24" className="h-3 w-3 fill-current" aria-hidden="true">
                         <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     ) : (
@@ -66,7 +62,7 @@ export default function CheckoutPage() {
                 </button>
                 {i < steps.length - 1 && (
                   <div
-                    className={`mx-1 h-px w-8 ${step > i + 1 ? "bg-green-400" : "bg-slate-200"}`}
+                    className={`mx-1 h-px w-8 ${step > i + 1 ? 'bg-green-400' : 'bg-slate-200'}`}
                     aria-hidden="true"
                   />
                 )}
@@ -79,58 +75,56 @@ export default function CheckoutPage() {
             <div className="space-y-6 lg:col-span-3">
               {/* Shipping info */}
               <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                <h2 className="mb-5 font-bold text-slate-900">
-                  Thông tin giao hàng
-                </h2>
+                <h2 className="mb-5 font-bold text-slate-900">Thông tin giao hàng</h2>
                 <div className="grid gap-4 sm:grid-cols-2">
                   {[
                     {
-                      id: "fname",
-                      label: "Họ",
-                      placeholder: "Nguyễn",
-                      type: "text",
+                      id: 'fname',
+                      label: 'Họ',
+                      placeholder: 'Nguyễn',
+                      type: 'text',
                     },
                     {
-                      id: "lname",
-                      label: "Tên",
-                      placeholder: "Văn A",
-                      type: "text",
+                      id: 'lname',
+                      label: 'Tên',
+                      placeholder: 'Văn A',
+                      type: 'text',
                     },
                     {
-                      id: "phone",
-                      label: "Số điện thoại",
-                      placeholder: "0901 234 567",
-                      type: "tel",
+                      id: 'phone',
+                      label: 'Số điện thoại',
+                      placeholder: '0901 234 567',
+                      type: 'tel',
                       full: true,
                     },
                     {
-                      id: "email",
-                      label: "Email",
-                      placeholder: "email@example.com",
-                      type: "email",
+                      id: 'email',
+                      label: 'Email',
+                      placeholder: 'email@example.com',
+                      type: 'email',
                       full: true,
                     },
                     {
-                      id: "address",
-                      label: "Địa chỉ",
-                      placeholder: "Số nhà, tên đường",
-                      type: "text",
+                      id: 'address',
+                      label: 'Địa chỉ',
+                      placeholder: 'Số nhà, tên đường',
+                      type: 'text',
                       full: true,
                     },
                     {
-                      id: "ward",
-                      label: "Phường/Xã",
-                      placeholder: "Phường 1",
-                      type: "text",
+                      id: 'ward',
+                      label: 'Phường/Xã',
+                      placeholder: 'Phường 1',
+                      type: 'text',
                     },
                     {
-                      id: "district",
-                      label: "Quận/Huyện",
-                      placeholder: "Quận 1",
-                      type: "text",
+                      id: 'district',
+                      label: 'Quận/Huyện',
+                      placeholder: 'Quận 1',
+                      type: 'text',
                     },
                   ].map((f) => (
-                    <div key={f.id} className={f.full ? "sm:col-span-2" : ""}>
+                    <div key={f.id} className={f.full ? 'sm:col-span-2' : ''}>
                       <label
                         htmlFor={f.id}
                         className="mb-1.5 block text-sm font-medium text-slate-700"
@@ -181,34 +175,32 @@ export default function CheckoutPage() {
 
               {/* Shipping method */}
               <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                <h2 className="mb-5 font-bold text-slate-900">
-                  Phương thức vận chuyển
-                </h2>
+                <h2 className="mb-5 font-bold text-slate-900">Phương thức vận chuyển</h2>
                 <div className="space-y-3">
                   {[
                     {
-                      id: "express",
-                      label: "Giao hàng nhanh 2 giờ",
-                      desc: "TP.HCM & Hà Nội",
-                      price: "Miễn phí",
-                      badge: "Khuyến nghị",
+                      id: 'express',
+                      label: 'Giao hàng nhanh 2 giờ',
+                      desc: 'TP.HCM & Hà Nội',
+                      price: 'Miễn phí',
+                      badge: 'Khuyến nghị',
                     },
                     {
-                      id: "standard",
-                      label: "Giao hàng tiêu chuẩn",
-                      desc: "1-2 ngày làm việc",
-                      price: "30.000₫",
+                      id: 'standard',
+                      label: 'Giao hàng tiêu chuẩn',
+                      desc: '1-2 ngày làm việc',
+                      price: '30.000₫',
                     },
                     {
-                      id: "economy",
-                      label: "Giao hàng tiết kiệm",
-                      desc: "3-5 ngày làm việc",
-                      price: "15.000₫",
+                      id: 'economy',
+                      label: 'Giao hàng tiết kiệm',
+                      desc: '3-5 ngày làm việc',
+                      price: '15.000₫',
                     },
                   ].map((m, i) => (
                     <label
                       key={m.id}
-                      className={`flex cursor-pointer items-center gap-4 rounded-2xl border p-4 transition-colors duration-200 ${i === 0 ? "border-slate-900 bg-slate-50" : "border-slate-200 hover:border-slate-300"}`}
+                      className={`flex cursor-pointer items-center gap-4 rounded-2xl border p-4 transition-colors duration-200 ${i === 0 ? 'border-slate-900 bg-slate-50' : 'border-slate-200 hover:border-slate-300'}`}
                     >
                       <input
                         type="radio"
@@ -218,21 +210,17 @@ export default function CheckoutPage() {
                       />
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-slate-900">
-                            {m.label}
-                          </span>
+                          <span className="text-sm font-medium text-slate-900">{m.label}</span>
                           {m.badge && (
                             <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
                               {m.badge}
                             </span>
                           )}
                         </div>
-                        <div className="mt-0.5 text-xs text-slate-400">
-                          {m.desc}
-                        </div>
+                        <div className="mt-0.5 text-xs text-slate-400">{m.desc}</div>
                       </div>
                       <span
-                        className={`shrink-0 text-sm font-semibold ${i === 0 ? "text-green-600" : "text-slate-900"}`}
+                        className={`shrink-0 text-sm font-semibold ${i === 0 ? 'text-green-600' : 'text-slate-900'}`}
                       >
                         {m.price}
                       </span>
@@ -243,14 +231,12 @@ export default function CheckoutPage() {
 
               {/* Payment method */}
               <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                <h2 className="mb-5 font-bold text-slate-900">
-                  Phương thức thanh toán
-                </h2>
+                <h2 className="mb-5 font-bold text-slate-900">Phương thức thanh toán</h2>
                 <div className="space-y-3">
                   {[
                     {
-                      id: "cod",
-                      label: "Thanh toán khi nhận hàng (COD)",
+                      id: 'cod',
+                      label: 'Thanh toán khi nhận hàng (COD)',
                       icon: (
                         <svg
                           viewBox="0 0 24 24"
@@ -264,8 +250,8 @@ export default function CheckoutPage() {
                       ),
                     },
                     {
-                      id: "card",
-                      label: "Thẻ tín dụng / Ghi nợ",
+                      id: 'card',
+                      label: 'Thẻ tín dụng / Ghi nợ',
                       icon: (
                         <svg
                           viewBox="0 0 24 24"
@@ -279,8 +265,8 @@ export default function CheckoutPage() {
                       ),
                     },
                     {
-                      id: "momo",
-                      label: "Ví MoMo",
+                      id: 'momo',
+                      label: 'Ví MoMo',
                       icon: (
                         <svg
                           viewBox="0 0 24 24"
@@ -294,8 +280,8 @@ export default function CheckoutPage() {
                       ),
                     },
                     {
-                      id: "bank",
-                      label: "Chuyển khoản ngân hàng",
+                      id: 'bank',
+                      label: 'Chuyển khoản ngân hàng',
                       icon: (
                         <svg
                           viewBox="0 0 24 24"
@@ -309,8 +295,8 @@ export default function CheckoutPage() {
                       ),
                     },
                     {
-                      id: "installment",
-                      label: "Trả góp 0% (12 tháng)",
+                      id: 'installment',
+                      label: 'Trả góp 0% (12 tháng)',
                       icon: (
                         <svg
                           viewBox="0 0 24 24"
@@ -326,7 +312,7 @@ export default function CheckoutPage() {
                   ].map((m) => (
                     <label
                       key={m.id}
-                      className={`flex cursor-pointer items-center gap-4 rounded-2xl border p-4 transition-colors duration-200 ${payMethod === m.id ? "border-slate-900 bg-slate-50" : "border-slate-200 hover:border-slate-300"}`}
+                      className={`flex cursor-pointer items-center gap-4 rounded-2xl border p-4 transition-colors duration-200 ${payMethod === m.id ? 'border-slate-900 bg-slate-50' : 'border-slate-200 hover:border-slate-300'}`}
                     >
                       <input
                         type="radio"
@@ -336,15 +322,13 @@ export default function CheckoutPage() {
                         className="shrink-0 accent-slate-900"
                       />
                       <span className="shrink-0 text-slate-500">{m.icon}</span>
-                      <span className="text-sm font-medium text-slate-900">
-                        {m.label}
-                      </span>
+                      <span className="text-sm font-medium text-slate-900">{m.label}</span>
                     </label>
                   ))}
                 </div>
 
                 {/* Card form */}
-                {payMethod === "card" && (
+                {payMethod === 'card' && (
                   <div className="mt-4 space-y-3 rounded-2xl border border-slate-100 bg-slate-50 p-4">
                     <div>
                       <label
@@ -398,9 +382,7 @@ export default function CheckoutPage() {
             {/* ── Order summary ── */}
             <div className="lg:col-span-2">
               <div className="sticky top-36 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                <h2 className="mb-5 font-bold text-slate-900">
-                  Đơn hàng của bạn
-                </h2>
+                <h2 className="mb-5 font-bold text-slate-900">Đơn hàng của bạn</h2>
                 <div className="mb-5 space-y-4">
                   {orderItems.map((item) => (
                     <div key={item.name} className="flex gap-3">
@@ -443,9 +425,7 @@ export default function CheckoutPage() {
                 <div className="mb-5 space-y-2.5 border-t border-slate-100 pt-4">
                   <div className="flex justify-between text-sm">
                     <span className="text-slate-500">Tạm tính</span>
-                    <span className="font-medium text-slate-900">
-                      68.780.000₫
-                    </span>
+                    <span className="font-medium text-slate-900">68.780.000₫</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-slate-500">Vận chuyển</span>
@@ -460,9 +440,7 @@ export default function CheckoutPage() {
                 <div className="mb-6 border-t border-slate-100 pt-4">
                   <div className="flex justify-between">
                     <span className="font-bold text-slate-900">Tổng cộng</span>
-                    <span className="text-xl font-bold text-slate-900">
-                      68.280.000₫
-                    </span>
+                    <span className="text-xl font-bold text-slate-900">68.280.000₫</span>
                   </div>
                   <p className="mt-1 text-xs text-slate-400">Đã bao gồm VAT</p>
                 </div>
@@ -510,5 +488,5 @@ export default function CheckoutPage() {
         </div>
       </main>
     </>
-  )
+  );
 }

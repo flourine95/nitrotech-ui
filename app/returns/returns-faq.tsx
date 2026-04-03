@@ -1,27 +1,27 @@
-"use client"
-import { useState } from "react"
+'use client';
+import { useState } from 'react';
 
 const faqs = [
   {
-    q: "Thời gian hoàn tiền mất bao lâu?",
-    a: "Sau khi nhận và kiểm tra sản phẩm, chúng tôi sẽ hoàn tiền trong 3–5 ngày làm việc qua phương thức thanh toán ban đầu.",
+    q: 'Thời gian hoàn tiền mất bao lâu?',
+    a: 'Sau khi nhận và kiểm tra sản phẩm, chúng tôi sẽ hoàn tiền trong 3–5 ngày làm việc qua phương thức thanh toán ban đầu.',
   },
   {
-    q: "Ai chịu phí vận chuyển khi đổi trả?",
-    a: "NitroTech chịu phí vận chuyển nếu lỗi do chúng tôi (sai hàng, lỗi kỹ thuật). Khách hàng chịu phí nếu đổi ý.",
+    q: 'Ai chịu phí vận chuyển khi đổi trả?',
+    a: 'NitroTech chịu phí vận chuyển nếu lỗi do chúng tôi (sai hàng, lỗi kỹ thuật). Khách hàng chịu phí nếu đổi ý.',
   },
   {
-    q: "Tôi có thể đổi sang sản phẩm khác giá cao hơn không?",
-    a: "Có. Bạn chỉ cần thanh toán thêm phần chênh lệch giá.",
+    q: 'Tôi có thể đổi sang sản phẩm khác giá cao hơn không?',
+    a: 'Có. Bạn chỉ cần thanh toán thêm phần chênh lệch giá.',
   },
   {
-    q: "Sản phẩm mở hộp rồi có đổi trả được không?",
-    a: "Có thể đổi trả nếu sản phẩm bị lỗi kỹ thuật. Trường hợp đổi ý, sản phẩm phải còn nguyên hộp và chưa kích hoạt.",
+    q: 'Sản phẩm mở hộp rồi có đổi trả được không?',
+    a: 'Có thể đổi trả nếu sản phẩm bị lỗi kỹ thuật. Trường hợp đổi ý, sản phẩm phải còn nguyên hộp và chưa kích hoạt.',
   },
-]
+];
 
 export function ReturnsFaq() {
-  const [openFaq, setOpenFaq] = useState<number | null>(null)
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   return (
     <div className="space-y-3">
@@ -38,7 +38,7 @@ export function ReturnsFaq() {
             <span className="text-sm font-medium text-slate-900">{faq.q}</span>
             <svg
               viewBox="0 0 24 24"
-              className={`h-5 w-5 shrink-0 text-slate-400 transition-transform duration-200 ${openFaq === i ? "rotate-180" : ""}`}
+              className={`h-5 w-5 shrink-0 text-slate-400 transition-transform duration-200 ${openFaq === i ? 'rotate-180' : ''}`}
               fill="none"
               stroke="currentColor"
               strokeWidth="2"
@@ -55,5 +55,5 @@ export function ReturnsFaq() {
         </div>
       ))}
     </div>
-  )
+  );
 }

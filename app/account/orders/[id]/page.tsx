@@ -1,43 +1,39 @@
-import type { Metadata } from "next"
-import Link from "next/link"
+import type { Metadata } from 'next';
+import Link from 'next/link';
 
-export const metadata: Metadata = { title: "Chi tiết đơn hàng" }
+export const metadata: Metadata = { title: 'Chi tiết đơn hàng' };
 
 const orderItems = [
   {
-    slug: "macbook-pro-m4",
-    name: "MacBook Pro M4",
-    variant: "16GB / 512GB / Space Black",
-    price: "42.990.000₫",
+    slug: 'macbook-pro-m4',
+    name: 'MacBook Pro M4',
+    variant: '16GB / 512GB / Space Black',
+    price: '42.990.000₫',
     qty: 1,
   },
   {
-    slug: "rtx-4080-super",
-    name: "RTX 4080 Super",
-    variant: "16GB GDDR6X",
-    price: "22.500.000₫",
+    slug: 'rtx-4080-super',
+    name: 'RTX 4080 Super',
+    variant: '16GB GDDR6X',
+    price: '22.500.000₫',
     qty: 1,
   },
-]
+];
 
 const timeline = [
-  { label: "Đặt hàng thành công", time: "12/03/2025 09:14", done: true },
-  { label: "Đã xác nhận đơn hàng", time: "12/03/2025 09:32", done: true },
-  { label: "Đang đóng gói", time: "12/03/2025 10:05", done: true },
+  { label: 'Đặt hàng thành công', time: '12/03/2025 09:14', done: true },
+  { label: 'Đã xác nhận đơn hàng', time: '12/03/2025 09:32', done: true },
+  { label: 'Đang đóng gói', time: '12/03/2025 10:05', done: true },
   {
-    label: "Đã giao cho đơn vị vận chuyển",
-    time: "12/03/2025 11:20",
+    label: 'Đã giao cho đơn vị vận chuyển',
+    time: '12/03/2025 11:20',
     done: true,
   },
-  { label: "Đang giao hàng", time: "12/03/2025 13:45", done: true },
-  { label: "Giao hàng thành công", time: "12/03/2025 15:10", done: true },
-]
+  { label: 'Đang giao hàng', time: '12/03/2025 13:45', done: true },
+  { label: 'Giao hàng thành công', time: '12/03/2025 15:10', done: true },
+];
 
-export default function OrderDetailPage({
-  params,
-}: {
-  params: { id: string }
-}) {
+export default function OrderDetailPage({ params }: { params: { id: string } }) {
   return (
     <div className="space-y-5">
       {/* Header */}
@@ -59,19 +55,12 @@ export default function OrderDetailPage({
                 <path d="M19 12H5M12 5l-7 7 7 7" />
               </svg>
             </Link>
-            <h1 className="text-xl font-bold text-slate-900">
-              Đơn hàng {params.id}
-            </h1>
+            <h1 className="text-xl font-bold text-slate-900">Đơn hàng {params.id}</h1>
           </div>
-          <p className="text-sm text-slate-400">
-            Đặt ngày 12/03/2025 lúc 09:14
-          </p>
+          <p className="text-sm text-slate-400">Đặt ngày 12/03/2025 lúc 09:14</p>
         </div>
         <span className="inline-flex items-center gap-1.5 rounded-full bg-green-100 px-3 py-1.5 text-sm font-medium text-green-700">
-          <span
-            className="h-1.5 w-1.5 rounded-full bg-green-500"
-            aria-hidden="true"
-          />
+          <span className="h-1.5 w-1.5 rounded-full bg-green-500" aria-hidden="true" />
           Đã giao hàng
         </span>
       </div>
@@ -114,17 +103,11 @@ export default function OrderDetailPage({
                     >
                       {item.name}
                     </Link>
-                    <div className="mt-0.5 text-xs text-slate-400">
-                      {item.variant}
-                    </div>
-                    <div className="mt-0.5 text-xs text-slate-400">
-                      Số lượng: {item.qty}
-                    </div>
+                    <div className="mt-0.5 text-xs text-slate-400">{item.variant}</div>
+                    <div className="mt-0.5 text-xs text-slate-400">Số lượng: {item.qty}</div>
                   </div>
                   <div className="shrink-0 text-right">
-                    <div className="text-sm font-bold text-slate-900">
-                      {item.price}
-                    </div>
+                    <div className="text-sm font-bold text-slate-900">{item.price}</div>
                     <button className="mt-2 cursor-pointer text-xs text-blue-600 transition-colors duration-150 hover:text-blue-700">
                       Đánh giá
                     </button>
@@ -136,19 +119,17 @@ export default function OrderDetailPage({
 
           {/* Timeline */}
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-5 font-bold text-slate-900">
-              Trạng thái đơn hàng
-            </h2>
+            <h2 className="mb-5 font-bold text-slate-900">Trạng thái đơn hàng</h2>
             <ol className="relative">
               {timeline.map((step, i) => (
                 <li
                   key={step.label}
-                  className={`flex gap-4 ${i < timeline.length - 1 ? "pb-5" : ""}`}
+                  className={`flex gap-4 ${i < timeline.length - 1 ? 'pb-5' : ''}`}
                 >
                   {/* Line */}
                   <div className="flex flex-col items-center">
                     <div
-                      className={`z-10 flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${step.done ? "bg-green-500" : "bg-slate-200"}`}
+                      className={`z-10 flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${step.done ? 'bg-green-500' : 'bg-slate-200'}`}
                     >
                       {step.done && (
                         <svg
@@ -162,20 +143,18 @@ export default function OrderDetailPage({
                     </div>
                     {i < timeline.length - 1 && (
                       <div
-                        className={`mt-1 w-px flex-1 ${step.done ? "bg-green-300" : "bg-slate-200"}`}
+                        className={`mt-1 w-px flex-1 ${step.done ? 'bg-green-300' : 'bg-slate-200'}`}
                         aria-hidden="true"
                       />
                     )}
                   </div>
                   <div className="pb-1">
                     <div
-                      className={`text-sm font-medium ${step.done ? "text-slate-900" : "text-slate-400"}`}
+                      className={`text-sm font-medium ${step.done ? 'text-slate-900' : 'text-slate-400'}`}
                     >
                       {step.label}
                     </div>
-                    <div className="mt-0.5 text-xs text-slate-400">
-                      {step.time}
-                    </div>
+                    <div className="mt-0.5 text-xs text-slate-400">{step.time}</div>
                   </div>
                 </li>
               ))}
@@ -203,9 +182,7 @@ export default function OrderDetailPage({
               </div>
               <div className="flex justify-between border-t border-slate-100 pt-2.5">
                 <span className="font-bold text-slate-900">Tổng cộng</span>
-                <span className="text-base font-bold text-slate-900">
-                  65.490.000₫
-                </span>
+                <span className="text-base font-bold text-slate-900">65.490.000₫</span>
               </div>
             </div>
             <div className="mt-4 flex items-center gap-2 border-t border-slate-100 pt-4 text-sm text-slate-500">
@@ -246,5 +223,5 @@ export default function OrderDetailPage({
         </div>
       </div>
     </div>
-  )
+  );
 }

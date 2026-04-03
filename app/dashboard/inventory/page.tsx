@@ -1,19 +1,17 @@
-"use client"
-import { getAllProducts } from "@/lib/products"
+'use client';
+import { getAllProducts } from '@/lib/products';
 
 export default function DashboardInventoryPage() {
-  const products = getAllProducts()
-  const lowStock = products.filter((p) => p.stockCount < 10)
-  const outOfStock = products.filter((p) => !p.inStock)
-  const healthy = products.filter((p) => p.inStock && p.stockCount >= 10)
+  const products = getAllProducts();
+  const lowStock = products.filter((p) => p.stockCount < 10);
+  const outOfStock = products.filter((p) => !p.inStock);
+  const healthy = products.filter((p) => p.inStock && p.stockCount >= 10);
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Kho hàng</h1>
-        <p className="mt-1 text-sm text-slate-500">
-          Theo dõi tồn kho và cảnh báo sắp hết hàng
-        </p>
+        <p className="mt-1 text-sm text-slate-500">Theo dõi tồn kho và cảnh báo sắp hết hàng</p>
       </div>
 
       {/* Stats */}
@@ -32,9 +30,7 @@ export default function DashboardInventoryPage() {
             </svg>
           </div>
           <div>
-            <div className="text-2xl font-bold text-slate-900">
-              {healthy.length}
-            </div>
+            <div className="text-2xl font-bold text-slate-900">{healthy.length}</div>
             <div className="text-sm text-slate-500">Đủ hàng</div>
           </div>
         </div>
@@ -54,9 +50,7 @@ export default function DashboardInventoryPage() {
             </svg>
           </div>
           <div>
-            <div className="text-2xl font-bold text-slate-900">
-              {lowStock.length}
-            </div>
+            <div className="text-2xl font-bold text-slate-900">{lowStock.length}</div>
             <div className="text-sm text-slate-500">Sắp hết hàng (&lt;10)</div>
           </div>
         </div>
@@ -76,9 +70,7 @@ export default function DashboardInventoryPage() {
             </svg>
           </div>
           <div>
-            <div className="text-2xl font-bold text-slate-900">
-              {outOfStock.length}
-            </div>
+            <div className="text-2xl font-bold text-slate-900">{outOfStock.length}</div>
             <div className="text-sm text-slate-500">Hết hàng</div>
           </div>
         </div>
@@ -104,7 +96,7 @@ export default function DashboardInventoryPage() {
               {lowStock.length} sản phẩm sắp hết hàng
             </div>
             <div className="mt-0.5 text-xs text-amber-700">
-              {lowStock.map((p) => p.name).join(", ")}
+              {lowStock.map((p) => p.name).join(', ')}
             </div>
           </div>
         </div>
@@ -139,27 +131,20 @@ export default function DashboardInventoryPage() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {products.map((p) => {
-                const pct = Math.min((p.stockCount / 30) * 100, 100)
+                const pct = Math.min((p.stockCount / 30) * 100, 100);
                 const barColor =
                   p.stockCount === 0
-                    ? "bg-rose-500"
+                    ? 'bg-rose-500'
                     : p.stockCount < 10
-                      ? "bg-amber-500"
-                      : "bg-green-500"
+                      ? 'bg-amber-500'
+                      : 'bg-green-500';
                 return (
-                  <tr
-                    key={p.slug}
-                    className="transition-colors hover:bg-slate-50"
-                  >
+                  <tr key={p.slug} className="transition-colors hover:bg-slate-50">
                     <td className="px-5 py-4">
-                      <div className="font-semibold text-slate-900">
-                        {p.name}
-                      </div>
+                      <div className="font-semibold text-slate-900">{p.name}</div>
                       <div className="text-xs text-slate-400">{p.brand}</div>
                     </td>
-                    <td className="px-5 py-4 font-mono text-xs text-slate-500">
-                      {p.sku}
-                    </td>
+                    <td className="px-5 py-4 font-mono text-xs text-slate-500">{p.sku}</td>
                     <td className="px-5 py-4">
                       <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
                         {p.cat}
@@ -167,7 +152,7 @@ export default function DashboardInventoryPage() {
                     </td>
                     <td className="px-5 py-4 text-center">
                       <span
-                        className={`text-lg font-bold ${p.stockCount === 0 ? "text-rose-600" : p.stockCount < 10 ? "text-amber-600" : "text-slate-900"}`}
+                        className={`text-lg font-bold ${p.stockCount === 0 ? 'text-rose-600' : p.stockCount < 10 ? 'text-amber-600' : 'text-slate-900'}`}
                       >
                         {p.stockCount}
                       </span>
@@ -206,12 +191,12 @@ export default function DashboardInventoryPage() {
                       </button>
                     </td>
                   </tr>
-                )
+                );
               })}
             </tbody>
           </table>
         </div>
       </div>
     </div>
-  )
+  );
 }

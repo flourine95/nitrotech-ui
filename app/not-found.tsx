@@ -1,13 +1,13 @@
-import Link from "next/link"
-import { SiteHeader } from "@/components/site-header"
-import { SiteFooter } from "@/components/site-footer"
+import Link from 'next/link';
+import { SiteHeader } from '@/components/site-header';
+import { SiteFooter } from '@/components/site-footer';
 
 const quickLinks = [
-  { label: "Laptop", href: "/products?cat=laptop" },
-  { label: "GPU", href: "/products?cat=gpu" },
-  { label: "Màn hình", href: "/products?cat=monitors" },
-  { label: "Khuyến mãi", href: "/products?sale=true" },
-]
+  { label: 'Laptop', href: '/products?cat=laptop' },
+  { label: 'GPU', href: '/products?cat=gpu' },
+  { label: 'Màn hình', href: '/products?cat=monitors' },
+  { label: 'Khuyến mãi', href: '/products?sale=true' },
+];
 
 export default function NotFound() {
   return (
@@ -18,10 +18,10 @@ export default function NotFound() {
         <div
           className="mb-4 text-[120px] leading-none font-black select-none sm:text-[160px]"
           style={{
-            background: "linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            backgroundClip: "text",
+            background: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
           }}
           aria-hidden="true"
         >
@@ -32,8 +32,7 @@ export default function NotFound() {
           Trang không tìm thấy
         </h1>
         <p className="mb-10 max-w-md text-center leading-relaxed text-slate-500">
-          Trang bạn đang tìm kiếm có thể đã bị xóa, đổi tên hoặc tạm thời không
-          khả dụng.
+          Trang bạn đang tìm kiếm có thể đã bị xóa, đổi tên hoặc tạm thời không khả dụng.
         </p>
 
         {/* Action buttons */}
@@ -78,5 +77,5 @@ export default function NotFound() {
       </main>
       <SiteFooter />
     </>
-  )
+  );
 }

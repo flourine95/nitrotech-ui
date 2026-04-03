@@ -1,40 +1,38 @@
-"use client"
-import { useState } from "react"
-import Link from "next/link"
-import { getAllProducts } from "@/lib/products"
+'use client';
+import { useState } from 'react';
+import Link from 'next/link';
+import { getAllProducts } from '@/lib/products';
 
 const categories = [
-  "Tất cả",
-  "Laptop",
-  "Laptop Gaming",
-  "Card đồ họa",
-  "CPU",
-  "SSD NVMe",
-  "RAM",
-  "Màn hình",
-]
+  'Tất cả',
+  'Laptop',
+  'Laptop Gaming',
+  'Card đồ họa',
+  'CPU',
+  'SSD NVMe',
+  'RAM',
+  'Màn hình',
+];
 
 export default function DashboardProductsPage() {
-  const allProducts = getAllProducts()
-  const [search, setSearch] = useState("")
-  const [cat, setCat] = useState("Tất cả")
+  const allProducts = getAllProducts();
+  const [search, setSearch] = useState('');
+  const [cat, setCat] = useState('Tất cả');
 
   const filtered = allProducts.filter((p) => {
-    const matchCat = cat === "Tất cả" || p.cat === cat
+    const matchCat = cat === 'Tất cả' || p.cat === cat;
     const matchSearch =
       p.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.brand.toLowerCase().includes(search.toLowerCase())
-    return matchCat && matchSearch
-  })
+      p.brand.toLowerCase().includes(search.toLowerCase());
+    return matchCat && matchSearch;
+  });
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Sản phẩm</h1>
-          <p className="mt-1 text-sm text-slate-500">
-            {allProducts.length} sản phẩm trong kho
-          </p>
+          <p className="mt-1 text-sm text-slate-500">{allProducts.length} sản phẩm trong kho</p>
         </div>
         <button className="flex cursor-pointer items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700">
           <svg
@@ -82,8 +80,8 @@ export default function DashboardProductsPage() {
               onClick={() => setCat(c)}
               className={`cursor-pointer rounded-xl px-3 py-2 text-sm font-medium transition-colors ${
                 cat === c
-                  ? "bg-slate-900 text-white"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  ? 'bg-slate-900 text-white'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
               {c}
@@ -124,42 +122,29 @@ export default function DashboardProductsPage() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filtered.map((p) => (
-                <tr
-                  key={p.slug}
-                  className="transition-colors hover:bg-slate-50"
-                >
+                <tr key={p.slug} className="transition-colors hover:bg-slate-50">
                   <td className="px-5 py-4">
                     <div className="font-semibold text-slate-900">{p.name}</div>
-                    <div className="mt-0.5 text-xs text-slate-400">
-                      {p.brand}
-                    </div>
+                    <div className="mt-0.5 text-xs text-slate-400">{p.brand}</div>
                   </td>
-                  <td className="px-5 py-4 font-mono text-xs text-slate-500">
-                    {p.sku}
-                  </td>
+                  <td className="px-5 py-4 font-mono text-xs text-slate-500">{p.sku}</td>
                   <td className="px-5 py-4">
                     <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
                       {p.cat}
                     </span>
                   </td>
                   <td className="px-5 py-4 text-right">
-                    <div className="font-semibold text-slate-900">
-                      {p.price}
-                    </div>
-                    <div className="text-xs text-slate-400 line-through">
-                      {p.old}
-                    </div>
+                    <div className="font-semibold text-slate-900">{p.price}</div>
+                    <div className="text-xs text-slate-400 line-through">{p.old}</div>
                   </td>
                   <td className="px-5 py-4 text-center">
                     <span
-                      className={`font-semibold ${p.stockCount < 10 ? "text-rose-600" : "text-slate-900"}`}
+                      className={`font-semibold ${p.stockCount < 10 ? 'text-rose-600' : 'text-slate-900'}`}
                     >
                       {p.stockCount}
                     </span>
                     {p.stockCount < 10 && (
-                      <div className="mt-0.5 text-xs text-rose-500">
-                        Sắp hết
-                      </div>
+                      <div className="mt-0.5 text-xs text-rose-500">Sắp hết</div>
                     )}
                   </td>
                   <td className="px-5 py-4 text-center">
@@ -171,19 +156,15 @@ export default function DashboardProductsPage() {
                       >
                         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                       </svg>
-                      <span className="text-sm font-semibold text-slate-900">
-                        {p.rating}
-                      </span>
-                      <span className="text-xs text-slate-400">
-                        ({p.reviews})
-                      </span>
+                      <span className="text-sm font-semibold text-slate-900">{p.rating}</span>
+                      <span className="text-xs text-slate-400">({p.reviews})</span>
                     </div>
                   </td>
                   <td className="px-5 py-4 text-center">
                     <span
-                      className={`rounded-full px-2.5 py-1 text-xs font-semibold ${p.inStock ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-500"}`}
+                      className={`rounded-full px-2.5 py-1 text-xs font-semibold ${p.inStock ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}
                     >
-                      {p.inStock ? "Còn hàng" : "Hết hàng"}
+                      {p.inStock ? 'Còn hàng' : 'Hết hàng'}
                     </span>
                   </td>
                   <td className="px-5 py-4">
@@ -263,5 +244,5 @@ export default function DashboardProductsPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

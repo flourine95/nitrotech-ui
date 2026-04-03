@@ -1,42 +1,39 @@
-"use client"
-import { useState, Suspense } from "react"
-import Link from "next/link"
-import { useRouter, useSearchParams } from "next/navigation"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { toast } from "sonner"
-import { loginSchema, type LoginInput } from "@/lib/schemas/auth"
-import { login } from "@/lib/auth-api"
+'use client';
+import { useState, Suspense } from 'react';
+import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { toast } from 'sonner';
+import { loginSchema, type LoginInput } from '@/lib/schemas/auth';
+import { login } from '@/lib/auth-api';
 
 function LoginForm() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const [showPass, setShowPass] = useState(false)
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [showPass, setShowPass] = useState(false);
 
   const {
     register,
     handleSubmit,
     setError,
     formState: { errors, isSubmitting },
-  } = useForm<LoginInput>({ resolver: zodResolver(loginSchema) })
+  } = useForm<LoginInput>({ resolver: zodResolver(loginSchema) });
 
   async function onSubmit(data: LoginInput) {
     try {
-      await login(data.email, data.password)
-      toast.success("Đăng nhập thành công")
-      router.push(searchParams.get("from") ?? "/")
-      router.refresh()
+      await login(data.email, data.password);
+      toast.success('Đăng nhập thành công');
+      router.push(searchParams.get('from') ?? '/');
+      router.refresh();
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Đăng nhập thất bại"
-      if (msg.includes("ACCOUNT_NOT_ACTIVE")) {
-        toast.error("Tài khoản chưa xác thực email")
-      } else if (
-        msg.includes("INVALID_CREDENTIALS") ||
-        msg.includes("incorrect")
-      ) {
-        toast.error("Email hoặc mật khẩu không đúng")
+      const msg = e instanceof Error ? e.message : 'Đăng nhập thất bại';
+      if (msg.includes('ACCOUNT_NOT_ACTIVE')) {
+        toast.error('Tài khoản chưa xác thực email');
+      } else if (msg.includes('INVALID_CREDENTIALS') || msg.includes('incorrect')) {
+        toast.error('Email hoặc mật khẩu không đúng');
       } else {
-        toast.error(msg)
+        toast.error(msg);
       }
     }
   }
@@ -46,9 +43,7 @@ function LoginForm() {
       <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
         <div className="mb-8 text-center">
           <h1 className="mb-1 text-2xl font-bold text-slate-900">Đăng nhập</h1>
-          <p className="text-sm text-slate-500">
-            Chào mừng bạn quay lại NitroTech
-          </p>
+          <p className="text-sm text-slate-500">Chào mừng bạn quay lại NitroTech</p>
         </div>
 
         {/* Social login */}
@@ -94,22 +89,13 @@ function LoginForm() {
 
         <div className="mb-6 flex items-center gap-3">
           <div className="h-px flex-1 bg-slate-200" />
-          <span className="text-xs text-slate-400">
-            hoặc đăng nhập bằng email
-          </span>
+          <span className="text-xs text-slate-400">hoặc đăng nhập bằng email</span>
           <div className="h-px flex-1 bg-slate-200" />
         </div>
 
-        <form
-          className="space-y-4"
-          onSubmit={handleSubmit(onSubmit)}
-          noValidate
-        >
+        <form className="space-y-4" onSubmit={handleSubmit(onSubmit)} noValidate>
           <div>
-            <label
-              htmlFor="email"
-              className="mb-1.5 block text-sm font-medium text-slate-700"
-            >
+            <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-slate-700">
               Email
             </label>
             <input
@@ -117,26 +103,19 @@ function LoginForm() {
               type="email"
               placeholder="email@example.com"
               autoComplete="email"
-              {...register("email")}
+              {...register('email')}
               className={`w-full rounded-full border px-4 py-3 text-sm text-slate-900 placeholder-slate-400 transition-all duration-200 focus:ring-2 focus:outline-none ${
                 errors.email
-                  ? "border-rose-400 focus:border-rose-400 focus:ring-rose-100"
-                  : "border-slate-200 focus:border-blue-400 focus:ring-blue-100"
+                  ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-100'
+                  : 'border-slate-200 focus:border-blue-400 focus:ring-blue-100'
               }`}
             />
-            {errors.email && (
-              <p className="mt-1.5 text-xs text-rose-500">
-                {errors.email.message}
-              </p>
-            )}
+            {errors.email && <p className="mt-1.5 text-xs text-rose-500">{errors.email.message}</p>}
           </div>
 
           <div>
             <div className="mb-1.5 flex items-center justify-between">
-              <label
-                htmlFor="password"
-                className="text-sm font-medium text-slate-700"
-              >
+              <label htmlFor="password" className="text-sm font-medium text-slate-700">
                 Mật khẩu
               </label>
               <Link
@@ -149,21 +128,21 @@ function LoginForm() {
             <div className="relative">
               <input
                 id="password"
-                type={showPass ? "text" : "password"}
+                type={showPass ? 'text' : 'password'}
                 placeholder="••••••••"
                 autoComplete="current-password"
-                {...register("password")}
+                {...register('password')}
                 className={`w-full rounded-full border px-4 py-3 pr-12 text-sm text-slate-900 placeholder-slate-400 transition-all duration-200 focus:ring-2 focus:outline-none ${
                   errors.password
-                    ? "border-rose-400 focus:border-rose-400 focus:ring-rose-100"
-                    : "border-slate-200 focus:border-blue-400 focus:ring-blue-100"
+                    ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-100'
+                    : 'border-slate-200 focus:border-blue-400 focus:ring-blue-100'
                 }`}
               />
               <button
                 type="button"
                 onClick={() => setShowPass(!showPass)}
                 className="absolute top-1/2 right-4 -translate-y-1/2 cursor-pointer text-slate-400 transition-colors duration-150 hover:text-slate-700"
-                aria-label={showPass ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                aria-label={showPass ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
               >
                 <svg
                   viewBox="0 0 24 24"
@@ -188,9 +167,7 @@ function LoginForm() {
               </button>
             </div>
             {errors.password && (
-              <p className="mt-1.5 text-xs text-rose-500">
-                {errors.password.message}
-              </p>
+              <p className="mt-1.5 text-xs text-rose-500">{errors.password.message}</p>
             )}
           </div>
 
@@ -199,12 +176,12 @@ function LoginForm() {
             disabled={isSubmitting}
             className="w-full cursor-pointer rounded-full bg-slate-900 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {isSubmitting ? "Đang đăng nhập..." : "Đăng nhập"}
+            {isSubmitting ? 'Đang đăng nhập...' : 'Đăng nhập'}
           </button>
         </form>
 
         <p className="mt-6 text-center text-sm text-slate-500">
-          Chưa có tài khoản?{" "}
+          Chưa có tài khoản?{' '}
           <Link
             href="/register"
             className="cursor-pointer font-medium text-blue-600 transition-colors duration-150 hover:text-blue-700"
@@ -214,17 +191,15 @@ function LoginForm() {
         </p>
       </div>
     </div>
-  )
+  );
 }
 
 export default function LoginPage() {
   return (
     <Suspense
-      fallback={
-        <div className="h-96 w-full max-w-md animate-pulse rounded-3xl bg-slate-100" />
-      }
+      fallback={<div className="h-96 w-full max-w-md animate-pulse rounded-3xl bg-slate-100" />}
     >
       <LoginForm />
     </Suspense>
-  )
+  );
 }

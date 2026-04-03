@@ -1,28 +1,28 @@
-"use client"
-import { useState } from "react"
+'use client';
+import { useState } from 'react';
 
 const subjects = [
-  "Tư vấn sản phẩm",
-  "Hỗ trợ đơn hàng",
-  "Bảo hành & Sửa chữa",
-  "Đổi trả hàng",
-  "Hợp tác kinh doanh",
-  "Khác",
-]
+  'Tư vấn sản phẩm',
+  'Hỗ trợ đơn hàng',
+  'Bảo hành & Sửa chữa',
+  'Đổi trả hàng',
+  'Hợp tác kinh doanh',
+  'Khác',
+];
 
 export function ContactForm() {
-  const [submitted, setSubmitted] = useState(false)
+  const [submitted, setSubmitted] = useState(false);
   const [form, setForm] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    subject: "",
-    message: "",
-  })
+    name: '',
+    email: '',
+    phone: '',
+    subject: '',
+    message: '',
+  });
 
   function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setSubmitted(true)
+    e.preventDefault();
+    setSubmitted(true);
   }
 
   if (submitted) {
@@ -40,39 +40,32 @@ export function ContactForm() {
             <polyline points="20 6 9 17 4 12" />
           </svg>
         </div>
-        <h2 className="mb-2 text-xl font-bold text-slate-900">
-          Gửi thành công!
-        </h2>
-        <p className="mb-6 text-slate-500">
-          Chúng tôi sẽ phản hồi bạn trong vòng 24 giờ.
-        </p>
+        <h2 className="mb-2 text-xl font-bold text-slate-900">Gửi thành công!</h2>
+        <p className="mb-6 text-slate-500">Chúng tôi sẽ phản hồi bạn trong vòng 24 giờ.</p>
         <button
           onClick={() => {
-            setSubmitted(false)
+            setSubmitted(false);
             setForm({
-              name: "",
-              email: "",
-              phone: "",
-              subject: "",
-              message: "",
-            })
+              name: '',
+              email: '',
+              phone: '',
+              subject: '',
+              message: '',
+            });
           }}
           className="cursor-pointer rounded-full bg-slate-900 px-6 py-2.5 text-sm font-semibold text-white transition-colors duration-200 hover:bg-slate-700"
         >
           Gửi tin nhắn khác
         </button>
       </div>
-    )
+    );
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <h2 className="mb-6 text-lg font-bold text-slate-900">Gửi tin nhắn</h2>
       <div>
-        <label
-          htmlFor="name"
-          className="mb-1.5 block text-sm font-medium text-slate-700"
-        >
+        <label htmlFor="name" className="mb-1.5 block text-sm font-medium text-slate-700">
           Họ và tên <span className="text-rose-500">*</span>
         </label>
         <input
@@ -87,10 +80,7 @@ export function ContactForm() {
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label
-            htmlFor="email"
-            className="mb-1.5 block text-sm font-medium text-slate-700"
-          >
+          <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-slate-700">
             Email <span className="text-rose-500">*</span>
           </label>
           <input
@@ -104,10 +94,7 @@ export function ContactForm() {
           />
         </div>
         <div>
-          <label
-            htmlFor="phone"
-            className="mb-1.5 block text-sm font-medium text-slate-700"
-          >
+          <label htmlFor="phone" className="mb-1.5 block text-sm font-medium text-slate-700">
             Số điện thoại
           </label>
           <input
@@ -121,10 +108,7 @@ export function ContactForm() {
         </div>
       </div>
       <div>
-        <label
-          htmlFor="subject"
-          className="mb-1.5 block text-sm font-medium text-slate-700"
-        >
+        <label htmlFor="subject" className="mb-1.5 block text-sm font-medium text-slate-700">
           Chủ đề <span className="text-rose-500">*</span>
         </label>
         <select
@@ -143,10 +127,7 @@ export function ContactForm() {
         </select>
       </div>
       <div>
-        <label
-          htmlFor="message"
-          className="mb-1.5 block text-sm font-medium text-slate-700"
-        >
+        <label htmlFor="message" className="mb-1.5 block text-sm font-medium text-slate-700">
           Nội dung <span className="text-rose-500">*</span>
         </label>
         <textarea
@@ -166,5 +147,5 @@ export function ContactForm() {
         Gửi tin nhắn
       </button>
     </form>
-  )
+  );
 }

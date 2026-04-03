@@ -1,93 +1,91 @@
-"use client"
-import { useState } from "react"
+'use client';
+import { useState } from 'react';
 
 const customers = [
   {
-    id: "KH001",
-    name: "Nguyễn Văn A",
-    email: "nguyenvana@email.com",
-    phone: "0901234567",
+    id: 'KH001',
+    name: 'Nguyễn Văn A',
+    email: 'nguyenvana@email.com',
+    phone: '0901234567',
     orders: 8,
     spent: 125000000,
-    joined: "15/01/2024",
-    tier: "VIP",
+    joined: '15/01/2024',
+    tier: 'VIP',
   },
   {
-    id: "KH002",
-    name: "Trần Thị B",
-    email: "tranthib@email.com",
-    phone: "0912345678",
+    id: 'KH002',
+    name: 'Trần Thị B',
+    email: 'tranthib@email.com',
+    phone: '0912345678',
     orders: 5,
     spent: 67500000,
-    joined: "20/01/2024",
-    tier: "Thân thiết",
+    joined: '20/01/2024',
+    tier: 'Thân thiết',
   },
   {
-    id: "KH003",
-    name: "Lê Văn C",
-    email: "levanc@email.com",
-    phone: "0923456789",
+    id: 'KH003',
+    name: 'Lê Văn C',
+    email: 'levanc@email.com',
+    phone: '0923456789',
     orders: 12,
     spent: 210000000,
-    joined: "05/12/2023",
-    tier: "VIP",
+    joined: '05/12/2023',
+    tier: 'VIP',
   },
   {
-    id: "KH004",
-    name: "Phạm Thị D",
-    email: "phamthid@email.com",
-    phone: "0934567890",
+    id: 'KH004',
+    name: 'Phạm Thị D',
+    email: 'phamthid@email.com',
+    phone: '0934567890',
     orders: 2,
     spent: 15000000,
-    joined: "10/03/2024",
-    tier: "Mới",
+    joined: '10/03/2024',
+    tier: 'Mới',
   },
   {
-    id: "KH005",
-    name: "Hoàng Văn E",
-    email: "hoangvane@email.com",
-    phone: "0945678901",
+    id: 'KH005',
+    name: 'Hoàng Văn E',
+    email: 'hoangvane@email.com',
+    phone: '0945678901',
     orders: 3,
     spent: 28000000,
-    joined: "22/02/2024",
-    tier: "Thân thiết",
+    joined: '22/02/2024',
+    tier: 'Thân thiết',
   },
   {
-    id: "KH006",
-    name: "Vũ Thị F",
-    email: "vuthif@email.com",
-    phone: "0956789012",
+    id: 'KH006',
+    name: 'Vũ Thị F',
+    email: 'vuthif@email.com',
+    phone: '0956789012',
     orders: 7,
     spent: 95000000,
-    joined: "08/11/2023",
-    tier: "VIP",
+    joined: '08/11/2023',
+    tier: 'VIP',
   },
-]
+];
 
 const tierConfig: Record<string, string> = {
-  VIP: "bg-amber-100 text-amber-700",
-  "Thân thiết": "bg-blue-100 text-blue-700",
-  Mới: "bg-green-100 text-green-700",
-}
+  VIP: 'bg-amber-100 text-amber-700',
+  'Thân thiết': 'bg-blue-100 text-blue-700',
+  Mới: 'bg-green-100 text-green-700',
+};
 
 export default function DashboardCustomersPage() {
-  const [search, setSearch] = useState("")
+  const [search, setSearch] = useState('');
 
   const filtered = customers.filter(
     (c) =>
       c.name.toLowerCase().includes(search.toLowerCase()) ||
       c.email.toLowerCase().includes(search.toLowerCase()) ||
-      c.id.toLowerCase().includes(search.toLowerCase())
-  )
+      c.id.toLowerCase().includes(search.toLowerCase()),
+  );
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Khách hàng</h1>
-          <p className="mt-1 text-sm text-slate-500">
-            {customers.length} khách hàng đã đăng ký
-          </p>
+          <p className="mt-1 text-sm text-slate-500">{customers.length} khách hàng đã đăng ký</p>
         </div>
         <button className="flex cursor-pointer items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700">
           <svg
@@ -110,19 +108,19 @@ export default function DashboardCustomersPage() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         {[
           {
-            label: "VIP",
-            count: customers.filter((c) => c.tier === "VIP").length,
-            color: "bg-amber-100 text-amber-700",
+            label: 'VIP',
+            count: customers.filter((c) => c.tier === 'VIP').length,
+            color: 'bg-amber-100 text-amber-700',
           },
           {
-            label: "Thân thiết",
-            count: customers.filter((c) => c.tier === "Thân thiết").length,
-            color: "bg-blue-100 text-blue-700",
+            label: 'Thân thiết',
+            count: customers.filter((c) => c.tier === 'Thân thiết').length,
+            color: 'bg-blue-100 text-blue-700',
           },
           {
-            label: "Mới",
-            count: customers.filter((c) => c.tier === "Mới").length,
-            color: "bg-green-100 text-green-700",
+            label: 'Mới',
+            count: customers.filter((c) => c.tier === 'Mới').length,
+            color: 'bg-green-100 text-green-700',
           },
         ].map((s) => (
           <div
@@ -197,12 +195,10 @@ export default function DashboardCustomersPage() {
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
                       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-600">
-                        {c.name.split(" ").pop()?.[0]}
+                        {c.name.split(' ').pop()?.[0]}
                       </div>
                       <div>
-                        <div className="font-semibold text-slate-900">
-                          {c.name}
-                        </div>
+                        <div className="font-semibold text-slate-900">{c.name}</div>
                         <div className="text-xs text-slate-400">{c.id}</div>
                       </div>
                     </div>
@@ -211,15 +207,11 @@ export default function DashboardCustomersPage() {
                     <div className="text-slate-700">{c.email}</div>
                     <div className="text-xs text-slate-400">{c.phone}</div>
                   </td>
-                  <td className="px-5 py-4 text-center font-semibold text-slate-900">
-                    {c.orders}
-                  </td>
+                  <td className="px-5 py-4 text-center font-semibold text-slate-900">{c.orders}</td>
                   <td className="px-5 py-4 text-right font-bold text-slate-900">
                     {(c.spent / 1000000).toFixed(0)}M₫
                   </td>
-                  <td className="px-5 py-4 text-center text-slate-500">
-                    {c.joined}
-                  </td>
+                  <td className="px-5 py-4 text-center text-slate-500">{c.joined}</td>
                   <td className="px-5 py-4 text-center">
                     <span
                       className={`rounded-full px-2.5 py-1 text-xs font-semibold ${tierConfig[c.tier]}`}
@@ -252,5 +244,5 @@ export default function DashboardCustomersPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

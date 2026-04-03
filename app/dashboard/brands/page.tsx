@@ -1,67 +1,55 @@
-"use client"
-import { useState, useEffect, useRef } from "react"
-import { toast } from "sonner"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
-import {
-  getBrands,
-  createBrand,
-  updateBrand,
-  deleteBrand,
-  type Brand,
-} from "@/lib/brands-api"
-import { ApiException } from "@/lib/api"
-import MediaPickerDialog from "@/components/media-picker-dialog"
+'use client';
+import { useState, useEffect, useRef } from 'react';
+import { toast } from 'sonner';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { getBrands, createBrand, updateBrand, deleteBrand, type Brand } from '@/lib/brands-api';
+import { ApiException } from '@/lib/api';
+import MediaPickerDialog from '@/components/media-picker-dialog';
 
 // ── Schema ────────────────────────────────────────────────────────────────────
 
 const brandSchema = z.object({
-  name: z.string().min(1, "Tên không được để trống"),
+  name: z.string().min(1, 'Tên không được để trống'),
   slug: z
     .string()
-    .min(1, "Slug không được để trống")
-    .regex(/^[a-z0-9-]+$/, "Slug chỉ gồm chữ thường, số và dấu gạch ngang"),
-  logo: z.string().url("Logo phải là URL hợp lệ").or(z.literal("")),
+    .min(1, 'Slug không được để trống')
+    .regex(/^[a-z0-9-]+$/, 'Slug chỉ gồm chữ thường, số và dấu gạch ngang'),
+  logo: z.string().url('Logo phải là URL hợp lệ').or(z.literal('')),
   description: z.string().optional(),
   active: z.boolean(),
-})
-type BrandInput = z.infer<typeof brandSchema>
+});
+type BrandInput = z.infer<typeof brandSchema>;
 
 // ── Logo uploader ─────────────────────────────────────────────────────────────
 
-function LogoUploader({
-  value,
-  onChange,
-}: {
-  value: string
-  onChange: (url: string) => void
-}) {
-  const [uploading, setUploading] = useState(false)
-  const [showPicker, setShowPicker] = useState(false)
-  const inputRef = useRef<HTMLInputElement>(null)
+function LogoUploader({ value, onChange }: { value: string; onChange: (url: string) => void }) {
+  const [uploading, setUploading] = useState(false);
+  const [showPicker, setShowPicker] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    if (!file.type.startsWith("image/")) {
-      toast.error("Chỉ chấp nhận file ảnh")
-      return
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      toast.error('Chỉ chấp nhận file ảnh');
+      return;
     }
     if (file.size > 2 * 1024 * 1024) {
-      toast.error("Ảnh tối đa 2MB")
-      return
+      toast.error('Ảnh tối đa 2MB');
+      return;
     }
-    setUploading(true)
+    setUploading(true);
     try {
-      const { uploadFile } = await import("@/lib/upload-api")
-      const result = await uploadFile(file, "brands")
-      onChange(result.secure_url)
+      const { uploadFile } = await import('@/lib/upload-api');
+      const result = await uploadFile(file, 'brands');
+      onChange(result.secure_url);
     } catch {
-      toast.error("Upload thất bại, vui lòng thử lại")
+      toast.error('Upload thất bại, vui lòng thử lại');
     } finally {
-      setUploading(false)
-      if (inputRef.current) inputRef.current.value = ""
+      setUploading(false);
+      if (inputRef.current) inputRef.current.value = '';
     }
   }
 
@@ -70,12 +58,8 @@ function LogoUploader({
       <div className="flex items-center gap-3">
         {/* Preview */}
         <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
-          {value && value.startsWith("http") ? (
-            <img
-              src={value}
-              alt="Logo preview"
-              className="h-full w-full object-contain p-1"
-            />
+          {value && value.startsWith('http') ? (
+            <img src={value} alt="Logo preview" className="h-full w-full object-contain p-1" />
           ) : (
             <svg
               viewBox="0 0 24 24"
@@ -104,7 +88,7 @@ function LogoUploader({
             />
             <label
               htmlFor="logo-upload"
-              className={`flex cursor-pointer items-center gap-1.5 rounded-xl border border-dashed border-slate-300 px-3 py-2 text-xs text-slate-600 transition-colors hover:border-blue-400 hover:bg-blue-50 hover:text-blue-600 ${uploading ? "pointer-events-none opacity-60" : ""}`}
+              className={`flex cursor-pointer items-center gap-1.5 rounded-xl border border-dashed border-slate-300 px-3 py-2 text-xs text-slate-600 transition-colors hover:border-blue-400 hover:bg-blue-50 hover:text-blue-600 ${uploading ? 'pointer-events-none opacity-60' : ''}`}
             >
               {uploading ? (
                 <>
@@ -115,12 +99,9 @@ function LogoUploader({
                     stroke="currentColor"
                     strokeWidth="2"
                   >
-                    <path
-                      d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      strokeOpacity=".3"
-                    />
+                    <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" strokeOpacity=".3" />
                     <path d="M21 12a9 9 0 00-9-9" />
-                  </svg>{" "}
+                  </svg>{' '}
                   Đang upload...
                 </>
               ) : (
@@ -135,7 +116,7 @@ function LogoUploader({
                     <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
                     <polyline points="17 8 12 3 7 8" />
                     <line x1="12" y1="3" x2="12" y2="15" />
-                  </svg>{" "}
+                  </svg>{' '}
                   Upload
                 </>
               )}
@@ -176,13 +157,13 @@ function LogoUploader({
           folder="brands"
           multiple={false}
           onInsert={(urls) => {
-            if (urls[0]) onChange(urls[0])
+            if (urls[0]) onChange(urls[0]);
           }}
           onClose={() => setShowPicker(false)}
         />
       )}
     </>
-  )
+  );
 }
 
 // ── Modal ─────────────────────────────────────────────────────────────────────
@@ -192,11 +173,11 @@ function BrandModal({
   onClose,
   onSaved,
 }: {
-  brand: Brand | null
-  onClose: () => void
-  onSaved: (b: Brand) => void
+  brand: Brand | null;
+  onClose: () => void;
+  onSaved: (b: Brand) => void;
 }) {
-  const isEdit = !!brand
+  const isEdit = !!brand;
   const {
     register,
     handleSubmit,
@@ -210,28 +191,28 @@ function BrandModal({
       ? {
           name: brand.name,
           slug: brand.slug,
-          logo: brand.logo ?? "",
-          description: brand.description ?? "",
+          logo: brand.logo ?? '',
+          description: brand.description ?? '',
           active: brand.active,
         }
-      : { name: "", slug: "", logo: "", description: "", active: true },
-  })
+      : { name: '', slug: '', logo: '', description: '', active: true },
+  });
 
-  const name = watch("name")
-  const logoValue = watch("logo")
-  const slugTouched = useRef(isEdit)
+  const name = watch('name');
+  const logoValue = watch('logo');
+  const slugTouched = useRef(isEdit);
 
   useEffect(() => {
     if (!slugTouched.current && name) {
       setValue(
-        "slug",
+        'slug',
         name
           .toLowerCase()
-          .replace(/\s+/g, "-")
-          .replace(/[^a-z0-9-]/g, "")
-      )
+          .replace(/\s+/g, '-')
+          .replace(/[^a-z0-9-]/g, ''),
+      );
     }
-  }, [name, setValue])
+  }, [name, setValue]);
 
   async function onSubmit(data: BrandInput) {
     try {
@@ -239,21 +220,20 @@ function BrandModal({
         ...data,
         logo: data.logo || null,
         description: data.description || null,
-      }
+      };
       const saved = isEdit
         ? await updateBrand(brand!.id, payload)
-        : await createBrand(payload as Brand)
-      toast.success(isEdit ? "Đã cập nhật thương hiệu" : "Đã tạo thương hiệu")
-      onSaved(saved)
+        : await createBrand(payload as Brand);
+      toast.success(isEdit ? 'Đã cập nhật thương hiệu' : 'Đã tạo thương hiệu');
+      onSaved(saved);
     } catch (e) {
       if (e instanceof ApiException) {
-        if (e.error.code === "BRAND_SLUG_EXISTS")
-          setError("slug", { message: "Slug đã tồn tại" })
+        if (e.error.code === 'BRAND_SLUG_EXISTS') setError('slug', { message: 'Slug đã tồn tại' });
         else if (e.error.errors)
           Object.entries(e.error.errors).forEach(([f, m]) =>
-            setError(f as keyof BrandInput, { message: m })
-          )
-        else toast.error(e.error.message)
+            setError(f as keyof BrandInput, { message: m }),
+          );
+        else toast.error(e.error.message);
       }
     }
   }
@@ -269,7 +249,7 @@ function BrandModal({
       >
         <div className="mb-5 flex items-center justify-between">
           <h2 className="text-base font-bold text-slate-900">
-            {isEdit ? "Sửa thương hiệu" : "Thêm thương hiệu"}
+            {isEdit ? 'Sửa thương hiệu' : 'Thêm thương hiệu'}
           </h2>
           <button
             onClick={onClose}
@@ -288,69 +268,45 @@ function BrandModal({
           </button>
         </div>
 
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="space-y-4"
-          noValidate
-        >
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
           <div>
             <label className="mb-1.5 block text-sm font-medium text-slate-700">
               Tên thương hiệu
             </label>
             <input
-              {...register("name")}
+              {...register('name')}
               placeholder="Apple"
-              className={`w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:ring-2 ${errors.name ? "border-rose-400 focus:ring-rose-100" : "border-slate-200 focus:border-blue-400 focus:ring-blue-100"}`}
+              className={`w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:ring-2 ${errors.name ? 'border-rose-400 focus:ring-rose-100' : 'border-slate-200 focus:border-blue-400 focus:ring-blue-100'}`}
             />
-            {errors.name && (
-              <p className="mt-1 text-xs text-rose-500">
-                {errors.name.message}
-              </p>
-            )}
+            {errors.name && <p className="mt-1 text-xs text-rose-500">{errors.name.message}</p>}
           </div>
 
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-700">
-              Slug
-            </label>
+            <label className="mb-1.5 block text-sm font-medium text-slate-700">Slug</label>
             <input
-              {...register("slug")}
+              {...register('slug')}
               placeholder="apple"
               onFocus={() => {
-                slugTouched.current = true
+                slugTouched.current = true;
               }}
-              className={`w-full rounded-xl border px-4 py-2.5 font-mono text-sm outline-none focus:ring-2 ${errors.slug ? "border-rose-400 focus:ring-rose-100" : "border-slate-200 focus:border-blue-400 focus:ring-blue-100"}`}
+              className={`w-full rounded-xl border px-4 py-2.5 font-mono text-sm outline-none focus:ring-2 ${errors.slug ? 'border-rose-400 focus:ring-rose-100' : 'border-slate-200 focus:border-blue-400 focus:ring-blue-100'}`}
             />
-            {errors.slug && (
-              <p className="mt-1 text-xs text-rose-500">
-                {errors.slug.message}
-              </p>
-            )}
+            {errors.slug && <p className="mt-1 text-xs text-rose-500">{errors.slug.message}</p>}
           </div>
 
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-700">
-              Logo
-            </label>
+            <label className="mb-1.5 block text-sm font-medium text-slate-700">Logo</label>
             <LogoUploader
               value={logoValue}
-              onChange={(url) =>
-                setValue("logo", url, { shouldValidate: true })
-              }
+              onChange={(url) => setValue('logo', url, { shouldValidate: true })}
             />
-            {errors.logo && (
-              <p className="mt-1 text-xs text-rose-500">
-                {errors.logo.message}
-              </p>
-            )}
+            {errors.logo && <p className="mt-1 text-xs text-rose-500">{errors.logo.message}</p>}
           </div>
 
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-700">
-              Mô tả
-            </label>
+            <label className="mb-1.5 block text-sm font-medium text-slate-700">Mô tả</label>
             <textarea
-              {...register("description")}
+              {...register('description')}
               rows={2}
               placeholder="Mô tả ngắn..."
               className="w-full resize-none rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
@@ -360,7 +316,7 @@ function BrandModal({
           <label className="flex cursor-pointer items-center gap-2.5">
             <input
               type="checkbox"
-              {...register("active")}
+              {...register('active')}
               className="h-4 w-4 cursor-pointer rounded accent-blue-600"
             />
             <span className="text-sm text-slate-700">Kích hoạt</span>
@@ -379,13 +335,13 @@ function BrandModal({
               disabled={isSubmitting}
               className="flex-1 cursor-pointer rounded-full bg-blue-600 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-60"
             >
-              {isSubmitting ? "Đang lưu..." : isEdit ? "Cập nhật" : "Tạo mới"}
+              {isSubmitting ? 'Đang lưu...' : isEdit ? 'Cập nhật' : 'Tạo mới'}
             </button>
           </div>
         </form>
       </div>
     </div>
-  )
+  );
 }
 
 // ── Delete confirm ────────────────────────────────────────────────────────────
@@ -395,9 +351,9 @@ function DeleteConfirm({
   onConfirm,
   onClose,
 }: {
-  name: string
-  onConfirm: () => void
-  onClose: () => void
+  name: string;
+  onConfirm: () => void;
+  onClose: () => void;
 }) {
   return (
     <div
@@ -423,9 +379,8 @@ function DeleteConfirm({
         </div>
         <h3 className="mb-1 font-bold text-slate-900">Xóa thương hiệu?</h3>
         <p className="mb-5 text-sm text-slate-500">
-          Thương hiệu{" "}
-          <span className="font-semibold text-slate-700">"{name}"</span> sẽ bị
-          xóa. Hành động này không thể hoàn tác.
+          Thương hiệu <span className="font-semibold text-slate-700">"{name}"</span> sẽ bị xóa. Hành
+          động này không thể hoàn tác.
         </p>
         <div className="flex gap-3">
           <button
@@ -443,69 +398,65 @@ function DeleteConfirm({
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function DashboardBrandsPage() {
-  const [brands, setBrands] = useState<Brand[]>([])
-  const [loading, setLoading] = useState(true)
-  const [search, setSearch] = useState("")
-  const [filterActive, setFilterActive] = useState<
-    "all" | "active" | "inactive"
-  >("all")
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [filterActive, setFilterActive] = useState<'all' | 'active' | 'inactive'>('all');
   const [modal, setModal] = useState<{ open: boolean; brand: Brand | null }>({
     open: false,
     brand: null,
-  })
-  const [deleteTarget, setDeleteTarget] = useState<Brand | null>(null)
+  });
+  const [deleteTarget, setDeleteTarget] = useState<Brand | null>(null);
 
   async function load() {
-    setLoading(true)
+    setLoading(true);
     try {
-      const data = await getBrands()
-      setBrands(data)
+      const data = await getBrands();
+      setBrands(data);
     } catch {
-      toast.error("Không thể tải danh sách thương hiệu")
+      toast.error('Không thể tải danh sách thương hiệu');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   useEffect(() => {
-    load()
-  }, [])
+    load();
+  }, []);
 
   const filtered = brands.filter((b) => {
     const matchSearch =
-      b.name.toLowerCase().includes(search.toLowerCase()) ||
-      b.slug.includes(search.toLowerCase())
+      b.name.toLowerCase().includes(search.toLowerCase()) || b.slug.includes(search.toLowerCase());
     const matchActive =
-      filterActive === "all" ||
-      (filterActive === "active" ? b.active : !b.active)
-    return matchSearch && matchActive
-  })
+      filterActive === 'all' || (filterActive === 'active' ? b.active : !b.active);
+    return matchSearch && matchActive;
+  });
 
   async function handleDelete(brand: Brand) {
     try {
-      await deleteBrand(brand.id)
-      setBrands((prev) => prev.filter((b) => b.id !== brand.id))
-      toast.success("Đã xóa thương hiệu")
+      await deleteBrand(brand.id);
+      setBrands((prev) => prev.filter((b) => b.id !== brand.id));
+      toast.success('Đã xóa thương hiệu');
     } catch (e) {
-      toast.error(e instanceof ApiException ? e.error.message : "Xóa thất bại")
+      toast.error(e instanceof ApiException ? e.error.message : 'Xóa thất bại');
     } finally {
-      setDeleteTarget(null)
+      setDeleteTarget(null);
     }
   }
 
   async function handleToggleActive(brand: Brand) {
     try {
-      const updated = await updateBrand(brand.id, { active: !brand.active })
-      setBrands((prev) => prev.map((b) => (b.id === updated.id ? updated : b)))
-      toast.success(updated.active ? "Đã kích hoạt" : "Đã tắt kích hoạt")
+      const updated = await updateBrand(brand.id, { active: !brand.active });
+      setBrands((prev) => prev.map((b) => (b.id === updated.id ? updated : b)));
+      toast.success(updated.active ? 'Đã kích hoạt' : 'Đã tắt kích hoạt');
     } catch {
-      toast.error("Cập nhật thất bại")
+      toast.error('Cập nhật thất bại');
     }
   }
 
@@ -515,9 +466,7 @@ export default function DashboardBrandsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Thương hiệu</h1>
-          <p className="mt-1 text-sm text-slate-500">
-            {brands.length} thương hiệu
-          </p>
+          <p className="mt-1 text-sm text-slate-500">{brands.length} thương hiệu</p>
         </div>
         <button
           onClick={() => setModal({ open: true, brand: null })}
@@ -559,17 +508,13 @@ export default function DashboardBrandsPage() {
           />
         </div>
         <div className="flex gap-2">
-          {(["all", "active", "inactive"] as const).map((v) => (
+          {(['all', 'active', 'inactive'] as const).map((v) => (
             <button
               key={v}
               onClick={() => setFilterActive(v)}
-              className={`cursor-pointer rounded-xl px-3 py-2 text-sm font-medium transition-colors ${filterActive === v ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+              className={`cursor-pointer rounded-xl px-3 py-2 text-sm font-medium transition-colors ${filterActive === v ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
             >
-              {v === "all"
-                ? "Tất cả"
-                : v === "active"
-                  ? "Đang hoạt động"
-                  : "Đã tắt"}
+              {v === 'all' ? 'Tất cả' : v === 'active' ? 'Đang hoạt động' : 'Đã tắt'}
             </button>
           ))}
         </div>
@@ -580,10 +525,7 @@ export default function DashboardBrandsPage() {
         {loading ? (
           <div className="space-y-3 p-6">
             {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="h-14 animate-pulse rounded-xl bg-slate-100"
-              />
+              <div key={i} className="h-14 animate-pulse rounded-xl bg-slate-100" />
             ))}
           </div>
         ) : (
@@ -611,14 +553,11 @@ export default function DashboardBrandsPage() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filtered.map((b) => (
-                  <tr
-                    key={b.id}
-                    className="transition-colors hover:bg-slate-50"
-                  >
+                  <tr key={b.id} className="transition-colors hover:bg-slate-50">
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
                         <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-slate-100 text-xs font-bold text-slate-500">
-                          {b.logo && b.logo.startsWith("http") ? (
+                          {b.logo && b.logo.startsWith('http') ? (
                             <img
                               src={b.logo}
                               alt={b.name}
@@ -628,32 +567,26 @@ export default function DashboardBrandsPage() {
                             b.name[0].toUpperCase()
                           )}
                         </div>
-                        <span className="font-semibold text-slate-900">
-                          {b.name}
-                        </span>
+                        <span className="font-semibold text-slate-900">{b.name}</span>
                       </div>
                     </td>
-                    <td className="px-5 py-4 font-mono text-xs text-slate-500">
-                      {b.slug}
-                    </td>
+                    <td className="px-5 py-4 font-mono text-xs text-slate-500">{b.slug}</td>
                     <td className="max-w-xs truncate px-5 py-4 text-slate-500">
-                      {b.description ?? (
-                        <span className="text-slate-300">—</span>
-                      )}
+                      {b.description ?? <span className="text-slate-300">—</span>}
                     </td>
                     <td className="px-5 py-4 text-center">
                       <button
                         onClick={() => handleToggleActive(b)}
-                        className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold transition-colors ${b.active ? "bg-green-100 text-green-700 hover:bg-green-200" : "bg-slate-100 text-slate-500 hover:bg-slate-200"}`}
+                        className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold transition-colors ${b.active ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
                       >
                         <span
-                          className={`h-1.5 w-1.5 rounded-full ${b.active ? "bg-green-500" : "bg-slate-400"}`}
+                          className={`h-1.5 w-1.5 rounded-full ${b.active ? 'bg-green-500' : 'bg-slate-400'}`}
                         />
-                        {b.active ? "Hoạt động" : "Đã tắt"}
+                        {b.active ? 'Hoạt động' : 'Đã tắt'}
                       </button>
                     </td>
                     <td className="px-5 py-4 text-center text-xs text-slate-400">
-                      {new Date(b.createdAt).toLocaleDateString("vi-VN")}
+                      {new Date(b.createdAt).toLocaleDateString('vi-VN')}
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex items-center justify-end gap-1">
@@ -708,9 +641,7 @@ export default function DashboardBrandsPage() {
                   <circle cx="11" cy="11" r="8" />
                   <path d="m21 21-4.35-4.35" />
                 </svg>
-                {search
-                  ? "Không tìm thấy thương hiệu nào"
-                  : "Chưa có thương hiệu nào"}
+                {search ? 'Không tìm thấy thương hiệu nào' : 'Chưa có thương hiệu nào'}
               </div>
             )}
           </div>
@@ -720,9 +651,7 @@ export default function DashboardBrandsPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         <div className="rounded-2xl border border-slate-200 bg-white p-4">
-          <div className="text-2xl font-bold text-slate-900">
-            {brands.length}
-          </div>
+          <div className="text-2xl font-bold text-slate-900">{brands.length}</div>
           <div className="text-sm text-slate-500">Tổng thương hiệu</div>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white p-4">
@@ -746,11 +675,9 @@ export default function DashboardBrandsPage() {
           onClose={() => setModal({ open: false, brand: null })}
           onSaved={(saved) => {
             setBrands((prev) =>
-              modal.brand
-                ? prev.map((b) => (b.id === saved.id ? saved : b))
-                : [saved, ...prev]
-            )
-            setModal({ open: false, brand: null })
+              modal.brand ? prev.map((b) => (b.id === saved.id ? saved : b)) : [saved, ...prev],
+            );
+            setModal({ open: false, brand: null });
           }}
         />
       )}
@@ -762,5 +689,5 @@ export default function DashboardBrandsPage() {
         />
       )}
     </div>
-  )
+  );
 }

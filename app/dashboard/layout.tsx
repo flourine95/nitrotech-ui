@@ -1,13 +1,13 @@
-"use client"
-import { useState } from "react"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { AuthInitializer } from "@/components/auth-initializer"
+'use client';
+import { useState } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { AuthInitializer } from '@/components/auth-initializer';
 
 const navItems = [
   {
-    label: "Tổng quan",
-    href: "/dashboard",
+    label: 'Tổng quan',
+    href: '/dashboard',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -25,8 +25,8 @@ const navItems = [
     ),
   },
   {
-    label: "Sản phẩm",
-    href: "/dashboard/products",
+    label: 'Sản phẩm',
+    href: '/dashboard/products',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -43,8 +43,8 @@ const navItems = [
     ),
   },
   {
-    label: "Đơn hàng",
-    href: "/dashboard/orders",
+    label: 'Đơn hàng',
+    href: '/dashboard/orders',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -62,8 +62,8 @@ const navItems = [
     badge: 12,
   },
   {
-    label: "Khách hàng",
-    href: "/dashboard/customers",
+    label: 'Khách hàng',
+    href: '/dashboard/customers',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -80,8 +80,8 @@ const navItems = [
     ),
   },
   {
-    label: "Doanh thu",
-    href: "/dashboard/revenue",
+    label: 'Doanh thu',
+    href: '/dashboard/revenue',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -97,8 +97,8 @@ const navItems = [
     ),
   },
   {
-    label: "Kho hàng",
-    href: "/dashboard/inventory",
+    label: 'Kho hàng',
+    href: '/dashboard/inventory',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -114,8 +114,8 @@ const navItems = [
     ),
   },
   {
-    label: "Thương hiệu",
-    href: "/dashboard/brands",
+    label: 'Thương hiệu',
+    href: '/dashboard/brands',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -131,8 +131,8 @@ const navItems = [
     ),
   },
   {
-    label: "Danh mục",
-    href: "/dashboard/categories",
+    label: 'Danh mục',
+    href: '/dashboard/categories',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -147,8 +147,8 @@ const navItems = [
     ),
   },
   {
-    label: "Hình ảnh",
-    href: "/dashboard/media",
+    label: 'Hình ảnh',
+    href: '/dashboard/media',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -165,8 +165,8 @@ const navItems = [
     ),
   },
   {
-    label: "Cài đặt",
-    href: "/dashboard/settings",
+    label: 'Cài đặt',
+    href: '/dashboard/settings',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -182,16 +182,12 @@ const navItems = [
       </svg>
     ),
   },
-]
+];
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  const pathname = usePathname()
-  const [collapsed, setCollapsed] = useState(false)
-  const [mobileOpen, setMobileOpen] = useState(false)
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
     <div className="flex min-h-screen bg-slate-50">
@@ -207,18 +203,14 @@ export default function DashboardLayout({
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-40 flex h-full flex-col bg-slate-900 transition-all duration-300 ${collapsed ? "w-16" : "w-60"} ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"} `}
+        className={`fixed top-0 left-0 z-40 flex h-full flex-col bg-slate-900 transition-all duration-300 ${collapsed ? 'w-16' : 'w-60'} ${mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} `}
       >
         {/* Logo */}
         <div
-          className={`flex items-center gap-3 border-b border-slate-800 px-4 py-5 ${collapsed ? "justify-center" : ""}`}
+          className={`flex items-center gap-3 border-b border-slate-800 px-4 py-5 ${collapsed ? 'justify-center' : ''}`}
         >
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-blue-600">
-            <svg
-              viewBox="0 0 24 24"
-              className="h-4 w-4 fill-current text-white"
-              aria-hidden="true"
-            >
+            <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current text-white" aria-hidden="true">
               <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
             </svg>
           </div>
@@ -233,24 +225,21 @@ export default function DashboardLayout({
         </div>
 
         {/* Nav */}
-        <nav
-          className="flex-1 overflow-y-auto py-4"
-          aria-label="Dashboard navigation"
-        >
+        <nav className="flex-1 overflow-y-auto py-4" aria-label="Dashboard navigation">
           <ul className="flex flex-col gap-0.5 px-2">
             {navItems.map((item) => {
-              const active = pathname === item.href
+              const active = pathname === item.href;
               return (
                 <li key={item.href}>
                   <Link
                     href={item.href}
                     className={`relative flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-150 ${
                       active
-                        ? "bg-blue-600 text-white"
-                        : "text-slate-400 hover:bg-slate-800 hover:text-white"
-                    } ${collapsed ? "justify-center" : ""} `}
+                        ? 'bg-blue-600 text-white'
+                        : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                    } ${collapsed ? 'justify-center' : ''} `}
                     title={collapsed ? item.label : undefined}
-                    aria-current={active ? "page" : undefined}
+                    aria-current={active ? 'page' : undefined}
                   >
                     {item.icon}
                     {!collapsed && <span>{item.label}</span>}
@@ -267,7 +256,7 @@ export default function DashboardLayout({
                     )}
                   </Link>
                 </li>
-              )
+              );
             })}
           </ul>
         </nav>
@@ -276,12 +265,12 @@ export default function DashboardLayout({
         <div className="flex flex-col gap-2 border-t border-slate-800 p-3">
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className={`hidden cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-sm text-slate-400 transition-colors duration-150 hover:bg-slate-800 hover:text-white md:flex ${collapsed ? "justify-center" : ""} `}
-            aria-label={collapsed ? "Mở rộng sidebar" : "Thu gọn sidebar"}
+            className={`hidden cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-sm text-slate-400 transition-colors duration-150 hover:bg-slate-800 hover:text-white md:flex ${collapsed ? 'justify-center' : ''} `}
+            aria-label={collapsed ? 'Mở rộng sidebar' : 'Thu gọn sidebar'}
           >
             <svg
               viewBox="0 0 24 24"
-              className={`h-4 w-4 transition-transform duration-300 ${collapsed ? "rotate-180" : ""}`}
+              className={`h-4 w-4 transition-transform duration-300 ${collapsed ? 'rotate-180' : ''}`}
               fill="none"
               stroke="currentColor"
               strokeWidth="2"
@@ -292,19 +281,15 @@ export default function DashboardLayout({
             {!collapsed && <span>Thu gọn</span>}
           </button>
           <div
-            className={`flex items-center gap-2.5 px-2 py-2 ${collapsed ? "justify-center" : ""}`}
+            className={`flex items-center gap-2.5 px-2 py-2 ${collapsed ? 'justify-center' : ''}`}
           >
             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-500 text-xs font-bold text-white">
               A
             </div>
             {!collapsed && (
               <div className="min-w-0">
-                <div className="truncate text-sm font-medium text-white">
-                  Admin
-                </div>
-                <div className="truncate text-xs text-slate-500">
-                  admin@nitrotech.vn
-                </div>
+                <div className="truncate text-sm font-medium text-white">Admin</div>
+                <div className="truncate text-xs text-slate-500">admin@nitrotech.vn</div>
               </div>
             )}
           </div>
@@ -313,7 +298,7 @@ export default function DashboardLayout({
 
       {/* Main */}
       <div
-        className={`flex min-w-0 flex-1 flex-col transition-all duration-300 ${collapsed ? "md:ml-16" : "md:ml-60"}`}
+        className={`flex min-w-0 flex-1 flex-col transition-all duration-300 ${collapsed ? 'md:ml-16' : 'md:ml-60'}`}
       >
         {/* Top bar */}
         <header className="sticky top-0 z-20 flex items-center justify-between gap-4 border-b border-slate-200 bg-white px-6 py-3.5">
@@ -399,5 +384,5 @@ export default function DashboardLayout({
         <main className="flex-1 p-6">{children}</main>
       </div>
     </div>
-  )
+  );
 }

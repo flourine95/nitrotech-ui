@@ -1,17 +1,17 @@
-"use client"
-import { useState } from "react"
-import Link from "next/link"
-import { toast } from "sonner"
+'use client';
+import { useState } from 'react';
+import Link from 'next/link';
+import { toast } from 'sonner';
 
 interface ProductActionsProps {
-  slug: string
-  price: string
-  old: string
-  discount: string
-  variants: string[]
-  colors: { name: string; color: string; ring: string }[]
-  stockCount: number
-  warranty: string
+  slug: string;
+  price: string;
+  old: string;
+  discount: string;
+  variants: string[];
+  colors: { name: string; color: string; ring: string }[];
+  stockCount: number;
+  warranty: string;
 }
 
 export function ProductActions({
@@ -24,9 +24,9 @@ export function ProductActions({
   stockCount,
   warranty,
 }: ProductActionsProps) {
-  const [qty, setQty] = useState(1)
-  const [activeVariant, setActiveVariant] = useState(0)
-  const [activeColor, setActiveColor] = useState(0)
+  const [qty, setQty] = useState(1);
+  const [activeVariant, setActiveVariant] = useState(0);
+  const [activeColor, setActiveColor] = useState(0);
 
   return (
     <>
@@ -48,7 +48,7 @@ export function ProductActions({
               <button
                 key={v}
                 onClick={() => setActiveVariant(i)}
-                className={`cursor-pointer rounded-full border px-4 py-2 text-sm font-medium transition-colors duration-200 ${i === activeVariant ? "border-slate-900 bg-slate-900 text-white" : "border-slate-200 text-slate-600 hover:border-slate-400"}`}
+                className={`cursor-pointer rounded-full border px-4 py-2 text-sm font-medium transition-colors duration-200 ${i === activeVariant ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 text-slate-600 hover:border-slate-400'}`}
               >
                 {v}
               </button>
@@ -66,7 +66,7 @@ export function ProductActions({
               <button
                 key={c.name}
                 onClick={() => setActiveColor(i)}
-                className={`h-8 w-8 rounded-full ${c.color} cursor-pointer transition-all duration-200 ${i === activeColor ? `ring-2 ring-offset-2 ${c.ring}` : "hover:ring-2 hover:ring-slate-300 hover:ring-offset-2"}`}
+                className={`h-8 w-8 rounded-full ${c.color} cursor-pointer transition-all duration-200 ${i === activeColor ? `ring-2 ring-offset-2 ${c.ring}` : 'hover:ring-2 hover:ring-slate-300 hover:ring-offset-2'}`}
                 aria-label={c.name}
                 title={c.name}
               />
@@ -101,9 +101,7 @@ export function ProductActions({
               +
             </button>
           </div>
-          <span className="text-xs text-slate-400">
-            Còn {stockCount} sản phẩm
-          </span>
+          <span className="text-xs text-slate-400">Còn {stockCount} sản phẩm</span>
         </div>
       </div>
 
@@ -112,7 +110,7 @@ export function ProductActions({
         <Link
           href="/cart"
           onClick={() =>
-            toast.success("Đã thêm vào giỏ hàng", {
+            toast.success('Đã thêm vào giỏ hàng', {
               description: `${qty} × sản phẩm`,
             })
           }
@@ -145,7 +143,7 @@ export function ProductActions({
           </svg>
         </Link>
         <button
-          onClick={() => toast.success("Đã thêm vào yêu thích")}
+          onClick={() => toast.success('Đã thêm vào yêu thích')}
           className="cursor-pointer rounded-full border border-slate-200 p-3.5 text-slate-400 transition-colors duration-200 hover:border-rose-200 hover:text-rose-500"
           aria-label="Yêu thích"
         >
@@ -191,7 +189,7 @@ export function ProductActions({
                 <path d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             ),
-            text: "Giao trong 2 giờ",
+            text: 'Giao trong 2 giờ',
           },
           {
             icon: (
@@ -206,7 +204,7 @@ export function ProductActions({
                 <polyline points="22,6 12,13 2,6" />
               </svg>
             ),
-            text: "Đổi trả trong 30 ngày",
+            text: 'Đổi trả trong 30 ngày',
           },
           {
             icon: (
@@ -220,7 +218,7 @@ export function ProductActions({
                 <path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
               </svg>
             ),
-            text: "Trả góp 0% lãi suất",
+            text: 'Trả góp 0% lãi suất',
           },
         ].map((b) => (
           <div
@@ -233,5 +231,5 @@ export function ProductActions({
         ))}
       </div>
     </>
-  )
+  );
 }

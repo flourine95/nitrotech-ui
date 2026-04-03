@@ -1,37 +1,37 @@
-"use client"
-import { useState } from "react"
+'use client';
+import { useState } from 'react';
 
 const initialAddresses = [
   {
     id: 1,
-    name: "Nguyễn Văn A",
-    phone: "0901 234 567",
-    address: "123 Nguyễn Huệ, Phường Bến Nghé",
-    district: "Quận 1",
-    city: "TP. Hồ Chí Minh",
+    name: 'Nguyễn Văn A',
+    phone: '0901 234 567',
+    address: '123 Nguyễn Huệ, Phường Bến Nghé',
+    district: 'Quận 1',
+    city: 'TP. Hồ Chí Minh',
     isDefault: true,
   },
   {
     id: 2,
-    name: "Nguyễn Văn A",
-    phone: "0901 234 567",
-    address: "456 Lê Lợi, Phường Phạm Ngũ Lão",
-    district: "Quận 1",
-    city: "TP. Hồ Chí Minh",
+    name: 'Nguyễn Văn A',
+    phone: '0901 234 567',
+    address: '456 Lê Lợi, Phường Phạm Ngũ Lão',
+    district: 'Quận 1',
+    city: 'TP. Hồ Chí Minh',
     isDefault: false,
   },
-]
+];
 
 export default function AddressesPage() {
-  const [addresses, setAddresses] = useState(initialAddresses)
-  const [showForm, setShowForm] = useState(false)
+  const [addresses, setAddresses] = useState(initialAddresses);
+  const [showForm, setShowForm] = useState(false);
 
   function setDefault(id: number) {
-    setAddresses((prev) => prev.map((a) => ({ ...a, isDefault: a.id === id })))
+    setAddresses((prev) => prev.map((a) => ({ ...a, isDefault: a.id === id })));
   }
 
   function remove(id: number) {
-    setAddresses((prev) => prev.filter((a) => a.id !== id))
+    setAddresses((prev) => prev.filter((a) => a.id !== id));
   }
 
   return (
@@ -61,14 +61,12 @@ export default function AddressesPage() {
         {addresses.map((addr) => (
           <div
             key={addr.id}
-            className={`rounded-3xl border bg-white p-6 shadow-sm ${addr.isDefault ? "border-slate-900" : "border-slate-200"}`}
+            className={`rounded-3xl border bg-white p-6 shadow-sm ${addr.isDefault ? 'border-slate-900' : 'border-slate-200'}`}
           >
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0 flex-1">
                 <div className="mb-2 flex flex-wrap items-center gap-2">
-                  <span className="font-semibold text-slate-900">
-                    {addr.name}
-                  </span>
+                  <span className="font-semibold text-slate-900">{addr.name}</span>
                   <span className="text-slate-300">|</span>
                   <span className="text-sm text-slate-500">{addr.phone}</span>
                   {addr.isDefault && (
@@ -168,8 +166,8 @@ export default function AddressesPage() {
             <form
               className="space-y-4"
               onSubmit={(e) => {
-                e.preventDefault()
-                setShowForm(false)
+                e.preventDefault();
+                setShowForm(false);
               }}
             >
               <div>
@@ -252,13 +250,8 @@ export default function AddressesPage() {
                 </div>
               </div>
               <label className="flex cursor-pointer items-center gap-2">
-                <input
-                  type="checkbox"
-                  className="h-4 w-4 rounded accent-slate-900"
-                />
-                <span className="text-sm text-slate-600">
-                  Đặt làm địa chỉ mặc định
-                </span>
+                <input type="checkbox" className="h-4 w-4 rounded accent-slate-900" />
+                <span className="text-sm text-slate-600">Đặt làm địa chỉ mặc định</span>
               </label>
               <div className="flex gap-3 pt-2">
                 <button
@@ -280,5 +273,5 @@ export default function AddressesPage() {
         </div>
       )}
     </div>
-  )
+  );
 }

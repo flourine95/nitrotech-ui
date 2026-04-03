@@ -1,66 +1,66 @@
-"use client"
-import { useEffect } from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
-import { toast } from "sonner"
-import { useSession } from "next-auth/react"
-import { updateProfile, getMe } from "@/lib/auth-api"
-import { ApiException } from "@/lib/api"
+'use client';
+import { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { toast } from 'sonner';
+import { useSession } from 'next-auth/react';
+import { updateProfile, getMe } from '@/lib/auth-api';
+import { ApiException } from '@/lib/api';
 
 const profileSchema = z.object({
-  name: z.string().min(2, "Họ tên tối thiểu 2 ký tự"),
+  name: z.string().min(2, 'Họ tên tối thiểu 2 ký tự'),
   phone: z.string().optional(),
-})
-type ProfileInput = z.infer<typeof profileSchema>
+});
+type ProfileInput = z.infer<typeof profileSchema>;
 
 export default function ProfilePage() {
-  const { data: session, update } = useSession()
+  const { data: session, update } = useSession();
   const user = session
     ? {
-        name: session.user.name ?? "",
-        email: session.user.email ?? "",
+        name: session.user.name ?? '',
+        email: session.user.email ?? '',
         phone: null as string | null,
         avatar: session.user.image ?? null,
       }
-    : null
+    : null;
 
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors, isSubmitting, isDirty },
-  } = useForm<ProfileInput>({ resolver: zodResolver(profileSchema) })
+  } = useForm<ProfileInput>({ resolver: zodResolver(profileSchema) });
 
   useEffect(() => {
     if (user) {
-      reset({ name: user.name, phone: user.phone ?? "" })
+      reset({ name: user.name, phone: user.phone ?? '' });
     } else {
-      getMe().catch(() => {})
+      getMe().catch(() => {});
     }
-  }, [user, reset])
+  }, [user, reset]);
 
   async function onSubmit(data: ProfileInput) {
     try {
-      await updateProfile({ name: data.name, phone: data.phone || undefined })
-      toast.success("Đã cập nhật thông tin")
-      reset(data)
+      await updateProfile({ name: data.name, phone: data.phone || undefined });
+      toast.success('Đã cập nhật thông tin');
+      reset(data);
     } catch (e) {
       if (e instanceof ApiException && e.error.errors) {
-        toast.error(Object.values(e.error.errors)[0])
+        toast.error(Object.values(e.error.errors)[0]);
       } else {
-        toast.error("Cập nhật thất bại")
+        toast.error('Cập nhật thất bại');
       }
     }
   }
 
   const initials =
     user?.name
-      ?.split(" ")
+      ?.split(' ')
       .map((n) => n[0])
       .slice(-2)
-      .join("")
-      .toUpperCase() ?? "?"
+      .join('')
+      .toUpperCase() ?? '?';
 
   return (
     <div className="space-y-5">
@@ -102,16 +102,10 @@ export default function ProfilePage() {
             </button>
           </div>
           <div>
-            <div className="font-bold text-slate-900">
-              {user?.name ?? "..."}
-            </div>
+            <div className="font-bold text-slate-900">{user?.name ?? '...'}</div>
             <div className="text-sm text-slate-400">{user?.email}</div>
             <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-700">
-              <svg
-                viewBox="0 0 24 24"
-                className="h-3 w-3 fill-current"
-                aria-hidden="true"
-              >
+              <svg viewBox="0 0 24 24" className="h-3 w-3 fill-current" aria-hidden="true">
                 <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
               </svg>
               Thành viên Bạc
@@ -123,43 +117,29 @@ export default function ProfilePage() {
       {/* Form */}
       <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="mb-5 font-bold text-slate-900">Thông tin cơ bản</h2>
-        <form
-          className="max-w-md space-y-4"
-          onSubmit={handleSubmit(onSubmit)}
-          noValidate
-        >
+        <form className="max-w-md space-y-4" onSubmit={handleSubmit(onSubmit)} noValidate>
           <div>
-            <label
-              htmlFor="name"
-              className="mb-1.5 block text-sm font-medium text-slate-700"
-            >
+            <label htmlFor="name" className="mb-1.5 block text-sm font-medium text-slate-700">
               Họ và tên
             </label>
             <input
               id="name"
               type="text"
-              {...register("name")}
-              className={`w-full rounded-xl border px-4 py-3 text-sm transition-all duration-200 focus:ring-2 focus:outline-none ${errors.name ? "border-rose-400 focus:border-rose-400 focus:ring-rose-100" : "border-slate-200 focus:border-blue-400 focus:ring-blue-100"}`}
+              {...register('name')}
+              className={`w-full rounded-xl border px-4 py-3 text-sm transition-all duration-200 focus:ring-2 focus:outline-none ${errors.name ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-100' : 'border-slate-200 focus:border-blue-400 focus:ring-blue-100'}`}
             />
-            {errors.name && (
-              <p className="mt-1.5 text-xs text-rose-500">
-                {errors.name.message}
-              </p>
-            )}
+            {errors.name && <p className="mt-1.5 text-xs text-rose-500">{errors.name.message}</p>}
           </div>
 
           <div>
-            <label
-              htmlFor="email"
-              className="mb-1.5 block text-sm font-medium text-slate-700"
-            >
+            <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-slate-700">
               Email
             </label>
             <div className="relative">
               <input
                 id="email"
                 type="email"
-                value={user?.email ?? ""}
+                value={user?.email ?? ''}
                 readOnly
                 className="w-full cursor-not-allowed rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 pr-24 text-sm text-slate-500"
               />
@@ -170,17 +150,14 @@ export default function ProfilePage() {
           </div>
 
           <div>
-            <label
-              htmlFor="phone"
-              className="mb-1.5 block text-sm font-medium text-slate-700"
-            >
+            <label htmlFor="phone" className="mb-1.5 block text-sm font-medium text-slate-700">
               Số điện thoại
             </label>
             <input
               id="phone"
               type="tel"
               placeholder="0901 234 567"
-              {...register("phone")}
+              {...register('phone')}
               className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm transition-all duration-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 focus:outline-none"
             />
           </div>
@@ -191,11 +168,11 @@ export default function ProfilePage() {
               disabled={isSubmitting || !isDirty}
               className="cursor-pointer rounded-full bg-slate-900 px-6 py-2.5 text-sm font-semibold text-white transition-colors duration-200 hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {isSubmitting ? "Đang lưu..." : "Lưu thay đổi"}
+              {isSubmitting ? 'Đang lưu...' : 'Lưu thay đổi'}
             </button>
           </div>
         </form>
       </div>
     </div>
-  )
+  );
 }

@@ -1,108 +1,102 @@
-"use client"
-import { useState, useRef, useEffect } from "react"
-import { ProductCard } from "@/components/product-card"
+'use client';
+import { useState, useRef, useEffect } from 'react';
+import { ProductCard } from '@/components/product-card';
 
-const filters = ["Tất cả", "Laptop", "GPU", "CPU", "RAM", "Màn hình"]
+const filters = ['Tất cả', 'Laptop', 'GPU', 'CPU', 'RAM', 'Màn hình'];
 
 const products = [
   {
-    slug: "macbook-pro-m4",
-    name: "MacBook Pro M4 14 inch",
-    cat: "Laptop",
-    price: "49.990.000đ",
-    old: "54.990.000đ",
-    badge: "Mới",
-    badgeColor: "bg-blue-100 text-blue-700",
+    slug: 'macbook-pro-m4',
+    name: 'MacBook Pro M4 14 inch',
+    cat: 'Laptop',
+    price: '49.990.000đ',
+    old: '54.990.000đ',
+    badge: 'Mới',
+    badgeColor: 'bg-blue-100 text-blue-700',
     rating: 5,
     reviews: 128,
-    specs: ["M4 10-core", "16GB RAM", "512GB SSD"],
+    specs: ['M4 10-core', '16GB RAM', '512GB SSD'],
   },
   {
-    slug: "rtx-4090",
-    name: "ASUS ROG STRIX RTX 4090 OC 24GB",
-    cat: "GPU",
-    price: "42.500.000đ",
-    old: "46.000.000đ",
-    badge: "Hot",
-    badgeColor: "bg-rose-100 text-rose-700",
+    slug: 'rtx-4090',
+    name: 'ASUS ROG STRIX RTX 4090 OC 24GB',
+    cat: 'GPU',
+    price: '42.500.000đ',
+    old: '46.000.000đ',
+    badge: 'Hot',
+    badgeColor: 'bg-rose-100 text-rose-700',
     rating: 5,
     reviews: 87,
-    specs: ["24GB GDDR6X", "PCIe 4.0"],
+    specs: ['24GB GDDR6X', 'PCIe 4.0'],
   },
   {
-    slug: "ryzen-9-9950x",
-    name: "AMD Ryzen 9 9950X",
-    cat: "CPU",
-    price: "18.900.000đ",
-    old: "21.000.000đ",
-    badge: "Sale",
-    badgeColor: "bg-amber-100 text-amber-700",
+    slug: 'ryzen-9-9950x',
+    name: 'AMD Ryzen 9 9950X',
+    cat: 'CPU',
+    price: '18.900.000đ',
+    old: '21.000.000đ',
+    badge: 'Sale',
+    badgeColor: 'bg-amber-100 text-amber-700',
     rating: 4,
     reviews: 54,
-    specs: ["16 nhân 32 luồng", "5.7GHz"],
+    specs: ['16 nhân 32 luồng', '5.7GHz'],
   },
   {
-    slug: "corsair-ddr5-64gb",
-    name: "Corsair Vengeance DDR5 64GB 6000MHz",
-    cat: "RAM",
-    price: "4.200.000đ",
-    old: "4.800.000đ",
-    badge: "Mới",
-    badgeColor: "bg-blue-100 text-blue-700",
+    slug: 'corsair-ddr5-64gb',
+    name: 'Corsair Vengeance DDR5 64GB 6000MHz',
+    cat: 'RAM',
+    price: '4.200.000đ',
+    old: '4.800.000đ',
+    badge: 'Mới',
+    badgeColor: 'bg-blue-100 text-blue-700',
     rating: 4,
     reviews: 32,
-    specs: ["64GB (2x32GB)", "DDR5-6000"],
+    specs: ['64GB (2x32GB)', 'DDR5-6000'],
   },
   {
-    slug: "lg-oled-27",
+    slug: 'lg-oled-27',
     name: 'LG UltraGear OLED 27" 240Hz',
-    cat: "Màn hình",
-    price: "22.500.000đ",
-    old: "25.000.000đ",
-    badge: "Hot",
-    badgeColor: "bg-rose-100 text-rose-700",
+    cat: 'Màn hình',
+    price: '22.500.000đ',
+    old: '25.000.000đ',
+    badge: 'Hot',
+    badgeColor: 'bg-rose-100 text-rose-700',
     rating: 5,
     reviews: 61,
-    specs: ['27" OLED', "2560x1440", "240Hz"],
+    specs: ['27" OLED', '2560x1440', '240Hz'],
   },
   {
-    slug: "asus-rog-zephyrus",
-    name: "ASUS ROG Zephyrus G16 RTX 4080",
-    cat: "Laptop",
-    price: "65.000.000đ",
-    old: "70.000.000đ",
-    badge: "Gaming",
-    badgeColor: "bg-violet-100 text-violet-700",
+    slug: 'asus-rog-zephyrus',
+    name: 'ASUS ROG Zephyrus G16 RTX 4080',
+    cat: 'Laptop',
+    price: '65.000.000đ',
+    old: '70.000.000đ',
+    badge: 'Gaming',
+    badgeColor: 'bg-violet-100 text-violet-700',
     rating: 4,
     reviews: 43,
-    specs: ["RTX 4080", "32GB DDR5", "1TB SSD"],
+    specs: ['RTX 4080', '32GB DDR5', '1TB SSD'],
   },
-]
+];
 
 const suggestions = [
-  "MacBook Pro",
-  "RTX 4090",
-  "Ryzen 9",
-  "DDR5 RAM",
-  "Màn hình OLED",
-  "Laptop Gaming",
-]
-const initialRecent = ["MacBook Pro M4", "RTX 4080", "Màn hình 4K"]
-const trending = [
-  "RTX 4090",
-  "MacBook Pro M4",
-  "Ryzen 9 9950X",
-  "DDR5 64GB",
-  'OLED 27"',
-]
+  'MacBook Pro',
+  'RTX 4090',
+  'Ryzen 9',
+  'DDR5 RAM',
+  'Màn hình OLED',
+  'Laptop Gaming',
+];
+const initialRecent = ['MacBook Pro M4', 'RTX 4080', 'Màn hình 4K'];
+const trending = ['RTX 4090', 'MacBook Pro M4', 'Ryzen 9 9950X', 'DDR5 64GB', 'OLED 27"'];
 
 export function SearchClient() {
-  const [query, setQuery] = useState("")
-  const [activeFilter, setActiveFilter] = useState("Tất cả")
-  const [focused, setFocused] = useState(false)
-  const [recent, setRecent] = useState(initialRecent)
-  const inputRef = useRef<HTMLInputElement>(null)
-  const dropdownRef = useRef<HTMLDivElement>(null)
+  const [query, setQuery] = useState('');
+  const [activeFilter, setActiveFilter] = useState('Tất cả');
+  const [focused, setFocused] = useState(false);
+  const [recent, setRecent] = useState(initialRecent);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -113,44 +107,42 @@ export function SearchClient() {
         inputRef.current &&
         !inputRef.current.contains(e.target as Node)
       ) {
-        setFocused(false)
+        setFocused(false);
       }
     }
-    document.addEventListener("mousedown", handler)
-    return () => document.removeEventListener("mousedown", handler)
-  }, [])
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
   const filtered = products.filter((p) => {
-    const matchFilter = activeFilter === "Tất cả" || p.cat === activeFilter
+    const matchFilter = activeFilter === 'Tất cả' || p.cat === activeFilter;
     const matchQuery =
-      query === "" ||
+      query === '' ||
       p.name.toLowerCase().includes(query.toLowerCase()) ||
-      p.cat.toLowerCase().includes(query.toLowerCase())
-    return matchFilter && matchQuery
-  })
+      p.cat.toLowerCase().includes(query.toLowerCase());
+    return matchFilter && matchQuery;
+  });
 
   // Autocomplete suggestions from product names
   const autoSuggestions =
     query.length >= 2
-      ? products
-          .filter((p) => p.name.toLowerCase().includes(query.toLowerCase()))
-          .slice(0, 5)
-      : []
+      ? products.filter((p) => p.name.toLowerCase().includes(query.toLowerCase())).slice(0, 5)
+      : [];
 
-  const showDropdown = focused && (query === "" || autoSuggestions.length > 0)
-  const hasResults = filtered.length > 0
-  const showEmpty = query !== "" && !hasResults
+  const showDropdown = focused && (query === '' || autoSuggestions.length > 0);
+  const hasResults = filtered.length > 0;
+  const showEmpty = query !== '' && !hasResults;
 
   function submitSearch(val: string) {
-    setQuery(val)
-    setFocused(false)
+    setQuery(val);
+    setFocused(false);
     if (val && !recent.includes(val)) {
-      setRecent((prev) => [val, ...prev].slice(0, 5))
+      setRecent((prev) => [val, ...prev].slice(0, 5));
     }
   }
 
   function clearRecent(item: string) {
-    setRecent((prev) => prev.filter((r) => r !== item))
+    setRecent((prev) => prev.filter((r) => r !== item));
   }
 
   return (
@@ -175,7 +167,7 @@ export function SearchClient() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => setFocused(true)}
-            onKeyDown={(e) => e.key === "Enter" && submitSearch(query)}
+            onKeyDown={(e) => e.key === 'Enter' && submitSearch(query)}
             placeholder="Tìm kiếm sản phẩm..."
             aria-label="Tìm kiếm sản phẩm"
             aria-expanded={showDropdown}
@@ -185,8 +177,8 @@ export function SearchClient() {
           {query && (
             <button
               onClick={() => {
-                setQuery("")
-                inputRef.current?.focus()
+                setQuery('');
+                inputRef.current?.focus();
               }}
               aria-label="Xóa tìm kiếm"
               className="absolute top-1/2 right-5 -translate-y-1/2 cursor-pointer text-slate-400 transition-colors duration-150 hover:text-slate-700"
@@ -244,7 +236,7 @@ export function SearchClient() {
               )}
 
               {/* Recent + Trending when empty query */}
-              {query === "" && (
+              {query === '' && (
                 <>
                   {recent.length > 0 && (
                     <div className="px-4 pt-3 pb-1">
@@ -342,8 +334,8 @@ export function SearchClient() {
             onClick={() => setActiveFilter(f)}
             className={`cursor-pointer rounded-full px-5 py-2 text-sm font-medium transition-colors duration-200 ${
               activeFilter === f
-                ? "bg-slate-900 text-white"
-                : "border border-slate-200 bg-white text-slate-600 hover:border-slate-400 hover:text-slate-900"
+                ? 'bg-slate-900 text-white'
+                : 'border border-slate-200 bg-white text-slate-600 hover:border-slate-400 hover:text-slate-900'
             }`}
           >
             {f}
@@ -367,9 +359,7 @@ export function SearchClient() {
               <path d="m21 21-4.35-4.35" />
             </svg>
           </div>
-          <h2 className="mb-2 text-xl font-bold text-slate-900">
-            Không tìm thấy kết quả
-          </h2>
+          <h2 className="mb-2 text-xl font-bold text-slate-900">Không tìm thấy kết quả</h2>
           <p className="mb-6 text-slate-500">
             Thử tìm kiếm với từ khóa khác hoặc xem các gợi ý bên dưới.
           </p>
@@ -385,11 +375,9 @@ export function SearchClient() {
             ))}
           </div>
         </div>
-      ) : query === "" ? (
+      ) : query === '' ? (
         <div>
-          <h2 className="mb-4 text-lg font-bold text-slate-900">
-            Sản phẩm nổi bật
-          </h2>
+          <h2 className="mb-4 text-lg font-bold text-slate-900">Sản phẩm nổi bật</h2>
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {products.map((p) => (
               <ProductCard key={p.slug} {...p} />
@@ -404,5 +392,5 @@ export function SearchClient() {
         </div>
       )}
     </>
-  )
+  );
 }

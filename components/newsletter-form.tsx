@@ -1,4 +1,4 @@
-"use client"
+'use client';
 
 export function NewsletterForm() {
   return (
@@ -23,5 +23,5 @@ export function NewsletterForm() {
         Nhận ưu đãi
       </button>
     </form>
-  )
+  );
 }

@@ -1,22 +1,22 @@
-import type { Metadata } from "next"
-import Link from "next/link"
-import { SiteHeader } from "@/components/site-header"
-import { SiteFooter } from "@/components/site-footer"
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import { SiteHeader } from '@/components/site-header';
+import { SiteFooter } from '@/components/site-footer';
 
-export const metadata: Metadata = { title: "Về NitroTech" }
+export const metadata: Metadata = { title: 'Về NitroTech' };
 
 const stats = [
-  { value: "10+", label: "Năm kinh nghiệm" },
-  { value: "200K+", label: "Khách hàng" },
-  { value: "50K+", label: "Sản phẩm" },
-]
+  { value: '10+', label: 'Năm kinh nghiệm' },
+  { value: '200K+', label: 'Khách hàng' },
+  { value: '50K+', label: 'Sản phẩm' },
+];
 
 const values = [
   {
-    title: "Chính hãng",
-    desc: "100% sản phẩm có nguồn gốc rõ ràng, giấy tờ đầy đủ từ nhà phân phối chính thức.",
-    accent: "bg-blue-50 border-blue-100",
-    iconBg: "bg-blue-100 text-blue-600",
+    title: 'Chính hãng',
+    desc: '100% sản phẩm có nguồn gốc rõ ràng, giấy tờ đầy đủ từ nhà phân phối chính thức.',
+    accent: 'bg-blue-50 border-blue-100',
+    iconBg: 'bg-blue-100 text-blue-600',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -31,10 +31,10 @@ const values = [
     ),
   },
   {
-    title: "Tận tâm",
-    desc: "Đội ngũ tư vấn nhiệt tình, hỗ trợ khách hàng 24/7 trước và sau khi mua.",
-    accent: "bg-emerald-50 border-emerald-100",
-    iconBg: "bg-emerald-100 text-emerald-600",
+    title: 'Tận tâm',
+    desc: 'Đội ngũ tư vấn nhiệt tình, hỗ trợ khách hàng 24/7 trước và sau khi mua.',
+    accent: 'bg-emerald-50 border-emerald-100',
+    iconBg: 'bg-emerald-100 text-emerald-600',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -49,10 +49,10 @@ const values = [
     ),
   },
   {
-    title: "Đổi mới",
-    desc: "Liên tục cập nhật công nghệ mới nhất, mang đến trải nghiệm mua sắm hiện đại.",
-    accent: "bg-violet-50 border-violet-100",
-    iconBg: "bg-violet-100 text-violet-600",
+    title: 'Đổi mới',
+    desc: 'Liên tục cập nhật công nghệ mới nhất, mang đến trải nghiệm mua sắm hiện đại.',
+    accent: 'bg-violet-50 border-violet-100',
+    iconBg: 'bg-violet-100 text-violet-600',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -69,10 +69,10 @@ const values = [
     ),
   },
   {
-    title: "Bền vững",
-    desc: "Cam kết phát triển bền vững, giảm thiểu tác động môi trường trong mọi hoạt động.",
-    accent: "bg-amber-50 border-amber-100",
-    iconBg: "bg-amber-100 text-amber-600",
+    title: 'Bền vững',
+    desc: 'Cam kết phát triển bền vững, giảm thiểu tác động môi trường trong mọi hoạt động.',
+    accent: 'bg-amber-50 border-amber-100',
+    iconBg: 'bg-amber-100 text-amber-600',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -89,14 +89,14 @@ const values = [
       </svg>
     ),
   },
-]
+];
 
 const team = [
-  { name: "Trần Minh Khoa", role: "CEO & Co-founder", color: "bg-blue-500" },
-  { name: "Nguyễn Thị Lan", role: "CTO", color: "bg-violet-500" },
-  { name: "Lê Văn Hùng", role: "Head of Sales", color: "bg-emerald-500" },
-  { name: "Phạm Thu Hà", role: "Customer Success", color: "bg-amber-500" },
-]
+  { name: 'Trần Minh Khoa', role: 'CEO & Co-founder', color: 'bg-blue-500' },
+  { name: 'Nguyễn Thị Lan', role: 'CTO', color: 'bg-violet-500' },
+  { name: 'Lê Văn Hùng', role: 'Head of Sales', color: 'bg-emerald-500' },
+  { name: 'Phạm Thu Hà', role: 'Customer Success', color: 'bg-amber-500' },
+];
 
 export default function AboutPage() {
   return (
@@ -105,10 +105,7 @@ export default function AboutPage() {
       <main>
         {/* Breadcrumb */}
         <div className="mx-auto max-w-7xl px-6 py-3">
-          <nav
-            aria-label="Breadcrumb"
-            className="flex items-center gap-2 text-sm text-slate-400"
-          >
+          <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm text-slate-400">
             <Link
               href="/"
               className="cursor-pointer transition-colors duration-150 hover:text-slate-700"
@@ -136,15 +133,13 @@ export default function AboutPage() {
               Chúng tôi là NitroTech
             </h1>
             <p className="mx-auto mb-12 max-w-2xl text-lg leading-relaxed text-slate-300">
-              Hệ thống bán lẻ linh kiện điện tử, laptop và máy tính hàng đầu
-              Việt Nam — nơi công nghệ gặp gỡ niềm tin.
+              Hệ thống bán lẻ linh kiện điện tử, laptop và máy tính hàng đầu Việt Nam — nơi công
+              nghệ gặp gỡ niềm tin.
             </p>
             <div className="mx-auto grid max-w-xl grid-cols-3 gap-8">
               {stats.map((s) => (
                 <div key={s.label} className="text-center">
-                  <div className="mb-1 text-3xl font-bold text-white">
-                    {s.value}
-                  </div>
+                  <div className="mb-1 text-3xl font-bold text-white">{s.value}</div>
                   <div className="text-sm text-slate-400">{s.label}</div>
                 </div>
               ))}
@@ -156,22 +151,16 @@ export default function AboutPage() {
         <section className="px-6 py-20">
           <div className="mx-auto grid max-w-7xl items-center gap-12 md:grid-cols-2">
             <div>
-              <h2 className="mb-4 text-2xl font-bold text-slate-900">
-                Sứ mệnh của chúng tôi
-              </h2>
+              <h2 className="mb-4 text-2xl font-bold text-slate-900">Sứ mệnh của chúng tôi</h2>
               <p className="mb-6 leading-relaxed text-slate-600">
-                NitroTech ra đời với sứ mệnh mang công nghệ chính hãng đến tay
-                mọi người Việt Nam với mức giá hợp lý nhất. Chúng tôi tin rằng
-                mọi người đều xứng đáng được sử dụng những sản phẩm công nghệ
-                tốt nhất.
+                NitroTech ra đời với sứ mệnh mang công nghệ chính hãng đến tay mọi người Việt Nam
+                với mức giá hợp lý nhất. Chúng tôi tin rằng mọi người đều xứng đáng được sử dụng
+                những sản phẩm công nghệ tốt nhất.
               </p>
-              <h3 className="mb-3 text-xl font-bold text-slate-900">
-                Tầm nhìn
-              </h3>
+              <h3 className="mb-3 text-xl font-bold text-slate-900">Tầm nhìn</h3>
               <p className="leading-relaxed text-slate-600">
-                Trở thành hệ sinh thái công nghệ số 1 Đông Nam Á vào năm 2030,
-                kết nối hàng triệu người dùng với những sản phẩm công nghệ tiên
-                tiến nhất thế giới.
+                Trở thành hệ sinh thái công nghệ số 1 Đông Nam Á vào năm 2030, kết nối hàng triệu
+                người dùng với những sản phẩm công nghệ tiên tiến nhất thế giới.
               </p>
             </div>
             <div className="flex items-center justify-center">
@@ -223,14 +212,7 @@ export default function AboutPage() {
                   stroke="#E9D5FF"
                   strokeWidth="1.5"
                 />
-                <circle
-                  cx="100"
-                  cy="85"
-                  r="20"
-                  fill="#DBEAFE"
-                  stroke="#93C5FD"
-                  strokeWidth="1.5"
-                />
+                <circle cx="100" cy="85" r="20" fill="#DBEAFE" stroke="#93C5FD" strokeWidth="1.5" />
                 <path
                   d="M90 85l7 7 13-14"
                   stroke="#3B82F6"
@@ -238,14 +220,7 @@ export default function AboutPage() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
-                <circle
-                  cx="220"
-                  cy="85"
-                  r="20"
-                  fill="#DCFCE7"
-                  stroke="#86EFAC"
-                  strokeWidth="1.5"
-                />
+                <circle cx="220" cy="85" r="20" fill="#DCFCE7" stroke="#86EFAC" strokeWidth="1.5" />
                 <path
                   d="M210 85l7 7 13-14"
                   stroke="#22C55E"
@@ -267,24 +242,17 @@ export default function AboutPage() {
         {/* Values */}
         <section className="bg-slate-50 px-6 py-20">
           <div className="mx-auto max-w-7xl">
-            <h2 className="mb-12 text-center text-2xl font-bold text-slate-900">
-              Giá trị cốt lõi
-            </h2>
+            <h2 className="mb-12 text-center text-2xl font-bold text-slate-900">Giá trị cốt lõi</h2>
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {values.map((v) => (
-                <div
-                  key={v.title}
-                  className={`rounded-2xl border p-6 ${v.accent}`}
-                >
+                <div key={v.title} className={`rounded-2xl border p-6 ${v.accent}`}>
                   <div
                     className={`mb-4 flex h-12 w-12 items-center justify-center rounded-xl ${v.iconBg}`}
                   >
                     {v.icon}
                   </div>
                   <h3 className="mb-2 font-bold text-slate-900">{v.title}</h3>
-                  <p className="text-sm leading-relaxed text-slate-600">
-                    {v.desc}
-                  </p>
+                  <p className="text-sm leading-relaxed text-slate-600">{v.desc}</p>
                 </div>
               ))}
             </div>
@@ -307,11 +275,9 @@ export default function AboutPage() {
                     className={`h-16 w-16 rounded-full ${m.color} mx-auto mb-4 flex items-center justify-center text-2xl font-bold text-white`}
                     aria-hidden="true"
                   >
-                    {m.name.split(" ").pop()?.[0]}
+                    {m.name.split(' ').pop()?.[0]}
                   </div>
-                  <div className="mb-1 font-semibold text-slate-900">
-                    {m.name}
-                  </div>
+                  <div className="mb-1 font-semibold text-slate-900">{m.name}</div>
                   <div className="text-sm text-slate-500">{m.role}</div>
                 </div>
               ))}
@@ -322,9 +288,7 @@ export default function AboutPage() {
         {/* CTA */}
         <section className="bg-slate-900 px-6 py-16">
           <div className="mx-auto max-w-2xl text-center">
-            <h2 className="mb-4 text-2xl font-bold text-white">
-              Khám phá sản phẩm của chúng tôi
-            </h2>
+            <h2 className="mb-4 text-2xl font-bold text-white">Khám phá sản phẩm của chúng tôi</h2>
             <p className="mb-8 text-slate-400">
               Hơn 50.000 sản phẩm chính hãng đang chờ bạn khám phá.
             </p>
@@ -339,5 +303,5 @@ export default function AboutPage() {
       </main>
       <SiteFooter />
     </>
-  )
+  );
 }

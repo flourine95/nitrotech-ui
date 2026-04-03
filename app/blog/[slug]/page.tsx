@@ -1,73 +1,73 @@
-import type { Metadata } from "next"
-import Link from "next/link"
-import { SiteHeader } from "@/components/site-header"
-import { SiteFooter } from "@/components/site-footer"
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import { SiteHeader } from '@/components/site-header';
+import { SiteFooter } from '@/components/site-footer';
 
-export const metadata: Metadata = { title: "Review MacBook Pro M4" }
+export const metadata: Metadata = { title: 'Review MacBook Pro M4' };
 
 const toc = [
-  { id: "tong-quan", label: "Tổng quan" },
-  { id: "thiet-ke", label: "Thiết kế & Màn hình" },
-  { id: "hieu-nang", label: "Hiệu năng chip M4" },
-  { id: "pin", label: "Thời lượng pin" },
-  { id: "so-sanh", label: "So sánh thông số" },
-  { id: "ket-luan", label: "Kết luận" },
-]
+  { id: 'tong-quan', label: 'Tổng quan' },
+  { id: 'thiet-ke', label: 'Thiết kế & Màn hình' },
+  { id: 'hieu-nang', label: 'Hiệu năng chip M4' },
+  { id: 'pin', label: 'Thời lượng pin' },
+  { id: 'so-sanh', label: 'So sánh thông số' },
+  { id: 'ket-luan', label: 'Kết luận' },
+];
 
 const relatedPosts = [
   {
-    slug: "laptop-gaming-vs-workstation",
-    title: "Laptop Gaming vs Workstation: Nên chọn cái nào?",
-    category: "So sánh",
-    date: "12 tháng 1, 2025",
+    slug: 'laptop-gaming-vs-workstation',
+    title: 'Laptop Gaming vs Workstation: Nên chọn cái nào?',
+    category: 'So sánh',
+    date: '12 tháng 1, 2025',
   },
   {
-    slug: "ai-pc-2025",
-    title: "AI PC 2025: Kỷ nguyên mới của máy tính cá nhân",
-    category: "Tin tức",
-    date: "10 tháng 1, 2025",
+    slug: 'ai-pc-2025',
+    title: 'AI PC 2025: Kỷ nguyên mới của máy tính cá nhân',
+    category: 'Tin tức',
+    date: '10 tháng 1, 2025',
   },
   {
-    slug: "man-hinh-oled-gaming",
-    title: "Top 5 màn hình OLED gaming tốt nhất 2025",
-    category: "Review",
-    date: "9 tháng 1, 2025",
+    slug: 'man-hinh-oled-gaming',
+    title: 'Top 5 màn hình OLED gaming tốt nhất 2025',
+    category: 'Review',
+    date: '9 tháng 1, 2025',
   },
-]
+];
 
 const specsTable = [
   {
-    spec: "Chip",
-    m4: "Apple M4 (10-core CPU)",
-    m3: "Apple M3 (8-core CPU)",
-    m2: "Apple M2 (8-core CPU)",
+    spec: 'Chip',
+    m4: 'Apple M4 (10-core CPU)',
+    m3: 'Apple M3 (8-core CPU)',
+    m2: 'Apple M2 (8-core CPU)',
   },
   {
-    spec: "RAM",
-    m4: "16GB / 24GB / 32GB",
-    m3: "8GB / 16GB / 24GB",
-    m2: "8GB / 16GB / 24GB",
+    spec: 'RAM',
+    m4: '16GB / 24GB / 32GB',
+    m3: '8GB / 16GB / 24GB',
+    m2: '8GB / 16GB / 24GB',
   },
   {
-    spec: "GPU",
-    m4: "10-core / 38-core",
-    m3: "10-core / 30-core",
-    m2: "10-core / 19-core",
+    spec: 'GPU',
+    m4: '10-core / 38-core',
+    m3: '10-core / 30-core',
+    m2: '10-core / 19-core',
   },
-  { spec: "Pin", m4: "Đến 24 giờ", m3: "Đến 22 giờ", m2: "Đến 18 giờ" },
+  { spec: 'Pin', m4: 'Đến 24 giờ', m3: 'Đến 22 giờ', m2: 'Đến 18 giờ' },
   {
-    spec: "Màn hình",
+    spec: 'Màn hình',
     m4: '14.2" / 16.2" Liquid Retina XDR',
     m3: '14.2" / 16.2" Liquid Retina XDR',
     m2: '13.6" Liquid Retina',
   },
   {
-    spec: "Giá khởi điểm",
-    m4: "49.990.000đ",
-    m3: "44.990.000đ",
-    m2: "32.990.000đ",
+    spec: 'Giá khởi điểm',
+    m4: '49.990.000đ',
+    m3: '44.990.000đ',
+    m2: '32.990.000đ',
   },
-]
+];
 
 export default function BlogPostPage() {
   return (
@@ -113,16 +113,14 @@ export default function BlogPostPage() {
               >
                 <path d="M9 18l6-6-6-6" />
               </svg>
-              <span className="max-w-52 truncate text-slate-300">
-                Review MacBook Pro M4
-              </span>
+              <span className="max-w-52 truncate text-slate-300">Review MacBook Pro M4</span>
             </nav>
             <span className="mb-4 inline-block rounded-full bg-blue-500/20 px-3 py-1 text-xs font-semibold text-blue-300">
               Review
             </span>
             <h1 className="mb-5 text-3xl leading-tight font-bold md:text-4xl">
-              Review MacBook Pro M4: Hiệu năng vượt trội, pin &ldquo;trâu&rdquo;
-              nhất từ trước đến nay
+              Review MacBook Pro M4: Hiệu năng vượt trội, pin &ldquo;trâu&rdquo; nhất từ trước đến
+              nay
             </h1>
             <div className="flex flex-wrap items-center gap-4 text-sm text-slate-400">
               <div className="flex items-center gap-2">
@@ -160,20 +158,16 @@ export default function BlogPostPage() {
             <article className="prose-custom min-w-0 flex-1">
               <div className="space-y-6 leading-relaxed text-slate-700">
                 <section id="tong-quan">
-                  <h2 className="mb-3 text-2xl font-bold text-slate-900">
-                    Tổng quan
-                  </h2>
+                  <h2 className="mb-3 text-2xl font-bold text-slate-900">Tổng quan</h2>
                   <p>
-                    Apple vừa ra mắt MacBook Pro M4 với những cải tiến đáng kể
-                    về hiệu năng và thời lượng pin. Sau 2 tuần sử dụng thực tế,
-                    chúng tôi có thể khẳng định đây là chiếc laptop mạnh mẽ nhất
-                    trong phân khúc mỏng nhẹ hiện tại.
+                    Apple vừa ra mắt MacBook Pro M4 với những cải tiến đáng kể về hiệu năng và thời
+                    lượng pin. Sau 2 tuần sử dụng thực tế, chúng tôi có thể khẳng định đây là chiếc
+                    laptop mạnh mẽ nhất trong phân khúc mỏng nhẹ hiện tại.
                   </p>
                   <p className="mt-3">
-                    Chip M4 mang đến bước nhảy vọt đáng kể so với thế hệ M3, đặc
-                    biệt trong các tác vụ AI và machine learning. Neural Engine
-                    16-core mới có thể xử lý 38 nghìn tỷ phép tính mỗi giây —
-                    nhanh hơn 60% so với M3.
+                    Chip M4 mang đến bước nhảy vọt đáng kể so với thế hệ M3, đặc biệt trong các tác
+                    vụ AI và machine learning. Neural Engine 16-core mới có thể xử lý 38 nghìn tỷ
+                    phép tính mỗi giây — nhanh hơn 60% so với M3.
                   </p>
                 </section>
 
@@ -182,23 +176,22 @@ export default function BlogPostPage() {
                     Thiết kế &amp; Màn hình
                   </h2>
                   <p>
-                    Thiết kế của MacBook Pro M4 không thay đổi nhiều so với thế
-                    hệ trước — điều này không hẳn là xấu. Khung nhôm nguyên khối
-                    vẫn mang lại cảm giác cao cấp và bền bỉ.
+                    Thiết kế của MacBook Pro M4 không thay đổi nhiều so với thế hệ trước — điều này
+                    không hẳn là xấu. Khung nhôm nguyên khối vẫn mang lại cảm giác cao cấp và bền
+                    bỉ.
                   </p>
                   <h3 className="mt-4 mb-2 text-lg font-bold text-slate-900">
                     Màn hình Liquid Retina XDR
                   </h3>
                   <p>
-                    Màn hình 14.2 inch với độ phân giải 3024 x 1964 pixels, tần
-                    số quét ProMotion 120Hz và độ sáng tối đa 1600 nits vẫn là
-                    một trong những màn hình laptop tốt nhất hiện tại.
+                    Màn hình 14.2 inch với độ phân giải 3024 x 1964 pixels, tần số quét ProMotion
+                    120Hz và độ sáng tối đa 1600 nits vẫn là một trong những màn hình laptop tốt
+                    nhất hiện tại.
                   </p>
                   <blockquote className="my-4 rounded-r-xl border-l-4 border-blue-500 bg-blue-50 py-2 pl-5">
                     <p className="text-slate-700 italic">
-                      &ldquo;Màn hình MacBook Pro M4 vẫn là chuẩn mực mà các nhà
-                      sản xuất khác phải hướng tới. Màu sắc chính xác, độ sáng
-                      ấn tượng và tần số quét mượt mà.&rdquo;
+                      &ldquo;Màn hình MacBook Pro M4 vẫn là chuẩn mực mà các nhà sản xuất khác phải
+                      hướng tới. Màu sắc chính xác, độ sáng ấn tượng và tần số quét mượt mà.&rdquo;
                     </p>
                     <cite className="mt-1 block text-sm text-slate-500 not-italic">
                       — Nhóm kiểm thử NitroTech
@@ -207,37 +200,29 @@ export default function BlogPostPage() {
                 </section>
 
                 <section id="hieu-nang">
-                  <h2 className="mb-3 text-2xl font-bold text-slate-900">
-                    Hiệu năng chip M4
-                  </h2>
+                  <h2 className="mb-3 text-2xl font-bold text-slate-900">Hiệu năng chip M4</h2>
                   <p>
-                    Chip M4 được sản xuất trên tiến trình 3nm thế hệ 2 của TSMC,
-                    mang lại hiệu năng vượt trội trong khi tiêu thụ điện năng
-                    thấp hơn đáng kể so với các đối thủ x86.
+                    Chip M4 được sản xuất trên tiến trình 3nm thế hệ 2 của TSMC, mang lại hiệu năng
+                    vượt trội trong khi tiêu thụ điện năng thấp hơn đáng kể so với các đối thủ x86.
                   </p>
                   <p className="mt-3">
-                    Trong các bài test Cinebench R24, MacBook Pro M4 đạt điểm
-                    multi-core cao hơn 35% so với M3 và thậm chí vượt qua nhiều
-                    laptop Windows cao cấp sử dụng Intel Core Ultra 9.
+                    Trong các bài test Cinebench R24, MacBook Pro M4 đạt điểm multi-core cao hơn 35%
+                    so với M3 và thậm chí vượt qua nhiều laptop Windows cao cấp sử dụng Intel Core
+                    Ultra 9.
                   </p>
                 </section>
 
                 <section id="pin">
-                  <h2 className="mb-3 text-2xl font-bold text-slate-900">
-                    Thời lượng pin
-                  </h2>
+                  <h2 className="mb-3 text-2xl font-bold text-slate-900">Thời lượng pin</h2>
                   <p>
-                    Apple tuyên bố MacBook Pro M4 có thể hoạt động đến 24 giờ —
-                    và trong thực tế, con số này khá chính xác với tác vụ văn
-                    phòng thông thường. Đây là cải thiện đáng kể so với 22 giờ
-                    của M3.
+                    Apple tuyên bố MacBook Pro M4 có thể hoạt động đến 24 giờ — và trong thực tế,
+                    con số này khá chính xác với tác vụ văn phòng thông thường. Đây là cải thiện
+                    đáng kể so với 22 giờ của M3.
                   </p>
                 </section>
 
                 <section id="so-sanh">
-                  <h2 className="mb-4 text-2xl font-bold text-slate-900">
-                    So sánh thông số
-                  </h2>
+                  <h2 className="mb-4 text-2xl font-bold text-slate-900">So sánh thông số</h2>
                   <div className="overflow-x-auto rounded-xl border border-slate-200">
                     <table className="w-full text-sm">
                       <thead>
@@ -260,22 +245,12 @@ export default function BlogPostPage() {
                         {specsTable.map((row, i) => (
                           <tr
                             key={row.spec}
-                            className={
-                              i % 2 === 0 ? "bg-white" : "bg-slate-50/50"
-                            }
+                            className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}
                           >
-                            <td className="px-4 py-3 font-medium text-slate-700">
-                              {row.spec}
-                            </td>
-                            <td className="bg-blue-50/30 px-4 py-3 text-slate-900">
-                              {row.m4}
-                            </td>
-                            <td className="px-4 py-3 text-slate-600">
-                              {row.m3}
-                            </td>
-                            <td className="px-4 py-3 text-slate-600">
-                              {row.m2}
-                            </td>
+                            <td className="px-4 py-3 font-medium text-slate-700">{row.spec}</td>
+                            <td className="bg-blue-50/30 px-4 py-3 text-slate-900">{row.m4}</td>
+                            <td className="px-4 py-3 text-slate-600">{row.m3}</td>
+                            <td className="px-4 py-3 text-slate-600">{row.m2}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -284,14 +259,11 @@ export default function BlogPostPage() {
                 </section>
 
                 <section id="ket-luan">
-                  <h2 className="mb-3 text-2xl font-bold text-slate-900">
-                    Kết luận
-                  </h2>
+                  <h2 className="mb-3 text-2xl font-bold text-slate-900">Kết luận</h2>
                   <p>
-                    MacBook Pro M4 là chiếc laptop tốt nhất Apple từng sản xuất.
-                    Nếu bạn đang dùng M2 hoặc cũ hơn, đây là thời điểm tốt để
-                    nâng cấp. Nếu bạn đang dùng M3, sự khác biệt không đủ lớn để
-                    justify việc nâng cấp ngay.
+                    MacBook Pro M4 là chiếc laptop tốt nhất Apple từng sản xuất. Nếu bạn đang dùng
+                    M2 hoặc cũ hơn, đây là thời điểm tốt để nâng cấp. Nếu bạn đang dùng M3, sự khác
+                    biệt không đủ lớn để justify việc nâng cấp ngay.
                   </p>
                 </section>
               </div>
@@ -307,8 +279,8 @@ export default function BlogPostPage() {
                 <div>
                   <div className="mb-1 font-bold text-slate-900">Minh Khoa</div>
                   <div className="mb-2 text-sm text-slate-500">
-                    Editor-in-Chief tại NitroTech. Chuyên review laptop, PC và
-                    linh kiện với hơn 8 năm kinh nghiệm trong ngành công nghệ.
+                    Editor-in-Chief tại NitroTech. Chuyên review laptop, PC và linh kiện với hơn 8
+                    năm kinh nghiệm trong ngành công nghệ.
                   </div>
                   <div className="flex gap-2">
                     <span className="rounded-full bg-slate-200 px-2.5 py-1 text-xs text-slate-600">
@@ -326,9 +298,7 @@ export default function BlogPostPage() {
 
               {/* Related articles */}
               <div className="mt-10">
-                <h2 className="mb-5 text-xl font-bold text-slate-900">
-                  Bài viết liên quan
-                </h2>
+                <h2 className="mb-5 text-xl font-bold text-slate-900">Bài viết liên quan</h2>
                 <div className="grid gap-4 sm:grid-cols-3">
                   {relatedPosts.map((p) => (
                     <Link
@@ -354,9 +324,7 @@ export default function BlogPostPage() {
               <div className="sticky top-24 space-y-5">
                 {/* TOC */}
                 <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                  <h3 className="mb-3 text-sm font-bold text-slate-900">
-                    Mục lục
-                  </h3>
+                  <h3 className="mb-3 text-sm font-bold text-slate-900">Mục lục</h3>
                   <nav aria-label="Table of contents">
                     <ul className="space-y-1">
                       {toc.map((item) => (
@@ -375,14 +343,12 @@ export default function BlogPostPage() {
 
                 {/* Share */}
                 <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                  <h3 className="mb-3 text-sm font-bold text-slate-900">
-                    Chia sẻ
-                  </h3>
+                  <h3 className="mb-3 text-sm font-bold text-slate-900">Chia sẻ</h3>
                   <div className="flex gap-2">
                     {[
                       {
-                        label: "Facebook",
-                        color: "bg-blue-600 hover:bg-blue-700",
+                        label: 'Facebook',
+                        color: 'bg-blue-600 hover:bg-blue-700',
                         icon: (
                           <svg
                             viewBox="0 0 24 24"
@@ -394,8 +360,8 @@ export default function BlogPostPage() {
                         ),
                       },
                       {
-                        label: "Twitter/X",
-                        color: "bg-slate-900 hover:bg-slate-700",
+                        label: 'Twitter/X',
+                        color: 'bg-slate-900 hover:bg-slate-700',
                         icon: (
                           <svg
                             viewBox="0 0 24 24"
@@ -407,8 +373,8 @@ export default function BlogPostPage() {
                         ),
                       },
                       {
-                        label: "Copy link",
-                        color: "bg-slate-100 hover:bg-slate-200 text-slate-700",
+                        label: 'Copy link',
+                        color: 'bg-slate-100 hover:bg-slate-200 text-slate-700',
                         icon: (
                           <svg
                             viewBox="0 0 24 24"
@@ -441,5 +407,5 @@ export default function BlogPostPage() {
       </main>
       <SiteFooter />
     </>
-  )
+  );
 }

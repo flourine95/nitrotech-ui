@@ -1,84 +1,83 @@
-import type { Metadata } from "next"
-import Link from "next/link"
+import type { Metadata } from 'next';
+import Link from 'next/link';
 
-export const metadata: Metadata = { title: "Đơn hàng của tôi" }
+export const metadata: Metadata = { title: 'Đơn hàng của tôi' };
 
 const orders = [
   {
-    id: "NT-2025-0312",
-    date: "12/03/2025",
+    id: 'NT-2025-0312',
+    date: '12/03/2025',
     items: [
-      { name: "MacBook Pro M4", qty: 1 },
-      { name: "RTX 4080 Super", qty: 1 },
+      { name: 'MacBook Pro M4', qty: 1 },
+      { name: 'RTX 4080 Super', qty: 1 },
     ],
-    total: "65.490.000₫",
-    status: "delivered",
-    payMethod: "Thẻ tín dụng",
+    total: '65.490.000₫',
+    status: 'delivered',
+    payMethod: 'Thẻ tín dụng',
   },
   {
-    id: "NT-2025-0301",
-    date: "05/03/2025",
-    items: [{ name: "Corsair 32GB DDR5", qty: 1 }],
-    total: "2.490.000₫",
-    status: "shipping",
-    payMethod: "MoMo",
+    id: 'NT-2025-0301',
+    date: '05/03/2025',
+    items: [{ name: 'Corsair 32GB DDR5', qty: 1 }],
+    total: '2.490.000₫',
+    status: 'shipping',
+    payMethod: 'MoMo',
   },
   {
-    id: "NT-2025-0289",
-    date: "28/02/2025",
-    items: [{ name: "Samsung 990 Pro 2TB", qty: 2 }],
-    total: "6.580.000₫",
-    status: "delivered",
-    payMethod: "COD",
+    id: 'NT-2025-0289',
+    date: '28/02/2025',
+    items: [{ name: 'Samsung 990 Pro 2TB', qty: 2 }],
+    total: '6.580.000₫',
+    status: 'delivered',
+    payMethod: 'COD',
   },
   {
-    id: "NT-2025-0271",
-    date: "18/02/2025",
+    id: 'NT-2025-0271',
+    date: '18/02/2025',
     items: [{ name: 'LG UltraGear 27" 4K', qty: 1 }],
-    total: "12.990.000₫",
-    status: "delivered",
-    payMethod: "VNPay",
+    total: '12.990.000₫',
+    status: 'delivered',
+    payMethod: 'VNPay',
   },
   {
-    id: "NT-2025-0244",
-    date: "02/02/2025",
-    items: [{ name: "Intel Core i9-14900K", qty: 1 }],
-    total: "8.990.000₫",
-    status: "cancelled",
-    payMethod: "Thẻ tín dụng",
+    id: 'NT-2025-0244',
+    date: '02/02/2025',
+    items: [{ name: 'Intel Core i9-14900K', qty: 1 }],
+    total: '8.990.000₫',
+    status: 'cancelled',
+    payMethod: 'Thẻ tín dụng',
   },
-]
+];
 
-const statusMap: Record<string, { label: string; color: string; dot: string }> =
-  {
-    pending: {
-      label: "Chờ xác nhận",
-      color: "bg-amber-100 text-amber-700",
-      dot: "bg-amber-400",
-    },
-    confirmed: {
-      label: "Đã xác nhận",
-      color: "bg-blue-100 text-blue-700",
-      dot: "bg-blue-400",
-    },
-    shipping: {
-      label: "Đang giao",
-      color: "bg-purple-100 text-purple-700",
-      dot: "bg-purple-400",
-    },
-    delivered: {
-      label: "Đã nhận",
-      color: "bg-green-100 text-green-700",
-      dot: "bg-green-400",
-    },
-    cancelled: {
-      label: "Đã hủy",
-      color: "bg-slate-100 text-slate-500",
-      dot: "bg-slate-400",
-    },
-  }
+const statusMap: Record<string, { label: string; color: string; dot: string }> = {
+  pending: {
+    label: 'Chờ xác nhận',
+    color: 'bg-amber-100 text-amber-700',
+    dot: 'bg-amber-400',
+  },
+  confirmed: {
+    label: 'Đã xác nhận',
+    color: 'bg-blue-100 text-blue-700',
+    dot: 'bg-blue-400',
+  },
+  shipping: {
+    label: 'Đang giao',
+    color: 'bg-purple-100 text-purple-700',
+    dot: 'bg-purple-400',
+  },
+  delivered: {
+    label: 'Đã nhận',
+    color: 'bg-green-100 text-green-700',
+    dot: 'bg-green-400',
+  },
+  cancelled: {
+    label: 'Đã hủy',
+    color: 'bg-slate-100 text-slate-500',
+    dot: 'bg-slate-400',
+  },
+};
 
-const tabs = ["Tất cả", "Đang giao", "Đã nhận", "Đã hủy"]
+const tabs = ['Tất cả', 'Đang giao', 'Đã nhận', 'Đã hủy'];
 
 export default function OrdersPage() {
   return (
@@ -93,7 +92,7 @@ export default function OrdersPage() {
         {tabs.map((tab, i) => (
           <button
             key={tab}
-            className={`cursor-pointer rounded-full px-4 py-1.5 text-sm font-medium transition-colors duration-200 ${i === 0 ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-900"}`}
+            className={`cursor-pointer rounded-full px-4 py-1.5 text-sm font-medium transition-colors duration-200 ${i === 0 ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
           >
             {tab}
           </button>
@@ -110,9 +109,7 @@ export default function OrdersPage() {
             {/* Header */}
             <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-6 py-4">
               <div className="flex flex-wrap items-center gap-3">
-                <span className="text-sm font-semibold text-slate-900">
-                  {order.id}
-                </span>
+                <span className="text-sm font-semibold text-slate-900">{order.id}</span>
                 <span
                   className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${statusMap[order.status].color}`}
                 >
@@ -145,12 +142,8 @@ export default function OrdersPage() {
                       </svg>
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-medium text-slate-900">
-                        {item.name}
-                      </div>
-                      <div className="text-xs text-slate-400">
-                        Số lượng: {item.qty}
-                      </div>
+                      <div className="truncate text-sm font-medium text-slate-900">{item.name}</div>
+                      <div className="text-xs text-slate-400">Số lượng: {item.qty}</div>
                     </div>
                   </div>
                 ))}
@@ -158,17 +151,12 @@ export default function OrdersPage() {
 
               <div className="flex items-center justify-between border-t border-slate-100 pt-3">
                 <div className="text-xs text-slate-400">
-                  Thanh toán:{" "}
-                  <span className="font-medium text-slate-600">
-                    {order.payMethod}
-                  </span>
+                  Thanh toán: <span className="font-medium text-slate-600">{order.payMethod}</span>
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="text-right">
                     <div className="text-xs text-slate-400">Tổng tiền</div>
-                    <div className="text-base font-bold text-slate-900">
-                      {order.total}
-                    </div>
+                    <div className="text-base font-bold text-slate-900">{order.total}</div>
                   </div>
                   <Link
                     href={`/account/orders/${order.id}`}
@@ -176,7 +164,7 @@ export default function OrdersPage() {
                   >
                     Chi tiết
                   </Link>
-                  {order.status === "delivered" && (
+                  {order.status === 'delivered' && (
                     <button className="cursor-pointer rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold whitespace-nowrap text-white transition-colors duration-200 hover:bg-slate-700">
                       Mua lại
                     </button>
@@ -188,5 +176,5 @@ export default function OrdersPage() {
         ))}
       </div>
     </div>
-  )
+  );
 }

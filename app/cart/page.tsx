@@ -1,45 +1,45 @@
-import type { Metadata } from "next"
-import Link from "next/link"
-import { SiteHeader } from "@/components/site-header"
-import { SiteFooter } from "@/components/site-footer"
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import { SiteHeader } from '@/components/site-header';
+import { SiteFooter } from '@/components/site-footer';
 
-export const metadata: Metadata = { title: "Giỏ hàng" }
+export const metadata: Metadata = { title: 'Giỏ hàng' };
 
 const cartItems = [
   {
-    slug: "macbook-pro-m4",
-    name: "MacBook Pro M4",
-    variant: "16GB / 512GB / Space Black",
+    slug: 'macbook-pro-m4',
+    name: 'MacBook Pro M4',
+    variant: '16GB / 512GB / Space Black',
     price: 42990000,
     qty: 1,
-    cat: "Laptop",
+    cat: 'Laptop',
   },
   {
-    slug: "rtx-4080-super",
-    name: "RTX 4080 Super",
-    variant: "16GB GDDR6X",
+    slug: 'rtx-4080-super',
+    name: 'RTX 4080 Super',
+    variant: '16GB GDDR6X',
     price: 22500000,
     qty: 1,
-    cat: "Card đồ họa",
+    cat: 'Card đồ họa',
   },
   {
-    slug: "samsung-990-pro-2tb",
-    name: "Samsung 990 Pro 2TB",
-    variant: "PCIe 4.0 NVMe",
+    slug: 'samsung-990-pro-2tb',
+    name: 'Samsung 990 Pro 2TB',
+    variant: 'PCIe 4.0 NVMe',
     price: 3290000,
     qty: 2,
-    cat: "SSD NVMe",
+    cat: 'SSD NVMe',
   },
-]
+];
 
 function fmt(n: number) {
-  return n.toLocaleString("vi-VN") + "₫"
+  return n.toLocaleString('vi-VN') + '₫';
 }
 
-const subtotal = cartItems.reduce((s, i) => s + i.price * i.qty, 0)
-const shipping = 0
-const discount = 500000
-const total = subtotal + shipping - discount
+const subtotal = cartItems.reduce((s, i) => s + i.price * i.qty, 0);
+const shipping = 0;
+const discount = 500000;
+const total = subtotal + shipping - discount;
 
 export default function CartPage() {
   return (
@@ -109,18 +109,14 @@ export default function CartPage() {
                   </Link>
                   {/* Info */}
                   <div className="min-w-0 flex-1">
-                    <div className="mb-0.5 text-xs text-slate-400">
-                      {item.cat}
-                    </div>
+                    <div className="mb-0.5 text-xs text-slate-400">{item.cat}</div>
                     <Link
                       href={`/products/${item.slug}`}
                       className="mb-1 block cursor-pointer text-sm leading-snug font-semibold text-slate-900 transition-colors duration-150 hover:text-blue-600"
                     >
                       {item.name}
                     </Link>
-                    <div className="mb-3 text-xs text-slate-400">
-                      {item.variant}
-                    </div>
+                    <div className="mb-3 text-xs text-slate-400">{item.variant}</div>
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       {/* Qty */}
                       <div className="flex items-center overflow-hidden rounded-full border border-slate-200">
@@ -169,9 +165,7 @@ export default function CartPage() {
 
               {/* Coupon */}
               <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-                <p className="mb-3 text-sm font-semibold text-slate-900">
-                  Mã giảm giá
-                </p>
+                <p className="mb-3 text-sm font-semibold text-slate-900">Mã giảm giá</p>
                 <div className="flex gap-3">
                   <label htmlFor="coupon" className="sr-only">
                     Nhập mã giảm giá
@@ -188,11 +182,7 @@ export default function CartPage() {
                   </button>
                 </div>
                 <p className="mt-2 flex items-center gap-1 text-xs text-green-600">
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="h-3.5 w-3.5 fill-current"
-                    aria-hidden="true"
-                  >
+                  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-current" aria-hidden="true">
                     <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   Mã NITRO500 đã được áp dụng — giảm 500.000₫
@@ -219,31 +209,29 @@ export default function CartPage() {
 
               {/* Gợi ý thêm vào giỏ */}
               <div className="pt-2">
-                <h2 className="mb-4 font-bold text-slate-900">
-                  Có thể bạn cũng thích
-                </h2>
+                <h2 className="mb-4 font-bold text-slate-900">Có thể bạn cũng thích</h2>
                 <div className="space-y-3">
                   {[
                     {
-                      slug: "corsair-32gb-ddr5",
-                      name: "Corsair Vengeance 32GB DDR5",
-                      cat: "RAM",
-                      price: "2.490.000₫",
-                      old: "2.990.000₫",
+                      slug: 'corsair-32gb-ddr5',
+                      name: 'Corsair Vengeance 32GB DDR5',
+                      cat: 'RAM',
+                      price: '2.490.000₫',
+                      old: '2.990.000₫',
                     },
                     {
-                      slug: "samsung-990-pro-1tb",
-                      name: "Samsung 990 Pro 1TB NVMe",
-                      cat: "SSD",
-                      price: "1.890.000₫",
-                      old: "2.190.000₫",
+                      slug: 'samsung-990-pro-1tb',
+                      name: 'Samsung 990 Pro 1TB NVMe',
+                      cat: 'SSD',
+                      price: '1.890.000₫',
+                      old: '2.190.000₫',
                     },
                     {
-                      slug: "lg-ultragear-27",
+                      slug: 'lg-ultragear-27',
                       name: 'LG UltraGear 27" 4K 144Hz',
-                      cat: "Màn hình",
-                      price: "12.990.000₫",
-                      old: "14.500.000₫",
+                      cat: 'Màn hình',
+                      price: '12.990.000₫',
+                      old: '14.500.000₫',
                     },
                   ].map((p) => (
                     <div
@@ -275,9 +263,7 @@ export default function CartPage() {
                         </svg>
                       </Link>
                       <div className="min-w-0 flex-1">
-                        <div className="mb-0.5 text-xs text-slate-400">
-                          {p.cat}
-                        </div>
+                        <div className="mb-0.5 text-xs text-slate-400">{p.cat}</div>
                         <Link
                           href={`/products/${p.slug}`}
                           className="block cursor-pointer truncate text-sm font-semibold text-slate-900 transition-colors duration-150 hover:text-blue-600"
@@ -285,12 +271,8 @@ export default function CartPage() {
                           {p.name}
                         </Link>
                         <div className="mt-0.5 flex items-center gap-2">
-                          <span className="text-sm font-bold text-slate-900">
-                            {p.price}
-                          </span>
-                          <span className="text-xs text-slate-300 line-through">
-                            {p.old}
-                          </span>
+                          <span className="text-sm font-bold text-slate-900">{p.price}</span>
+                          <span className="text-xs text-slate-300 line-through">{p.old}</span>
                         </div>
                       </div>
                       <button className="shrink-0 cursor-pointer rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors duration-200 hover:border-slate-900 hover:bg-slate-900 hover:text-white">
@@ -305,17 +287,11 @@ export default function CartPage() {
             {/* ── Order summary ── */}
             <div>
               <div className="sticky top-36 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                <h2 className="mb-5 text-base font-bold text-slate-900">
-                  Tóm tắt đơn hàng
-                </h2>
+                <h2 className="mb-5 text-base font-bold text-slate-900">Tóm tắt đơn hàng</h2>
                 <div className="mb-5 space-y-3">
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-500">
-                      Tạm tính ({cartItems.length} sản phẩm)
-                    </span>
-                    <span className="font-medium text-slate-900">
-                      {fmt(subtotal)}
-                    </span>
+                    <span className="text-slate-500">Tạm tính ({cartItems.length} sản phẩm)</span>
+                    <span className="font-medium text-slate-900">{fmt(subtotal)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-slate-500">Phí vận chuyển</span>
@@ -323,17 +299,13 @@ export default function CartPage() {
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-slate-500">Giảm giá (NITRO500)</span>
-                    <span className="font-medium text-rose-600">
-                      −{fmt(discount)}
-                    </span>
+                    <span className="font-medium text-rose-600">−{fmt(discount)}</span>
                   </div>
                 </div>
                 <div className="mb-6 border-t border-slate-100 pt-4">
                   <div className="flex justify-between">
                     <span className="font-bold text-slate-900">Tổng cộng</span>
-                    <span className="text-xl font-bold text-slate-900">
-                      {fmt(total)}
-                    </span>
+                    <span className="text-xl font-bold text-slate-900">{fmt(total)}</span>
                   </div>
                   <p className="mt-1 text-xs text-slate-400">Đã bao gồm VAT</p>
                 </div>
@@ -360,18 +332,9 @@ export default function CartPage() {
 
                 {/* Payment methods */}
                 <div className="mt-5 border-t border-slate-100 pt-5">
-                  <p className="mb-3 text-center text-xs text-slate-400">
-                    Chấp nhận thanh toán
-                  </p>
+                  <p className="mb-3 text-center text-xs text-slate-400">Chấp nhận thanh toán</p>
                   <div className="flex flex-wrap justify-center gap-2">
-                    {[
-                      "Visa",
-                      "Mastercard",
-                      "MoMo",
-                      "ZaloPay",
-                      "VNPay",
-                      "COD",
-                    ].map((m) => (
+                    {['Visa', 'Mastercard', 'MoMo', 'ZaloPay', 'VNPay', 'COD'].map((m) => (
                       <span
                         key={m}
                         className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs text-slate-500"
@@ -388,5 +351,5 @@ export default function CartPage() {
       </main>
       <SiteFooter />
     </>
-  )
+  );
 }

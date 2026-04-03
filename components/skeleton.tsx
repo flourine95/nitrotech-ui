@@ -1,10 +1,8 @@
-import { cn } from "@/lib/utils"
+import { cn } from '@/lib/utils';
 
 // ── Base skeleton ──────────────────────────────────────────────
 function Skeleton({ className }: { className?: string }) {
-  return (
-    <div className={cn("animate-pulse rounded-md bg-slate-200", className)} />
-  )
+  return <div className={cn('animate-pulse rounded-md bg-slate-200', className)} />;
 }
 
 // ── Product card skeleton ──────────────────────────────────────
@@ -32,49 +30,31 @@ export function SkeletonProductCard() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 // ── Text skeleton ──────────────────────────────────────────────
-export function SkeletonText({
-  lines = 3,
-  className,
-}: {
-  lines?: number
-  className?: string
-}) {
+export function SkeletonText({ lines = 3, className }: { lines?: number; className?: string }) {
   return (
-    <div className={cn("space-y-2", className)}>
+    <div className={cn('space-y-2', className)}>
       {Array.from({ length: lines }).map((_, i) => (
         <Skeleton
           key={i}
-          className={cn(
-            "h-3 rounded-full",
-            i === lines - 1 && lines > 1 ? "w-3/4" : "w-full"
-          )}
+          className={cn('h-3 rounded-full', i === lines - 1 && lines > 1 ? 'w-3/4' : 'w-full')}
         />
       ))}
     </div>
-  )
+  );
 }
 
 // ── Avatar skeleton ────────────────────────────────────────────
 export function SkeletonAvatar({ size = 10 }: { size?: number }) {
-  return (
-    <div
-      className={`animate-pulse rounded-full bg-slate-200 w-${size} h-${size} shrink-0`}
-    />
-  )
+  return <div className={`animate-pulse rounded-full bg-slate-200 w-${size} h-${size} shrink-0`} />;
 }
 
 // ── Banner skeleton ────────────────────────────────────────────
 export function SkeletonBanner({ className }: { className?: string }) {
   return (
-    <div
-      className={cn(
-        "h-48 w-full animate-pulse rounded-2xl bg-slate-200 sm:h-64",
-        className
-      )}
-    />
-  )
+    <div className={cn('h-48 w-full animate-pulse rounded-2xl bg-slate-200 sm:h-64', className)} />
+  );
 }

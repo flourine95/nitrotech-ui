@@ -1,10 +1,6 @@
-import Link from "next/link"
+import Link from 'next/link';
 
-export default function AuthLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col bg-slate-50">
       {/* Simple header */}
@@ -44,9 +40,7 @@ export default function AuthLayout({
       </header>
 
       {/* Content */}
-      <main className="flex flex-1 items-center justify-center px-4 py-12">
-        {children}
-      </main>
+      <main className="flex flex-1 items-center justify-center px-4 py-12">{children}</main>
 
       {/* Footer */}
       <footer className="border-t border-slate-200 bg-white py-6 text-center text-xs text-slate-400">
@@ -66,5 +60,5 @@ export default function AuthLayout({
         </Link>
       </footer>
     </div>
-  )
+  );
 }

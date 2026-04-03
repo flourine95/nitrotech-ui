@@ -1,71 +1,67 @@
-"use client"
-import { useState } from "react"
-import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
-import { toast } from "sonner"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
-import { useSession } from "next-auth/react"
-import { logout } from "@/lib/auth-api"
+'use client';
+import { useState } from 'react';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useSession } from 'next-auth/react';
+import { logout } from '@/lib/auth-api';
 
 const navLinks = [
-  { label: "Laptop", href: "/products?cat=laptop" },
-  { label: "Linh kiện PC", href: "/products?cat=components" },
-  { label: "Màn hình", href: "/products?cat=monitors" },
-  { label: "Phụ kiện", href: "/products?cat=accessories" },
-  { label: "Khuyến mãi", href: "/products?sale=true" },
-  { label: "Blog", href: "/blog" },
-]
+  { label: 'Laptop', href: '/products?cat=laptop' },
+  { label: 'Linh kiện PC', href: '/products?cat=components' },
+  { label: 'Màn hình', href: '/products?cat=monitors' },
+  { label: 'Phụ kiện', href: '/products?cat=accessories' },
+  { label: 'Khuyến mãi', href: '/products?sale=true' },
+  { label: 'Blog', href: '/blog' },
+];
 
 const categories = [
-  { label: "Tất cả", href: "/products" },
-  { label: "Laptop Gaming", href: "/products?cat=laptop-gaming" },
-  { label: "Laptop Văn phòng", href: "/products?cat=laptop-office" },
-  { label: "PC Desktop", href: "/products?cat=desktop" },
-  { label: "CPU & Bo mạch", href: "/products?cat=cpu" },
-  { label: "Card đồ họa", href: "/products?cat=gpu" },
-  { label: "RAM & SSD", href: "/products?cat=storage" },
-  { label: "Màn hình", href: "/products?cat=monitors" },
-  { label: "Bàn phím & Chuột", href: "/products?cat=peripherals" },
-  { label: "Tai nghe", href: "/products?cat=audio" },
-]
+  { label: 'Tất cả', href: '/products' },
+  { label: 'Laptop Gaming', href: '/products?cat=laptop-gaming' },
+  { label: 'Laptop Văn phòng', href: '/products?cat=laptop-office' },
+  { label: 'PC Desktop', href: '/products?cat=desktop' },
+  { label: 'CPU & Bo mạch', href: '/products?cat=cpu' },
+  { label: 'Card đồ họa', href: '/products?cat=gpu' },
+  { label: 'RAM & SSD', href: '/products?cat=storage' },
+  { label: 'Màn hình', href: '/products?cat=monitors' },
+  { label: 'Bàn phím & Chuột', href: '/products?cat=peripherals' },
+  { label: 'Tai nghe', href: '/products?cat=audio' },
+];
 
 const announcements = [
-  { text: "Miễn phí giao hàng cho đơn từ 500K", href: "/products" },
+  { text: 'Miễn phí giao hàng cho đơn từ 500K', href: '/products' },
   {
-    text: "Flash Sale hôm nay — Giảm đến 20% linh kiện PC",
-    href: "/products?sale=true",
+    text: 'Flash Sale hôm nay — Giảm đến 20% linh kiện PC',
+    href: '/products?sale=true',
   },
   {
-    text: "Trả góp 0% lãi suất — Áp dụng cho tất cả sản phẩm",
-    href: "/products",
+    text: 'Trả góp 0% lãi suất — Áp dụng cho tất cả sản phẩm',
+    href: '/products',
   },
-  { text: "Giao hàng trong 2 giờ tại TP.HCM & Hà Nội", href: "/shipping" },
+  { text: 'Giao hàng trong 2 giờ tại TP.HCM & Hà Nội', href: '/shipping' },
   {
-    text: "Bảo hành chính hãng toàn quốc — Đổi trả trong 30 ngày",
-    href: "/warranty",
+    text: 'Bảo hành chính hãng toàn quốc — Đổi trả trong 30 ngày',
+    href: '/warranty',
   },
-]
+];
 
 export function SiteHeader({ cartCount = 0 }: { cartCount?: number }) {
-  const router = useRouter()
-  const pathname = usePathname()
-  const { data: session } = useSession()
-  const user = session?.user
-  const isLoggedIn = !!user
-  const userName = user?.name ?? "Tài khoản"
-  const [mobileOpen, setMobileOpen] = useState(false)
-  const [accountOpen, setAccountOpen] = useState(false)
+  const router = useRouter();
+  const pathname = usePathname();
+  const { data: session } = useSession();
+  const user = session?.user;
+  const isLoggedIn = !!user;
+  const userName = user?.name ?? 'Tài khoản';
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
 
   async function handleLogout() {
     try {
-      await logout()
-      router.push("/login")
+      await logout();
+      router.push('/login');
     } catch {
-      toast.error("Có lỗi xảy ra khi đăng xuất")
+      toast.error('Có lỗi xảy ra khi đăng xuất');
     }
   }
 
@@ -84,13 +80,9 @@ export function SiteHeader({ cartCount = 0 }: { cartCount?: number }) {
 
         <div
           className="flex whitespace-nowrap"
-          style={{ animation: "marquee 35s linear infinite" }}
-          onMouseEnter={(e) =>
-            (e.currentTarget.style.animationPlayState = "paused")
-          }
-          onMouseLeave={(e) =>
-            (e.currentTarget.style.animationPlayState = "running")
-          }
+          style={{ animation: 'marquee 35s linear infinite' }}
+          onMouseEnter={(e) => (e.currentTarget.style.animationPlayState = 'paused')}
+          onMouseLeave={(e) => (e.currentTarget.style.animationPlayState = 'running')}
           aria-live="off"
         >
           {[...announcements, ...announcements].map((a, i) => (
@@ -99,10 +91,7 @@ export function SiteHeader({ cartCount = 0 }: { cartCount?: number }) {
               href={a.href}
               className="inline-flex shrink-0 cursor-pointer items-center gap-3 px-8 transition-colors duration-150 hover:text-white"
             >
-              <span
-                className="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400"
-                aria-hidden="true"
-              />
+              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" aria-hidden="true" />
               {a.text}
             </Link>
           ))}
@@ -114,11 +103,7 @@ export function SiteHeader({ cartCount = 0 }: { cartCount?: number }) {
         {/* Logo */}
         <Link href="/" className="flex cursor-pointer items-center gap-2.5">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-slate-900">
-            <svg
-              viewBox="0 0 24 24"
-              className="h-4 w-4 fill-current text-white"
-              aria-hidden="true"
-            >
+            <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current text-white" aria-hidden="true">
               <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
             </svg>
           </div>
@@ -135,8 +120,8 @@ export function SiteHeader({ cartCount = 0 }: { cartCount?: number }) {
               href={l.href}
               className={`cursor-pointer rounded-full px-4 py-2 text-sm transition-colors duration-200 ${
                 pathname === l.href
-                  ? "bg-slate-100 font-medium text-slate-900"
-                  : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                  ? 'bg-slate-100 font-medium text-slate-900'
+                  : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
               }`}
             >
               {l.label}
@@ -192,9 +177,7 @@ export function SiteHeader({ cartCount = 0 }: { cartCount?: number }) {
                 )}
               </Link>
             </TooltipTrigger>
-            <TooltipContent side="bottom">
-              Giỏ hàng ({cartCount})
-            </TooltipContent>
+            <TooltipContent side="bottom">Giỏ hàng ({cartCount})</TooltipContent>
           </Tooltip>
           {/* Login / Account */}
           {isLoggedIn ? (
@@ -209,14 +192,12 @@ export function SiteHeader({ cartCount = 0 }: { cartCount?: number }) {
                   className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-500 text-[10px] font-bold"
                   aria-hidden="true"
                 >
-                  {userName.split(" ").pop()?.[0]}
+                  {userName.split(' ').pop()?.[0]}
                 </div>
-                <span className="max-w-20 truncate">
-                  {userName.split(" ").pop()}
-                </span>
+                <span className="max-w-20 truncate">{userName.split(' ').pop()}</span>
                 <svg
                   viewBox="0 0 24 24"
-                  className={`h-3.5 w-3.5 transition-transform duration-200 ${accountOpen ? "rotate-180" : ""}`}
+                  className={`h-3.5 w-3.5 transition-transform duration-200 ${accountOpen ? 'rotate-180' : ''}`}
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="2.5"
@@ -240,15 +221,13 @@ export function SiteHeader({ cartCount = 0 }: { cartCount?: number }) {
                       <div className="truncate text-sm font-semibold text-slate-900">
                         {userName}
                       </div>
-                      <div className="truncate text-xs text-slate-400">
-                        email@example.com
-                      </div>
+                      <div className="truncate text-xs text-slate-400">email@example.com</div>
                     </div>
                     <div className="py-1.5">
                       {[
                         {
-                          href: "/account",
-                          label: "Tổng quan",
+                          href: '/account',
+                          label: 'Tổng quan',
                           icon: (
                             <svg
                               viewBox="0 0 24 24"
@@ -263,8 +242,8 @@ export function SiteHeader({ cartCount = 0 }: { cartCount?: number }) {
                           ),
                         },
                         {
-                          href: "/account/orders",
-                          label: "Đơn hàng",
+                          href: '/account/orders',
+                          label: 'Đơn hàng',
                           icon: (
                             <svg
                               viewBox="0 0 24 24"
@@ -280,8 +259,8 @@ export function SiteHeader({ cartCount = 0 }: { cartCount?: number }) {
                           ),
                         },
                         {
-                          href: "/account/wishlist",
-                          label: "Yêu thích",
+                          href: '/account/wishlist',
+                          label: 'Yêu thích',
                           icon: (
                             <svg
                               viewBox="0 0 24 24"
@@ -295,8 +274,8 @@ export function SiteHeader({ cartCount = 0 }: { cartCount?: number }) {
                           ),
                         },
                         {
-                          href: "/compare",
-                          label: "So sánh",
+                          href: '/compare',
+                          label: 'So sánh',
                           icon: (
                             <svg
                               viewBox="0 0 24 24"
@@ -311,8 +290,8 @@ export function SiteHeader({ cartCount = 0 }: { cartCount?: number }) {
                           ),
                         },
                         {
-                          href: "/account/profile",
-                          label: "Hồ sơ",
+                          href: '/account/profile',
+                          label: 'Hồ sơ',
                           icon: (
                             <svg
                               viewBox="0 0 24 24"
@@ -378,8 +357,8 @@ export function SiteHeader({ cartCount = 0 }: { cartCount?: number }) {
                     <div className="border-t border-slate-100 py-1.5">
                       <button
                         onClick={() => {
-                          setAccountOpen(false)
-                          handleLogout()
+                          setAccountOpen(false);
+                          handleLogout();
                         }}
                         className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-sm text-rose-500 transition-colors duration-150 hover:bg-rose-50"
                       >
@@ -442,8 +421,8 @@ export function SiteHeader({ cartCount = 0 }: { cartCount?: number }) {
               href={c.href}
               className={`cursor-pointer rounded-full px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors duration-200 ${
                 pathname === c.href
-                  ? "bg-slate-900 text-white"
-                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                  ? 'bg-slate-900 text-white'
+                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
               }`}
             >
               {c.label}
@@ -470,9 +449,9 @@ export function SiteHeader({ cartCount = 0 }: { cartCount?: number }) {
           {isLoggedIn ? (
             <div className="flex flex-col gap-1">
               {[
-                { href: "/account", label: "Tài khoản của tôi" },
-                { href: "/account/orders", label: "Đơn hàng" },
-                { href: "/account/wishlist", label: "Yêu thích" },
+                { href: '/account', label: 'Tài khoản của tôi' },
+                { href: '/account/orders', label: 'Đơn hàng' },
+                { href: '/account/wishlist', label: 'Yêu thích' },
               ].map((l) => (
                 <Link
                   key={l.href}
@@ -485,8 +464,8 @@ export function SiteHeader({ cartCount = 0 }: { cartCount?: number }) {
               ))}
               <button
                 onClick={() => {
-                  setMobileOpen(false)
-                  handleLogout()
+                  setMobileOpen(false);
+                  handleLogout();
                 }}
                 className="mt-1 w-full cursor-pointer rounded-full border border-rose-200 py-2.5 text-center text-sm font-semibold text-rose-500"
               >
@@ -505,5 +484,5 @@ export function SiteHeader({ cartCount = 0 }: { cartCount?: number }) {
         </div>
       )}
     </header>
-  )
+  );
 }

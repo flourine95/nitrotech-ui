@@ -1,64 +1,58 @@
-"use client"
-import { useState, useEffect, useRef } from "react"
-import { toast } from "sonner"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
+'use client';
+import { useState, useEffect, useRef } from 'react';
+import { toast } from 'sonner';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import {
   getCategories,
   createCategory,
   updateCategory,
   deleteCategory,
   type Category,
-} from "@/lib/categories-api"
-import { uploadFile } from "@/lib/upload-api"
-import { ApiException } from "@/lib/api"
-import MediaPickerDialog from "@/components/media-picker-dialog"
+} from '@/lib/categories-api';
+import { uploadFile } from '@/lib/upload-api';
+import { ApiException } from '@/lib/api';
+import MediaPickerDialog from '@/components/media-picker-dialog';
 
 // ── Schema ────────────────────────────────────────────────────────────────────
 
 const categorySchema = z.object({
-  name: z.string().min(1, "Tên không được để trống"),
+  name: z.string().min(1, 'Tên không được để trống'),
   slug: z
     .string()
-    .min(1, "Slug không được để trống")
-    .regex(/^[a-z0-9-]+$/, "Slug chỉ gồm chữ thường, số và dấu gạch ngang"),
+    .min(1, 'Slug không được để trống')
+    .regex(/^[a-z0-9-]+$/, 'Slug chỉ gồm chữ thường, số và dấu gạch ngang'),
   description: z.string().optional(),
   image: z.string().optional(),
   parentId: z.number().nullable(),
   active: z.boolean(),
-})
-type CategoryInput = z.infer<typeof categorySchema>
+});
+type CategoryInput = z.infer<typeof categorySchema>;
 
 // ── Image Uploader ────────────────────────────────────────────────────────────
 
-function ImageUploader({
-  value,
-  onChange,
-}: {
-  value: string
-  onChange: (url: string) => void
-}) {
-  const [uploading, setUploading] = useState(false)
-  const [showPicker, setShowPicker] = useState(false)
-  const inputRef = useRef<HTMLInputElement>(null)
+function ImageUploader({ value, onChange }: { value: string; onChange: (url: string) => void }) {
+  const [uploading, setUploading] = useState(false);
+  const [showPicker, setShowPicker] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    if (!file.type.startsWith("image/")) {
-      toast.error("Chỉ chấp nhận file ảnh")
-      return
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      toast.error('Chỉ chấp nhận file ảnh');
+      return;
     }
-    setUploading(true)
+    setUploading(true);
     try {
-      const result = await uploadFile(file, "categories")
-      onChange(result.secure_url)
+      const result = await uploadFile(file, 'categories');
+      onChange(result.secure_url);
     } catch {
-      toast.error("Upload thất bại, vui lòng thử lại")
+      toast.error('Upload thất bại, vui lòng thử lại');
     } finally {
-      setUploading(false)
-      if (inputRef.current) inputRef.current.value = ""
+      setUploading(false);
+      if (inputRef.current) inputRef.current.value = '';
     }
   }
 
@@ -66,12 +60,8 @@ function ImageUploader({
     <>
       <div className="flex items-center gap-3">
         <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
-          {value && value.startsWith("http") ? (
-            <img
-              src={value}
-              alt="Ảnh danh mục"
-              className="h-full w-full object-cover"
-            />
+          {value && value.startsWith('http') ? (
+            <img src={value} alt="Ảnh danh mục" className="h-full w-full object-cover" />
           ) : (
             <svg
               viewBox="0 0 24 24"
@@ -98,7 +88,7 @@ function ImageUploader({
             />
             <label
               htmlFor="cat-img-upload"
-              className={`flex cursor-pointer items-center gap-1.5 rounded-xl border border-dashed border-slate-300 px-3 py-2 text-xs text-slate-600 transition-colors hover:border-blue-400 hover:bg-blue-50 hover:text-blue-600 ${uploading ? "pointer-events-none opacity-60" : ""}`}
+              className={`flex cursor-pointer items-center gap-1.5 rounded-xl border border-dashed border-slate-300 px-3 py-2 text-xs text-slate-600 transition-colors hover:border-blue-400 hover:bg-blue-50 hover:text-blue-600 ${uploading ? 'pointer-events-none opacity-60' : ''}`}
             >
               {uploading ? (
                 <>
@@ -109,12 +99,9 @@ function ImageUploader({
                     stroke="currentColor"
                     strokeWidth="2"
                   >
-                    <path
-                      d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      strokeOpacity=".3"
-                    />
+                    <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" strokeOpacity=".3" />
                     <path d="M21 12a9 9 0 00-9-9" />
-                  </svg>{" "}
+                  </svg>{' '}
                   Đang upload...
                 </>
               ) : (
@@ -129,7 +116,7 @@ function ImageUploader({
                     <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
                     <polyline points="17 8 12 3 7 8" />
                     <line x1="12" y1="3" x2="12" y2="15" />
-                  </svg>{" "}
+                  </svg>{' '}
                   Upload
                 </>
               )}
@@ -156,7 +143,7 @@ function ImageUploader({
           {value && (
             <button
               type="button"
-              onClick={() => onChange("")}
+              onClick={() => onChange('')}
               className="cursor-pointer text-xs text-rose-400 transition-colors hover:text-rose-600"
             >
               Xóa ảnh
@@ -169,13 +156,13 @@ function ImageUploader({
           folder="categories"
           multiple={false}
           onInsert={(urls) => {
-            if (urls[0]) onChange(urls[0])
+            if (urls[0]) onChange(urls[0]);
           }}
           onClose={() => setShowPicker(false)}
         />
       )}
     </>
-  )
+  );
 }
 
 // ── Modal ─────────────────────────────────────────────────────────────────────
@@ -186,12 +173,12 @@ function CategoryModal({
   onClose,
   onSaved,
 }: {
-  category: Category | null
-  allCategories: Category[]
-  onClose: () => void
-  onSaved: (c: Category) => void
+  category: Category | null;
+  allCategories: Category[];
+  onClose: () => void;
+  onSaved: (c: Category) => void;
 }) {
-  const isEdit = !!category
+  const isEdit = !!category;
   const {
     register,
     handleSubmit,
@@ -205,39 +192,39 @@ function CategoryModal({
       ? {
           name: category.name,
           slug: category.slug,
-          description: category.description ?? "",
-          image: category.image ?? "",
+          description: category.description ?? '',
+          image: category.image ?? '',
           parentId: category.parentId,
           active: category.active,
         }
       : {
-          name: "",
-          slug: "",
-          description: "",
-          image: "",
+          name: '',
+          slug: '',
+          description: '',
+          image: '',
           parentId: null,
           active: true,
         },
-  })
+  });
 
-  const name = watch("name")
-  const slugTouched = useRef(isEdit)
-  const imageValue = watch("image")
+  const name = watch('name');
+  const slugTouched = useRef(isEdit);
+  const imageValue = watch('image');
 
   useEffect(() => {
     if (!slugTouched.current && name) {
       setValue(
-        "slug",
+        'slug',
         name
           .toLowerCase()
-          .replace(/\s+/g, "-")
-          .replace(/[^a-z0-9-]/g, "")
-      )
+          .replace(/\s+/g, '-')
+          .replace(/[^a-z0-9-]/g, ''),
+      );
     }
-  }, [name, setValue])
+  }, [name, setValue]);
 
   // Exclude self and descendants from parent options
-  const parentOptions = allCategories.filter((c) => c.id !== category?.id)
+  const parentOptions = allCategories.filter((c) => c.id !== category?.id);
 
   async function onSubmit(data: CategoryInput) {
     try {
@@ -250,22 +237,22 @@ function CategoryModal({
             ...data,
             description: data.description || undefined,
             image: data.image || undefined,
-          })
-      toast.success(isEdit ? "Đã cập nhật danh mục" : "Đã tạo danh mục")
-      onSaved(saved)
+          });
+      toast.success(isEdit ? 'Đã cập nhật danh mục' : 'Đã tạo danh mục');
+      onSaved(saved);
     } catch (e) {
       if (e instanceof ApiException) {
-        if (e.error.code === "CATEGORY_SLUG_EXISTS")
-          setError("slug", { message: "Slug đã tồn tại" })
-        else if (e.error.code === "CATEGORY_CIRCULAR_REF")
-          setError("parentId", {
-            message: "Không thể chọn danh mục con làm cha",
-          })
+        if (e.error.code === 'CATEGORY_SLUG_EXISTS')
+          setError('slug', { message: 'Slug đã tồn tại' });
+        else if (e.error.code === 'CATEGORY_CIRCULAR_REF')
+          setError('parentId', {
+            message: 'Không thể chọn danh mục con làm cha',
+          });
         else if (e.error.errors)
           Object.entries(e.error.errors).forEach(([f, m]) =>
-            setError(f as keyof CategoryInput, { message: m })
-          )
-        else toast.error(e.error.message)
+            setError(f as keyof CategoryInput, { message: m }),
+          );
+        else toast.error(e.error.message);
       }
     }
   }
@@ -281,7 +268,7 @@ function CategoryModal({
       >
         <div className="mb-5 flex items-center justify-between">
           <h2 className="text-base font-bold text-slate-900">
-            {isEdit ? "Sửa danh mục" : "Thêm danh mục"}
+            {isEdit ? 'Sửa danh mục' : 'Thêm danh mục'}
           </h2>
           <button
             onClick={onClose}
@@ -300,68 +287,42 @@ function CategoryModal({
           </button>
         </div>
 
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="space-y-4"
-          noValidate
-        >
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-700">
-              Tên danh mục
-            </label>
+            <label className="mb-1.5 block text-sm font-medium text-slate-700">Tên danh mục</label>
             <input
-              {...register("name")}
+              {...register('name')}
               placeholder="Laptop Gaming"
-              className={`w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:ring-2 ${errors.name ? "border-rose-400 focus:ring-rose-100" : "border-slate-200 focus:border-blue-400 focus:ring-blue-100"}`}
+              className={`w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:ring-2 ${errors.name ? 'border-rose-400 focus:ring-rose-100' : 'border-slate-200 focus:border-blue-400 focus:ring-blue-100'}`}
             />
-            {errors.name && (
-              <p className="mt-1 text-xs text-rose-500">
-                {errors.name.message}
-              </p>
-            )}
+            {errors.name && <p className="mt-1 text-xs text-rose-500">{errors.name.message}</p>}
           </div>
 
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-700">
-              Slug
-            </label>
+            <label className="mb-1.5 block text-sm font-medium text-slate-700">Slug</label>
             <input
-              {...register("slug")}
+              {...register('slug')}
               placeholder="laptop-gaming"
               onFocus={() => {
-                slugTouched.current = true
+                slugTouched.current = true;
               }}
-              className={`w-full rounded-xl border px-4 py-2.5 font-mono text-sm outline-none focus:ring-2 ${errors.slug ? "border-rose-400 focus:ring-rose-100" : "border-slate-200 focus:border-blue-400 focus:ring-blue-100"}`}
+              className={`w-full rounded-xl border px-4 py-2.5 font-mono text-sm outline-none focus:ring-2 ${errors.slug ? 'border-rose-400 focus:ring-rose-100' : 'border-slate-200 focus:border-blue-400 focus:ring-blue-100'}`}
             />
-            {errors.slug && (
-              <p className="mt-1 text-xs text-rose-500">
-                {errors.slug.message}
-              </p>
-            )}
+            {errors.slug && <p className="mt-1 text-xs text-rose-500">{errors.slug.message}</p>}
           </div>
 
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-700">
-              Ảnh danh mục
-            </label>
-            <ImageUploader
-              value={imageValue ?? ""}
-              onChange={(url) => setValue("image", url)}
-            />
+            <label className="mb-1.5 block text-sm font-medium text-slate-700">Ảnh danh mục</label>
+            <ImageUploader value={imageValue ?? ''} onChange={(url) => setValue('image', url)} />
           </div>
 
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-700">
-              Danh mục cha
-            </label>
+            <label className="mb-1.5 block text-sm font-medium text-slate-700">Danh mục cha</label>
             <select
-              className={`w-full cursor-pointer rounded-xl border bg-white px-4 py-2.5 text-sm outline-none focus:ring-2 ${errors.parentId ? "border-rose-400 focus:ring-rose-100" : "border-slate-200 focus:border-blue-400 focus:ring-blue-100"}`}
-              value={watch("parentId") ?? ""}
+              className={`w-full cursor-pointer rounded-xl border bg-white px-4 py-2.5 text-sm outline-none focus:ring-2 ${errors.parentId ? 'border-rose-400 focus:ring-rose-100' : 'border-slate-200 focus:border-blue-400 focus:ring-blue-100'}`}
+              value={watch('parentId') ?? ''}
               onChange={(e) =>
-                setValue(
-                  "parentId",
-                  e.target.value === "" ? null : Number(e.target.value)
-                )
+                setValue('parentId', e.target.value === '' ? null : Number(e.target.value))
               }
             >
               <option value="">— Không có (danh mục gốc) —</option>
@@ -372,18 +333,14 @@ function CategoryModal({
               ))}
             </select>
             {errors.parentId && (
-              <p className="mt-1 text-xs text-rose-500">
-                {errors.parentId.message}
-              </p>
+              <p className="mt-1 text-xs text-rose-500">{errors.parentId.message}</p>
             )}
           </div>
 
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-700">
-              Mô tả
-            </label>
+            <label className="mb-1.5 block text-sm font-medium text-slate-700">Mô tả</label>
             <textarea
-              {...register("description")}
+              {...register('description')}
               rows={2}
               placeholder="Mô tả ngắn..."
               className="w-full resize-none rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
@@ -393,7 +350,7 @@ function CategoryModal({
           <label className="flex cursor-pointer items-center gap-2.5">
             <input
               type="checkbox"
-              {...register("active")}
+              {...register('active')}
               className="h-4 w-4 cursor-pointer rounded accent-blue-600"
             />
             <span className="text-sm text-slate-700">Kích hoạt</span>
@@ -412,13 +369,13 @@ function CategoryModal({
               disabled={isSubmitting}
               className="flex-1 cursor-pointer rounded-full bg-blue-600 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-60"
             >
-              {isSubmitting ? "Đang lưu..." : isEdit ? "Cập nhật" : "Tạo mới"}
+              {isSubmitting ? 'Đang lưu...' : isEdit ? 'Cập nhật' : 'Tạo mới'}
             </button>
           </div>
         </form>
       </div>
     </div>
-  )
+  );
 }
 
 // ── Delete confirm ────────────────────────────────────────────────────────────
@@ -428,11 +385,11 @@ function DeleteConfirm({
   onConfirm,
   onClose,
 }: {
-  category: Category
-  onConfirm: () => void
-  onClose: () => void
+  category: Category;
+  onConfirm: () => void;
+  onClose: () => void;
 }) {
-  const hasChildren = category.children.length > 0
+  const hasChildren = category.children.length > 0;
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
@@ -457,17 +414,13 @@ function DeleteConfirm({
         </div>
         <h3 className="mb-1 font-bold text-slate-900">Xóa danh mục?</h3>
         <p className="mb-2 text-sm text-slate-500">
-          Danh mục{" "}
-          <span className="font-semibold text-slate-700">
-            "{category.name}"
-          </span>{" "}
-          sẽ bị xóa.
+          Danh mục <span className="font-semibold text-slate-700">"{category.name}"</span> sẽ bị
+          xóa.
         </p>
         {hasChildren && (
           <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-700">
-            Danh mục này có{" "}
-            <strong>{category.children.length} danh mục con</strong>. Các danh
-            mục con sẽ trở thành danh mục gốc.
+            Danh mục này có <strong>{category.children.length} danh mục con</strong>. Các danh mục
+            con sẽ trở thành danh mục gốc.
           </div>
         )}
         <div className="flex gap-3">
@@ -486,7 +439,7 @@ function DeleteConfirm({
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 // ── Tree row ──────────────────────────────────────────────────────────────────
@@ -499,33 +452,30 @@ function CategoryRow({
   onDelete,
   onToggle,
 }: {
-  cat: Category
-  depth: number
-  allFlat: Category[]
-  onEdit: (c: Category) => void
-  onDelete: (c: Category) => void
-  onToggle: (c: Category) => void
+  cat: Category;
+  depth: number;
+  allFlat: Category[];
+  onEdit: (c: Category) => void;
+  onDelete: (c: Category) => void;
+  onToggle: (c: Category) => void;
 }) {
-  const [expanded, setExpanded] = useState(true)
-  const hasChildren = cat.children.length > 0
+  const [expanded, setExpanded] = useState(true);
+  const hasChildren = cat.children.length > 0;
 
   return (
     <>
       <tr className="transition-colors hover:bg-slate-50">
         <td className="px-5 py-3.5">
-          <div
-            className="flex items-center gap-2"
-            style={{ paddingLeft: depth * 20 }}
-          >
+          <div className="flex items-center gap-2" style={{ paddingLeft: depth * 20 }}>
             {hasChildren ? (
               <button
                 onClick={() => setExpanded(!expanded)}
                 className="cursor-pointer text-slate-400 transition-colors hover:text-slate-700"
-                aria-label={expanded ? "Thu gọn" : "Mở rộng"}
+                aria-label={expanded ? 'Thu gọn' : 'Mở rộng'}
               >
                 <svg
                   viewBox="0 0 24 24"
-                  className={`h-3.5 w-3.5 transition-transform ${expanded ? "" : "-rotate-90"}`}
+                  className={`h-3.5 w-3.5 transition-transform ${expanded ? '' : '-rotate-90'}`}
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="2.5"
@@ -538,12 +488,8 @@ function CategoryRow({
             )}
             {depth > 0 && <span className="text-xs text-slate-300">↳</span>}
             <div className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-slate-100">
-              {cat.image && cat.image.startsWith("http") ? (
-                <img
-                  src={cat.image}
-                  alt=""
-                  className="h-full w-full object-cover"
-                />
+              {cat.image && cat.image.startsWith('http') ? (
+                <img src={cat.image} alt="" className="h-full w-full object-cover" />
               ) : (
                 <svg
                   viewBox="0 0 24 24"
@@ -561,32 +507,28 @@ function CategoryRow({
             <span className="font-medium text-slate-900">{cat.name}</span>
           </div>
         </td>
-        <td className="px-5 py-3.5 font-mono text-xs text-slate-500">
-          {cat.slug}
-        </td>
+        <td className="px-5 py-3.5 font-mono text-xs text-slate-500">{cat.slug}</td>
         <td className="max-w-xs truncate px-5 py-3.5 text-sm text-slate-500">
           {cat.description ?? <span className="text-slate-300">—</span>}
         </td>
         <td className="px-5 py-3.5 text-center text-sm text-slate-500">
           {cat.parentId ? (
             <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
-              {allFlat.find((c) => c.id === cat.parentId)?.name ?? "—"}
+              {allFlat.find((c) => c.id === cat.parentId)?.name ?? '—'}
             </span>
           ) : (
-            <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs text-blue-600">
-              Gốc
-            </span>
+            <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs text-blue-600">Gốc</span>
           )}
         </td>
         <td className="px-5 py-3.5 text-center">
           <button
             onClick={() => onToggle(cat)}
-            className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold transition-colors ${cat.active ? "bg-green-100 text-green-700 hover:bg-green-200" : "bg-slate-100 text-slate-500 hover:bg-slate-200"}`}
+            className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold transition-colors ${cat.active ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
           >
             <span
-              className={`h-1.5 w-1.5 rounded-full ${cat.active ? "bg-green-500" : "bg-slate-400"}`}
+              className={`h-1.5 w-1.5 rounded-full ${cat.active ? 'bg-green-500' : 'bg-slate-400'}`}
             />
-            {cat.active ? "Hoạt động" : "Đã tắt"}
+            {cat.active ? 'Hoạt động' : 'Đã tắt'}
           </button>
         </td>
         <td className="px-5 py-3.5">
@@ -641,87 +583,84 @@ function CategoryRow({
           />
         ))}
     </>
-  )
+  );
 }
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function DashboardCategoriesPage() {
-  const [tree, setTree] = useState<Category[]>([])
-  const [flat, setFlat] = useState<Category[]>([])
-  const [loading, setLoading] = useState(true)
-  const [search, setSearch] = useState("")
-  const [filterActive, setFilterActive] = useState<
-    "all" | "active" | "inactive"
-  >("all")
+  const [tree, setTree] = useState<Category[]>([]);
+  const [flat, setFlat] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [filterActive, setFilterActive] = useState<'all' | 'active' | 'inactive'>('all');
   const [modal, setModal] = useState<{
-    open: boolean
-    category: Category | null
-  }>({ open: false, category: null })
-  const [deleteTarget, setDeleteTarget] = useState<Category | null>(null)
+    open: boolean;
+    category: Category | null;
+  }>({ open: false, category: null });
+  const [deleteTarget, setDeleteTarget] = useState<Category | null>(null);
 
   async function load() {
-    setLoading(true)
+    setLoading(true);
     try {
       const [treeData, flatData] = await Promise.all([
         getCategories({ tree: true }),
         getCategories(),
-      ])
-      setTree(treeData)
-      setFlat(flatData)
+      ]);
+      setTree(treeData);
+      setFlat(flatData);
     } catch {
-      toast.error("Không thể tải danh sách danh mục")
+      toast.error('Không thể tải danh sách danh mục');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   useEffect(() => {
-    load()
-  }, [])
+    load();
+  }, []);
 
   // Flatten tree for search/filter display
   function flattenTree(cats: Category[]): Category[] {
-    return cats.flatMap((c) => [c, ...flattenTree(c.children)])
+    return cats.flatMap((c) => [c, ...flattenTree(c.children)]);
   }
 
   const displayList =
-    search || filterActive !== "all"
+    search || filterActive !== 'all'
       ? flat.filter((c) => {
           const matchSearch =
             c.name.toLowerCase().includes(search.toLowerCase()) ||
-            c.slug.includes(search.toLowerCase())
+            c.slug.includes(search.toLowerCase());
           const matchActive =
-            filterActive === "all" ||
-            (filterActive === "active" ? c.active : !c.active)
-          return matchSearch && matchActive
+            filterActive === 'all' || (filterActive === 'active' ? c.active : !c.active);
+          return matchSearch && matchActive;
         })
-      : null // null = show tree
+      : null; // null = show tree
 
   async function handleToggle(cat: Category) {
     try {
-      const updated = await updateCategory(cat.id, { active: !cat.active })
-      toast.success(updated.active ? "Đã kích hoạt" : "Đã tắt kích hoạt")
-      load()
+      const updated = await updateCategory(cat.id, { active: !cat.active });
+      toast.success(updated.active ? 'Đã kích hoạt' : 'Đã tắt kích hoạt');
+      load();
     } catch {
-      toast.error("Cập nhật thất bại")
+      toast.error('Cập nhật thất bại');
     }
   }
 
   async function handleDelete(cat: Category) {
     try {
-      await deleteCategory(cat.id)
-      toast.success("Đã xóa danh mục")
-      load()
+      await deleteCategory(cat.id);
+      toast.success('Đã xóa danh mục');
+      load();
     } catch (e) {
-      toast.error(e instanceof ApiException ? e.error.message : "Xóa thất bại")
+      toast.error(e instanceof ApiException ? e.error.message : 'Xóa thất bại');
     } finally {
-      setDeleteTarget(null)
+      setDeleteTarget(null);
     }
   }
 
-  const totalActive = flat.filter((c) => c.active).length
-  const totalRoot = flat.filter((c) => !c.parentId).length
+  const totalActive = flat.filter((c) => c.active).length;
+  const totalRoot = flat.filter((c) => !c.parentId).length;
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
@@ -773,17 +712,13 @@ export default function DashboardCategoriesPage() {
           />
         </div>
         <div className="flex gap-2">
-          {(["all", "active", "inactive"] as const).map((v) => (
+          {(['all', 'active', 'inactive'] as const).map((v) => (
             <button
               key={v}
               onClick={() => setFilterActive(v)}
-              className={`cursor-pointer rounded-xl px-3 py-2 text-sm font-medium transition-colors ${filterActive === v ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+              className={`cursor-pointer rounded-xl px-3 py-2 text-sm font-medium transition-colors ${filterActive === v ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
             >
-              {v === "all"
-                ? "Tất cả"
-                : v === "active"
-                  ? "Đang hoạt động"
-                  : "Đã tắt"}
+              {v === 'all' ? 'Tất cả' : v === 'active' ? 'Đang hoạt động' : 'Đã tắt'}
             </button>
           ))}
         </div>
@@ -794,10 +729,7 @@ export default function DashboardCategoriesPage() {
         {loading ? (
           <div className="space-y-3 p-6">
             {[1, 2, 3, 4].map((i) => (
-              <div
-                key={i}
-                className="h-12 animate-pulse rounded-xl bg-slate-100"
-              />
+              <div key={i} className="h-12 animate-pulse rounded-xl bg-slate-100" />
             ))}
           </div>
         ) : (
@@ -861,9 +793,7 @@ export default function DashboardCategoriesPage() {
                   <circle cx="11" cy="11" r="8" />
                   <path d="m21 21-4.35-4.35" />
                 </svg>
-                {search
-                  ? "Không tìm thấy danh mục nào"
-                  : "Chưa có danh mục nào"}
+                {search ? 'Không tìm thấy danh mục nào' : 'Chưa có danh mục nào'}
               </div>
             )}
           </div>
@@ -893,8 +823,8 @@ export default function DashboardCategoriesPage() {
           allCategories={flat}
           onClose={() => setModal({ open: false, category: null })}
           onSaved={() => {
-            setModal({ open: false, category: null })
-            load()
+            setModal({ open: false, category: null });
+            load();
           }}
         />
       )}
@@ -906,5 +836,5 @@ export default function DashboardCategoriesPage() {
         />
       )}
     </div>
-  )
+  );
 }

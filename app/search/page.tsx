@@ -1,10 +1,10 @@
-import type { Metadata } from "next"
-import Link from "next/link"
-import { SiteHeader } from "@/components/site-header"
-import { SiteFooter } from "@/components/site-footer"
-import { SearchClient } from "./search-client"
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import { SiteHeader } from '@/components/site-header';
+import { SiteFooter } from '@/components/site-footer';
+import { SearchClient } from './search-client';
 
-export const metadata: Metadata = { title: "Tìm kiếm" }
+export const metadata: Metadata = { title: 'Tìm kiếm' };
 
 export default function SearchPage() {
   return (
@@ -13,10 +13,7 @@ export default function SearchPage() {
       <main>
         {/* Breadcrumb */}
         <div className="mx-auto max-w-7xl px-6 py-3">
-          <nav
-            aria-label="Breadcrumb"
-            className="flex items-center gap-2 text-sm text-slate-400"
-          >
+          <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm text-slate-400">
             <Link
               href="/"
               className="cursor-pointer transition-colors duration-150 hover:text-slate-700"
@@ -42,5 +39,5 @@ export default function SearchPage() {
       </main>
       <SiteFooter />
     </>
-  )
+  );
 }

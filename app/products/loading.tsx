@@ -1,4 +1,4 @@
-import { SkeletonProductCard } from "@/components/skeleton"
+import { SkeletonProductCard } from '@/components/skeleton';
 
 export default function ProductsLoading() {
   return (
@@ -10,10 +10,7 @@ export default function ProductsLoading() {
             <div className="sticky top-36 space-y-4">
               <div className="h-4 w-20 animate-pulse rounded-full bg-slate-200" />
               {Array.from({ length: 6 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="h-8 animate-pulse rounded-xl bg-slate-200"
-                />
+                <div key={i} className="h-8 animate-pulse rounded-xl bg-slate-200" />
               ))}
             </div>
           </div>
@@ -29,5 +26,5 @@ export default function ProductsLoading() {
         </div>
       </div>
     </div>
-  )
+  );
 }
