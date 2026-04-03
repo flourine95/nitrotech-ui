@@ -14,7 +14,11 @@ export interface Category {
   updatedAt: string
 }
 
-export async function getCategories(params?: { active?: boolean; tree?: boolean; parentId?: number }) {
+export async function getCategories(params?: {
+  active?: boolean
+  tree?: boolean
+  parentId?: number
+}) {
   const q = new URLSearchParams()
   if (params?.active !== undefined) q.set("active", String(params.active))
   if (params?.tree) q.set("tree", "true")
@@ -32,21 +36,27 @@ export async function createCategory(body: {
   parentId?: number | null
   active: boolean
 }) {
-  const res = await apiFetch<{ data: Category; message: string }>("/api/categories", {
-    method: "POST",
-    body: JSON.stringify(body),
-  })
+  const res = await apiFetch<{ data: Category; message: string }>(
+    "/api/categories",
+    {
+      method: "POST",
+      body: JSON.stringify(body),
+    }
+  )
   return res.data
 }
 
-export async function updateCategory(id: number, body: Partial<{
-  name: string
-  slug: string
-  description: string
-  parentId: number | null
-  active: boolean
-  image: string
-}>) {
+export async function updateCategory(
+  id: number,
+  body: Partial<{
+    name: string
+    slug: string
+    description: string
+    parentId: number | null
+    active: boolean
+    image: string
+  }>
+) {
   const res = await apiFetch<{ data: Category }>(`/api/categories/${id}`, {
     method: "PUT",
     body: JSON.stringify(body),
@@ -55,5 +65,7 @@ export async function updateCategory(id: number, body: Partial<{
 }
 
 export async function deleteCategory(id: number) {
-  return apiFetch<{ message: string }>(`/api/categories/${id}`, { method: "DELETE" })
+  return apiFetch<{ message: string }>(`/api/categories/${id}`, {
+    method: "DELETE",
+  })
 }

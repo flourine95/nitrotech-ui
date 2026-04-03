@@ -18,12 +18,20 @@ export default function VerifyEmailPage() {
   const [resendError, setResendError] = useState("")
 
   useEffect(() => {
-    if (!token) { setStatus("error"); setMessage("Token không hợp lệ hoặc đã hết hạn."); return }
+    if (!token) {
+      setStatus("error")
+      setMessage("Token không hợp lệ hoặc đã hết hạn.")
+      return
+    }
     verifyEmail(token)
       .then(() => setStatus("success"))
       .catch((e) => {
         setStatus("error")
-        setMessage(e instanceof ApiException ? e.error.message : "Xác thực thất bại. Token có thể đã hết hạn.")
+        setMessage(
+          e instanceof ApiException
+            ? e.error.message
+            : "Xác thực thất bại. Token có thể đã hết hạn."
+        )
       })
   }, [token])
 
@@ -36,7 +44,11 @@ export default function VerifyEmailPage() {
       await resendVerification(email)
       setResent(true)
     } catch (e) {
-      setResendError(e instanceof ApiException ? e.error.message : "Gửi lại thất bại, vui lòng thử lại.")
+      setResendError(
+        e instanceof ApiException
+          ? e.error.message
+          : "Gửi lại thất bại, vui lòng thử lại."
+      )
     } finally {
       setResending(false)
     }
@@ -44,30 +56,59 @@ export default function VerifyEmailPage() {
 
   return (
     <div className="w-full max-w-md">
-      <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm text-center">
+      <div className="rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm">
         {status === "loading" && (
           <>
             <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
-              <svg viewBox="0 0 24 24" className="h-7 w-7 animate-spin text-slate-400" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" strokeOpacity=".3"/>
-                <path d="M21 12a9 9 0 00-9-9"/>
+              <svg
+                viewBox="0 0 24 24"
+                className="h-7 w-7 animate-spin text-slate-400"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                aria-hidden="true"
+              >
+                <path
+                  d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  strokeOpacity=".3"
+                />
+                <path d="M21 12a9 9 0 00-9-9" />
               </svg>
             </div>
-            <h2 className="mb-2 text-xl font-bold text-slate-900">Đang xác thực...</h2>
-            <p className="text-sm text-slate-500">Vui lòng chờ trong giây lát.</p>
+            <h2 className="mb-2 text-xl font-bold text-slate-900">
+              Đang xác thực...
+            </h2>
+            <p className="text-sm text-slate-500">
+              Vui lòng chờ trong giây lát.
+            </p>
           </>
         )}
 
         {status === "success" && (
           <>
             <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-              <svg viewBox="0 0 24 24" className="h-8 w-8 text-green-600" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
-                <path d="M20 6L9 17l-5-5"/>
+              <svg
+                viewBox="0 0 24 24"
+                className="h-8 w-8 text-green-600"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                aria-hidden="true"
+              >
+                <path d="M20 6L9 17l-5-5" />
               </svg>
             </div>
-            <h2 className="mb-2 text-xl font-bold text-slate-900">Xác thực thành công!</h2>
-            <p className="mb-6 text-sm text-slate-500">Tài khoản của bạn đã được kích hoạt. Bạn có thể đăng nhập ngay bây giờ.</p>
-            <Link href="/login" className="inline-block cursor-pointer rounded-full bg-slate-900 px-8 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-slate-700">
+            <h2 className="mb-2 text-xl font-bold text-slate-900">
+              Xác thực thành công!
+            </h2>
+            <p className="mb-6 text-sm text-slate-500">
+              Tài khoản của bạn đã được kích hoạt. Bạn có thể đăng nhập ngay bây
+              giờ.
+            </p>
+            <Link
+              href="/login"
+              className="inline-block cursor-pointer rounded-full bg-slate-900 px-8 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-slate-700"
+            >
               Đăng nhập
             </Link>
           </>
@@ -76,11 +117,20 @@ export default function VerifyEmailPage() {
         {status === "error" && (
           <>
             <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-rose-100">
-              <svg viewBox="0 0 24 24" className="h-8 w-8 text-rose-600" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
-                <path d="M18 6L6 18M6 6l12 12"/>
+              <svg
+                viewBox="0 0 24 24"
+                className="h-8 w-8 text-rose-600"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                aria-hidden="true"
+              >
+                <path d="M18 6L6 18M6 6l12 12" />
               </svg>
             </div>
-            <h2 className="mb-2 text-xl font-bold text-slate-900">Xác thực thất bại</h2>
+            <h2 className="mb-2 text-xl font-bold text-slate-900">
+              Xác thực thất bại
+            </h2>
             <p className="mb-6 text-sm text-slate-500">{message}</p>
 
             {resent ? (
@@ -89,7 +139,9 @@ export default function VerifyEmailPage() {
               </div>
             ) : (
               <form onSubmit={handleResend} className="text-left">
-                <p className="mb-3 text-center text-sm font-medium text-slate-700">Gửi lại email xác thực</p>
+                <p className="mb-3 text-center text-sm font-medium text-slate-700">
+                  Gửi lại email xác thực
+                </p>
                 <input
                   type="email"
                   value={email}
@@ -98,7 +150,9 @@ export default function VerifyEmailPage() {
                   required
                   className="mb-3 w-full rounded-full border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
                 />
-                {resendError && <p className="mb-2 text-xs text-rose-500">{resendError}</p>}
+                {resendError && (
+                  <p className="mb-2 text-xs text-rose-500">{resendError}</p>
+                )}
                 <button
                   type="submit"
                   disabled={resending}
@@ -109,7 +163,10 @@ export default function VerifyEmailPage() {
               </form>
             )}
 
-            <Link href="/login" className="mt-4 block text-sm text-slate-400 transition-colors duration-150 hover:text-slate-700">
+            <Link
+              href="/login"
+              className="mt-4 block text-sm text-slate-400 transition-colors duration-150 hover:text-slate-700"
+            >
               Về trang đăng nhập
             </Link>
           </>

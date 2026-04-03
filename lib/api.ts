@@ -1,4 +1,5 @@
-export const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080"
+export const BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080"
 
 export interface ApiError {
   status: number
@@ -25,7 +26,10 @@ interface FetchOptions extends RequestInit {
   _retry?: boolean
 }
 
-export async function apiFetch<T>(path: string, options: FetchOptions = {}): Promise<T> {
+export async function apiFetch<T>(
+  path: string,
+  options: FetchOptions = {}
+): Promise<T> {
   const { skipAuth = false, _retry = false, ...init } = options
 
   const token = skipAuth ? null : await getAccessToken()

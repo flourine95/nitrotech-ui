@@ -12,7 +12,11 @@ export interface User {
 }
 
 export async function login(email: string, password: string) {
-  const result = await signIn("credentials", { email, password, redirect: false })
+  const result = await signIn("credentials", {
+    email,
+    password,
+    redirect: false,
+  })
   if (result?.error) throw new Error(result.error)
   return result
 }
@@ -34,7 +38,11 @@ export async function getMe() {
   return res.data
 }
 
-export async function updateProfile(data: { name?: string; phone?: string; avatar?: string }) {
+export async function updateProfile(data: {
+  name?: string
+  phone?: string
+  avatar?: string
+}) {
   const res = await apiFetch<{ data: User }>("/api/auth/profile", {
     method: "PUT",
     body: JSON.stringify(data),
@@ -42,7 +50,10 @@ export async function updateProfile(data: { name?: string; phone?: string; avata
   return res.data
 }
 
-export async function changePassword(currentPassword: string, newPassword: string) {
+export async function changePassword(
+  currentPassword: string,
+  newPassword: string
+) {
   return apiFetch<{ message: string }>("/api/auth/change-password", {
     method: "PUT",
     body: JSON.stringify({ currentPassword, newPassword }),
@@ -82,8 +93,12 @@ export async function resendVerification(email: string) {
 }
 
 export async function register(name: string, email: string, password: string) {
-  return apiFetch<{ data: { user: Pick<User, "id" | "name" | "email"> }; message: string }>(
-    "/api/auth/register",
-    { method: "POST", body: JSON.stringify({ name, email, password }), skipAuth: true }
-  )
+  return apiFetch<{
+    data: { user: Pick<User, "id" | "name" | "email"> }
+    message: string
+  }>("/api/auth/register", {
+    method: "POST",
+    body: JSON.stringify({ name, email, password }),
+    skipAuth: true,
+  })
 }

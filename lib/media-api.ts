@@ -30,11 +30,18 @@ function mapResource(r: {
   }
 }
 
-export async function getMediaAssets(folder: string, cursor?: string, maxResults = 50) {
+export async function getMediaAssets(
+  folder: string,
+  cursor?: string,
+  maxResults = 50
+) {
   const params = new URLSearchParams({ folder, maxResults: String(maxResults) })
   if (cursor) params.set("cursor", cursor)
   const res = await apiFetch<{
-    data: { resources: Parameters<typeof mapResource>[0][]; nextCursor: string | null }
+    data: {
+      resources: Parameters<typeof mapResource>[0][]
+      nextCursor: string | null
+    }
   }>(`/api/upload/assets?${params}`)
   return {
     assets: res.data.resources.map(mapResource),

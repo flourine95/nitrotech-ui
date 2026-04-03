@@ -6,14 +6,18 @@ const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080"
 // Decode JWT để lấy expiry (không verify signature)
 function getTokenExpiry(token: string): number {
   try {
-    const payload = JSON.parse(Buffer.from(token.split(".")[1], "base64").toString())
+    const payload = JSON.parse(
+      Buffer.from(token.split(".")[1], "base64").toString()
+    )
     return payload.exp ?? 0
   } catch {
     return 0
   }
 }
 
-async function refreshAccessToken(refreshToken: string): Promise<{ accessToken: string; refreshToken: string } | null> {
+async function refreshAccessToken(
+  refreshToken: string
+): Promise<{ accessToken: string; refreshToken: string } | null> {
   try {
     const res = await fetch(`${BASE_URL}/api/auth/refresh`, {
       method: "POST",
@@ -27,7 +31,8 @@ async function refreshAccessToken(refreshToken: string): Promise<{ accessToken: 
     const json = await res.json()
     // Web: new refreshToken comes from Set-Cookie header
     const setCookie = res.headers.get("set-cookie") ?? ""
-    const newRefresh = setCookie.match(/refreshToken=([^;]+)/)?.[1] ?? refreshToken
+    const newRefresh =
+      setCookie.match(/refreshToken=([^;]+)/)?.[1] ?? refreshToken
     return { accessToken: json.data.accessToken, refreshToken: newRefresh }
   } catch {
     return null
@@ -47,8 +52,14 @@ export const authOptions: NextAuthOptions = {
 
         const res = await fetch(`${BASE_URL}/api/auth/login`, {
           method: "POST",
-          headers: { "Content-Type": "application/json", "X-Client-Type": "web" },
-          body: JSON.stringify({ email: credentials.email, password: credentials.password }),
+          headers: {
+            "Content-Type": "application/json",
+            "X-Client-Type": "web",
+          },
+          body: JSON.stringify({
+            email: credentials.email,
+            password: credentials.password,
+          }),
         })
 
         if (!res.ok) {
@@ -111,7 +122,8 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       session.accessToken = token.accessToken as string
       session.user.id = token.id as string
-      if (token.error) (session as { error?: string }).error = token.error as string
+      if (token.error)
+        (session as { error?: string }).error = token.error as string
       return session
     },
   },

@@ -17,7 +17,9 @@ export async function getBrands(active?: boolean) {
   return res.data
 }
 
-export async function createBrand(body: Omit<Brand, "id" | "createdAt" | "updatedAt">) {
+export async function createBrand(
+  body: Omit<Brand, "id" | "createdAt" | "updatedAt">
+) {
   const res = await apiFetch<{ data: Brand; message: string }>("/api/brands", {
     method: "POST",
     body: JSON.stringify(body),
@@ -25,7 +27,10 @@ export async function createBrand(body: Omit<Brand, "id" | "createdAt" | "update
   return res.data
 }
 
-export async function updateBrand(id: number, body: Partial<Omit<Brand, "id" | "createdAt" | "updatedAt">>) {
+export async function updateBrand(
+  id: number,
+  body: Partial<Omit<Brand, "id" | "createdAt" | "updatedAt">>
+) {
   const res = await apiFetch<{ data: Brand }>(`/api/brands/${id}`, {
     method: "PUT",
     body: JSON.stringify(body),
@@ -34,5 +39,7 @@ export async function updateBrand(id: number, body: Partial<Omit<Brand, "id" | "
 }
 
 export async function deleteBrand(id: number) {
-  return apiFetch<{ message: string }>(`/api/brands/${id}`, { method: "DELETE" })
+  return apiFetch<{ message: string }>(`/api/brands/${id}`, {
+    method: "DELETE",
+  })
 }

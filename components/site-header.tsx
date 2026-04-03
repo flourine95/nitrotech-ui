@@ -3,7 +3,11 @@ import { useState } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { useSession } from "next-auth/react"
 import { logout } from "@/lib/auth-api"
 
@@ -373,10 +377,20 @@ export function SiteHeader({ cartCount = 0 }: { cartCount?: number }) {
                     </div>
                     <div className="border-t border-slate-100 py-1.5">
                       <button
-                        onClick={() => { setAccountOpen(false); handleLogout() }}
+                        onClick={() => {
+                          setAccountOpen(false)
+                          handleLogout()
+                        }}
                         className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-sm text-rose-500 transition-colors duration-150 hover:bg-rose-50"
                       >
-                        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                        <svg
+                          viewBox="0 0 24 24"
+                          className="h-4 w-4"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          aria-hidden="true"
+                        >
                           <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
                         </svg>
                         Đăng xuất
@@ -470,7 +484,10 @@ export function SiteHeader({ cartCount = 0 }: { cartCount?: number }) {
                 </Link>
               ))}
               <button
-                onClick={() => { setMobileOpen(false); handleLogout() }}
+                onClick={() => {
+                  setMobileOpen(false)
+                  handleLogout()
+                }}
                 className="mt-1 w-full cursor-pointer rounded-full border border-rose-200 py-2.5 text-center text-sm font-semibold text-rose-500"
               >
                 Đăng xuất

@@ -33,11 +33,18 @@ export interface CloudinaryFolder {
   external_id: string
 }
 
-export type AllowedFolder = "products" | "brands" | "categories" | "avatars" | "banners"
+export type AllowedFolder =
+  | "products"
+  | "brands"
+  | "categories"
+  | "avatars"
+  | "banners"
 
 // ── Step 1: Get signature ─────────────────────────────────────────────────────
 
-export async function getUploadSignature(folder: AllowedFolder): Promise<UploadSignature> {
+export async function getUploadSignature(
+  folder: AllowedFolder
+): Promise<UploadSignature> {
   const res = await apiFetch<{ data: UploadSignature }>("/api/upload/sign", {
     method: "POST",
     body: JSON.stringify({ folder }),
@@ -61,7 +68,10 @@ export interface UploadResult {
  * 2. Upload trực tiếp lên Cloudinary
  * 3. Trả về public_id (dùng để lưu vào DB) và secure_url
  */
-export async function uploadFile(file: File, folder: AllowedFolder): Promise<UploadResult> {
+export async function uploadFile(
+  file: File,
+  folder: AllowedFolder
+): Promise<UploadResult> {
   const sig = await getUploadSignature(folder)
 
   const formData = new FormData()
@@ -105,9 +115,9 @@ export async function getAssets(
 ): Promise<AssetsResponse> {
   const params = new URLSearchParams({ folder, maxResults: String(maxResults) })
   if (cursor) params.set("cursor", cursor)
-  const res = await apiFetch<{ data: { resources: CloudinaryResource[]; nextCursor: string | null } }>(
-    `/api/upload/assets?${params}`
-  )
+  const res = await apiFetch<{
+    data: { resources: CloudinaryResource[]; nextCursor: string | null }
+  }>(`/api/upload/assets?${params}`)
   return res.data
 }
 
@@ -126,14 +136,19 @@ export async function getFolders(parent?: string): Promise<CloudinaryFolder[]> {
 
 const CLOUD_BASE = "https://res.cloudinary.com"
 
-export type TransformPreset = "thumbnail" | "product" | "banner" | "avatar" | "logo"
+export type TransformPreset =
+  | "thumbnail"
+  | "product"
+  | "banner"
+  | "avatar"
+  | "logo"
 
 const TRANSFORMS: Record<TransformPreset, string> = {
   thumbnail: "w_200,h_200,c_fill,f_auto,q_auto",
-  product:   "w_800,h_800,c_fill,f_auto,q_auto",
-  banner:    "w_1920,h_600,c_fill,f_auto,q_auto",
-  avatar:    "w_100,h_100,c_thumb,g_face,f_auto,q_auto",
-  logo:      "w_200,h_200,c_pad,b_white,f_auto,q_auto",
+  product: "w_800,h_800,c_fill,f_auto,q_auto",
+  banner: "w_1920,h_600,c_fill,f_auto,q_auto",
+  avatar: "w_100,h_100,c_thumb,g_face,f_auto,q_auto",
+  logo: "w_200,h_200,c_pad,b_white,f_auto,q_auto",
 }
 
 export function buildCloudinaryUrl(

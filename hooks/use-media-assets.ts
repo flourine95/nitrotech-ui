@@ -1,7 +1,11 @@
 "use client"
 import { useState, useCallback, useRef } from "react"
 import { toast } from "sonner"
-import { getAssets, type CloudinaryResource, type AllowedFolder } from "@/lib/upload-api"
+import {
+  getAssets,
+  type CloudinaryResource,
+  type AllowedFolder,
+} from "@/lib/upload-api"
 
 interface UseMediaAssetsReturn {
   assets: CloudinaryResource[]
@@ -31,8 +35,11 @@ export function useMediaAssets(): UseMediaAssetsReturn {
     }
 
     try {
-      const res = await getAssets(folder, reset ? undefined : cursorRef.current ?? undefined)
-      setAssets(prev => reset ? res.resources : [...prev, ...res.resources])
+      const res = await getAssets(
+        folder,
+        reset ? undefined : (cursorRef.current ?? undefined)
+      )
+      setAssets((prev) => (reset ? res.resources : [...prev, ...res.resources]))
       setNextCursor(res.nextCursor)
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Không thể tải ảnh")
