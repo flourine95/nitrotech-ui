@@ -1,30 +1,39 @@
 import { apiFetch } from "./api"
 
-interface PresignResponse {
-  uploadUrl: string
-  publicUrl: string
+interface SignResponse {
+  signature: string
+  timestamp: string
+  apiKey: string
+  cloudName: string
+  folder: string
 }
 
-export async function getPresignedUrl(filename: string, contentType: string, folder: string) {
-  const res = await apiFetch<{ data: PresignResponse }>("/api/upload/presign", {
+async function getSignature(folder: string) {
+  const res = await apiFetch<{ data: SignResponse }>("/api/upload/sign", {
     method: "POST",
-    body: JSON.stringify({ filename, contentType, folder }),
+    body: JSON.stringify({ folder }),
   })
   return res.data
 }
 
-export async function uploadToR2(uploadUrl: string, file: File) {
-  const res = await fetch(uploadUrl, {
-    method: "PUT",
-    headers: { "Content-Type": file.type },
-    body: file,
-  })
-  if (!res.ok) throw new Error("Upload thất bại")
-}
-
-/** Upload file và trả về publicUrl */
+/** Upload file lên Cloudinary và trả về secure_url */
 export async function uploadFile(file: File, folder: string): Promise<string> {
-  const { uploadUrl, publicUrl } = await getPresignedUrl(file.name, file.type, folder)
-  await uploadToR2(uploadUrl, file)
-  return publicUrl
+  const { signature, timestamp, apiKey, cloudName, folder: signedFolder } = await getSignature(folder)
+
+  const formData = new FormData()
+  formData.append("file", file)
+  formData.append("signature", signature)
+  formData.append("timestamp", timestamp)
+  formData.append("api_key", apiKey)
+  formData.append("folder", signedFolder)
+
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+    method: "POST",
+    body: formData,
+  })
+
+  if (!res.ok) throw new Error("Upload thất bại")
+
+  const data = await res.json()
+  return data.secure_url as string
 }
