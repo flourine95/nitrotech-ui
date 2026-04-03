@@ -28,6 +28,7 @@ export async function createCategory(body: {
   name: string
   slug: string
   description?: string
+  image?: string
   parentId?: number | null
   active: boolean
 }) {

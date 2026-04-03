@@ -4,6 +4,7 @@ import "next-auth/jwt"
 declare module "next-auth" {
   interface Session {
     accessToken: string
+    error?: string
     user: {
       id: string
       name?: string | null
@@ -11,11 +12,19 @@ declare module "next-auth" {
       image?: string | null
     }
   }
+
+  interface User {
+    accessToken: string
+    refreshToken: string
+  }
 }
 
 declare module "next-auth/jwt" {
   interface JWT {
     accessToken: string
+    refreshToken: string
+    accessTokenExpiry: number
     id: string
+    error?: string
   }
 }

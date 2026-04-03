@@ -16,17 +16,17 @@ export class ApiException extends Error {
 
 async function getAccessToken(): Promise<string | null> {
   if (typeof window === "undefined") return null
-  const { getSession } = await import("next-auth/react")
-  const session = await getSession()
-  return session?.accessToken ?? null
+  const { useAuthStore } = await import("@/store/auth")
+  return useAuthStore.getState().accessToken
 }
 
 interface FetchOptions extends RequestInit {
   skipAuth?: boolean
+  _retry?: boolean
 }
 
 export async function apiFetch<T>(path: string, options: FetchOptions = {}): Promise<T> {
-  const { skipAuth = false, ...init } = options
+  const { skipAuth = false, _retry = false, ...init } = options
 
   const token = skipAuth ? null : await getAccessToken()
 
@@ -42,6 +42,22 @@ export async function apiFetch<T>(path: string, options: FetchOptions = {}): Pro
     headers,
     credentials: "include",
   })
+
+  // Token expired → thử lấy session mới từ NextAuth rồi retry 1 lần
+  if (res.status === 401 && !skipAuth && !_retry) {
+    try {
+      const { getSession } = await import("next-auth/react")
+      const session = await getSession()
+      if (session?.accessToken) {
+        const { useAuthStore } = await import("@/store/auth")
+        useAuthStore.getState().setAccessToken(session.accessToken)
+        return apiFetch<T>(path, { ...options, _retry: true })
+      }
+    } catch {}
+    // Session hết hạn hoàn toàn → redirect về login
+    const { signOut } = await import("next-auth/react")
+    await signOut({ callbackUrl: "/login" })
+  }
 
   if (!res.ok) {
     const err: ApiError = await res.json().catch(() => ({

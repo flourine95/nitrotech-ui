@@ -33,8 +33,8 @@ function LogoUploader({ value, onChange }: { value: string; onChange: (url: stri
     setUploading(true)
     try {
       const { uploadFile } = await import("@/lib/upload-api")
-      const url = await uploadFile(file, "brands")
-      onChange(url)
+      const result = await uploadFile(file, "brands")
+      onChange(result.secure_url)
     } catch {
       toast.error("Upload thất bại, vui lòng thử lại")
     } finally {

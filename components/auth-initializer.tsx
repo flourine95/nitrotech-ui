@@ -1,43 +1,24 @@
 "use client"
-import { useEffect, useRef } from "react"
-import { getMe } from "@/lib/auth-api"
+import { useEffect } from "react"
+import { useSession } from "next-auth/react"
 import { useAuthStore } from "@/store/auth"
 
+/**
+ * Sync NextAuth session → useAuthStore mỗi khi session thay đổi.
+ * Dùng useSession() để reactive — tự update khi token refresh.
+ */
 export function AuthInitializer() {
-  const ran = useRef(false)
+  const { data: session, status } = useSession()
 
   useEffect(() => {
-    if (ran.current) return
-    ran.current = true
+    if (status === "loading") return
 
-    async function init() {
-      const { accessToken } = useAuthStore.getState()
-
-      if (accessToken) {
-        // Token còn trong memory (SPA navigation) — chỉ cần fetch user
-        try {
-          await getMe()
-        } catch {
-          useAuthStore.getState().clear()
-        }
-        return
-      }
-
-      // Reload trang — gọi route handler để verify refreshToken cookie
-      // và nhận lại accessToken + set isLoggedIn cookie với Path=/
-      try {
-        const res = await fetch("/api/session", { method: "POST" })
-        if (!res.ok) return
-        const { accessToken: newToken } = await res.json()
-        useAuthStore.getState().setAccessToken(newToken)
-        await getMe()
-      } catch {
-        useAuthStore.getState().clear()
-      }
+    if (status === "authenticated" && session?.accessToken) {
+      useAuthStore.getState().setAccessToken(session.accessToken)
+    } else if (status === "unauthenticated") {
+      useAuthStore.getState().clear()
     }
-
-    init()
-  }, [])
+  }, [session?.accessToken, status])
 
   return null
 }
