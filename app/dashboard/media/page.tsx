@@ -3,33 +3,24 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import {
   type AllowedFolder,
-  type CloudinaryFolder,
   type CloudinaryResource,
-  getFolders,
 } from '@/lib/upload-api';
 import { useAuthStore } from '@/store/auth';
 import { useMediaAssets } from '@/hooks/use-media-assets';
 import { useCopy } from '@/hooks/use-copy';
+import { useFolders } from '@/hooks/use-folders';
 import { formatBytes } from '@/lib/utils';
 import { UploadZone } from './_components/upload-zone';
 import { DetailPanel } from './_components/detail-panel';
 import { AssetGrid } from './_components/asset-grid';
 import { AssetList } from './_components/asset-list';
 
-const FALLBACK_FOLDERS: AllowedFolder[] = [
-  'brands',
-  'products',
-  'categories',
-  'avatars',
-  'banners',
-];
-
 export default function MediaPage() {
   const accessToken = useAuthStore((s) => s.accessToken);
   const { assets, loading, loadingMore, nextCursor, load } = useMediaAssets();
   const { copied, copy } = useCopy();
+  const folders = useFolders(!!accessToken);
 
-  const [folders, setFolders] = useState<CloudinaryFolder[]>([]);
   const [activeFolder, setActiveFolder] = useState<AllowedFolder>('brands');
   const [activeAsset, setActiveAsset] = useState<CloudinaryResource | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -57,17 +48,10 @@ export default function MediaPage() {
     return () => window.removeEventListener('keydown', handler);
   }, []); // stable — never re-subscribes
 
-  // Load folders + initial assets in parallel
+  // Load initial assets khi có token
   useEffect(() => {
     if (!accessToken) return;
-    Promise.all([
-      getFolders().then((data) => {
-        setFolders(data);
-        if (data.length) setActiveFolder(data[0].path as AllowedFolder);
-        return data;
-      }),
-      load(activeFolder),
-    ]).catch(() => {});
+    load(activeFolder);
   }, [accessToken]); // eslint-disable-line
 
   // Reload when folder changes (skip initial — handled above)
@@ -96,10 +80,7 @@ export default function MediaPage() {
   const totalSize = useMemo(() => assets.reduce((s, a) => s + a.bytes, 0), [assets]);
 
   const folderList = useMemo(
-    () =>
-      folders.length
-        ? folders.map((f) => ({ name: f.name, path: f.path as AllowedFolder }))
-        : FALLBACK_FOLDERS.map((f) => ({ name: f, path: f })),
+    () => folders.map((f) => ({ name: f.name, path: f.path as AllowedFolder })),
     [folders],
   );
 
