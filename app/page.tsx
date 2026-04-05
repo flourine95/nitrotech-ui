@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { SiteHeader } from '@/components/site-header';
+import { SiteHeaderServer as SiteHeader } from '@/components/site-header-server';
 import { SiteFooter } from '@/components/site-footer';
 import { ProductCard } from '@/components/product-card';
 import { NewsletterForm } from '@/components/newsletter-form';

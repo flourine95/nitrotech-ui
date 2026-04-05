@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { SiteHeader } from '@/components/site-header';
+import { SiteHeaderServer as SiteHeader } from '@/components/site-header-server';
 import { SiteFooter } from '@/components/site-footer';
 
 export const metadata: Metadata = { title: 'Về NitroTech' };

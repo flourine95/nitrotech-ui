@@ -16,8 +16,18 @@ export class ApiException extends Error {
 
 async function getAccessToken(): Promise<string | null> {
   if (typeof window === 'undefined') return null;
+  // Đọc từ store trước (fast path — đã có sau login hoặc AuthInitializer sync)
   const { useAuthStore } = await import('@/store/auth');
-  return useAuthStore.getState().accessToken;
+  const stored = useAuthStore.getState().accessToken;
+  if (stored) return stored;
+  // Fallback: lấy từ NextAuth session (sau reload, trước khi AuthInitializer chạy)
+  const { getSession } = await import('next-auth/react');
+  const session = await getSession();
+  if (session?.accessToken) {
+    useAuthStore.getState().setAccessToken(session.accessToken);
+    return session.accessToken;
+  }
+  return null;
 }
 
 interface FetchOptions extends RequestInit {

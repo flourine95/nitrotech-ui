@@ -46,11 +46,18 @@ const announcements = [
   },
 ];
 
-export function SiteHeader({ cartCount = 0 }: { cartCount?: number }) {
+export function SiteHeader({
+  cartCount = 0,
+  initialUser,
+}: {
+  cartCount?: number;
+  initialUser?: { name?: string | null; email?: string | null; image?: string | null } | null;
+}) {
   const router = useRouter();
   const pathname = usePathname();
+  // initialUser từ server → không flash khi hydrate
   const { data: session } = useSession();
-  const user = session?.user;
+  const user = session?.user ?? initialUser;
   const isLoggedIn = !!user;
   const userName = user?.name ?? 'Tài khoản';
   const [mobileOpen, setMobileOpen] = useState(false);

@@ -1,9 +1,12 @@
-import { withAuth } from 'next-auth/middleware';
+import { auth } from '@/auth';
+import { NextResponse } from 'next/server';
 
-export default withAuth({
-  pages: {
-    signIn: '/login',
-  },
+export default auth((req) => {
+  if (!req.auth) {
+    const loginUrl = new URL('/login', req.nextUrl.origin);
+    loginUrl.searchParams.set('from', req.nextUrl.pathname);
+    return NextResponse.redirect(loginUrl);
+  }
 });
 
 export const config = {

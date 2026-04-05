@@ -7,6 +7,7 @@ import { CompareProvider } from '@/components/compare-bar';
 import { Toaster } from '@/components/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { NextAuthProvider } from '@/components/session-provider';
+import { auth } from '@/auth';
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ['latin', 'vietnamese'],

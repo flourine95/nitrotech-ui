@@ -12,14 +12,10 @@ export interface User {
 }
 
 export async function login(email: string, password: string) {
-  const result = await signIn('credentials', {
-    email,
-    password,
-    redirect: false,
-  });
+  const result = await signIn('credentials', { email, password, redirect: false });
   if (result?.error) throw new Error(result.error);
 
-  // Sync token vào store ngay — không chờ AuthInitializer/useSession
+  // Sync token vào store ngay sau login
   const { getSession } = await import('next-auth/react');
   const session = await getSession();
   if (session?.accessToken) {
@@ -31,6 +27,8 @@ export async function login(email: string, password: string) {
 }
 
 export async function logout(redirectTo = '/login') {
+  const { useAuthStore } = await import('@/store/auth');
+  useAuthStore.getState().clear();
   await signOut({ callbackUrl: redirectTo });
 }
 
@@ -38,6 +36,8 @@ export async function logoutAll() {
   try {
     await apiFetch('/api/auth/logout-all', { method: 'POST' });
   } finally {
+    const { useAuthStore } = await import('@/store/auth');
+    useAuthStore.getState().clear();
     await signOut({ callbackUrl: '/login' });
   }
 }
@@ -95,12 +95,8 @@ export async function resendVerification(email: string) {
 }
 
 export async function register(name: string, email: string, password: string) {
-  return apiFetch<{
-    data: { user: Pick<User, 'id' | 'name' | 'email'> };
-    message: string;
-  }>('/api/auth/register', {
-    method: 'POST',
-    body: JSON.stringify({ name, email, password }),
-    skipAuth: true,
-  });
+  return apiFetch<{ data: { user: Pick<User, 'id' | 'name' | 'email'> }; message: string }>(
+    '/api/auth/register',
+    { method: 'POST', body: JSON.stringify({ name, email, password }), skipAuth: true },
+  );
 }

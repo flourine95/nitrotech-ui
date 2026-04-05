@@ -1,9 +1,8 @@
-import type { NextAuthOptions } from 'next-auth';
-import CredentialsProvider from 'next-auth/providers/credentials';
+import NextAuth from 'next-auth';
+import Credentials from 'next-auth/providers/credentials';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080';
 
-// Decode JWT để lấy expiry (không verify signature)
 function getTokenExpiry(token: string): number {
   try {
     const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
@@ -17,6 +16,7 @@ async function refreshAccessToken(
   refreshToken: string,
 ): Promise<{ accessToken: string; refreshToken: string } | null> {
   try {
+    console.log('[auth] refreshing token, refreshToken length:', refreshToken?.length);
     const res = await fetch(`${BASE_URL}/api/auth/refresh`, {
       method: 'POST',
       headers: {
@@ -25,38 +25,35 @@ async function refreshAccessToken(
         Cookie: `refreshToken=${refreshToken}`,
       },
     });
-    if (!res.ok) return null;
+    console.log('[auth] refresh response status:', res.status);
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      console.log('[auth] refresh failed body:', body);
+      return null;
+    }
     const json = await res.json();
-    // Web: new refreshToken comes from Set-Cookie header
     const setCookie = res.headers.get('set-cookie') ?? '';
     const newRefresh = setCookie.match(/refreshToken=([^;]+)/)?.[1] ?? refreshToken;
+    console.log('[auth] refresh success, newRefresh length:', newRefresh?.length);
     return { accessToken: json.data.accessToken, refreshToken: newRefresh };
-  } catch {
+  } catch (e) {
+    console.log('[auth] refresh exception:', e);
     return null;
   }
 }
 
-export const authOptions: NextAuthOptions = {
+export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
-    CredentialsProvider({
-      name: 'credentials',
+    Credentials({
       credentials: {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
-
         const res = await fetch(`${BASE_URL}/api/auth/login`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Client-Type': 'web',
-          },
-          body: JSON.stringify({
-            email: credentials.email,
-            password: credentials.password,
-          }),
+          headers: { 'Content-Type': 'application/json', 'X-Client-Type': 'web' },
+          body: JSON.stringify({ email: credentials.email, password: credentials.password }),
         });
 
         if (!res.ok) {
@@ -66,25 +63,16 @@ export const authOptions: NextAuthOptions = {
 
         const json = await res.json();
         const { accessToken, user } = json.data;
-
-        // Lấy refreshToken từ Set-Cookie header (server-side fetch có thể đọc)
         const setCookie = res.headers.get('set-cookie') ?? '';
         const refreshToken = setCookie.match(/refreshToken=([^;]+)/)?.[1] ?? '';
 
-        return {
-          id: String(user.id),
-          name: user.name,
-          email: user.email,
-          accessToken,
-          refreshToken,
-        };
+        return { id: String(user.id), name: user.name, email: user.email, accessToken, refreshToken };
       },
     }),
   ],
 
   callbacks: {
     async jwt({ token, user }) {
-      // Lần đầu login
       if (user) {
         const u = user as { accessToken: string; refreshToken: string };
         return {
@@ -95,17 +83,16 @@ export const authOptions: NextAuthOptions = {
         };
       }
 
-      // Token còn hạn (buffer 60s)
       const now = Math.floor(Date.now() / 1000);
-      if ((token.accessTokenExpiry as number) - now > 60) {
-        return token;
-      }
+      // Buffer 10s — đủ để refresh trước khi hết hạn
+      if ((token.accessTokenExpiry as number) - now > 10) return token;
 
-      // Token sắp hết hoặc đã hết — refresh
+      // Không có refreshToken → không thể refresh
+      if (!token.refreshToken) return { ...token, error: 'RefreshTokenExpired' };
+
+      console.log('[auth] jwt: token expired, refreshToken length:', (token.refreshToken as string)?.length, 'expiry:', token.accessTokenExpiry, 'now:', now);
       const refreshed = await refreshAccessToken(token.refreshToken as string);
-      if (!refreshed) {
-        return { ...token, error: 'RefreshTokenExpired' };
-      }
+      if (!refreshed) return { ...token, error: 'RefreshTokenExpired' };
 
       return {
         ...token,
@@ -118,16 +105,28 @@ export const authOptions: NextAuthOptions = {
 
     async session({ session, token }) {
       session.accessToken = token.accessToken as string;
-      session.user.id = token.id as string;
-      if (token.error) (session as { error?: string }).error = token.error as string;
+      if (token.error) session.error = token.error as string;
       return session;
     },
   },
 
-  pages: {
-    signIn: '/login',
-    error: '/login',
-  },
-
+  pages: { signIn: '/login', error: '/login' },
   session: { strategy: 'jwt' },
-};
+});
+
+declare module 'next-auth' {
+  interface Session {
+    accessToken: string;
+    error?: string;
+  }
+  interface User {
+    accessToken: string;
+    refreshToken: string;
+  }
+  interface JWT {
+    accessToken: string;
+    refreshToken: string;
+    accessTokenExpiry: number;
+    error?: string;
+  }
+}
