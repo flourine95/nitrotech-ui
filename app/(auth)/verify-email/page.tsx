@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { SubmitEventHandler, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { verifyEmail, resendVerification } from '@/lib/auth-api';
@@ -35,11 +35,13 @@ export default function VerifyEmailPage() {
       });
   }, [token]);
 
-  async function handleResend(e: React.FormEvent) {
+  const handleResend: SubmitEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
     if (!email) return;
+
     setResending(true);
     setResendError('');
+
     try {
       await resendVerification(email);
       setResent(true);
@@ -50,7 +52,7 @@ export default function VerifyEmailPage() {
     } finally {
       setResending(false);
     }
-  }
+  };
 
   return (
     <div className="w-full max-w-md">

@@ -1,16 +1,14 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { registerSchema, type RegisterInput } from '@/lib/schemas/auth';
+import { type RegisterInput, registerSchema } from '@/lib/schemas/auth';
 import { register as registerUser } from '@/lib/auth-api';
 import { ApiException } from '@/lib/api';
 
 export default function RegisterPage() {
-  const router = useRouter();
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [step, setStep] = useState(1);
@@ -20,12 +18,12 @@ export default function RegisterPage() {
     register,
     handleSubmit,
     trigger,
-    watch,
+    control,
     setError,
     formState: { errors, isSubmitting },
   } = useForm<RegisterInput>({ resolver: zodResolver(registerSchema) });
 
-  const password = watch('password', '');
+  const password = useWatch({ control, name: 'password' }) ?? '';
   const strength =
     password.length === 0
       ? 0
@@ -286,11 +284,11 @@ export default function RegisterPage() {
                   className="cursor-pointer text-sm leading-relaxed text-slate-600"
                 >
                   Tôi đồng ý với{' '}
-                  <Link href="/terms" className="text-blue-600 hover:underline">
+                  <Link href="/terms" className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">
                     Điều khoản sử dụng
                   </Link>{' '}
                   và{' '}
-                  <Link href="/privacy" className="text-blue-600 hover:underline">
+                  <Link href="/privacy" className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">
                     Chính sách bảo mật
                   </Link>
                 </label>
