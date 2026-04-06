@@ -26,11 +26,16 @@ function LoginForm() {
       router.push(searchParams.get('from') ?? '/');
       router.refresh();
     } catch (e: unknown) {
-      const err = e as { message?: string; code?: string };
-      const msg = err?.message ?? 'Đăng nhập thất bại';
-      if (err?.code === 'ACCOUNT_NOT_ACTIVE' || msg.includes('ACCOUNT_NOT_ACTIVE')) {
+      let code = '';
+      let msg = 'Đăng nhập thất bại';
+      try {
+        const parsed = JSON.parse((e as Error).message);
+        code = parsed.code ?? '';
+        msg = parsed.message ?? msg;
+      } catch {}
+      if (code === 'ACCOUNT_NOT_ACTIVE') {
         toast.error('Tài khoản chưa xác thực email');
-      } else if (err?.code === 'INVALID_CREDENTIALS' || msg.includes('incorrect')) {
+      } else if (code === 'INVALID_CREDENTIALS') {
         toast.error('Email hoặc mật khẩu không đúng');
       } else {
         toast.error(msg);

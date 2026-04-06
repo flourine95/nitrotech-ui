@@ -1,10 +1,7 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import {
-  type AllowedFolder,
-  type CloudinaryResource,
-} from '@/lib/upload-api';
+import { type AllowedFolder, type CloudinaryResource } from '@/lib/upload-api';
 import { useMediaAssets } from '@/hooks/use-media-assets';
 import { useCopy } from '@/hooks/use-copy';
 import { useFolders } from '@/hooks/use-folders';

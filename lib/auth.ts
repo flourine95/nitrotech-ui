@@ -1,7 +1,6 @@
 'use server';
 
-import { cookies } from "next/headers"
-import { redirect } from "next/navigation"
+import { cookies } from 'next/headers';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080';
 const ACCESS_TOKEN_COOKIE = 'access_token';
@@ -23,7 +22,8 @@ export async function login(email: string, password: string) {
   });
 
   if (!res.ok) {
-    throw await res.json().catch(() => ({}));
+    const err = await res.json().catch(() => ({ message: 'Đăng nhập thất bại' }));
+    throw new Error(JSON.stringify(err));
   }
 
   const { data } = await res.json();
@@ -55,7 +55,7 @@ export async function login(email: string, password: string) {
   return data;
 }
 
-export async function logout(redirectTo = '/login') {
+export async function logout() {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get(ACCESS_TOKEN_COOKIE)?.value;
 
@@ -72,7 +72,6 @@ export async function logout(redirectTo = '/login') {
   cookieStore.delete(ACCESS_TOKEN_COOKIE);
   cookieStore.delete(EXPIRES_AT_COOKIE);
   cookieStore.delete(USER_COOKIE);
-  redirect(redirectTo);
 }
 
 export async function getAccessToken(): Promise<string | null> {

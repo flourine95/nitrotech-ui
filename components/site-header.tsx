@@ -1,7 +1,8 @@
 'use client';
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { logout } from '@/lib/auth';
 
@@ -57,12 +58,17 @@ export function SiteHeader({
   const userName = user?.name ?? 'Tài khoản';
   const [mobileOpen, setMobileOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
-  const [, startTransition] = useTransition();
+  const router = useRouter();
 
-  function handleLogout() {
-    startTransition(() => {
-      logout();
-    });
+  async function handleLogout() {
+    try {
+      await logout();
+      toast.success('Đã đăng xuất');
+      router.push('/login');
+      router.refresh();
+    } catch {
+      toast.error('Có lỗi xảy ra khi đăng xuất');
+    }
   }
 
   return (
