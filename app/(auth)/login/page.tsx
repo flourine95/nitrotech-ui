@@ -16,16 +16,12 @@ function LoginForm() {
   const {
     register,
     handleSubmit,
-    setError,
     formState: { errors, isSubmitting },
   } = useForm<LoginInput>({ resolver: zodResolver(loginSchema) });
 
   async function onSubmit(data: LoginInput) {
     try {
-      const result = await login(data.email, data.password);
-      // Sync accessToken vào store để apiFetch dùng ngay
-      const { useAuthStore } = await import('@/store/auth');
-      useAuthStore.getState().setAccessToken(result.accessToken);
+      await login(data.email, data.password);
       toast.success('Đăng nhập thành công');
       router.push(searchParams.get('from') ?? '/');
       router.refresh();

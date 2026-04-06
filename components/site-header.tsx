@@ -60,7 +60,6 @@ export function SiteHeader({
   const [, startTransition] = useTransition();
 
   function handleLogout() {
-    import('@/store/auth').then(({ useAuthStore }) => useAuthStore.getState().clear());
     startTransition(() => {
       logout();
     });

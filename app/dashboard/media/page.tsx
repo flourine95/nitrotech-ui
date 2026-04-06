@@ -5,7 +5,6 @@ import {
   type AllowedFolder,
   type CloudinaryResource,
 } from '@/lib/upload-api';
-import { useAuthStore } from '@/store/auth';
 import { useMediaAssets } from '@/hooks/use-media-assets';
 import { useCopy } from '@/hooks/use-copy';
 import { useFolders } from '@/hooks/use-folders';
@@ -16,10 +15,9 @@ import { AssetGrid } from './_components/asset-grid';
 import { AssetList } from './_components/asset-list';
 
 export default function MediaPage() {
-  const accessToken = useAuthStore((s) => s.accessToken);
   const { assets, loading, loadingMore, nextCursor, load } = useMediaAssets();
   const { copied, copy } = useCopy();
-  const folders = useFolders(!!accessToken);
+  const folders = useFolders(true);
 
   const [activeFolder, setActiveFolder] = useState<AllowedFolder>('brands');
   const [activeAsset, setActiveAsset] = useState<CloudinaryResource | null>(null);

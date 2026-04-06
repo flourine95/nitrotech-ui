@@ -14,10 +14,15 @@ export class ApiException extends Error {
   }
 }
 
+// getAccessToken là Server Action, gọi được trực tiếp từ client
 async function getClientToken(): Promise<string | null> {
   if (typeof window === 'undefined') return null;
-  const { useAuthStore } = await import('@/store/auth');
-  return useAuthStore.getState().accessToken;
+  try {
+    const { getAccessToken } = await import('@/lib/auth');
+    return getAccessToken();
+  } catch {
+    return null;
+  }
 }
 
 interface FetchOptions extends RequestInit {
@@ -43,10 +48,7 @@ export async function apiFetch<T>(path: string, options: FetchOptions = {}): Pro
     credentials: 'include',
   });
 
-  // Token expired → redirect về login
   if (res.status === 401 && !skipAuth && !_retry) {
-    const { useAuthStore } = await import('@/store/auth');
-    useAuthStore.getState().clear();
     window.location.href = '/login';
     return undefined as T;
   }
