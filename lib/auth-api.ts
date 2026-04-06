@@ -1,4 +1,3 @@
-import { signIn, signOut } from 'next-auth/react';
 import { apiFetch } from './api';
 
 export interface User {
@@ -9,37 +8,6 @@ export interface User {
   avatar: string | null;
   status: string;
   provider: string;
-}
-
-export async function login(email: string, password: string) {
-  const result = await signIn('credentials', { email, password, redirect: false });
-  if (result?.error) throw new Error(result.error);
-
-  // Sync token vào store ngay sau login
-  const { getSession } = await import('next-auth/react');
-  const session = await getSession();
-  if (session?.accessToken) {
-    const { useAuthStore } = await import('@/store/auth');
-    useAuthStore.getState().setAccessToken(session.accessToken);
-  }
-
-  return result;
-}
-
-export async function logout(redirectTo = '/login') {
-  const { useAuthStore } = await import('@/store/auth');
-  useAuthStore.getState().clear();
-  await signOut({ callbackUrl: redirectTo });
-}
-
-export async function logoutAll() {
-  try {
-    await apiFetch('/api/auth/logout-all', { method: 'POST' });
-  } finally {
-    const { useAuthStore } = await import('@/store/auth');
-    useAuthStore.getState().clear();
-    await signOut({ callbackUrl: '/login' });
-  }
 }
 
 export async function getMe() {

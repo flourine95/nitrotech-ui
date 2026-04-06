@@ -6,8 +6,7 @@ import { ScrollToTop } from '@/components/scroll-to-top';
 import { CompareProvider } from '@/components/compare-bar';
 import { Toaster } from '@/components/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { NextAuthProvider } from '@/components/session-provider';
-import { auth } from '@/auth';
+import { ReactNode } from 'react';
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ['latin', 'vietnamese'],
@@ -24,18 +23,16 @@ export const metadata: Metadata = {
     'Mua sắm linh kiện điện tử, laptop, PC chính hãng với giá tốt nhất. Giao hàng nhanh, bảo hành uy tín.',
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="vi" suppressHydrationWarning className={beVietnamPro.variable}>
       <body className="bg-[#F8FAFC] font-sans text-[#0F172A] antialiased">
         <ProgressBar />
-        <NextAuthProvider>
-          <TooltipProvider>
-            <CompareProvider>{children}</CompareProvider>
-          </TooltipProvider>
-          <Toaster />
-          <ScrollToTop />
-        </NextAuthProvider>
+        <TooltipProvider>
+          <CompareProvider>{children}</CompareProvider>
+        </TooltipProvider>
+        <Toaster />
+        <ScrollToTop />
       </body>
     </html>
   );

@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { loginSchema, type LoginInput } from '@/lib/schemas/auth';
-import { login } from '@/lib/auth-api';
+import { login } from '@/lib/auth';
 
 function LoginForm() {
   const router = useRouter();
@@ -22,15 +22,19 @@ function LoginForm() {
 
   async function onSubmit(data: LoginInput) {
     try {
-      await login(data.email, data.password);
+      const result = await login(data.email, data.password);
+      // Sync accessToken vào store để apiFetch dùng ngay
+      const { useAuthStore } = await import('@/store/auth');
+      useAuthStore.getState().setAccessToken(result.accessToken);
       toast.success('Đăng nhập thành công');
       router.push(searchParams.get('from') ?? '/');
       router.refresh();
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Đăng nhập thất bại';
-      if (msg.includes('ACCOUNT_NOT_ACTIVE')) {
+    } catch (e: unknown) {
+      const err = e as { message?: string; code?: string };
+      const msg = err?.message ?? 'Đăng nhập thất bại';
+      if (err?.code === 'ACCOUNT_NOT_ACTIVE' || msg.includes('ACCOUNT_NOT_ACTIVE')) {
         toast.error('Tài khoản chưa xác thực email');
-      } else if (msg.includes('INVALID_CREDENTIALS') || msg.includes('incorrect')) {
+      } else if (err?.code === 'INVALID_CREDENTIALS' || msg.includes('incorrect')) {
         toast.error('Email hoặc mật khẩu không đúng');
       } else {
         toast.error(msg);

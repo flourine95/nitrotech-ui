@@ -1,11 +1,10 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
-import { useSession } from 'next-auth/react';
-import { updateProfile, getMe } from '@/lib/auth-api';
+import { updateProfile, getMe, type User } from '@/lib/auth-api';
 import { ApiException } from '@/lib/api';
 
 const profileSchema = z.object({
@@ -15,15 +14,7 @@ const profileSchema = z.object({
 type ProfileInput = z.infer<typeof profileSchema>;
 
 export default function ProfilePage() {
-  const { data: session, update } = useSession();
-  const user = session
-    ? {
-        name: session.user.name ?? '',
-        email: session.user.email ?? '',
-        phone: null as string | null,
-        avatar: session.user.image ?? null,
-      }
-    : null;
+  const [user, setUser] = useState<User | null>(null);
 
   const {
     register,
@@ -33,16 +24,18 @@ export default function ProfilePage() {
   } = useForm<ProfileInput>({ resolver: zodResolver(profileSchema) });
 
   useEffect(() => {
-    if (user) {
-      reset({ name: user.name, phone: user.phone ?? '' });
-    } else {
-      getMe().catch(() => {});
-    }
-  }, [user, reset]);
+    getMe()
+      .then((u) => {
+        setUser(u);
+        reset({ name: u.name, phone: u.phone ?? '' });
+      })
+      .catch(() => {});
+  }, [reset]);
 
   async function onSubmit(data: ProfileInput) {
     try {
-      await updateProfile({ name: data.name, phone: data.phone || undefined });
+      const updated = await updateProfile({ name: data.name, phone: data.phone || undefined });
+      setUser(updated);
       toast.success('Đã cập nhật thông tin');
       reset(data);
     } catch (e) {

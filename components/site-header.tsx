@@ -1,11 +1,9 @@
 'use client';
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { toast } from 'sonner';
+import { usePathname } from 'next/navigation';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { useSession } from 'next-auth/react';
-import { logout } from '@/lib/auth-api';
+import { logout } from '@/lib/auth';
 
 const navLinks = [
   { label: 'Laptop', href: '/products?cat=laptop' },
@@ -53,23 +51,19 @@ export function SiteHeader({
   cartCount?: number;
   initialUser?: { name?: string | null; email?: string | null; image?: string | null } | null;
 }) {
-  const router = useRouter();
   const pathname = usePathname();
-  // initialUser từ server → không flash khi hydrate
-  const { data: session } = useSession();
-  const user = session?.user ?? initialUser;
+  const user = initialUser;
   const isLoggedIn = !!user;
   const userName = user?.name ?? 'Tài khoản';
   const [mobileOpen, setMobileOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
+  const [, startTransition] = useTransition();
 
-  async function handleLogout() {
-    try {
-      await logout();
-      router.push('/login');
-    } catch {
-      toast.error('Có lỗi xảy ra khi đăng xuất');
-    }
+  function handleLogout() {
+    import('@/store/auth').then(({ useAuthStore }) => useAuthStore.getState().clear());
+    startTransition(() => {
+      logout();
+    });
   }
 
   return (
