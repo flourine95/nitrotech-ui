@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getValidAccessToken } from '@/lib/auth/guards';
+import { backendFetch } from '@/lib/backend';
 
-const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:8080';
-
-// Public endpoints không cần auth
+// Public endpoints — không cần SESSION cookie
 const PUBLIC_PATHS = [
-  '/api/auth/login',
   '/api/auth/register',
   '/api/auth/forgot-password',
   '/api/auth/reset-password',
@@ -17,41 +14,37 @@ const PUBLIC_PATHS = [
 ];
 
 function isPublic(pathname: string): boolean {
-  return PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + '?') || pathname.startsWith(p + '/'));
+  return PUBLIC_PATHS.some(
+    (p) => pathname === p || pathname.startsWith(p + '?') || pathname.startsWith(p + '/'),
+  );
 }
 
 async function handler(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const cookieHeader = request.headers.get('cookie') ?? '';
 
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    'X-Client-Type': 'web',
-  };
+  const body =
+    request.method !== 'GET' && request.method !== 'HEAD'
+      ? await request.text()
+      : undefined;
 
-  if (!isPublic(pathname)) {
-    const token = await getValidAccessToken(cookieHeader);
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
-  const body = request.method !== 'GET' && request.method !== 'HEAD'
-    ? await request.text()
-    : undefined;
-
-  const res = await fetch(`${BACKEND}${pathname}${search}`, {
+  const springRes = await backendFetch(`${pathname}${search}`, {
     method: request.method,
-    headers,
+    cookieHeader: isPublic(pathname) ? undefined : cookieHeader,
     body,
   });
 
-  const data = await res.text();
-  return new NextResponse(data, {
-    status: res.status,
-    headers: { 'Content-Type': res.headers.get('content-type') ?? 'application/json' },
+  const data = await springRes.text();
+  const res = new NextResponse(data, {
+    status: springRes.status,
+    headers: { 'Content-Type': springRes.headers.get('content-type') ?? 'application/json' },
   });
+
+  // Forward Set-Cookie nếu có (ví dụ session renewal)
+  const setCookie = springRes.headers.get('set-cookie');
+  if (setCookie) res.headers.set('set-cookie', setCookie);
+
+  return res;
 }
 
 export const GET = handler;

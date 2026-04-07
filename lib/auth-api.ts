@@ -34,7 +34,6 @@ export async function forgotPassword(email: string) {
   return apiFetch<{ message: string }>('/api/auth/forgot-password', {
     method: 'POST',
     body: JSON.stringify({ email }),
-    skipAuth: true,
   });
 }
 
@@ -42,7 +41,6 @@ export async function resetPassword(token: string, newPassword: string) {
   return apiFetch<{ message: string }>('/api/auth/reset-password', {
     method: 'POST',
     body: JSON.stringify({ token, newPassword }),
-    skipAuth: true,
   });
 }
 
@@ -50,7 +48,6 @@ export async function verifyEmail(token: string) {
   return apiFetch<{ message: string }>('/api/auth/verify-email', {
     method: 'POST',
     body: JSON.stringify({ token }),
-    skipAuth: true,
   });
 }
 
@@ -58,13 +55,12 @@ export async function resendVerification(email: string) {
   return apiFetch<{ message: string }>('/api/auth/resend-verification', {
     method: 'POST',
     body: JSON.stringify({ email }),
-    skipAuth: true,
   });
 }
 
 export async function register(name: string, email: string, password: string) {
   return apiFetch<{ data: { user: Pick<User, 'id' | 'name' | 'email'> }; message: string }>(
     '/api/auth/register',
-    { method: 'POST', body: JSON.stringify({ name, email, password }), skipAuth: true },
+    { method: 'POST', body: JSON.stringify({ name, email, password }) },
   );
 }

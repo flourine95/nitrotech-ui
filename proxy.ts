@@ -8,8 +8,8 @@ export function proxy(request: NextRequest) {
 
   if (!isProtected) return NextResponse.next();
 
-  // Chỉ check có session không — refresh xảy ra ở Route Handler
-  if (!request.cookies.has('session')) {
+  // Spring Session dùng cookie tên "SESSION"
+  if (!request.cookies.has('SESSION')) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('from', pathname);
     return NextResponse.redirect(loginUrl);

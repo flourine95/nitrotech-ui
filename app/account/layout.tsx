@@ -2,7 +2,6 @@ import { redirect } from 'next/navigation';
 import { getSession } from '@/lib/auth';
 import { SiteHeaderServer as SiteHeader } from '@/components/site-header-server';
 import { SiteFooter } from '@/components/site-footer';
-import { AuthRefresh } from '@/components/auth-refresh';
 import Link from 'next/link';
 
 const sidebarLinks = [
@@ -127,12 +126,11 @@ const sidebarLinks = [
 ];
 
 export default async function AccountLayout({ children }: { children: React.ReactNode }) {
-  const session = await getSession();
-  if (!session.user) redirect('/login?from=/account');
+  const user = await getSession();
+  if (!user) redirect('/login?from=/account');
 
   return (
     <>
-      <AuthRefresh expiresAt={session.expiresAt }/>
       <SiteHeader cartCount={3} />
       <div className="min-h-screen bg-slate-50">
         {/* Breadcrumb */}
