@@ -25,7 +25,8 @@ export async function getValidAccessToken(requestCookieHeader?: string): Promise
       });
 
       if (!res.ok) {
-        await session.destroy();
+        // Không destroy session — tab khác có thể đã refresh thành công
+        // Client sẽ retry, lúc đó session đã có token mới
         return null;
       }
 

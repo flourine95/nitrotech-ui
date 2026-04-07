@@ -39,8 +39,19 @@ export async function apiFetch<T>(path: string, options: FetchOptions = {}): Pro
   });
 
   if (res.status === 401 && !skipAuth) {
-    const refreshed = await fetch('/api/auth/refresh', { method: 'POST', credentials: 'include' });
-    if (refreshed.ok) {
+    // Thử refresh, nếu fail đợi 1s rồi thử lại (tab khác có thể đang refresh)
+    const tryRefresh = async (): Promise<boolean> => {
+      const r = await fetch('/api/auth/refresh', { method: 'POST', credentials: 'include' });
+      return r.ok;
+    };
+
+    let ok = await tryRefresh();
+    if (!ok) {
+      await new Promise(r => setTimeout(r, 1000));
+      ok = await tryRefresh();
+    }
+
+    if (ok) {
       window.location.reload();
     } else {
       window.location.href = '/login';
