@@ -24,11 +24,13 @@ function writeCache(data: CloudinaryFolder[]) {
 }
 
 export function useFolders(enabled: boolean) {
-  const [folders, setFolders] = useState<CloudinaryFolder[]>(() => {
-    // typeof window guard: server trả FALLBACK, client đọc cache ngay
-    if (typeof window === 'undefined') return FALLBACK;
-    return readCache() ?? FALLBACK;
-  });
+  const [folders, setFolders] = useState<CloudinaryFolder[]>(FALLBACK);
+
+  useEffect(() => {
+    // Đọc cache sau hydration để tránh mismatch
+    const cached = readCache();
+    if (cached) setFolders(cached);
+  }, []);
 
   useEffect(() => {
     if (!enabled) return;

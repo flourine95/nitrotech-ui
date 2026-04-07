@@ -6,7 +6,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { loginSchema, type LoginInput } from '@/lib/schemas/auth';
-import { login } from '@/lib/auth';
 
 function LoginForm() {
   const router = useRouter();
@@ -21,25 +20,31 @@ function LoginForm() {
 
   async function onSubmit(data: LoginInput) {
     try {
-      await login(data.email, data.password);
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: data.email, password: data.password }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        const code = err?.data?.code ?? err?.code ?? '';
+        const msg = err?.data?.message ?? err?.message ?? 'Đăng nhập thất bại';
+        if (code === 'ACCOUNT_NOT_ACTIVE') {
+          toast.error('Tài khoản chưa xác thực email');
+        } else if (code === 'INVALID_CREDENTIALS') {
+          toast.error('Email hoặc mật khẩu không đúng');
+        } else {
+          toast.error(msg);
+        }
+        return;
+      }
+
       toast.success('Đăng nhập thành công');
       router.push(searchParams.get('from') ?? '/');
       router.refresh();
-    } catch (e: unknown) {
-      let code = '';
-      let msg = 'Đăng nhập thất bại';
-      try {
-        const parsed = JSON.parse((e as Error).message);
-        code = parsed.code ?? '';
-        msg = parsed.message ?? msg;
-      } catch {}
-      if (code === 'ACCOUNT_NOT_ACTIVE') {
-        toast.error('Tài khoản chưa xác thực email');
-      } else if (code === 'INVALID_CREDENTIALS') {
-        toast.error('Email hoặc mật khẩu không đúng');
-      } else {
-        toast.error(msg);
-      }
+    } catch {
+      toast.error('Đăng nhập thất bại');
     }
   }
 

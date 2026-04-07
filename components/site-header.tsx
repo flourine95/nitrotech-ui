@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { logout } from '@/lib/auth';
 
 const navLinks = [
   { label: 'Laptop', href: '/products?cat=laptop' },
@@ -62,7 +61,7 @@ export function SiteHeader({
 
   async function handleLogout() {
     try {
-      await logout();
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
       toast.success('Đã đăng xuất');
       router.push('/login');
       router.refresh();

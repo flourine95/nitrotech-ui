@@ -14,42 +14,37 @@ export class ApiException extends Error {
   }
 }
 
-// getAccessToken là Server Action, gọi được trực tiếp từ client
-async function getClientToken(): Promise<string | null> {
-  if (typeof window === 'undefined') return null;
-  try {
-    const { getAccessToken } = await import('@/lib/auth');
-    return getAccessToken();
-  } catch {
-    return null;
-  }
-}
-
 interface FetchOptions extends RequestInit {
   skipAuth?: boolean;
-  _retry?: boolean;
 }
 
+/**
+ * apiFetch — gọi Next.js BFF (/api/...) cho private endpoints.
+ * BFF tự gắn Authorization header từ session trước khi forward lên Spring.
+ * Public endpoints dùng skipAuth: true để gọi Spring trực tiếp.
+ */
 export async function apiFetch<T>(path: string, options: FetchOptions = {}): Promise<T> {
-  const { skipAuth = false, _retry = false, ...init } = options;
+  const { skipAuth = false, ...init } = options;
 
-  const token = skipAuth ? null : await getClientToken();
+  const url = skipAuth ? `${BASE_URL}${path}` : path; // BFF hoặc Spring trực tiếp
 
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    'X-Client-Type': 'web',
-    ...(init.headers as Record<string, string>),
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  };
-
-  const res = await fetch(`${BASE_URL}${path}`, {
+  const res = await fetch(url, {
     ...init,
-    headers,
     credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Client-Type': 'web',
+      ...(init.headers as Record<string, string>),
+    },
   });
 
-  if (res.status === 401 && !skipAuth && !_retry) {
-    window.location.href = '/login';
+  if (res.status === 401 && !skipAuth) {
+    const refreshed = await fetch('/api/auth/refresh', { method: 'POST', credentials: 'include' });
+    if (refreshed.ok) {
+      window.location.reload();
+    } else {
+      window.location.href = '/login';
+    }
     return undefined as T;
   }
 

@@ -1,19 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const PROTECTED_PATHS = ['/dashboard', '/account'];
+const PROTECTED = ['/dashboard', '/account'];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const isProtected = PROTECTED_PATHS.some((p) => pathname.startsWith(p));
+  const isProtected = PROTECTED.some((p) => pathname.startsWith(p));
 
   if (!isProtected) return NextResponse.next();
 
-  const token = request.cookies.get('access_token')?.value;
-  const expiresAt = request.cookies.get('access_token_expires_at')?.value;
-
-  const isValid = token && expiresAt && Date.now() < Number(expiresAt) - 30_000;
-
-  if (!isValid) {
+  // Chỉ check có session không — refresh xảy ra ở Route Handler
+  if (!request.cookies.has('session')) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('from', pathname);
     return NextResponse.redirect(loginUrl);

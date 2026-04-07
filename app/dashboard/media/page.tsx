@@ -43,11 +43,10 @@ export default function MediaPage() {
     return () => window.removeEventListener('keydown', handler);
   }, []); // stable — never re-subscribes
 
-  // Load initial assets khi có token
+  // Load initial assets
   useEffect(() => {
-    if (!accessToken) return;
     load(activeFolder);
-  }, [accessToken]); // eslint-disable-line
+  }, []); // eslint-disable-line
 
   // Reload when folder changes (skip initial — handled above)
   const isFirstRender = useRef(true);
@@ -56,7 +55,6 @@ export default function MediaPage() {
       isFirstRender.current = false;
       return;
     }
-    if (!accessToken) return;
     setSelected(new Set());
     setActiveAsset(null);
     setSearch('');
