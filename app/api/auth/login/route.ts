@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { backendFetch } from '@/lib/backend';
+import { backendFetch } from '@/lib/server';
 
 export async function POST(request: NextRequest) {
   const body = await request.json();

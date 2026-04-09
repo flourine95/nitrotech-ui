@@ -6,8 +6,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { resetPasswordSchema, type ResetPasswordInput } from '@/lib/schemas/auth';
-import { resetPassword } from '@/lib/auth-api';
-import { ApiException } from '@/lib/api';
+import { resetPassword } from '@/lib/auth.api';
+import { ApiException } from '@/lib/client';
 
 function ResetPasswordForm() {
   const router = useRouter();

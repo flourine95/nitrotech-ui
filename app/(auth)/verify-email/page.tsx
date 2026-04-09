@@ -2,8 +2,8 @@
 import { SubmitEventHandler, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { verifyEmail, resendVerification } from '@/lib/auth-api';
-import { ApiException } from '@/lib/api';
+import { verifyEmail, resendVerification } from '@/lib/auth.api';
+import { ApiException } from '@/lib/client';
 
 type Status = 'loading' | 'success' | 'error';
 

@@ -1,4 +1,4 @@
-import { apiFetch } from './api';
+import { apiFetch } from './client';
 
 export interface Brand {
   id: number;
@@ -11,9 +11,36 @@ export interface Brand {
   updatedAt: string;
 }
 
-export async function getBrands(active?: boolean) {
-  const q = active !== undefined ? `?active=${active}` : '';
-  const res = await apiFetch<{ data: Brand[] }>(`/api/brands${q}`);
+export interface BrandsQuery {
+  search?: string;
+  active?: boolean;
+  deleted?: boolean;
+  page?: number;
+  size?: number;
+  sort?: string;
+}
+
+export interface Page<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  number: number;
+  size: number;
+  first: boolean;
+  last: boolean;
+  empty: boolean;
+}
+
+export async function getBrands(query?: BrandsQuery): Promise<Page<Brand>> {
+  const q = new URLSearchParams();
+  if (query?.search?.trim()) q.set('search', query.search.trim());
+  if (query?.active !== undefined) q.set('active', String(query.active));
+  if (query?.deleted !== undefined) q.set('deleted', String(query.deleted));
+  if (query?.page !== undefined) q.set('page', String(query.page));
+  if (query?.size !== undefined) q.set('size', String(query.size));
+  if (query?.sort) q.set('sort', query.sort);
+  const qs = q.toString() ? `?${q}` : '';
+  const res = await apiFetch<{ data: Page<Brand> }>(`/api/brands${qs}`);
   return res.data;
 }
 

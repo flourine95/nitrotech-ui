@@ -5,8 +5,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { changePasswordSchema, type ChangePasswordInput } from '@/lib/schemas/auth';
-import { changePassword, logoutAll } from '@/lib/auth-api';
-import { ApiException } from '@/lib/api';
+import { changePassword, logoutAll } from '@/lib/auth.api';
+import { ApiException } from '@/lib/client';
 
 export default function SecurityPage() {
   const router = useRouter();

@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { getBrands, createBrand, updateBrand, deleteBrand, type Brand } from '@/lib/brands-api';
-import { ApiException } from '@/lib/api';
+import { ApiException } from '@/lib/client';
 import MediaPickerDialog from '@/components/media-picker-dialog';
 
 // ── Schema ────────────────────────────────────────────────────────────────────
@@ -417,8 +417,8 @@ export default function DashboardBrandsPage() {
   async function load() {
     setLoading(true);
     try {
-      const data = await getBrands();
-      setBrands(data);
+      const page = await getBrands();
+      setBrands(page.content);
     } catch {
       toast.error('Không thể tải danh sách thương hiệu');
     } finally {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { backendFetch } from '@/lib/backend';
+import { backendFetch } from '@/lib/server';
 
 // Public endpoints — không cần SESSION cookie
 const PUBLIC_PATHS = [

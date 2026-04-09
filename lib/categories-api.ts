@@ -1,4 +1,5 @@
-import { apiFetch } from './api';
+import { apiFetch } from './client';
+import type { Page } from './brands-api';
 
 export interface Category {
   id: number;
@@ -14,17 +15,29 @@ export interface Category {
   updatedAt: string;
 }
 
-export async function getCategories(params?: {
+export interface CategoriesQuery {
+  search?: string;
   active?: boolean;
-  tree?: boolean;
+  deleted?: boolean;
   parentId?: number;
-}) {
+  tree?: boolean;
+  page?: number;
+  size?: number;
+  sort?: string;
+}
+
+export async function getCategories(params?: CategoriesQuery): Promise<Page<Category> | Category[]> {
   const q = new URLSearchParams();
+  if (params?.search?.trim()) q.set('search', params.search.trim());
   if (params?.active !== undefined) q.set('active', String(params.active));
-  if (params?.tree) q.set('tree', 'true');
+  if (params?.deleted !== undefined) q.set('deleted', String(params.deleted));
   if (params?.parentId !== undefined) q.set('parentId', String(params.parentId));
+  if (params?.tree) q.set('tree', 'true');
+  if (params?.page !== undefined) q.set('page', String(params.page));
+  if (params?.size !== undefined) q.set('size', String(params.size));
+  if (params?.sort) q.set('sort', params.sort);
   const qs = q.toString() ? `?${q}` : '';
-  const res = await apiFetch<{ data: Category[] }>(`/api/categories${qs}`);
+  const res = await apiFetch<{ data: Page<Category> | Category[] }>(`/api/categories${qs}`);
   return res.data;
 }
 

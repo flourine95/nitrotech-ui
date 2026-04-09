@@ -12,7 +12,7 @@ import {
   type Category,
 } from '@/lib/categories-api';
 import { uploadFile } from '@/lib/upload-api';
-import { ApiException } from '@/lib/api';
+import { ApiException } from '@/lib/client';
 import MediaPickerDialog from '@/components/media-picker-dialog';
 
 // ── Schema ────────────────────────────────────────────────────────────────────
@@ -603,12 +603,12 @@ export default function DashboardCategoriesPage() {
   async function load() {
     setLoading(true);
     try {
-      const [treeData, flatData] = await Promise.all([
+      const [treeData, flatPage] = await Promise.all([
         getCategories({ tree: true }),
         getCategories(),
       ]);
-      setTree(treeData);
-      setFlat(flatData);
+      setTree(treeData as Category[]);
+      setFlat((flatPage as { content: Category[] }).content ?? []);
     } catch {
       toast.error('Không thể tải danh sách danh mục');
     } finally {

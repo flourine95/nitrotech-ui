@@ -1,5 +1,5 @@
 import { cookies } from 'next/headers';
-import { backendFetch } from './backend';
+import { backendFetch } from './server';
 
 export interface AuthUser {
   id: number;
