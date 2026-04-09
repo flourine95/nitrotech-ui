@@ -10,9 +10,18 @@ export interface Category {
   parentId: number | null;
   parentName: string | null;
   active: boolean;
+  sortOrder: number;
   children: Category[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface MovePayload {
+  movedId: number;
+  fromParentId: number | null;
+  toParentId: number | null;
+  targetOrderedIds: number[];
+  sourceOrderedIds?: number[];
 }
 
 export interface CategoriesQuery {
@@ -74,8 +83,27 @@ export async function updateCategory(
   return res.data;
 }
 
+export async function getCategory(id: number) {
+  const res = await apiFetch<{ data: Category }>(`/api/categories/${id}`);
+  return res.data;
+}
+
 export async function deleteCategory(id: number) {
-  return apiFetch<{ message: string }>(`/api/categories/${id}`, {
-    method: 'DELETE',
+  return apiFetch<{ message: string }>(`/api/categories/${id}`, { method: 'DELETE' });
+}
+
+export async function restoreCategory(id: number) {
+  return apiFetch<{ message: string }>(`/api/categories/${id}/restore`, { method: 'PATCH' });
+}
+
+export async function hardDeleteCategory(id: number) {
+  return apiFetch<{ message: string }>(`/api/categories/${id}/permanent`, { method: 'DELETE' });
+}
+
+export async function moveCategories(payload: MovePayload) {
+  const res = await apiFetch<{ data: { updated: Category[] } }>('/api/categories/move', {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
   });
+  return res.data.updated;
 }

@@ -63,8 +63,19 @@ export async function updateBrand(
   return res.data;
 }
 
+export async function getBrand(id: number) {
+  const res = await apiFetch<{ data: Brand }>(`/api/brands/${id}`);
+  return res.data;
+}
+
 export async function deleteBrand(id: number) {
-  return apiFetch<{ message: string }>(`/api/brands/${id}`, {
-    method: 'DELETE',
-  });
+  return apiFetch<{ message: string }>(`/api/brands/${id}`, { method: 'DELETE' });
+}
+
+export async function restoreBrand(id: number) {
+  return apiFetch<{ message: string }>(`/api/brands/${id}/restore`, { method: 'PATCH' });
+}
+
+export async function hardDeleteBrand(id: number) {
+  return apiFetch<{ message: string }>(`/api/brands/${id}/permanent`, { method: 'DELETE' });
 }

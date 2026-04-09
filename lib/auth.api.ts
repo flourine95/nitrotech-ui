@@ -64,3 +64,11 @@ export async function register(name: string, email: string, password: string) {
     { method: 'POST', body: JSON.stringify({ name, email, password }) },
   );
 }
+
+export async function logout() {
+  return apiFetch<{ message: string }>('/api/auth/logout', { method: 'POST' });
+}
+
+export async function logoutAll() {
+  return apiFetch<{ message: string }>('/api/auth/logout-all', { method: 'POST' });
+}
