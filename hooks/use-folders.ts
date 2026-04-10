@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { getFolders, type CloudinaryFolder } from '@/lib/upload-api';
+import { getFolders, type CloudinaryFolder } from '@/lib/api/upload';
 
 const CACHE_KEY = 'media:folders';
 

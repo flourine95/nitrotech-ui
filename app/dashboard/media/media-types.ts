@@ -1,4 +1,4 @@
-import { type CloudinaryResource } from '@/lib/upload-api';
+import { type CloudinaryResource } from '@/lib/api/upload';
 
 export interface AssetViewProps {
   assets: CloudinaryResource[];

@@ -1,7 +1,7 @@
 'use client';
 import { useCopy } from '@/hooks/use-copy';
 import { formatBytes, formatDate } from '@/lib/utils';
-import { type CloudinaryResource } from '@/lib/upload-api';
+import { type CloudinaryResource } from '@/lib/api/upload';
 
 const META_ROWS = (asset: CloudinaryResource) => [
   { label: 'Tên file', value: `${asset.display_name}.${asset.format}` },

@@ -1,8 +1,8 @@
 'use client';
 import { useCopy } from '@/hooks/use-copy';
 import { formatBytes } from '@/lib/utils';
-import { type CloudinaryResource } from '@/lib/upload-api';
-import { type AssetViewProps } from './types';
+import { type CloudinaryResource } from '@/lib/api/upload';
+import { type AssetViewProps } from './media-types';
 
 export function AssetGrid({ assets, selected, active, onToggle, onSelect }: AssetViewProps) {
   const { copied, copy } = useCopy();

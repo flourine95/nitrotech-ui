@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { getBrands, createBrand, updateBrand, deleteBrand, type Brand } from '@/lib/brands-api';
+import { getBrands, createBrand, updateBrand, deleteBrand, type Brand } from '@/lib/api/brands';
 import { ApiException } from '@/lib/client';
 import MediaPickerDialog from '@/components/media-picker-dialog';
 
@@ -42,7 +42,7 @@ function LogoUploader({ value, onChange }: { value: string; onChange: (url: stri
     }
     setUploading(true);
     try {
-      const { uploadFile } = await import('@/lib/upload-api');
+      const { uploadFile } = await import('@/lib/api/upload');
       const result = await uploadFile(file, 'brands');
       onChange(result.secure_url);
     } catch {

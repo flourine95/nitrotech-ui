@@ -5,7 +5,7 @@ import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { type RegisterInput, registerSchema } from '@/lib/schemas/auth';
-import { register as registerUser } from '@/lib/auth.api';
+import { register as registerUser } from '@/lib/api/auth';
 import { ApiException } from '@/lib/client';
 
 export default function RegisterPage() {

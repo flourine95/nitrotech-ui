@@ -2,13 +2,13 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { toast } from 'sonner';
-import { getMediaAssets, type MediaAsset } from '@/lib/media-api';
+import { getMediaAssets, type MediaAsset } from '@/lib/api/media';
 import {
   uploadFile,
   getFolders,
   type AllowedFolder,
   type CloudinaryFolder,
-} from '@/lib/upload-api';
+} from '@/lib/api/upload';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 

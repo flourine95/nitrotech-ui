@@ -1,15 +1,15 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { type AllowedFolder, type CloudinaryResource } from '@/lib/upload-api';
+import { type AllowedFolder, type CloudinaryResource } from '@/lib/api/upload';
 import { useMediaAssets } from '@/hooks/use-media-assets';
 import { useCopy } from '@/hooks/use-copy';
 import { useFolders } from '@/hooks/use-folders';
 import { formatBytes } from '@/lib/utils';
-import { UploadZone } from './_components/upload-zone';
-import { DetailPanel } from './_components/detail-panel';
-import { AssetGrid } from './_components/asset-grid';
-import { AssetList } from './_components/asset-list';
+import { UploadZone } from './upload-zone';
+import { DetailPanel } from './detail-panel';
+import { AssetGrid } from './asset-grid';
+import { AssetList } from './asset-list';
 
 export default function MediaPage() {
   const { assets, loading, loadingMore, nextCursor, load } = useMediaAssets();

@@ -1,7 +1,7 @@
 'use client';
 import { useState, useRef } from 'react';
 import { toast } from 'sonner';
-import { uploadFile, type AllowedFolder } from '@/lib/upload-api';
+import { uploadFile, type AllowedFolder } from '@/lib/api/upload';
 
 interface Props {
   folder: AllowedFolder;

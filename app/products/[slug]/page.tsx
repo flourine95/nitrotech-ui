@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { SiteHeader } from '@/components/site-header';
 import { SiteFooter } from '@/components/site-footer';
-import { getProduct, getRelatedProducts, getAllProducts } from '@/lib/products';
+import { getProduct, getRelatedProducts, getAllProducts } from '@/lib/api/products';
 import { ProductActions } from './product-actions';
 
 export async function generateStaticParams() {

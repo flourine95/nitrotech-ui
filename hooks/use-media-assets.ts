@@ -1,7 +1,7 @@
 'use client';
 import { useState, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
-import { getAssets, type CloudinaryResource, type AllowedFolder } from '@/lib/upload-api';
+import { getAssets, type CloudinaryResource, type AllowedFolder } from '@/lib/api/upload';
 
 interface UseMediaAssetsReturn {
   assets: CloudinaryResource[];

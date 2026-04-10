@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { forgotPasswordSchema, type ForgotPasswordInput } from '@/lib/schemas/auth';
-import { forgotPassword } from '@/lib/auth.api';
+import { forgotPassword } from '@/lib/api/auth';
 
 export default function ForgotPasswordPage() {
   const [sent, setSent] = useState(false);

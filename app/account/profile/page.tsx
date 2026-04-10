@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
-import { updateProfile, getMe, type User } from '@/lib/auth.api';
+import { updateProfile, getMe, type User } from '@/lib/api/auth';
 import { ApiException } from '@/lib/client';
 
 const profileSchema = z.object({
