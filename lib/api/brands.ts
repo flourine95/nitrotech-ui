@@ -1,4 +1,5 @@
-import { apiFetch } from './client';
+import { apiFetch } from '@/lib/client';
+import type { Page } from '@/lib/types/pagination';
 
 export interface Brand {
   id: number;
@@ -20,17 +21,6 @@ export interface BrandsQuery {
   sort?: string;
 }
 
-export interface Page<T> {
-  content: T[];
-  totalElements: number;
-  totalPages: number;
-  number: number;
-  size: number;
-  first: boolean;
-  last: boolean;
-  empty: boolean;
-}
-
 export async function getBrands(query?: BrandsQuery): Promise<Page<Brand>> {
   const q = new URLSearchParams();
   if (query?.search?.trim()) q.set('search', query.search.trim());
@@ -41,6 +31,11 @@ export async function getBrands(query?: BrandsQuery): Promise<Page<Brand>> {
   if (query?.sort) q.set('sort', query.sort);
   const qs = q.toString() ? `?${q}` : '';
   const res = await apiFetch<{ data: Page<Brand> }>(`/api/brands${qs}`);
+  return res.data;
+}
+
+export async function getBrand(id: number) {
+  const res = await apiFetch<{ data: Brand }>(`/api/brands/${id}`);
   return res.data;
 }
 
@@ -60,11 +55,6 @@ export async function updateBrand(
     method: 'PUT',
     body: JSON.stringify(body),
   });
-  return res.data;
-}
-
-export async function getBrand(id: number) {
-  const res = await apiFetch<{ data: Brand }>(`/api/brands/${id}`);
   return res.data;
 }
 

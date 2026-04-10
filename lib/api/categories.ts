@@ -1,5 +1,5 @@
-import { apiFetch } from './client';
-import type { Page } from './brands-api';
+import type { Page } from '@/lib/types/pagination';
+import { apiFetch } from '@/lib/client';
 
 export interface Category {
   id: number;

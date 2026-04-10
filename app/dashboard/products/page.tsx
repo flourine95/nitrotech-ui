@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
-import { getAllProducts } from '@/lib/api/products';
+import { getAllProducts } from '@/lib/data/products';
 
 const categories = [
   'Tất cả',

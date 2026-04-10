@@ -11,7 +11,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-import { getAllProducts } from '@/lib/api/products';
+import { getAllProducts } from '@/lib/data/products';
 
 const revenueData = [
   { month: 'T1', revenue: 45000000, orders: 120 },

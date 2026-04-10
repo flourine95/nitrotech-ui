@@ -2,10 +2,11 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { toast } from 'sonner';
-import { getMediaAssets, type MediaAsset } from '@/lib/api/media';
 import {
+  getAssets,
   uploadFile,
   getFolders,
+  type CloudinaryResource,
   type AllowedFolder,
   type CloudinaryFolder,
 } from '@/lib/api/upload';

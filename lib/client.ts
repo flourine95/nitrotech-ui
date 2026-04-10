@@ -18,11 +18,6 @@ interface FetchOptions extends RequestInit {
   skipAuth?: boolean;
 }
 
-/**
- * apiFetch — gọi Next.js BFF (/api/...) cho private endpoints.
- * Browser tự gửi SESSION cookie, BFF forward lên Spring.
- * Public endpoints dùng skipAuth: true để gọi Spring trực tiếp.
- */
 export async function apiFetch<T>(path: string, options: FetchOptions = {}): Promise<T> {
   const { skipAuth = false, ...init } = options;
 

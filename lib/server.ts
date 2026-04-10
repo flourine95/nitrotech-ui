@@ -5,7 +5,7 @@ type FetchOptions = RequestInit & { cookieHeader?: string };
 export async function backendFetch(path: string, options: FetchOptions = {}) {
   const { cookieHeader, ...rest } = options;
 
-  const res = await fetch(`${BACKEND}${path}`, {
+  return await fetch(`${BACKEND}${path}`, {
     ...rest,
     headers: {
       'Content-Type': 'application/json',
@@ -13,6 +13,4 @@ export async function backendFetch(path: string, options: FetchOptions = {}) {
       ...(rest.headers as Record<string, string>),
     },
   });
-
-  return res;
 }

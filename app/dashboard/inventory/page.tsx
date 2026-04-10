@@ -1,5 +1,5 @@
 'use client';
-import { getAllProducts } from '@/lib/api/products';
+import { getAllProducts } from '@/lib/data/products';
 
 export default function DashboardInventoryPage() {
   const products = getAllProducts();

@@ -1,4 +1,4 @@
-import { apiFetch } from './client';
+import { apiFetch } from '@/lib/client';
 
 export interface User {
   id: number;

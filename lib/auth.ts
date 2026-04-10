@@ -1,13 +1,8 @@
 import { cookies } from 'next/headers';
 import { backendFetch } from './server';
+import type { User } from '@/lib/api/auth';
 
-export interface AuthUser {
-  id: number;
-  name: string;
-  email: string;
-  phone: string | null;
-  avatar: string | null;
-}
+export type AuthUser = Pick<User, 'id' | 'name' | 'email' | 'phone' | 'avatar'>;
 
 export async function getSession(): Promise<AuthUser | null> {
   const cookieStore = await cookies();

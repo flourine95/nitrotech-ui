@@ -21,7 +21,7 @@
 | `components/ui/` | shadcn/ui primitives — avoid editing unless intentionally customizing |
 | `lib/api/` | Domain API functions (one file per domain) |
 | `lib/schemas/` | Zod validation schemas |
-| `lib/types/` | Shared domain TypeScript types |
+| `lib/types/` | Shared domain TypeScript types — see rules below |
 | `lib/client.ts` | `apiFetch()` — transport layer, client-side BFF fetch |
 | `lib/server.ts` | `backendFetch()` — transport layer, server-side Spring fetch |
 | `lib/auth.ts` | Server-side `getSession()` helper |
@@ -31,6 +31,20 @@
 | `types/` | Global declarations only (`*.d.ts`, module augmentation). Remove if unused. |
 
 > `lib/api/*.ts` = domain API wrappers. `lib/client.ts` / `lib/server.ts` = low-level transport. Do not mix them.
+
+### When to put types in `lib/api/` vs `lib/types/`
+
+**Keep in `lib/api/`** when the type only describes a request/response shape for that domain:
+```ts
+// lib/api/brands.ts
+export interface Brand { ... }        // API response shape
+export interface BrandsQuery { ... }  // query params
+```
+
+**Move to `lib/types/`** when:
+- Used across multiple domains — e.g. `Page<T>` used by brands, categories, products → `lib/types/pagination.ts`
+- Used outside the API layer — e.g. `TreeNode` used in UI components, not an API response → `lib/types/categories.ts`
+- Generic utility types not tied to a specific endpoint
 
 ---
 
