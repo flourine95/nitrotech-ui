@@ -7,6 +7,7 @@ import { Folder, FolderOpen, X } from 'lucide-react';
 import { createCategory, updateCategory, type Category } from '@/lib/api/categories';
 import { ApiException } from '@/lib/client';
 import { categorySchema, type CategoryFormData } from '@/lib/schemas/categories';
+import { slugify } from '@/lib/utils';
 
 export function CategoryPanel({ category, allCategories, onClose, onSaved }: {
   category: Category | null;
@@ -30,7 +31,7 @@ export function CategoryPanel({ category, allCategories, onClose, onSaved }: {
 
   useEffect(() => {
     if (!slugTouched.current && name)
-      setValue('slug', name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''));
+      setValue('slug', slugify(name));
   }, [name, setValue]);
 
   const parentOptions = allCategories.filter((c) => c.id !== category?.id);

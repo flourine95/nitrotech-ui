@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { getBrands, createBrand, updateBrand, deleteBrand, type Brand } from '@/lib/api/brands';
 import { ApiException } from '@/lib/client';
 import MediaPickerDialog from '@/components/media-picker-dialog';
+import { slugify } from '@/lib/utils';
 
 // ── Schema ────────────────────────────────────────────────────────────────────
 
@@ -204,13 +205,7 @@ function BrandModal({
 
   useEffect(() => {
     if (!slugTouched.current && name) {
-      setValue(
-        'slug',
-        name
-          .toLowerCase()
-          .replace(/\s+/g, '-')
-          .replace(/[^a-z0-9-]/g, ''),
-      );
+      setValue('slug', slugify(name));
     }
   }, [name, setValue]);
 
