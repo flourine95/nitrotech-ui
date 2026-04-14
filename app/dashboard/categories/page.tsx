@@ -1,7 +1,6 @@
 'use client';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { DragDropProvider } from '@dnd-kit/react';
 import { Folder, Plus, Search, Trash2, X } from 'lucide-react';
 import {
   type Category,
@@ -13,6 +12,21 @@ import {
 import { ApiException } from '@/lib/client';
 import { flattenTree, type TreeNode } from '@/lib/types/categories';
 import { CategoryTree } from './category-tree';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+
+// Rebuild TreeNode[] từ flat list
+function buildTree(flat: Category[]): TreeNode[] {
+  const map = new Map<number, TreeNode>();
+  const roots: TreeNode[] = [];
+  const sorted = [...flat].sort((a, b) => a.sortOrder - b.sortOrder);
+  for (const c of sorted) map.set(c.id, { ...c, children: [] });
+  for (const c of sorted) {
+    const node = map.get(c.id)!;
+    if (c.parentId == null) roots.push(node);
+    else map.get(c.parentId)?.children.push(node);
+  }
+  return roots;
+}
 import { CategoryPanel } from './category-panel';
 import {
   AlertDialog,
@@ -162,58 +176,128 @@ export default function DashboardCategoriesPage() {
     [load],
   );
 
-  // DnD — useSortable + isSortable pattern (docs: Managing sortable state)
-  // OptimisticSortingPlugin handles visual reorder; read source.initialIndex/index/group in onDragEnd
-  const handleDragEnd = useCallback(
-    (event) => {
-      const { active, over } = event;
-      if (!over || active.id === over.id || event.canceled) {
-        load();
-        return;
+  // ── Optimistic tree/flatList update helpers ──────────────────────────────────
+
+  const applyReorder = useCallback(
+    (parentId: number | null, reordered: Category[]) => {
+      const orderMap = new Map(reordered.map((c, i) => [c.id, i]));
+      const nextFlat = flatList.map((c) =>
+        c.parentId === parentId && orderMap.has(c.id)
+          ? { ...c, sortOrder: orderMap.get(c.id)! }
+          : c,
+      );
+      setFlatList(nextFlat);
+      setTree(buildTree(nextFlat));
+    },
+    [flatList],
+  );
+
+  const applyChangeParent = useCallback(
+    (id: number, fromParentId: number | null, toParentId: number | null) => {
+      const nextFlat = flatList.map((c) => (c.id === id ? { ...c, parentId: toParentId } : c));
+      // Re-sort sortOrder for affected groups
+      const reindex = (pid: number | null) => {
+        const siblings = nextFlat
+          .filter((c) => c.parentId === pid)
+          .sort((a, b) => a.sortOrder - b.sortOrder);
+        siblings.forEach((c, i) => {
+          const item = nextFlat.find((x) => x.id === c.id);
+          if (item) item.sortOrder = i;
+        });
+      };
+      reindex(fromParentId);
+      reindex(toParentId);
+      setFlatList([...nextFlat]);
+      setTree(buildTree(nextFlat));
+    },
+    [flatList],
+  );
+
+  const handleMoveUp = useCallback(
+    async (id: number, parentId: number | null) => {
+      const siblings = flatList
+        .filter((c) => c.parentId === parentId)
+        .sort((a, b) => a.sortOrder - b.sortOrder);
+      const idx = siblings.findIndex((c) => c.id === id);
+      if (idx <= 0) return;
+      const reordered = [...siblings];
+      [reordered[idx - 1], reordered[idx]] = [reordered[idx], reordered[idx - 1]];
+      const snapshot = { flatList, tree };
+      applyReorder(parentId, reordered);
+      try {
+        await moveCategories({
+          movedId: id,
+          fromParentId: parentId,
+          toParentId: parentId,
+          targetOrderedIds: reordered.map((c) => c.id),
+        });
+      } catch {
+        setFlatList(snapshot.flatList);
+        setTree(snapshot.tree);
+        toast.error('Sắp xếp thất bại');
       }
+    },
+    [flatList, tree, applyReorder],
+  );
 
-      const movedId = Number(active.id);
-      const dropId = Number(over.id);
+  const handleMoveDown = useCallback(
+    async (id: number, parentId: number | null) => {
+      const siblings = flatList
+        .filter((c) => c.parentId === parentId)
+        .sort((a, b) => a.sortOrder - b.sortOrder);
+      const idx = siblings.findIndex((c) => c.id === id);
+      if (idx < 0 || idx >= siblings.length - 1) return;
+      const reordered = [...siblings];
+      [reordered[idx], reordered[idx + 1]] = [reordered[idx + 1], reordered[idx]];
+      const snapshot = { flatList, tree };
+      applyReorder(parentId, reordered);
+      try {
+        await moveCategories({
+          movedId: id,
+          fromParentId: parentId,
+          toParentId: parentId,
+          targetOrderedIds: reordered.map((c) => c.id),
+        });
+      } catch {
+        setFlatList(snapshot.flatList);
+        setTree(snapshot.tree);
+        toast.error('Sắp xếp thất bại');
+      }
+    },
+    [flatList, tree, applyReorder],
+  );
 
-      // Tìm parent đích từ node drop
-      const dropNode = flatList.find((c) => c.id === dropId);
-      const toParentId = dropNode?.parentId ?? null;
-
-      // Source parent
-      const sourceNode = flatList.find((c) => c.id === movedId);
-      const fromParentId = sourceNode?.parentId ?? null;
-
-      // Siblings đích (không tính movedId)
+  const handleChangeParent = useCallback(
+    async (id: number, newParentId: number | null) => {
+      const node = flatList.find((c) => c.id === id);
+      if (!node || node.parentId === newParentId) return;
+      const fromParentId = node.parentId;
+      const snapshot = { flatList, tree };
+      applyChangeParent(id, fromParentId, newParentId);
       const destSiblings = flatList
-        .filter((c) => c.parentId === toParentId && c.id !== movedId)
+        .filter((c) => c.parentId === newParentId)
         .sort((a, b) => a.sortOrder - b.sortOrder)
         .map((c) => c.id);
-
-      // Insert vào vị trí dropId
-      const dropIndex = destSiblings.indexOf(dropId);
-      destSiblings.splice(dropIndex, 0, movedId);
-
-      const payload = {
-        movedId,
-        fromParentId,
-        toParentId,
-        targetOrderedIds: destSiblings,
-        ...(fromParentId !== toParentId && {
+      destSiblings.push(id);
+      try {
+        await moveCategories({
+          movedId: id,
+          fromParentId,
+          toParentId: newParentId,
+          targetOrderedIds: destSiblings,
           sourceOrderedIds: flatList
-            .filter((c) => c.parentId === fromParentId && c.id !== movedId)
+            .filter((c) => c.parentId === fromParentId && c.id !== id)
             .sort((a, b) => a.sortOrder - b.sortOrder)
             .map((c) => c.id),
-        }),
-      };
-
-      moveCategories(payload)
-        .then(() => load())
-        .catch(() => {
-          toast.error('Sắp xếp thất bại');
-          load();
         });
+        toast.success('Đã đổi danh mục cha');
+      } catch {
+        setFlatList(snapshot.flatList);
+        setTree(snapshot.tree);
+        toast.error('Đổi danh mục cha thất bại');
+      }
     },
-    [flatList, load],
+    [flatList, tree, applyChangeParent],
   );
   return (
     <div className="space-y-4">
@@ -221,17 +305,22 @@ export default function DashboardCategoriesPage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-slate-900">Danh mục</h1>
-          <p className="mt-0.5 text-sm text-slate-500">
-            Kéo handle để sắp xếp · Click mũi tên để mở rộng
-          </p>
+          <p className="mt-0.5 text-sm text-slate-500">Quản lý cây danh mục sản phẩm</p>
         </div>
-        <button
-          onClick={() => setPanel({ open: true, category: null })}
-          className="flex shrink-0 cursor-pointer items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
-        >
-          <Plus className="h-4 w-4" />
-          Thêm danh mục
-        </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              onClick={() => setPanel({ open: true, category: null })}
+              className="flex shrink-0 cursor-pointer items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+            >
+              <Plus className="h-4 w-4" />
+              Thêm danh mục
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">
+            <p>Tạo danh mục mới</p>
+          </TooltipContent>
+        </Tooltip>
       </div>
 
       {/* Stats */}
@@ -298,8 +387,7 @@ export default function DashboardCategoriesPage() {
       </div>
 
       {/* Tree */}
-      <DragDropProvider onDragEnd={handleDragEnd as never}>
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
           {loading ? (
             <div className="space-y-2 p-4">
               {[1, 2, 3, 4].map((i) => (
@@ -327,10 +415,14 @@ export default function DashboardCategoriesPage() {
                 nodes={visibleTree}
                 depth={0}
                 expandedIds={activeExpandedIds}
+                allCategories={flatList}
                 onToggleExpand={toggleExpand}
                 onEdit={(c) => setPanel({ open: true, category: c })}
                 onDelete={setDeleteTarget}
                 onToggleActive={handleToggleActive}
+                onMoveUp={handleMoveUp}
+                onMoveDown={handleMoveDown}
+                onChangeParent={handleChangeParent}
                 togglingId={togglingId}
               />
             </div>
@@ -343,7 +435,6 @@ export default function DashboardCategoriesPage() {
             </div>
           )}
         </div>
-      </DragDropProvider>
 
       {panel.open && (
         <CategoryPanel
