@@ -23,14 +23,23 @@ export async function apiFetch<T>(path: string, options: FetchOptions = {}): Pro
 
   const url = skipAuth ? `${BASE_URL}${path}` : path;
 
-  const res = await fetch(url, {
-    ...init,
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(init.headers as Record<string, string>),
-    },
-  });
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      ...init,
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(init.headers as Record<string, string>),
+      },
+    });
+  } catch {
+    throw new ApiException({
+      status: 0,
+      code: 'NETWORK_ERROR',
+      message: 'Không thể kết nối đến server. Vui lòng thử lại sau.',
+    });
+  }
 
   if (res.status === 401 && !skipAuth) {
     window.location.href = '/login';

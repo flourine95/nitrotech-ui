@@ -8,9 +8,13 @@ export async function getSession(): Promise<AuthUser | null> {
   const cookieStore = await cookies();
   const cookieHeader = cookieStore.toString();
 
-  const res = await backendFetch('/api/auth/me', { cookieHeader });
-  if (!res.ok) return null;
+  try {
+    const res = await backendFetch('/api/auth/me', { cookieHeader });
+    if (!res.ok) return null;
 
-  const { data } = await res.json();
-  return data ?? null;
+    const { data } = await res.json();
+    return data ?? null;
+  } catch {
+    return null;
+  }
 }
