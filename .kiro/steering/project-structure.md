@@ -26,7 +26,7 @@
 | `lib/server.ts` | `backendFetch()` — transport layer, server-side Spring fetch |
 | `lib/auth.ts` | Server-side `getSession()` helper |
 | `lib/utils.ts` | General utilities |
-| `hooks/` | Reusable custom React hooks |
+| `hooks/` | Reusable custom React hooks — used across 2+ routes |
 | `store/` | Zustand stores |
 | `types/` | Global declarations only (`*.d.ts`, module augmentation). Remove if unused. |
 
@@ -60,6 +60,10 @@ Prefer flat co-location inside route folders first.
 - Used by 2+ routes
 
 **Use `_components/`** only when a route grows too large and needs a private subfolder to group many co-located files. Not the default.
+
+**Hook files (`use-*.ts`) follow the same co-location rule:**
+- Co-locate inside route folder when the hook is tightly coupled to that route's state/API
+- Move to `hooks/` only when used across 2+ routes
 
 ---
 
