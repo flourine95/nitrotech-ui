@@ -1,12 +1,12 @@
-import { SkeletonProductCard } from "@/components/skeleton"
+import { SkeletonProductCard } from '@/components/skeleton';
 
 export default function ProductsLoading() {
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="mx-auto max-w-7xl px-6 py-8">
         <div className="flex gap-8">
           {/* Sidebar placeholder */}
-          <div className="hidden lg:block w-60 shrink-0" aria-hidden="true">
+          <div className="hidden w-60 shrink-0 lg:block" aria-hidden="true">
             <div className="sticky top-36 space-y-4">
               <div className="h-4 w-20 animate-pulse rounded-full bg-slate-200" />
               {Array.from({ length: 6 }).map((_, i) => (
@@ -15,9 +15,9 @@ export default function ProductsLoading() {
             </div>
           </div>
           {/* Grid */}
-          <div className="flex-1 min-w-0">
-            <div className="h-8 w-32 animate-pulse rounded-full bg-slate-200 mb-6" />
-            <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-5">
+          <div className="min-w-0 flex-1">
+            <div className="mb-6 h-8 w-32 animate-pulse rounded-full bg-slate-200" />
+            <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
               {Array.from({ length: 8 }).map((_, i) => (
                 <SkeletonProductCard key={i} />
               ))}
@@ -26,5 +26,5 @@ export default function ProductsLoading() {
         </div>
       </div>
     </div>
-  )
+  );
 }
