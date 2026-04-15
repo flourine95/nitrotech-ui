@@ -127,8 +127,8 @@ export function CategoryPanel({ category, allCategories, onClose, onSaved }: {
 
             <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
               <div>
-                <p className="text-sm font-medium text-slate-700">Kích hoạt</p>
-                <p className="text-xs text-slate-400">Hiển thị trên cửa hàng</p>
+                <p className="text-sm font-medium text-slate-700">Hiển thị trên cửa hàng</p>
+                <p className="text-xs text-slate-400">Khách hàng có thể thấy danh mục này</p>
               </div>
               <button type="button" role="switch" aria-checked={active} onClick={() => setValue('active', !active)}
                 className={`relative inline-flex h-6 w-11 cursor-pointer items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${active ? 'bg-blue-600' : 'bg-slate-300'}`}>

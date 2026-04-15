@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Folder, Plus, Search, Trash2, X } from 'lucide-react';
+import { Folder, Plus, RotateCcw, Search, Trash2, X } from 'lucide-react';
 import type { Category } from '@/lib/api/categories';
 import { ApiException } from '@/lib/client';
 import { CategoryTree } from './category-tree';
@@ -17,16 +17,21 @@ export default function DashboardCategoriesPage() {
   const [panel, setPanel] = useState<{ open: boolean; category: Category | null }>({ open: false, category: null });
   const [deleteTarget, setDeleteTarget] = useState<Category | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [restoreTarget, setRestoreTarget] = useState<Category | null>(null);
+  const [hardDeleteTarget, setHardDeleteTarget] = useState<Category | null>(null);
+  const [restoring, setRestoring] = useState(false);
+  const [hardDeleting, setHardDeleting] = useState(false);
 
   const {
     flatList, loading, search, setSearch,
     filterStatus, setFilterStatus,
-    total, activeCount, rootCount, subCount,
-    visibleTree, matchedIds,
+    total, activeCount, rootCount, subCount, deletedCount,
+    visibleTree, visibleDeleted, matchedIds,
     expandedIds, togglingId,
     toggleExpand, expandAll, collapseAll,
     handleToggleActive, handleDelete,
     handleMoveUp, handleMoveDown, handleChangeParent,
+    handleRestore, handleHardDelete,
     reload,
   } = useCategories();
 
@@ -39,6 +44,26 @@ export default function DashboardCategoriesPage() {
     } finally {
       setDeleting(false);
       setDeleteTarget(null);
+    }
+  }
+
+  async function confirmRestore(cat: Category) {
+    setRestoring(true);
+    try {
+      await handleRestore(cat);
+    } finally {
+      setRestoring(false);
+      setRestoreTarget(null);
+    }
+  }
+
+  async function confirmHardDelete(cat: Category) {
+    setHardDeleting(true);
+    try {
+      await handleHardDelete(cat);
+    } finally {
+      setHardDeleting(false);
+      setHardDeleteTarget(null);
     }
   }
 
@@ -93,21 +118,46 @@ export default function DashboardCategoriesPage() {
           )}
         </div>
         <div className="flex gap-2">
-          {(['all', 'active', 'inactive'] as FilterStatus[]).map((v) => (
+          {([
+            { value: 'all', label: 'Tất cả', count: total },
+            { value: 'active', label: 'Hoạt động', count: activeCount },
+            { value: 'inactive', label: 'Ẩn', count: total - activeCount },
+            { value: 'deleted', label: 'Đã xóa', count: deletedCount },
+          ] as { value: FilterStatus; label: string; count: number }[]).map((f) => (
             <button
-              key={v}
-              onClick={() => setFilterStatus(v)}
-              className={`cursor-pointer rounded-xl border px-3 py-2 text-xs font-medium transition-colors ${filterStatus === v ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}
+              key={f.value}
+              onClick={() => setFilterStatus(f.value)}
+              className={`cursor-pointer rounded-xl border px-3 py-2 text-xs font-medium transition-colors ${
+                filterStatus === f.value
+                  ? f.value === 'deleted'
+                    ? 'border-rose-600 bg-rose-600 text-white'
+                    : 'border-slate-900 bg-slate-900 text-white'
+                  : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+              }`}
             >
-              {v === 'all' ? 'Tất cả' : v === 'active' ? 'Hoạt động' : 'Đã tắt'}
+              {f.label}{f.count > 0 && <span className={`ml-1 ${filterStatus === f.value ? 'opacity-75' : 'text-slate-400'}`}>({f.count})</span>}
             </button>
           ))}
-          <button onClick={expandAll} className="cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50">
-            Mở tất cả
-          </button>
-          <button onClick={collapseAll} className="cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50">
-            Đóng tất cả
-          </button>
+          {filterStatus !== 'deleted' && (
+            <>
+              <button onClick={expandAll} className="cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50">
+                Mở tất cả
+              </button>
+              <button onClick={collapseAll} className="cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50">
+                Đóng tất cả
+              </button>
+            </>
+          )}
+          {filterStatus === 'deleted' && (
+            <>
+              <button disabled className="invisible rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600">
+                Mở tất cả
+              </button>
+              <button disabled className="invisible rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600">
+                Đóng tất cả
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -118,6 +168,53 @@ export default function DashboardCategoriesPage() {
               <div key={i} className="h-12 animate-pulse rounded-lg bg-slate-100" />
             ))}
           </div>
+        ) : filterStatus === 'deleted' ? (
+          visibleDeleted.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-slate-400">
+              <Trash2 className="mb-3 h-10 w-10 text-slate-200" />
+              <p className="text-sm font-medium">
+                {search ? `Không tìm thấy "${search}"` : 'Không có danh mục nào đã xóa'}
+              </p>
+              {search && (
+                <button onClick={() => setSearch('')} className="mt-2 cursor-pointer text-xs text-blue-500 hover:underline">
+                  Xóa bộ lọc
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-100">
+              {visibleDeleted.map((cat) => (
+                <div key={cat.id} className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50">
+                  <Folder className="h-4 w-4 shrink-0 text-slate-300" />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-slate-500 line-through">{cat.name}</p>
+                    <p className="font-mono text-[11px] text-slate-400">{cat.slug}</p>
+                  </div>
+                  {cat.parentName && (
+                    <span className="shrink-0 rounded bg-slate-100 px-2 py-0.5 text-[11px] text-slate-400">
+                      {cat.parentName}
+                    </span>
+                  )}
+                  <div className="flex shrink-0 items-center gap-1">
+                    <button
+                      onClick={() => setRestoreTarget(cat)}
+                      className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700"
+                    >
+                      <RotateCcw className="h-3.5 w-3.5" />
+                      Khôi phục
+                    </button>
+                    <button
+                      onClick={() => setHardDeleteTarget(cat)}
+                      className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      Xóa vĩnh viễn
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
         ) : visibleTree.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-slate-400">
             <Folder className="mb-3 h-10 w-10 text-slate-200" />
@@ -148,11 +245,16 @@ export default function DashboardCategoriesPage() {
             />
           </div>
         )}
-        {!loading && visibleTree.length > 0 && (
+        {!loading && filterStatus !== 'deleted' && visibleTree.length > 0 && (
           <div className="border-t border-slate-100 px-4 py-2.5 text-xs text-slate-400">
             {search
               ? `${matchedIds?.size ?? 0} kết quả cho "${search}"`
               : `${total} danh mục · ${rootCount} gốc · ${subCount} con`}
+          </div>
+        )}
+        {!loading && filterStatus === 'deleted' && visibleDeleted.length > 0 && (
+          <div className="border-t border-slate-100 px-4 py-2.5 text-xs text-slate-400">
+            {search ? `${visibleDeleted.length} kết quả cho "${search}"` : `${deletedCount} danh mục đã xóa`}
           </div>
         )}
       </div>
@@ -176,19 +278,68 @@ export default function DashboardCategoriesPage() {
             <AlertDialogDescription>
               Bạn sắp xóa <strong className="text-slate-900">{deleteTarget?.name}</strong>.
               {(deleteTarget?.children?.length ?? 0) > 0 && (
-                <> Có {deleteTarget!.children.length} danh mục con — xóa con trước.</>
+                <> Danh mục này còn {deleteTarget!.children.length} danh mục con, hãy xóa chúng trước.</>
               )}{' '}
-              Soft delete, có thể khôi phục sau.
+              Danh mục sẽ bị ẩn và có thể khôi phục lại sau.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Hủy</AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
+              className="bg-destructive text-white hover:bg-destructive/90"
               onClick={() => deleteTarget && confirmDelete(deleteTarget)}
               disabled={deleting}
             >
               {deleting ? 'Đang xóa...' : 'Xóa'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!restoreTarget} onOpenChange={(v) => !v && setRestoreTarget(null)}>
+        <AlertDialogContent size="sm">
+          <AlertDialogHeader>
+            <AlertDialogMedia className="bg-emerald-100 text-emerald-600">
+              <RotateCcw className="h-5 w-5" />
+            </AlertDialogMedia>
+            <AlertDialogTitle>Khôi phục danh mục?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Khôi phục <strong className="text-slate-900">{restoreTarget?.name}</strong> về trạng thái hoạt động.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => restoreTarget && confirmRestore(restoreTarget)}
+              disabled={restoring}
+            >
+              {restoring ? 'Đang khôi phục...' : 'Khôi phục'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!hardDeleteTarget} onOpenChange={(v) => !v && setHardDeleteTarget(null)}>
+        <AlertDialogContent size="sm">
+          <AlertDialogHeader>
+            <AlertDialogMedia className="bg-rose-100 text-rose-600">
+              <Trash2 className="h-5 w-5" />
+            </AlertDialogMedia>
+            <AlertDialogTitle>Xóa vĩnh viễn?</AlertDialogTitle>
+            <AlertDialogDescription>
+              <strong className="text-slate-900">{hardDeleteTarget?.name}</strong> sẽ bị xóa hoàn toàn và không thể khôi phục.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              className="bg-destructive text-white hover:bg-destructive/90"
+              onClick={() => hardDeleteTarget && confirmHardDelete(hardDeleteTarget)}
+              disabled={hardDeleting}
+            >
+              {hardDeleting ? 'Đang xóa...' : 'Xóa vĩnh viễn'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

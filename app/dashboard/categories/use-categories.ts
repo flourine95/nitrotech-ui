@@ -5,13 +5,16 @@ import {
   type Category,
   deleteCategory,
   getCategories,
+  hardDeleteCategory,
   moveCategories,
+  restoreCategory,
   updateCategory,
 } from '@/lib/api/categories';
 import { ApiException } from '@/lib/client';
 import { flattenTree, type TreeNode } from '@/lib/types/categories';
+import type { Page } from '@/lib/types/pagination';
 
-type FilterStatus = 'all' | 'active' | 'inactive';
+type FilterStatus = 'all' | 'active' | 'inactive' | 'deleted';
 
 function buildTree(flat: Category[]): TreeNode[] {
   const map = new Map<number, TreeNode>();
@@ -29,6 +32,7 @@ function buildTree(flat: Category[]): TreeNode[] {
 export function useCategories() {
   const [flatList, setFlatList] = useState<Category[]>([]);
   const [tree, setTree] = useState<TreeNode[]>([]);
+  const [deletedList, setDeletedList] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
@@ -40,9 +44,13 @@ export function useCategories() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const data = (await getCategories({ tree: true })) as TreeNode[];
-      setTree(data);
-      setFlatList(flattenTree(data));
+      const [active, deleted] = await Promise.all([
+        getCategories({ tree: true }) as Promise<TreeNode[]>,
+        getCategories({ deleted: true }) as Promise<Page<Category>>,
+      ]);
+      setTree(active);
+      setFlatList(flattenTree(active));
+      setDeletedList(Array.isArray(deleted) ? deleted : (deleted as Page<Category>).content ?? []);
     } catch {
       toast.error('Không thể tải danh sách danh mục');
     } finally {
@@ -63,18 +71,21 @@ export function useCategories() {
   const activeCount = useMemo(() => flatList.filter((c) => c.active).length, [flatList]);
   const rootCount = useMemo(() => flatList.filter((c) => !c.parentId).length, [flatList]);
   const subCount = useMemo(() => flatList.filter((c) => !!c.parentId).length, [flatList]);
+  const deletedCount = deletedList.length;
 
   const matchedIds = useMemo(() => {
     if (!search) return null;
     const q = search.toLowerCase();
+    const sourceList = filterStatus === 'deleted' ? deletedList : flatList;
     return new Set(
-      flatList
+      sourceList
         .filter((c) => c.name.toLowerCase().includes(q) || c.slug.includes(q))
         .map((c) => c.id),
     );
-  }, [flatList, search]);
+  }, [flatList, deletedList, filterStatus, search]);
 
   const visibleTree = useMemo(() => {
+    if (filterStatus === 'deleted') return [];
     function filter(nodes: TreeNode[]): TreeNode[] {
       if (!matchedIds) return nodes;
       return nodes.reduce<TreeNode[]>((acc, node) => {
@@ -87,6 +98,13 @@ export function useCategories() {
       filterStatus === 'all' ? true : filterStatus === 'active' ? n.active : !n.active,
     );
   }, [tree, matchedIds, filterStatus]);
+
+  const visibleDeleted = useMemo(() => {
+    if (filterStatus !== 'deleted') return [];
+    if (!search) return deletedList;
+    const q = search.toLowerCase();
+    return deletedList.filter((c) => c.name.toLowerCase().includes(q) || c.slug.includes(q));
+  }, [deletedList, filterStatus, search]);
 
   const activeExpandedIds = useMemo(
     () => (search ? new Set(flatList.map((c) => c.id)) : expandedIds),
@@ -113,12 +131,14 @@ export function useCategories() {
       const updated = await updateCategory(cat.id, { active: !cat.active });
       function patch(nodes: TreeNode[]): TreeNode[] {
         return nodes.map((n) =>
-          n.id === updated.id ? { ...n, ...updated } : { ...n, children: patch(n.children) },
+          n.id === updated.id
+            ? { ...n, active: updated.active }
+            : { ...n, children: patch(n.children) },
         );
       }
       setTree((prev) => patch(prev));
-      setFlatList((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
-      toast.success(updated.active ? 'Đã kích hoạt' : 'Đã tắt');
+      setFlatList((prev) => prev.map((c) => (c.id === updated.id ? { ...c, active: updated.active } : c)));
+      toast.success(updated.active ? 'Đã hiển thị' : 'Đã ẩn');
     } catch {
       toast.error('Cập nhật thất bại');
     } finally {
@@ -222,16 +242,37 @@ export function useCategories() {
     }
   }, [flatList, tree, applyChangeParent]);
 
+  const handleRestore = useCallback(async (cat: Category) => {
+    try {
+      await restoreCategory(cat.id);
+      await load();
+      toast.success('Đã khôi phục danh mục');
+    } catch {
+      toast.error('Khôi phục thất bại');
+    }
+  }, [load]);
+
+  const handleHardDelete = useCallback(async (cat: Category) => {
+    try {
+      await hardDeleteCategory(cat.id);
+      setDeletedList((prev) => prev.filter((c) => c.id !== cat.id));
+      toast.success('Đã xóa vĩnh viễn');
+    } catch {
+      toast.error('Xóa vĩnh viễn thất bại');
+    }
+  }, []);
+
   return {
     flatList, loading, search, setSearch,
     filterStatus, setFilterStatus,
-    total, activeCount, rootCount, subCount,
-    visibleTree, matchedIds,
+    total, activeCount, rootCount, subCount, deletedCount,
+    visibleTree, visibleDeleted, matchedIds,
     expandedIds: activeExpandedIds,
     togglingId,
     toggleExpand, expandAll, collapseAll,
     handleToggleActive, handleDelete,
     handleMoveUp, handleMoveDown, handleChangeParent,
+    handleRestore, handleHardDelete,
     reload: load,
   };
 }

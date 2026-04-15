@@ -27,29 +27,28 @@ function buildDisplayTree(categories: Category[]): TreeNode[] {
   return roots;
 }
 
+function calcPopoverPos(anchor: HTMLElement): { top: number; left: number; width: number } {
+  const rect = anchor.getBoundingClientRect();
+  const w = 224;
+  const left = rect.right - w < 8 ? rect.left : rect.right - w;
+  const top = window.innerHeight - rect.bottom < 220 ? rect.top - 220 : rect.bottom + 4;
+  return { top, left, width: w };
+}
+
 function ParentPopover({
-  node, allCategories, anchorRef, onSelect, onClose,
+  node, allCategories, pos, onSelect, onClose,
 }: {
   node: TreeNode;
   allCategories: Category[];
-  anchorRef: React.RefObject<HTMLButtonElement | null>;
+  pos: { top: number; left: number; width: number };
   onSelect: (newParentId: number | null) => void;
   onClose: () => void;
 }) {
   const popoverRef = useRef<HTMLDivElement>(null);
 
-  const pos = (() => {
-    if (!anchorRef.current) return { top: 0, left: 0, width: 224, ready: false };
-    const rect = anchorRef.current.getBoundingClientRect();
-    const w = 224;
-    const left = rect.right - w < 8 ? rect.left : rect.right - w;
-    const top = window.innerHeight - rect.bottom < 220 ? rect.top - 220 : rect.bottom + 4;
-    return { top, left, width: w, ready: true };
-  })();
-
   useEffect(() => {
     function onMouseDown(e: MouseEvent) {
-      if (popoverRef.current?.contains(e.target as Node) || anchorRef.current?.contains(e.target as Node)) return;
+      if (popoverRef.current?.contains(e.target as Node)) return;
       onClose();
     }
     document.addEventListener('mousedown', onMouseDown);
@@ -58,7 +57,7 @@ function ParentPopover({
       document.removeEventListener('mousedown', onMouseDown);
       document.removeEventListener('scroll', onClose, true);
     };
-  }, [onClose, anchorRef]);
+  }, [onClose]);
 
   const descendantIds = getDescendantIds(node);
   const options: Array<{ id: number | null; name: string; depth: number }> = [{ id: null, name: 'Danh mục gốc', depth: 0 }];
@@ -72,8 +71,6 @@ function ParentPopover({
     }
   }
   collectOptions(buildDisplayTree(allCategories), 1);
-
-  if (!pos.ready) return null;
 
   return createPortal(
     <div
@@ -134,8 +131,16 @@ const NodeRow = memo(function NodeRow({
   onToggleExpand, onEdit, onDelete, onToggleActive, onMoveUp, onMoveDown, onChangeParent,
 }: NodeRowProps) {
   const hasChildren = node.children.length > 0;
-  const [showParentPicker, setShowParentPicker] = useState(false);
+  const [popoverPos, setPopoverPos] = useState<{ top: number; left: number; width: number } | null>(null);
   const anchorRef = useRef<HTMLButtonElement>(null);
+
+  function handleTogglePopover() {
+    if (popoverPos) {
+      setPopoverPos(null);
+    } else if (anchorRef.current) {
+      setPopoverPos(calcPopoverPos(anchorRef.current));
+    }
+  }
 
   return (
     <div className="group relative">
@@ -163,11 +168,6 @@ const NodeRow = memo(function NodeRow({
             {hasChildren && (
               <span className="shrink-0 rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-500">
                 {node.children.length}
-              </span>
-            )}
-            {!node.active && (
-              <span className="shrink-0 rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-400">
-                Tắt
               </span>
             )}
           </div>
@@ -200,21 +200,21 @@ const NodeRow = memo(function NodeRow({
               <TooltipTrigger asChild>
                 <button
                   ref={anchorRef}
-                  onClick={() => setShowParentPicker((v) => !v)}
-                  className={`cursor-pointer rounded-lg border px-2 py-1 text-xs font-medium transition-colors ${showParentPicker ? 'border-blue-300 bg-blue-50 text-blue-600' : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-700'}`}
+                  onClick={handleTogglePopover}
+                  className={`cursor-pointer rounded-lg border px-2 py-1 text-xs font-medium transition-colors ${popoverPos ? 'border-blue-300 bg-blue-50 text-blue-600' : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-700'}`}
                 >
                   <CornerDownRight className="h-3.5 w-3.5" />
                 </button>
               </TooltipTrigger>
               <TooltipContent side="top"><p>Chuyển danh mục cha</p></TooltipContent>
             </Tooltip>
-            {showParentPicker && (
+            {popoverPos && (
               <ParentPopover
                 node={node}
                 allCategories={allCategories}
-                anchorRef={anchorRef}
+                pos={popoverPos}
                 onSelect={onChangeParent}
-                onClose={() => setShowParentPicker(false)}
+                onClose={() => setPopoverPos(null)}
               />
             )}
           </div>
@@ -232,7 +232,7 @@ const NodeRow = memo(function NodeRow({
               </button>
             </TooltipTrigger>
             <TooltipContent side="top">
-              <p>{node.active ? 'Đang hoạt động — nhấn để tắt' : 'Đã tắt — nhấn để bật'}</p>
+              <p>{node.active ? 'Đang hiển thị — nhấn để ẩn' : 'Đang ẩn — nhấn để hiển thị'}</p>
             </TooltipContent>
           </Tooltip>
 
@@ -300,7 +300,7 @@ export const CategoryTree = memo(function CategoryTree({
             onChangeParent={(newParentId) => onChangeParent(node.id, newParentId)}
           />
           {node.children.length > 0 && expandedIds.has(node.id) && (
-            <div className="ml-[29px] border-l border-slate-100">
+            <div className="ml-7.25 border-l border-slate-100">
               <CategoryTree
                 nodes={node.children}
                 depth={depth + 1}
