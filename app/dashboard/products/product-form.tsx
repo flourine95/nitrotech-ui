@@ -3,11 +3,12 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { toast } from 'sonner';
 import { ArrowLeft, ImageIcon, Save } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 
 import {
   createProduct,
@@ -22,6 +23,7 @@ import type { Brand } from '@/lib/api/brands';
 import { getBrands } from '@/lib/api/brands';
 import { ApiException } from '@/lib/client';
 import { slugify } from '@/lib/utils';
+import { productSchema, type ProductFormData } from '@/lib/schemas/products';
 import MediaPickerDialog from '@/components/media-picker-dialog';
 import {
   Select,
@@ -33,20 +35,6 @@ import {
 import { KeyValueEditor } from './key-value-editor';
 import { GalleryEditor } from './gallery-editor';
 import { VariantsEditor } from './variants-editor';
-
-const productSchema = z.object({
-  name: z.string().min(1, { message: 'Tên không được để trống' }),
-  slug: z
-    .string()
-    .min(1, { message: 'Slug không được để trống' })
-    .regex(/^[a-z0-9-]+$/, { message: 'Chỉ chữ thường, số, gạch ngang' }),
-  description: z.string().optional(),
-  categoryId: z.number({ message: 'Chọn danh mục' }).min(1, { message: 'Chọn danh mục' }),
-  brandId: z.number().nullable().optional(),
-  thumbnail: z.url({ error: 'Thumbnail phải là URL hợp lệ' }).or(z.literal('')).optional(),
-  active: z.boolean(),
-});
-type ProductFormData = z.infer<typeof productSchema>;
 
 
 interface ProductFormProps {
@@ -166,12 +154,11 @@ export function ProductForm({ product }: ProductFormProps) {
     <form onSubmit={handleSubmit(onSubmit)} noValidate>
       <div className="mb-4 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <Link
-            href="/dashboard/products"
-            className="cursor-pointer rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
+          <Button variant="ghost" size="icon-sm" asChild className="rounded-lg text-slate-400">
+            <Link href="/dashboard/products">
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
+          </Button>
           <div>
             <h1 className="text-xl font-bold text-slate-900">
               {isEdit ? 'Sửa sản phẩm' : 'Thêm sản phẩm'}
@@ -179,14 +166,10 @@ export function ProductForm({ product }: ProductFormProps) {
             {isEdit && <p className="text-xs text-slate-400">ID #{product!.id}</p>}
           </div>
         </div>
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="flex cursor-pointer items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-60"
-        >
+        <Button type="submit" disabled={isSubmitting} size="lg" className="rounded-xl">
           <Save className="h-4 w-4" />
           {isSubmitting ? 'Đang lưu...' : isEdit ? 'Cập nhật' : 'Tạo sản phẩm'}
-        </button>
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -372,17 +355,11 @@ export function ProductForm({ product }: ProductFormProps) {
                 <p className="text-sm font-medium text-slate-700">Hiển thị trên cửa hàng</p>
                 <p className="text-xs text-slate-400">Khách hàng có thể thấy sản phẩm này</p>
               </div>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={active}
-                onClick={() => setValue('active', !active)}
-                className={`relative inline-flex h-6 w-11 cursor-pointer items-center rounded-full transition-colors duration-200 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none ${active ? 'bg-blue-600' : 'bg-slate-300'}`}
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${active ? 'translate-x-6' : 'translate-x-1'}`}
-                />
-              </button>
+              <Switch
+                checked={active}
+                onCheckedChange={(val) => setValue('active', val)}
+                aria-label="Hiển thị trên cửa hàng"
+              />
             </div>
           </div>
         </div>

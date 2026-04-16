@@ -5,6 +5,7 @@ import { DragDropProvider, type DragEndEvent, type DragOverEvent } from '@dnd-ki
 import { useSortable } from '@dnd-kit/react/sortable';
 import { GripVertical, ImageIcon, Plus, Trash2 } from 'lucide-react';
 import MediaPickerDialog from '@/components/media-picker-dialog';
+import { Button } from '@/components/ui/button';
 
 function arrayMove<T>(arr: T[], from: number, to: number): T[] {
   const next = [...arr];
@@ -34,22 +35,26 @@ function SortableImage({ url, index, onRemove }: SortableImageProps) {
         sizes="(max-width: 768px) 33vw, 25vw"
       />
 
-      <button
+      <Button
         ref={handleRef}
         type="button"
-        className="absolute top-1 left-1 cursor-grab rounded-lg bg-black/40 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100 active:cursor-grabbing"
+        variant="ghost"
+        size="icon-sm"
+        className="absolute top-1 left-1 cursor-grab rounded-lg bg-black/40 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100 hover:bg-black/40 active:cursor-grabbing"
         aria-label="Kéo để sắp xếp"
       >
         <GripVertical className="h-3.5 w-3.5" />
-      </button>
-      <button
+      </Button>
+      <Button
         type="button"
+        variant="ghost"
+        size="icon-sm"
         onClick={onRemove}
         className="absolute top-1 right-1 cursor-pointer rounded-lg bg-black/40 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100 hover:bg-rose-500"
         aria-label="Xóa ảnh"
       >
         <Trash2 className="h-3.5 w-3.5" />
-      </button>
+      </Button>
       <span className="absolute bottom-1 left-1 rounded bg-black/40 px-1.5 py-0.5 text-[10px] font-semibold text-white">
         {index + 1}
       </span>
@@ -109,14 +114,15 @@ export function GalleryEditor({ images, onChange }: GalleryEditorProps) {
           {localImages.map((url, index) => (
             <SortableImage key={url} url={url} index={index} onRemove={() => removeImage(index)} />
           ))}
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={() => setShowPicker(true)}
-            className="flex aspect-square cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-slate-300 text-slate-400 transition-colors hover:border-blue-400 hover:bg-blue-50 hover:text-blue-500"
+            className="flex aspect-square h-auto cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-slate-300 text-slate-400 transition-colors hover:border-blue-400 hover:bg-blue-50 hover:text-blue-500"
           >
             <Plus className="h-5 w-5" />
             <span className="text-[11px] font-medium">Thêm ảnh</span>
-          </button>
+          </Button>
         </div>
       </DragDropProvider>
 

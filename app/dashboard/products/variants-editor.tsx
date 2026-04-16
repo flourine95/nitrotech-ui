@@ -2,16 +2,16 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Check, Pencil, Plus, Trash2, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   type CreateVariantBody, type ProductVariant,
   createVariant, deleteVariant, updateVariant,
 } from '@/lib/api/products';
 import { ApiException } from '@/lib/client';
 import { KeyValueEditor } from './key-value-editor';
-
-const variantPriceFormatter = new Intl.NumberFormat('vi-VN', {
-  style: 'currency', currency: 'VND', maximumFractionDigits: 0,
-});
+import { formatVariantPrice } from './utils';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader,
@@ -92,15 +92,11 @@ function VariantInlineForm({
         <div className="flex items-end">
           <div className="flex w-full items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2">
             <span className="text-xs text-slate-600">Hiển thị</span>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={form.active}
-              onClick={() => set('active', !form.active)}
-              className={`relative inline-flex h-5 w-9 cursor-pointer items-center rounded-full transition-colors ${form.active ? 'bg-blue-600' : 'bg-slate-300'}`}
-            >
-              <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${form.active ? 'translate-x-4' : 'translate-x-0.5'}`} />
-            </button>
+            <Switch
+              checked={form.active}
+              onCheckedChange={(val) => set('active', val)}
+              aria-label="Hiển thị variant"
+            />
           </div>
         </div>
       </div>
@@ -116,27 +112,16 @@ function VariantInlineForm({
       </div>
 
       <div className="mt-3 flex justify-end gap-2">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="flex cursor-pointer items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50"
-        >
+        <Button type="button" variant="outline" size="sm" onClick={onCancel} className="rounded-xl">
           <X className="h-3.5 w-3.5" /> Hủy
-        </button>
-        <button
-          type="button"
-          onClick={handleSave}
-          disabled={saving}
-          className="flex cursor-pointer items-center gap-1.5 rounded-xl bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
-        >
+        </Button>
+        <Button type="button" size="sm" onClick={handleSave} disabled={saving} className="rounded-xl">
           <Check className="h-3.5 w-3.5" /> {saving ? 'Đang lưu...' : 'Lưu'}
-        </button>
+        </Button>
       </div>
     </div>
   );
 }
-
-// ── Main component ────────────────────────────────────────────────────────────
 
 interface VariantsEditorProps {
   productId: number;
@@ -210,7 +195,7 @@ export function VariantsEditor({ productId, variants, onChange }: VariantsEditor
     }
   }
 
-  const fmt = (n: number) => variantPriceFormatter.format(n);
+  const fmt = formatVariantPrice;
 
   return (
     <div className="space-y-3">
@@ -261,20 +246,36 @@ export function VariantsEditor({ productId, variants, onChange }: VariantsEditor
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-1">
-                        <button
-                          type="button"
-                          onClick={() => setEditingId(v.id)}
-                          className="cursor-pointer rounded-lg p-1.5 text-slate-400 hover:bg-amber-50 hover:text-amber-600"
-                        >
-                          <Pencil className="h-3.5 w-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setDeleteTarget(v)}
-                          className="cursor-pointer rounded-lg p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon-sm"
+                              onClick={() => setEditingId(v.id)}
+                              className="rounded-lg text-slate-400 hover:bg-amber-50 hover:text-amber-600"
+                              aria-label="Sửa variant"
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top"><p>Sửa</p></TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon-sm"
+                              onClick={() => setDeleteTarget(v)}
+                              className="rounded-lg text-slate-400 hover:bg-rose-50 hover:text-rose-600"
+                              aria-label="Xóa variant"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top"><p>Xóa</p></TooltipContent>
+                        </Tooltip>
                       </div>
                     </td>
                   </tr>
@@ -293,14 +294,16 @@ export function VariantsEditor({ productId, variants, onChange }: VariantsEditor
           saving={saving}
         />
       ) : (
-        <button
+        <Button
           type="button"
+          variant="outline"
+          size="sm"
           onClick={() => setAdding(true)}
-          className="flex cursor-pointer items-center gap-1.5 rounded-xl border border-dashed border-slate-300 px-4 py-2.5 text-xs font-medium text-slate-500 transition-colors hover:border-blue-400 hover:bg-blue-50 hover:text-blue-600"
+          className="w-full rounded-xl border-dashed text-slate-500 hover:border-blue-400 hover:bg-blue-50 hover:text-blue-600"
         >
           <Plus className="h-3.5 w-3.5" />
           Thêm variant
-        </button>
+        </Button>
       )}
 
       <AlertDialog open={!!deleteTarget} onOpenChange={(v) => !v && setDeleteTarget(null)}>

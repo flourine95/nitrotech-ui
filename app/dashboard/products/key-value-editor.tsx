@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface Row {
   id: number;
@@ -77,23 +78,28 @@ export function KeyValueEditor({
             placeholder={valuePlaceholder}
             className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors outline-none focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
           />
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon-sm"
             onClick={() => removeRow(row.id)}
-            className="cursor-pointer rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-500"
+            className="rounded-lg text-slate-400 hover:bg-rose-50 hover:text-rose-500"
+            aria-label="Xóa dòng"
           >
             <Trash2 className="h-3.5 w-3.5" />
-          </button>
+          </Button>
         </div>
       ))}
-      <button
+      <Button
         type="button"
+        variant="outline"
+        size="sm"
         onClick={addRow}
-        className="flex cursor-pointer items-center gap-1.5 rounded-xl border border-dashed border-slate-300 px-3 py-2 text-xs text-slate-500 transition-colors hover:border-blue-400 hover:bg-blue-50 hover:text-blue-600"
+        className="w-full rounded-xl border-dashed text-slate-500 hover:border-blue-400 hover:bg-blue-50 hover:text-blue-600"
       >
         <Plus className="h-3.5 w-3.5" />
         Thêm dòng
-      </button>
+      </Button>
     </div>
   );
 }
