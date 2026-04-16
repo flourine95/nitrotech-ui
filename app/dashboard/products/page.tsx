@@ -1,7 +1,8 @@
 'use client';
-import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { parseAsInteger, parseAsString, parseAsStringEnum, useQueryState } from 'nuqs';
 import {
   Building2, ChevronLeft, ChevronRight, Package,
   Pencil, Plus, RotateCcw, Search, Trash2, X,
@@ -12,8 +13,6 @@ import {
 } from '@/lib/api/products';
 import { getCategories } from '@/lib/api/categories';
 import { getBrands } from '@/lib/api/brands';
-import type { Category } from '@/lib/api/categories';
-import type { Brand } from '@/lib/api/brands';
 import { ApiException } from '@/lib/client';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -22,140 +21,133 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import type { Page } from '@/lib/types/pagination';
+import { useState, useDeferredValue } from 'react';
+import type { Category } from '@/lib/api/categories';
+import type { Brand } from '@/lib/api/brands';
 
 type FilterStatus = 'all' | 'active' | 'inactive' | 'deleted';
 
+// Hoist formatter outside component to avoid re-creating on every render
+const priceFormatter = new Intl.NumberFormat('vi-VN', {
+  style: 'currency', currency: 'VND', maximumFractionDigits: 0,
+});
+
 function formatPrice(min: number | null, max: number | null): string {
   if (min === null) return '—';
-  const fmt = (n: number) =>
-    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(n);
-  return min === max ? fmt(min) : `${fmt(min)} – ${fmt(max!)}`;
+  return min === max
+    ? priceFormatter.format(min)
+    : `${priceFormatter.format(min)} – ${priceFormatter.format(max!)}`;
 }
 
 const PAGE_SIZE = 20;
 
 export default function DashboardProductsPage() {
-  const [page, setPage] = useState<Page<Product> | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(0);
-  const [search, setSearch] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
-  const [filterCategoryId, setFilterCategoryId] = useState<number | undefined>();
-  const [filterBrandId, setFilterBrandId] = useState<number | undefined>();
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [brands, setBrands] = useState<Brand[]>([]);
+  const queryClient = useQueryClient();
+
+  // ── URL state via nuqs ──────────────────────────────────────────────────────
+  const [search, setSearch] = useQueryState('q', parseAsString.withDefault(''));
+  const [filterStatus, setFilterStatus] = useQueryState(
+    'status',
+    parseAsStringEnum<FilterStatus>(['all', 'active', 'inactive', 'deleted']).withDefault('all'),
+  );
+  const [filterCategoryId, setFilterCategoryId] = useQueryState('cat', parseAsInteger);
+  const [filterBrandId, setFilterBrandId] = useQueryState('brand', parseAsInteger);
+  const [currentPage, setCurrentPage] = useQueryState('page', parseAsInteger.withDefault(0));
+
+  // Defer search to avoid query on every keystroke
+  const deferredSearch = useDeferredValue(search);
+
+  // ── Dialog state (local only, no need in URL) ───────────────────────────────
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
   const [restoreTarget, setRestoreTarget] = useState<Product | null>(null);
   const [hardDeleteTarget, setHardDeleteTarget] = useState<Product | null>(null);
-  const [deleting, setDeleting] = useState(false);
-  const [restoring, setRestoring] = useState(false);
-  const [hardDeleting, setHardDeleting] = useState(false);
 
-  // Debounce search
-  useEffect(() => {
-    const t = setTimeout(() => { setDebouncedSearch(search); setCurrentPage(0); }, 350);
-    return () => clearTimeout(t);
-  }, [search]);
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const isDeleted = filterStatus === 'deleted';
-      const active = filterStatus === 'active' ? true : filterStatus === 'inactive' ? false : undefined;
-      const data = await getProducts({
-        search: debouncedSearch || undefined,
-        active: isDeleted ? undefined : active,
-        deleted: isDeleted ? true : undefined,
-        categoryId: filterCategoryId,
-        brandId: filterBrandId,
-        page: currentPage,
-        size: PAGE_SIZE,
-        sort: 'createdAt,desc',
-      });
-      setPage(data);
-    } catch {
-      toast.error('Không thể tải danh sách sản phẩm');
-    } finally {
-      setLoading(false);
-    }
-  }, [debouncedSearch, filterStatus, filterCategoryId, filterBrandId, currentPage]);
-
-  useEffect(() => { load(); }, [load]);
-
-  // Load categories + brands for filters
-  useEffect(() => {
-    Promise.all([
-      getCategories({ tree: false }) as Promise<{ content: Category[] }>,
-      getBrands({ size: 100 }),
-    ]).then(([cats, brnds]) => {
-      const catList = Array.isArray(cats) ? cats : (cats as { content: Category[] }).content ?? [];
-      setCategories(catList);
-      setBrands(brnds.content);
-    }).catch(() => {});
-  }, []);
-
-  const products = page?.content ?? [];
-  const totalPages = page?.totalPages ?? 0;
-  const totalElements = page?.totalElements ?? 0;
-
-  const filterCounts = useMemo(() => ({
-    all: filterStatus === 'all' ? totalElements : undefined,
-  }), [filterStatus, totalElements]);
-
-  async function handleToggleActive(product: Product) {
-    try {
-      const updated = await updateProduct(product.id, { active: !product.active });
-      setPage((prev) => prev ? {
-        ...prev,
-        content: prev.content.map((p) => p.id === updated.id ? updated : p),
-      } : prev);
-      toast.success(updated.active ? 'Đã hiển thị' : 'Đã ẩn');
-    } catch {
-      toast.error('Cập nhật thất bại');
-    }
-  }
-
-  async function confirmDelete(product: Product) {
-    setDeleting(true);
-    try {
-      await deleteProduct(product.id);
-      await load();
-      toast.success('Đã xóa sản phẩm');
-    } catch (e) {
-      if (!(e instanceof ApiException)) toast.error('Xóa thất bại');
-    } finally {
-      setDeleting(false);
-      setDeleteTarget(null);
-    }
-  }
-
-  async function confirmRestore(product: Product) {
-    setRestoring(true);
-    try {
-      await restoreProduct(product.id);
-      await load();
-      toast.success('Đã khôi phục sản phẩm');
-    } finally {
-      setRestoring(false);
-      setRestoreTarget(null);
-    }
-  }
-
-  async function confirmHardDelete(product: Product) {
-    setHardDeleting(true);
-    try {
-      await hardDeleteProduct(product.id);
-      await load();
-      toast.success('Đã xóa vĩnh viễn');
-    } finally {
-      setHardDeleting(false);
-      setHardDeleteTarget(null);
-    }
-  }
-
+  // ── Queries ─────────────────────────────────────────────────────────────────
   const isDeleted = filterStatus === 'deleted';
+  const activeFilter = filterStatus === 'active' ? true : filterStatus === 'inactive' ? false : undefined;
+
+  const productsQuery = useQuery({
+    queryKey: ['products', deferredSearch, filterStatus, filterCategoryId, filterBrandId, currentPage],
+    queryFn: () => getProducts({
+      search: deferredSearch || undefined,
+      active: isDeleted ? undefined : activeFilter,
+      deleted: isDeleted ? true : undefined,
+      categoryId: filterCategoryId ?? undefined,
+      brandId: filterBrandId ?? undefined,
+      page: currentPage,
+      size: PAGE_SIZE,
+      sort: 'createdAt,desc',
+    }),
+  });
+
+  const categoriesQuery = useQuery({
+    queryKey: ['categories-flat'],
+    queryFn: async () => {
+      const res = await getCategories({ tree: false });
+      return Array.isArray(res) ? res as Category[] : (res as { content: Category[] }).content ?? [];
+    },
+    staleTime: 5 * 60 * 1000, // 5 min — categories don't change often
+  });
+
+  const brandsQuery = useQuery({
+    queryKey: ['brands-all'],
+    queryFn: () => getBrands({ size: 100 }).then((r) => r.content),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // ── Mutations ────────────────────────────────────────────────────────────────
+  const toggleActiveMutation = useMutation({
+    mutationFn: (product: Product) => updateProduct(product.id, { active: !product.active }),
+    onSuccess: (updated) => {
+      queryClient.setQueryData(
+        ['products', deferredSearch, filterStatus, filterCategoryId, filterBrandId, currentPage],
+        (old: typeof productsQuery.data) => old
+          ? { ...old, content: old.content.map((p) => p.id === updated.id ? updated : p) }
+          : old,
+      );
+      toast.success(updated.active ? 'Đã hiển thị' : 'Đã ẩn');
+    },
+    onError: () => toast.error('Cập nhật thất bại'),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (product: Product) => deleteProduct(product.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      toast.success('Đã xóa sản phẩm');
+      setDeleteTarget(null);
+    },
+    onError: (e) => {
+      if (!(e instanceof ApiException)) toast.error('Xóa thất bại');
+    },
+  });
+
+  const restoreMutation = useMutation({
+    mutationFn: (product: Product) => restoreProduct(product.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      toast.success('Đã khôi phục sản phẩm');
+      setRestoreTarget(null);
+    },
+    onError: () => toast.error('Khôi phục thất bại'),
+  });
+
+  const hardDeleteMutation = useMutation({
+    mutationFn: (product: Product) => hardDeleteProduct(product.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      toast.success('Đã xóa vĩnh viễn');
+      setHardDeleteTarget(null);
+    },
+    onError: () => toast.error('Xóa vĩnh viễn thất bại'),
+  });
+
+  const products = productsQuery.data?.content ?? [];
+  const totalPages = productsQuery.data?.totalPages ?? 0;
+  const totalElements = productsQuery.data?.totalElements ?? 0;
+  const loading = productsQuery.isLoading;
+  const categories = categoriesQuery.data ?? [];
+  const brands = brandsQuery.data ?? [];
 
   return (
     <div className="space-y-4">
@@ -182,11 +174,11 @@ export default function DashboardProductsPage() {
             type="text"
             placeholder="Tìm tên, slug..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => { setSearch(e.target.value || null); setCurrentPage(0); }}
             className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pr-4 pl-9 text-sm text-slate-700 outline-none placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
           />
           {search && (
-            <button onClick={() => setSearch('')} className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-slate-400 hover:text-slate-600">
+            <button onClick={() => { setSearch(null); setCurrentPage(0); }} className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-slate-400 hover:text-slate-600">
               <X className="h-3.5 w-3.5" />
             </button>
           )}
@@ -210,10 +202,9 @@ export default function DashboardProductsPage() {
               {f.label}
             </button>
           ))}
-          {/* Category filter */}
           <Select
             value={filterCategoryId ? String(filterCategoryId) : 'all'}
-            onValueChange={(v) => { setFilterCategoryId(v === 'all' ? undefined : Number(v)); setCurrentPage(0); }}
+            onValueChange={(v) => { setFilterCategoryId(v === 'all' ? null : Number(v)); setCurrentPage(0); }}
           >
             <SelectTrigger className="h-9 rounded-xl border-slate-200 bg-white text-xs font-medium text-slate-600">
               <SelectValue placeholder="Tất cả danh mục" />
@@ -223,10 +214,9 @@ export default function DashboardProductsPage() {
               {categories.map((c) => <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>)}
             </SelectContent>
           </Select>
-          {/* Brand filter */}
           <Select
             value={filterBrandId ? String(filterBrandId) : 'all'}
-            onValueChange={(v) => { setFilterBrandId(v === 'all' ? undefined : Number(v)); setCurrentPage(0); }}
+            onValueChange={(v) => { setFilterBrandId(v === 'all' ? null : Number(v)); setCurrentPage(0); }}
           >
             <SelectTrigger className="h-9 rounded-xl border-slate-200 bg-white text-xs font-medium text-slate-600">
               <SelectValue placeholder="Tất cả thương hiệu" />
@@ -251,7 +241,7 @@ export default function DashboardProductsPage() {
             <p className="text-sm font-medium">
               {search ? `Không tìm thấy "${search}"` : isDeleted ? 'Không có sản phẩm nào đã xóa' : 'Chưa có sản phẩm nào'}
             </p>
-            {search && <button onClick={() => setSearch('')} className="mt-2 cursor-pointer text-xs text-blue-500 hover:underline">Xóa bộ lọc</button>}
+            {search && <button onClick={() => setSearch(null)} className="mt-2 cursor-pointer text-xs text-blue-500 hover:underline">Xóa bộ lọc</button>}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -299,22 +289,19 @@ export default function DashboardProductsPage() {
                       </div>
                     </td>
                     <td className="px-5 py-4 text-right">
-                      <span className="text-sm font-semibold text-slate-900">
-                        {formatPrice(p.priceMin, p.priceMax)}
-                      </span>
+                      <span className="text-sm font-semibold text-slate-900">{formatPrice(p.priceMin, p.priceMax)}</span>
                     </td>
                     <td className="px-5 py-4 text-center">
-                      <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
-                        {p.variantCount}
-                      </span>
+                      <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">{p.variantCount}</span>
                     </td>
                     {!isDeleted && (
                       <td className="px-5 py-4 text-center">
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <button
-                              onClick={() => handleToggleActive(p)}
-                              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus:outline-none ${p.active ? 'bg-emerald-500' : 'bg-slate-300'}`}
+                              onClick={() => toggleActiveMutation.mutate(p)}
+                              disabled={toggleActiveMutation.isPending}
+                              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus:outline-none disabled:opacity-60 ${p.active ? 'bg-emerald-500' : 'bg-slate-300'}`}
                             >
                               <span className={`inline-flex h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${p.active ? 'translate-x-4' : 'translate-x-0.5'}`} />
                             </button>
@@ -329,35 +316,19 @@ export default function DashboardProductsPage() {
                       <div className="flex items-center justify-end gap-1">
                         {isDeleted ? (
                           <>
-                            <button
-                              onClick={() => setRestoreTarget(p)}
-                              className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700"
-                            >
-                              <RotateCcw className="h-3.5 w-3.5" />
-                              Khôi phục
+                            <button onClick={() => setRestoreTarget(p)} className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700">
+                              <RotateCcw className="h-3.5 w-3.5" /> Khôi phục
                             </button>
-                            <button
-                              onClick={() => setHardDeleteTarget(p)}
-                              className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                              Xóa vĩnh viễn
+                            <button onClick={() => setHardDeleteTarget(p)} className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700">
+                              <Trash2 className="h-3.5 w-3.5" /> Xóa vĩnh viễn
                             </button>
                           </>
                         ) : (
                           <>
-                            <Link
-                              href={`/dashboard/products/${p.id}/edit`}
-                              className="cursor-pointer rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-amber-50 hover:text-amber-600"
-                              aria-label={`Sửa ${p.name}`}
-                            >
+                            <Link href={`/dashboard/products/${p.id}/edit`} className="cursor-pointer rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-amber-50 hover:text-amber-600" aria-label={`Sửa ${p.name}`}>
                               <Pencil className="h-4 w-4" />
                             </Link>
-                            <button
-                              onClick={() => setDeleteTarget(p)}
-                              className="cursor-pointer rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600"
-                              aria-label={`Xóa ${p.name}`}
-                            >
+                            <button onClick={() => setDeleteTarget(p)} className="cursor-pointer rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600" aria-label={`Xóa ${p.name}`}>
                               <Trash2 className="h-4 w-4" />
                             </button>
                           </>
@@ -372,36 +343,24 @@ export default function DashboardProductsPage() {
         )}
 
         {/* Footer: count + pagination */}
-        {!loading && page && totalElements > 0 && (
+        {!loading && totalElements > 0 && (
           <div className="flex items-center justify-between border-t border-slate-100 px-4 py-2.5">
             <p className="text-xs text-slate-400">
               {totalElements} sản phẩm · trang {currentPage + 1}/{totalPages}
             </p>
             <div className="flex items-center gap-1">
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
-                disabled={currentPage === 0}
-                className="cursor-pointer rounded-lg border border-slate-200 p-1.5 text-slate-500 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
-              >
+              <button onClick={() => setCurrentPage(Math.max(0, currentPage - 1))} disabled={currentPage === 0} className="cursor-pointer rounded-lg border border-slate-200 p-1.5 text-slate-500 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">
                 <ChevronLeft className="h-4 w-4" />
               </button>
               {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
                 const p = totalPages <= 7 ? i : currentPage < 4 ? i : currentPage > totalPages - 4 ? totalPages - 7 + i : currentPage - 3 + i;
                 return (
-                  <button
-                    key={p}
-                    onClick={() => setCurrentPage(p)}
-                    className={`cursor-pointer rounded-lg border px-2.5 py-1 text-xs font-medium transition-colors ${currentPage === p ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}
-                  >
+                  <button key={p} onClick={() => setCurrentPage(p)} className={`cursor-pointer rounded-lg border px-2.5 py-1 text-xs font-medium transition-colors ${currentPage === p ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}>
                     {p + 1}
                   </button>
                 );
               })}
-              <button
-                onClick={() => setCurrentPage((p) => Math.min(totalPages - 1, p + 1))}
-                disabled={currentPage >= totalPages - 1}
-                className="cursor-pointer rounded-lg border border-slate-200 p-1.5 text-slate-500 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
-              >
+              <button onClick={() => setCurrentPage(Math.min(totalPages - 1, currentPage + 1))} disabled={currentPage >= totalPages - 1} className="cursor-pointer rounded-lg border border-slate-200 p-1.5 text-slate-500 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">
                 <ChevronRight className="h-4 w-4" />
               </button>
             </div>
@@ -409,27 +368,25 @@ export default function DashboardProductsPage() {
         )}
       </div>
 
-      {/* Delete dialog */}
+      {/* Dialogs */}
       <AlertDialog open={!!deleteTarget} onOpenChange={(v) => !v && setDeleteTarget(null)}>
         <AlertDialogContent size="sm">
           <AlertDialogHeader>
             <AlertDialogMedia className="bg-rose-100 text-rose-600"><Trash2 className="h-5 w-5" /></AlertDialogMedia>
             <AlertDialogTitle>Xóa sản phẩm?</AlertDialogTitle>
             <AlertDialogDescription>
-              Bạn sắp xóa <strong className="text-slate-900">{deleteTarget?.name}</strong>.
-              Sản phẩm sẽ bị ẩn và có thể khôi phục lại sau.
+              Bạn sắp xóa <strong className="text-slate-900">{deleteTarget?.name}</strong>. Sản phẩm sẽ bị ẩn và có thể khôi phục lại sau.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Hủy</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" className="bg-destructive text-white hover:bg-destructive/90" onClick={() => deleteTarget && confirmDelete(deleteTarget)} disabled={deleting}>
-              {deleting ? 'Đang xóa...' : 'Xóa'}
+            <AlertDialogAction variant="destructive" className="bg-destructive text-white hover:bg-destructive/90" onClick={() => deleteTarget && deleteMutation.mutate(deleteTarget)} disabled={deleteMutation.isPending}>
+              {deleteMutation.isPending ? 'Đang xóa...' : 'Xóa'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Restore dialog */}
       <AlertDialog open={!!restoreTarget} onOpenChange={(v) => !v && setRestoreTarget(null)}>
         <AlertDialogContent size="sm">
           <AlertDialogHeader>
@@ -441,14 +398,13 @@ export default function DashboardProductsPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Hủy</AlertDialogCancel>
-            <AlertDialogAction onClick={() => restoreTarget && confirmRestore(restoreTarget)} disabled={restoring}>
-              {restoring ? 'Đang khôi phục...' : 'Khôi phục'}
+            <AlertDialogAction onClick={() => restoreTarget && restoreMutation.mutate(restoreTarget)} disabled={restoreMutation.isPending}>
+              {restoreMutation.isPending ? 'Đang khôi phục...' : 'Khôi phục'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Hard delete dialog */}
       <AlertDialog open={!!hardDeleteTarget} onOpenChange={(v) => !v && setHardDeleteTarget(null)}>
         <AlertDialogContent size="sm">
           <AlertDialogHeader>
@@ -460,8 +416,8 @@ export default function DashboardProductsPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Hủy</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" className="bg-destructive text-white hover:bg-destructive/90" onClick={() => hardDeleteTarget && confirmHardDelete(hardDeleteTarget)} disabled={hardDeleting}>
-              {hardDeleting ? 'Đang xóa...' : 'Xóa vĩnh viễn'}
+            <AlertDialogAction variant="destructive" className="bg-destructive text-white hover:bg-destructive/90" onClick={() => hardDeleteTarget && hardDeleteMutation.mutate(hardDeleteTarget)} disabled={hardDeleteMutation.isPending}>
+              {hardDeleteMutation.isPending ? 'Đang xóa...' : 'Xóa vĩnh viễn'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

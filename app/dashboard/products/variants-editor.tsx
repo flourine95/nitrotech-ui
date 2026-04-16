@@ -8,6 +8,10 @@ import {
 } from '@/lib/api/products';
 import { ApiException } from '@/lib/client';
 import { KeyValueEditor } from './key-value-editor';
+
+const variantPriceFormatter = new Intl.NumberFormat('vi-VN', {
+  style: 'currency', currency: 'VND', maximumFractionDigits: 0,
+});
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader,
@@ -206,8 +210,7 @@ export function VariantsEditor({ productId, variants, onChange }: VariantsEditor
     }
   }
 
-  const fmt = (n: number) =>
-    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(n);
+  const fmt = (n: number) => variantPriceFormatter.format(n);
 
   return (
     <div className="space-y-3">

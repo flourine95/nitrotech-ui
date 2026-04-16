@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { DragDropProvider, type DragEndEvent, type DragOverEvent } from '@dnd-kit/react';
 import { useSortable } from '@dnd-kit/react/sortable';
@@ -66,11 +66,10 @@ export function GalleryEditor({ images, onChange }: GalleryEditorProps) {
   const [showPicker, setShowPicker] = useState(false);
   const [localImages, setLocalImages] = useState<string[]>(images);
 
-  const [lastParent, setLastParent] = useState(images);
-  if (images !== lastParent) {
-    setLastParent(images);
+  // Sync when parent resets externally (e.g. after initial load)
+  useEffect(() => {
     setLocalImages(images);
-  }
+  }, [images]);
 
   function handleDragOver(event: DragOverEvent) {
     const sourceId = event.operation.source?.id as string | undefined;
