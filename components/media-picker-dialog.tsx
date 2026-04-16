@@ -6,7 +6,6 @@ import {
   getAssets,
   uploadFile,
   getFolders,
-  type CloudinaryResource,
   type AllowedFolder,
   type CloudinaryFolder,
 } from '@/lib/api/upload';
@@ -18,6 +17,16 @@ export interface MediaPickerProps {
   multiple?: boolean;
   onInsert: (urls: string[]) => void;
   onClose: () => void;
+}
+
+interface MediaAsset {
+  publicId: string;
+  secureUrl: string;
+  width: number;
+  height: number;
+  format: string;
+  bytes: number;
+  createdAt: string;
 }
 
 type Tab = 'library' | 'upload';
@@ -41,6 +50,25 @@ function isWithinRange(iso: string, filter: DateFilter): boolean {
   if (filter === 'week') return diff < 7 * 86400000;
   if (filter === 'month') return diff < 30 * 86400000;
   return true;
+}
+
+async function getMediaAssets(
+  folder: string,
+  cursor?: string,
+): Promise<{ assets: MediaAsset[]; nextCursor: string | undefined }> {
+  const res = await getAssets(folder, cursor);
+  return {
+    assets: res.resources.map((r) => ({
+      publicId: r.public_id,
+      secureUrl: r.secure_url,
+      width: r.width,
+      height: r.height,
+      format: r.format,
+      bytes: r.bytes,
+      createdAt: r.created_at,
+    })),
+    nextCursor: res.nextCursor ?? undefined,
+  };
 }
 
 // ── Upload Tab ────────────────────────────────────────────────────────────────
@@ -515,7 +543,7 @@ export default function MediaPickerDialog({
               onToggle={toggleAsset}
             />
           ) : (
-            <UploadTab folder={activeFolder as AllowedFolder} onUploaded={handleUploaded} />
+            <UploadTab folder={defaultFolder} onUploaded={handleUploaded} />
           )}
         </div>
 
