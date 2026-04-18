@@ -25,7 +25,7 @@ function SortableImage({ url, index, onRemove }: SortableImageProps) {
   return (
     <div
       ref={ref}
-      className={`group relative aspect-square overflow-hidden rounded-xl border-2 border-slate-200 bg-slate-50 transition-all ${isDragging ? 'opacity-50 ring-2 ring-blue-400' : ''}`}
+      className={`group relative aspect-square overflow-hidden rounded-xl border-2 border-slate-200 bg-slate-50 transition-all ${isDragging ? 'opacity-50 ring-2 ring-primary' : ''}`}
     >
       <Image
         src={url}
@@ -118,7 +118,7 @@ export function GalleryEditor({ images, onChange }: GalleryEditorProps) {
             type="button"
             variant="ghost"
             onClick={() => setShowPicker(true)}
-            className="flex aspect-square h-auto cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-slate-300 text-slate-400 transition-colors hover:border-blue-400 hover:bg-blue-50 hover:text-blue-500"
+            className="flex aspect-square h-auto cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-slate-300 text-slate-400 transition-colors hover:border-ring hover:bg-primary/5 hover:text-primary"
           >
             <Plus className="h-5 w-5" />
             <span className="text-[11px] font-medium">Thêm ảnh</span>

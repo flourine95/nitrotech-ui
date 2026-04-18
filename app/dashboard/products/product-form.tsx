@@ -146,7 +146,7 @@ export function ProductForm({ product }: ProductFormProps) {
   }
 
   const inputCls = (hasError: boolean) =>
-    `w-full rounded-xl border px-3.5 py-2.5 text-sm outline-none transition-colors focus:ring-2 ${hasError ? 'border-rose-300 bg-rose-50 focus:ring-rose-100' : 'border-slate-200 bg-slate-50 focus:border-blue-400 focus:bg-white focus:ring-blue-100'}`;
+    `w-full rounded-xl border px-3.5 py-2.5 text-sm outline-none transition-colors focus:ring-2 ${hasError ? 'border-rose-300 bg-rose-50 focus:ring-rose-100' : 'border-slate-200 bg-slate-50 focus:border-ring focus:bg-white focus:ring-ring/20'}`;
 
   const labelCls = 'mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500';
 
@@ -205,7 +205,7 @@ export function ProductForm({ product }: ProductFormProps) {
                     onFocus={() => {
                       slugTouched.current = true;
                     }}
-                    className={`w-full rounded-xl border py-2.5 pr-3.5 pl-6 font-mono text-sm transition-colors outline-none focus:ring-2 ${errors.slug ? 'border-rose-300 bg-rose-50 focus:ring-rose-100' : 'border-slate-200 bg-slate-50 focus:border-blue-400 focus:bg-white focus:ring-blue-100'}`}
+                    className={`w-full rounded-xl border py-2.5 pr-3.5 pl-6 font-mono text-sm transition-colors outline-none focus:ring-2 ${errors.slug ? 'border-rose-300 bg-rose-50 focus:ring-rose-100' : 'border-slate-200 bg-slate-50 focus:border-ring focus:bg-white focus:ring-ring/20'}`}
                   />
                 </div>
                 {errors.slug && <p className="mt-1 text-xs text-rose-500">{errors.slug.message}</p>}
@@ -216,7 +216,7 @@ export function ProductForm({ product }: ProductFormProps) {
                   {...register('description')}
                   rows={4}
                   placeholder="Mô tả chi tiết sản phẩm..."
-                  className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm transition-colors outline-none focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
+                  className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm transition-colors outline-none focus:border-ring focus:bg-white focus:ring-2 focus:ring-ring/20"
                 />
               </div>
             </div>
@@ -256,7 +256,7 @@ export function ProductForm({ product }: ProductFormProps) {
           )}
 
           {!isEdit && (
-            <div className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-xs text-blue-600">
+            <div className="rounded-xl border border-primary/10 bg-primary/5 px-4 py-3 text-xs text-primary">
               Sau khi tạo sản phẩm, bạn có thể thêm variants trong trang chỉnh sửa.
             </div>
           )}
@@ -269,7 +269,7 @@ export function ProductForm({ product }: ProductFormProps) {
             <h2 className="mb-3 text-sm font-semibold text-slate-900">Thumbnail</h2>
             {/* Đã thêm class 'relative' vào div bọc ngoài để Image fill hoạt động */}
             <div
-              className="relative mb-3 flex aspect-video cursor-pointer items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 transition-colors hover:border-blue-400 hover:bg-blue-50"
+              className="relative mb-3 flex aspect-video cursor-pointer items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 transition-colors hover:border-ring hover:bg-primary/5"
               onClick={() => setShowThumbPicker(true)}
             >
               {thumbnail && thumbnail.startsWith('http') ? (
@@ -290,7 +290,7 @@ export function ProductForm({ product }: ProductFormProps) {
             <input
               {...register('thumbnail')}
               placeholder="Hoặc nhập URL..."
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs transition-colors outline-none focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs transition-colors outline-none focus:border-ring focus:bg-white focus:ring-2 focus:ring-ring/20"
             />
             {errors.thumbnail && (
               <p className="mt-1 text-xs text-rose-500">{errors.thumbnail.message}</p>

@@ -69,14 +69,14 @@ export function KeyValueEditor({
             value={row.key}
             onChange={(e) => updateKey(row.id, e.target.value)}
             placeholder={keyPlaceholder}
-            className="w-2/5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors outline-none focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
+            className="w-2/5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors outline-none focus:border-ring focus:bg-white focus:ring-2 focus:ring-ring/20"
           />
           <span className="text-slate-300">:</span>
           <input
             value={row.value}
             onChange={(e) => updateValue(row.id, e.target.value)}
             placeholder={valuePlaceholder}
-            className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors outline-none focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
+            className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors outline-none focus:border-ring focus:bg-white focus:ring-2 focus:ring-ring/20"
           />
           <Button
             type="button"
@@ -95,7 +95,7 @@ export function KeyValueEditor({
         variant="outline"
         size="sm"
         onClick={addRow}
-        className="w-full rounded-xl border-dashed text-slate-500 hover:border-blue-400 hover:bg-blue-50 hover:text-blue-600"
+        className="w-full rounded-xl border-dashed text-slate-500 hover:border-ring hover:bg-primary/5 hover:text-primary"
       >
         <Plus className="h-3.5 w-3.5" />
         Thêm dòng

@@ -58,7 +58,7 @@ function VariantInlineForm({
   }
 
   return (
-    <div className="rounded-xl border border-blue-200 bg-blue-50/50 p-4">
+    <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div>
           <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">SKU *</label>
@@ -66,7 +66,7 @@ function VariantInlineForm({
             value={form.sku}
             onChange={(e) => set('sku', e.target.value)}
             placeholder="SKU-001"
-            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 font-mono text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 font-mono text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
           />
         </div>
         <div>
@@ -75,7 +75,7 @@ function VariantInlineForm({
             value={form.name}
             onChange={(e) => set('name', e.target.value)}
             placeholder="Size S"
-            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
           />
         </div>
         <div>
@@ -86,7 +86,7 @@ function VariantInlineForm({
             value={form.price}
             onChange={(e) => set('price', e.target.value)}
             placeholder="100000"
-            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
           />
         </div>
         <div className="flex items-end">
@@ -299,7 +299,7 @@ export function VariantsEditor({ productId, variants, onChange }: VariantsEditor
           variant="outline"
           size="sm"
           onClick={() => setAdding(true)}
-          className="w-full rounded-xl border-dashed text-slate-500 hover:border-blue-400 hover:bg-blue-50 hover:text-blue-600"
+          className="w-full rounded-xl border-dashed text-slate-500 hover:border-ring hover:bg-primary/5 hover:text-primary"
         >
           <Plus className="h-3.5 w-3.5" />
           Thêm variant

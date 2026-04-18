@@ -15,7 +15,7 @@ export default function DashboardSettingsPage() {
             <input
               type="text"
               defaultValue="NitroTech"
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
           <div>
@@ -23,7 +23,7 @@ export default function DashboardSettingsPage() {
             <input
               type="email"
               defaultValue="contact@nitrotech.vn"
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
           <div>
@@ -31,7 +31,7 @@ export default function DashboardSettingsPage() {
             <input
               type="tel"
               defaultValue="1900 1234"
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
         </div>
@@ -70,7 +70,7 @@ export default function DashboardSettingsPage() {
               <input
                 type="checkbox"
                 defaultChecked={item.checked}
-                className="mt-0.5 h-4 w-4 cursor-pointer rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-500"
+                className="mt-0.5 h-4 w-4 cursor-pointer rounded border-slate-300 text-primary focus:ring-2 focus:ring-ring"
               />
               <div className="flex-1">
                 <div className="text-sm font-medium text-slate-900">{item.label}</div>
@@ -98,7 +98,7 @@ export default function DashboardSettingsPage() {
               <span className="text-sm text-slate-700">{method.name}</span>
               <label className="relative inline-flex cursor-pointer items-center">
                 <input type="checkbox" defaultChecked={method.enabled} className="peer sr-only" />
-                <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-blue-600 peer-focus:ring-2 peer-focus:ring-blue-500 after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white" />
+                <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-primary peer-focus:ring-2 peer-focus:ring-ring after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white" />
               </label>
             </div>
           ))}
@@ -110,7 +110,7 @@ export default function DashboardSettingsPage() {
         <button className="cursor-pointer rounded-xl px-5 py-2.5 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100">
           Hủy
         </button>
-        <button className="cursor-pointer rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700">
+        <button className="cursor-pointer rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90">
           Lưu thay đổi
         </button>
       </div>

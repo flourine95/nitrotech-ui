@@ -89,14 +89,14 @@ function ParentPopover({
               key={opt.id ?? 'root'}
               onClick={() => { onSelect(opt.id); onClose(); }}
               disabled={isCurrent}
-              className={`flex w-full cursor-pointer items-center gap-2 py-2 pr-3 text-left text-sm transition-colors ${isCurrent ? 'cursor-default bg-blue-50 font-medium text-blue-600' : 'text-slate-700 hover:bg-slate-50'}`}
+              className={`flex w-full cursor-pointer items-center gap-2 py-2 pr-3 text-left text-sm transition-colors ${isCurrent ? 'cursor-default bg-primary/5 font-medium text-primary' : 'text-slate-700 hover:bg-slate-50'}`}
               style={{ paddingLeft: `${12 + opt.depth * 16}px` }}
             >
               {opt.depth > 0 && <CornerDownRight className="h-3 w-3 shrink-0 text-slate-300" />}
-              <Folder className={`h-3.5 w-3.5 shrink-0 ${opt.depth === 0 ? 'text-blue-400' : 'text-slate-300'}`} />
+              <Folder className={`h-3.5 w-3.5 shrink-0 ${opt.depth === 0 ? 'text-primary/60' : 'text-slate-300'}`} />
               <span className="truncate">{opt.name}</span>
               {isCurrent && (
-                <span className="ml-auto shrink-0 rounded bg-blue-100 px-1.5 py-0.5 text-[10px] font-semibold text-blue-600">
+                <span className="ml-auto shrink-0 rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
                   hiện tại
                 </span>
               )}
@@ -156,7 +156,7 @@ const NodeRow = memo(function NodeRow({
           <ChevronRight className={`h-3.5 w-3.5 transition-transform duration-200 ${expanded ? 'rotate-90' : ''}`} />
         </button>
 
-        <span className={`shrink-0 ${depth === 0 ? 'text-blue-500' : 'text-slate-400'}`}>
+        <span className={`shrink-0 ${depth === 0 ? 'text-primary' : 'text-slate-400'}`}>
           {expanded && hasChildren ? <FolderOpen className="h-4 w-4" /> : <Folder className="h-4 w-4" />}
         </span>
 
@@ -201,7 +201,7 @@ const NodeRow = memo(function NodeRow({
                 <button
                   ref={anchorRef}
                   onClick={handleTogglePopover}
-                  className={`cursor-pointer rounded-lg border px-2 py-1 text-xs font-medium transition-colors ${popoverPos ? 'border-blue-300 bg-blue-50 text-blue-600' : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-700'}`}
+                  className={`cursor-pointer rounded-lg border px-2 py-1 text-xs font-medium transition-colors ${popoverPos ? 'border-primary/30 bg-primary/5 text-primary' : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-700'}`}
                 >
                   <CornerDownRight className="h-3.5 w-3.5" />
                 </button>

@@ -173,7 +173,7 @@ export default function DashboardProductsPage() {
               void setSearch(e.target.value || null);
               void setCurrentPage(0);
             }}
-            className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pr-4 pl-9 text-sm text-slate-700 outline-none placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+            className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pr-4 pl-9 text-sm text-slate-700 outline-none placeholder:text-slate-400 focus:border-ring focus:ring-2 focus:ring-ring/20"
           />
           {search && (
             <Button

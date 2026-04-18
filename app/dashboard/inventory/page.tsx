@@ -186,7 +186,7 @@ export default function DashboardInventoryPage() {
                       )}
                     </td>
                     <td className="px-5 py-4">
-                      <button className="cursor-pointer rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-600 transition-colors hover:bg-blue-100">
+                      <button className="cursor-pointer rounded-lg bg-primary/5 px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/10">
                         Nhập hàng
                       </button>
                     </td>
