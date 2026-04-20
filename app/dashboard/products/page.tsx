@@ -5,12 +5,14 @@ import { toast } from 'sonner';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { parseAsInteger, parseAsString, parseAsStringEnum, useQueryState } from 'nuqs';
 import {
-  ChevronLeft, ChevronRight, Package,
-  Pencil, Plus, RotateCcw, Search, Trash2, X,
+  ArrowUpDown, ChevronLeft, ChevronRight, Download, Ellipsis, Eye, EyeOff, Package,
+  Pencil, Plus, RotateCcw, Search, Trash2, Upload, X,
 } from 'lucide-react';
 import {
   deleteProduct, getProducts, hardDeleteProduct,
   type Product, restoreProduct, updateProduct,
+  bulkDeleteProducts, bulkRestoreProducts, bulkUpdateActive, bulkHardDeleteProducts,
+  exportProducts,
 } from '@/lib/api/products';
 import type { Category } from '@/lib/api/categories';
 import { getCategories } from '@/lib/api/categories';
@@ -25,8 +27,20 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuSeparator, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from '@/components/ui/table';
 import { useDeferredValue, useState } from 'react';
-import { formatPrice, PAGE_SIZE } from './utils';
+import { formatPrice, PAGE_SIZE, SORT_OPTIONS, type SortValue, productsToCSV, downloadCSV } from './utils';
+import { ProductFilterChips } from './product-filter-chips';
+import { ProductBulkBar } from './product-bulk-bar';
+import { ProductImportDialog } from './product-import-dialog';
 
 type FilterStatus = 'all' | 'active' | 'inactive' | 'deleted';
 
@@ -41,8 +55,16 @@ export default function DashboardProductsPage() {
   const [filterCategoryId, setFilterCategoryId] = useQueryState('cat', parseAsInteger);
   const [filterBrandId, setFilterBrandId] = useQueryState('brand', parseAsInteger);
   const [currentPage, setCurrentPage] = useQueryState('page', parseAsInteger.withDefault(0));
+  const [sortBy, setSortBy] = useQueryState(
+    'sort',
+    parseAsStringEnum<SortValue>(SORT_OPTIONS.map((o) => o.value) as SortValue[]).withDefault('createdAt,desc'),
+  );
 
   const deferredSearch = useDeferredValue(search);
+
+  // Multi-select state
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [showImport, setShowImport] = useState(false);
 
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
   const [restoreTarget, setRestoreTarget] = useState<Product | null>(null);
@@ -52,15 +74,12 @@ export default function DashboardProductsPage() {
   const activeFilter =
     filterStatus === 'active' ? true : filterStatus === 'inactive' ? false : undefined;
 
+  const queryKey = [
+    'products', deferredSearch, filterStatus, filterCategoryId, filterBrandId, currentPage, sortBy,
+  ] as const;
+
   const productsQuery = useQuery({
-    queryKey: [
-      'products',
-      deferredSearch,
-      filterStatus,
-      filterCategoryId,
-      filterBrandId,
-      currentPage,
-    ],
+    queryKey,
     queryFn: () =>
       getProducts({
         search: deferredSearch || undefined,
@@ -70,7 +89,7 @@ export default function DashboardProductsPage() {
         brandId: filterBrandId ?? undefined,
         page: currentPage,
         size: PAGE_SIZE,
-        sort: 'createdAt,desc',
+        sort: sortBy,
       }),
   });
 
@@ -95,7 +114,7 @@ export default function DashboardProductsPage() {
     mutationFn: (product: Product) => updateProduct(product.id, { active: !product.active }),
     onSuccess: (updated) => {
       queryClient.setQueryData(
-        ['products', deferredSearch, filterStatus, filterCategoryId, filterBrandId, currentPage],
+        queryKey,
         (old: typeof productsQuery.data) =>
           old
             ? { ...old, content: old.content.map((p) => (p.id === updated.id ? updated : p)) }
@@ -138,6 +157,107 @@ export default function DashboardProductsPage() {
     onError: () => toast.error('Xóa vĩnh viễn thất bại'),
   });
 
+  // ── Selection helpers ──────────────────────────────────────────────────────
+
+  function toggleSelect(id: number) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    if (selectedIds.size === products.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(products.map((p) => p.id)));
+    }
+  }
+
+  function clearSelection() {
+    setSelectedIds(new Set());
+  }
+
+  // ── Bulk actions ───────────────────────────────────────────────────────────
+
+  async function handleBulkShow() {
+    const ids = [...selectedIds];
+    const r = await bulkUpdateActive(ids, true);
+    toast.success(`Đã hiển thị ${r.success} sản phẩm${r.failed ? `, ${r.failed} thất bại` : ''}`);
+    void queryClient.invalidateQueries({ queryKey: ['products'] });
+    clearSelection();
+  }
+
+  async function handleBulkHide() {
+    const ids = [...selectedIds];
+    const r = await bulkUpdateActive(ids, false);
+    toast.success(`Đã ẩn ${r.success} sản phẩm${r.failed ? `, ${r.failed} thất bại` : ''}`);
+    void queryClient.invalidateQueries({ queryKey: ['products'] });
+    clearSelection();
+  }
+
+  async function handleBulkDelete() {
+    const ids = [...selectedIds];
+    const r = await bulkDeleteProducts(ids);
+    toast.success(`Đã xóa ${r.success} sản phẩm${r.failed ? `, ${r.failed} thất bại` : ''}`);
+    void queryClient.invalidateQueries({ queryKey: ['products'] });
+    clearSelection();
+  }
+
+  async function handleBulkRestore() {
+    const ids = [...selectedIds];
+    const r = await bulkRestoreProducts(ids);
+    toast.success(`Đã khôi phục ${r.success} sản phẩm${r.failed ? `, ${r.failed} thất bại` : ''}`);
+    void queryClient.invalidateQueries({ queryKey: ['products'] });
+    clearSelection();
+  }
+
+  async function handleBulkHardDelete() {
+    const ids = [...selectedIds];
+    const r = await bulkHardDeleteProducts(ids);
+    toast.success(`Đã xóa vĩnh viễn ${r.success} sản phẩm${r.failed ? `, ${r.failed} thất bại` : ''}`);
+    void queryClient.invalidateQueries({ queryKey: ['products'] });
+    clearSelection();
+  }
+
+  // ── Export ─────────────────────────────────────────────────────────────────
+
+  function handleExportSelected() {
+    const selected = products.filter((p) => selectedIds.has(p.id));
+    downloadCSV(productsToCSV(selected), `products-selected-${Date.now()}.csv`);
+    toast.success(`Đã xuất ${selected.length} sản phẩm`);
+  }
+
+  async function handleExportFiltered() {
+    toast.info('Đang xuất dữ liệu...');
+    try {
+      const data = await exportProducts({
+        search: deferredSearch || undefined,
+        active: isDeleted ? undefined : activeFilter,
+        deleted: isDeleted ? true : undefined,
+        categoryId: filterCategoryId ?? undefined,
+        brandId: filterBrandId ?? undefined,
+        sort: sortBy,
+      });
+      downloadCSV(productsToCSV(data.content), `products-export-${Date.now()}.csv`);
+      toast.success(`Đã xuất ${data.content.length} sản phẩm`);
+    } catch {
+      toast.error('Xuất thất bại');
+    }
+  }
+
+  // ── Filter clear helpers ───────────────────────────────────────────────────
+
+  function clearAllFilters() {
+    void setSearch(null);
+    void setFilterCategoryId(null);
+    void setFilterBrandId(null);
+    void setSortBy(null);
+    void setCurrentPage(0);
+    clearSelection();
+  }
+
   const products = productsQuery.data?.content ?? [];
   const totalPages = productsQuery.data?.totalPages ?? 0;
   const totalElements = productsQuery.data?.totalElements ?? 0;
@@ -145,26 +265,42 @@ export default function DashboardProductsPage() {
   const categories = categoriesQuery.data ?? [];
   const brands = brandsQuery.data ?? [];
 
+  const allSelected = products.length > 0 && products.every((p) => selectedIds.has(p.id));
+  const someSelected = products.some((p) => selectedIds.has(p.id)) && !allSelected;
+
+  const categoryName = categories.find((c) => c.id === filterCategoryId)?.name;
+  const brandName = brands.find((b) => b.id === filterBrandId)?.name;
+
   return (
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">Sản phẩm</h1>
-          <p className="mt-0.5 text-sm text-slate-500">Quản lý danh sách sản phẩm</p>
+          <h1 className="text-2xl font-semibold tracking-tight">Sản phẩm</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Quản lý danh sách sản phẩm</p>
         </div>
-        <Button asChild size="lg" className="rounded-xl">
-          <Link href="/dashboard/products/new">
-            <Plus className="h-4 w-4" />
-            Thêm sản phẩm
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setShowImport(true)}>
+            <Upload className="h-4 w-4" />
+            Import
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleExportFiltered}>
+            <Download className="h-4 w-4" />
+            Export
+          </Button>
+          <Button asChild size="sm">
+            <Link href="/dashboard/products/new">
+              <Plus className="h-4 w-4" />
+              Thêm sản phẩm
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {/* Search + filters */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         <div className="relative flex-1">
-          <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
             type="text"
             placeholder="Tìm tên, slug..."
@@ -172,15 +308,16 @@ export default function DashboardProductsPage() {
             onChange={(e) => {
               void setSearch(e.target.value || null);
               void setCurrentPage(0);
+              clearSelection();
             }}
-            className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pr-4 pl-9 text-sm text-slate-700 outline-none placeholder:text-slate-400 focus:border-ring focus:ring-2 focus:ring-ring/20"
+            className="border-input placeholder:text-muted-foreground focus-visible:ring-ring flex h-9 w-full rounded-md border bg-transparent py-1 pr-4 pl-9 text-sm shadow-xs transition-colors focus-visible:ring-1 focus-visible:outline-hidden"
           />
           {search && (
             <Button
               variant="ghost"
-              size="icon-sm"
-              onClick={() => { void setSearch(null); void setCurrentPage(0); }}
-              className="absolute top-1/2 right-2 -translate-y-1/2"
+              size="icon"
+              onClick={() => { void setSearch(null); void setCurrentPage(0); clearSelection(); }}
+              className="absolute top-1/2 right-1 h-7 w-7 -translate-y-1/2"
             >
               <X className="h-3.5 w-3.5" />
             </Button>
@@ -199,8 +336,7 @@ export default function DashboardProductsPage() {
               key={f.value}
               variant={filterStatus === f.value ? 'default' : 'outline'}
               size="sm"
-              onClick={() => { void setFilterStatus(f.value); void setCurrentPage(0); }}
-              className={`rounded-xl text-xs ${filterStatus === f.value && f.value === 'deleted' ? 'border-rose-600 bg-rose-600 hover:bg-rose-700' : ''}`}
+              onClick={() => { void setFilterStatus(f.value); void setCurrentPage(0); clearSelection(); }}
             >
               {f.label}
             </Button>
@@ -210,17 +346,16 @@ export default function DashboardProductsPage() {
             onValueChange={(v) => {
               void setFilterCategoryId(v === 'all' ? null : Number(v));
               void setCurrentPage(0);
+              clearSelection();
             }}
           >
-            <SelectTrigger className="h-9 rounded-xl border-slate-200 bg-white text-xs font-medium text-slate-600">
-              <SelectValue placeholder="Tất cả danh mục" />
+            <SelectTrigger className="h-9 w-auto min-w-36">
+              <SelectValue placeholder="Danh mục" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tất cả danh mục</SelectItem>
               {categories.map((c) => (
-                <SelectItem key={c.id} value={String(c.id)}>
-                  {c.name}
-                </SelectItem>
+                <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -229,198 +364,261 @@ export default function DashboardProductsPage() {
             onValueChange={(v) => {
               void setFilterBrandId(v === 'all' ? null : Number(v));
               void setCurrentPage(0);
+              clearSelection();
             }}
           >
-            <SelectTrigger className="h-9 rounded-xl border-slate-200 bg-white text-xs font-medium text-slate-600">
-              <SelectValue placeholder="Tất cả thương hiệu" />
+            <SelectTrigger className="h-9 w-auto min-w-36">
+              <SelectValue placeholder="Thương hiệu" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tất cả thương hiệu</SelectItem>
               {brands.map((b) => (
-                <SelectItem key={b.id} value={String(b.id)}>
-                  {b.name}
-                </SelectItem>
+                <SelectItem key={b.id} value={String(b.id)}>{b.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={sortBy}
+            onValueChange={(v) => { void setSortBy(v as SortValue); void setCurrentPage(0); }}
+          >
+            <SelectTrigger className="h-9 w-auto min-w-36">
+              <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {SORT_OPTIONS.map((o) => (
+                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
       </div>
 
+      {/* Active filter chips */}
+      <ProductFilterChips
+        search={search}
+        filterStatus={filterStatus}
+        filterCategoryId={filterCategoryId}
+        filterBrandId={filterBrandId}
+        sortBy={sortBy as SortValue}
+        categoryName={categoryName}
+        brandName={brandName}
+        totalElements={totalElements}
+        onClearSearch={() => { void setSearch(null); void setCurrentPage(0); clearSelection(); }}
+        onClearCategory={() => { void setFilterCategoryId(null); void setCurrentPage(0); clearSelection(); }}
+        onClearBrand={() => { void setFilterBrandId(null); void setCurrentPage(0); clearSelection(); }}
+        onClearSort={() => { void setSortBy(null); }}
+        onClearAll={clearAllFilters}
+      />
+
+      {/* Bulk action bar */}
+      <ProductBulkBar
+        selectedCount={selectedIds.size}
+        isDeleted={isDeleted}
+        onClearSelection={clearSelection}
+        onBulkShow={handleBulkShow}
+        onBulkHide={handleBulkHide}
+        onBulkDelete={handleBulkDelete}
+        onBulkRestore={handleBulkRestore}
+        onBulkHardDelete={handleBulkHardDelete}
+        onExportSelected={handleExportSelected}
+      />
+
       {/* Table */}
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+      <div className="rounded-md border">
         {loading ? (
           <div className="space-y-2 p-4">
             {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="h-14 animate-pulse rounded-lg bg-slate-100" />
+              <div key={i} className="h-14 animate-pulse rounded-lg bg-muted" />
             ))}
           </div>
         ) : products.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-slate-400">
-            <Package className="mb-3 h-10 w-10 text-slate-200" />
+          <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+            <Package className="mb-3 h-10 w-10 text-muted-foreground/30" />
             <p className="text-sm font-medium">
-              {search
-                ? `Không tìm thấy "${search}"`
+              {search || filterCategoryId || filterBrandId
+                ? 'Không tìm thấy sản phẩm nào phù hợp'
                 : isDeleted
                   ? 'Không có sản phẩm nào đã xóa'
                   : 'Chưa có sản phẩm nào'}
             </p>
-            {search && (
-              <Button variant="link" size="sm" onClick={() => void setSearch(null)} className="mt-1 h-auto p-0 text-xs">
+            {(search || filterCategoryId || filterBrandId) && (
+              <Button variant="link" size="sm" onClick={clearAllFilters} className="mt-1 h-auto p-0 text-xs">
                 Xóa bộ lọc
               </Button>
             )}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50">
-                  <th className="px-5 py-3.5 text-left text-xs font-semibold tracking-wide text-slate-500 uppercase">
-                    Sản phẩm
-                  </th>
-                  <th className="px-5 py-3.5 text-left text-xs font-semibold tracking-wide text-slate-500 uppercase">
-                    Danh mục / Thương hiệu
-                  </th>
-                  <th className="px-5 py-3.5 text-right text-xs font-semibold tracking-wide text-slate-500 uppercase">
-                    Giá
-                  </th>
-                  <th className="px-5 py-3.5 text-center text-xs font-semibold tracking-wide text-slate-500 uppercase">
-                    Variants
-                  </th>
-                  {!isDeleted && (
-                    <th className="px-5 py-3.5 text-center text-xs font-semibold tracking-wide text-slate-500 uppercase">
-                      Trạng thái
-                    </th>
-                  )}
-                  <th className="px-5 py-3.5" />
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {products.map((p) => (
-                  <tr key={p.id} className="transition-colors hover:bg-slate-50">
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-3">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-xl bg-slate-100 text-xs font-bold text-slate-500">
-                              {p.thumbnail && p.thumbnail.startsWith('http') ? (
-                                <Image src={p.thumbnail} alt={p.name} width={40} height={40} className="h-full w-full object-cover" />
-                              ) : (
-                                <Package className="h-5 w-5 text-slate-300" />
-                              )}
-                            </div>
-                          </TooltipTrigger>
-                          {p.thumbnail && p.thumbnail.startsWith('http') && (
-                            <TooltipContent side="right" className="p-2">
-                              <Image src={p.thumbnail} alt={p.name} width={160} height={160} className="rounded-lg object-contain" />
-                            </TooltipContent>
-                          )}
-                        </Tooltip>
-                        <div>
-                          <p
-                            className={`font-semibold ${p.active ? 'text-slate-900' : 'text-slate-400'}`}
-                          >
-                            {p.name}
-                          </p>
-                          <p className="font-mono text-[11px] text-slate-400">{p.slug}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-5 py-4">
-                      <div className="space-y-0.5">
-                        {p.categoryName && (
-                          <p className="text-xs text-slate-600">{p.categoryName}</p>
-                        )}
-                        {p.brandName && <p className="text-xs text-slate-400">{p.brandName}</p>}
-                        {!p.categoryName && !p.brandName && (
-                          <span className="text-slate-300">—</span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-5 py-4 text-right">
-                      <span className="text-sm font-semibold text-slate-900">
-                        {formatPrice(p.priceMin, p.priceMax)}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4 text-center">
-                      <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
-                        {p.variantCount}
-                      </span>
-                    </td>
-                    {!isDeleted && (
-                      <td className="px-5 py-4 text-center">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span>
-                              <Switch
-                                checked={p.active}
-                                onCheckedChange={() => toggleActiveMutation.mutate(p)}
-                                disabled={toggleActiveMutation.isPending}
-                                aria-label={p.active ? 'Đang hiển thị — nhấn để ẩn' : 'Đang ẩn — nhấn để hiển thị'}
-                              />
-                            </span>
-                          </TooltipTrigger>
-                          <TooltipContent side="top">
-                            <p>
-                              {p.active
-                                ? 'Đang hiển thị — nhấn để ẩn'
-                                : 'Đang ẩn — nhấn để hiển thị'}
-                            </p>
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="w-10 px-4">
+                  <Checkbox
+                    checked={someSelected ? 'indeterminate' : allSelected}
+                    onCheckedChange={toggleSelectAll}
+                    aria-label="Chọn tất cả"
+                  />
+                </TableHead>
+                <TableHead>Sản phẩm</TableHead>
+                <TableHead>Danh mục / Thương hiệu</TableHead>
+                <TableHead className="text-right">Giá</TableHead>
+                <TableHead className="text-center">Variants</TableHead>
+                {!isDeleted && <TableHead className="text-center">Trạng thái</TableHead>}
+                <TableHead />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {products.map((p) => (
+                <TableRow
+                  key={p.id}
+                  data-state={selectedIds.has(p.id) ? 'selected' : undefined}
+                >
+                  <TableCell className="px-4">
+                    <Checkbox
+                      checked={selectedIds.has(p.id)}
+                      onCheckedChange={() => toggleSelect(p.id)}
+                      aria-label={`Chọn ${p.name}`}
+                    />
+                  </TableCell>
+
+                  {/* Product */}
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="bg-muted relative size-10 shrink-0 overflow-hidden rounded-md">
+                            {p.thumbnail && p.thumbnail.startsWith('http') ? (
+                              <Image src={p.thumbnail} alt={p.name} fill className="object-cover" sizes="40px" />
+                            ) : (
+                              <Package className="absolute inset-0 m-auto h-5 w-5 text-muted-foreground" />
+                            )}
+                          </div>
+                        </TooltipTrigger>
+                        {p.thumbnail && p.thumbnail.startsWith('http') && (
+                          <TooltipContent side="right" className="p-1.5">
+                            <Image src={p.thumbnail} alt={p.name} width={160} height={160} className="rounded object-contain" />
                           </TooltipContent>
-                        </Tooltip>
-                      </td>
-                    )}
-                    <td className="px-5 py-4">
-                      <div className="flex items-center justify-end gap-1">
-                        {isDeleted ? (
-                          <>
-                            <Button variant="outline" size="sm" onClick={() => setRestoreTarget(p)} className="rounded-lg text-xs hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700">
-                              <RotateCcw className="h-3.5 w-3.5" /> Khôi phục
-                            </Button>
-                            <Button variant="outline" size="sm" onClick={() => setHardDeleteTarget(p)} className="rounded-lg text-xs hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700">
-                              <Trash2 className="h-3.5 w-3.5" /> Xóa vĩnh viễn
-                            </Button>
-                          </>
-                        ) : (
-                          <>
-                            <Button variant="ghost" size="icon-sm" asChild className="rounded-lg text-slate-400 hover:bg-amber-50 hover:text-amber-600">
-                              <Link href={`/dashboard/products/${p.id}/edit`} aria-label={`Sửa ${p.name}`}>
-                                <Pencil className="h-4 w-4" />
-                              </Link>
-                            </Button>
-                            <Button variant="ghost" size="icon-sm" onClick={() => setDeleteTarget(p)} className="rounded-lg text-slate-400 hover:bg-rose-50 hover:text-rose-600" aria-label={`Xóa ${p.name}`}>
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </>
                         )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                      </Tooltip>
+                      <span className={`max-w-[260px] truncate text-sm font-medium ${!p.active ? 'text-muted-foreground' : ''}`}>
+                        {p.name}
+                      </span>
+                    </div>
+                  </TableCell>
+
+                  {/* Category / Brand */}
+                  <TableCell>
+                    <div className="flex flex-col gap-0.5">
+                      {p.categoryName && (
+                        <Badge variant="secondary" className="w-fit font-normal">{p.categoryName}</Badge>
+                      )}
+                      {p.brandName && (
+                        <span className="text-xs text-muted-foreground">{p.brandName}</span>
+                      )}
+                      {!p.categoryName && !p.brandName && <span className="text-muted-foreground">—</span>}
+                    </div>
+                  </TableCell>
+
+                  {/* Price */}
+                  <TableCell className="text-right text-sm text-muted-foreground">
+                    {formatPrice(p.priceMin, p.priceMax)}
+                  </TableCell>
+
+                  {/* Variants */}
+                  <TableCell className="text-center">
+                    <Badge variant="secondary" className="font-normal">{p.variantCount}</Badge>
+                  </TableCell>
+
+                  {/* Status toggle */}
+                  {!isDeleted && (
+                    <TableCell className="text-center">
+                      <Switch
+                        checked={p.active}
+                        onCheckedChange={() => toggleActiveMutation.mutate(p)}
+                        disabled={toggleActiveMutation.isPending}
+                        aria-label={p.active ? 'Đang hiển thị' : 'Đang ẩn'}
+                      />
+                    </TableCell>
+                  )}
+
+                  {/* Actions */}
+                  <TableCell>
+                    <div className="flex justify-end">
+                      {isDeleted ? (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="size-8 rounded-full text-muted-foreground" aria-label={`Hành động cho ${p.name}`}>
+                              <Ellipsis className="size-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => setRestoreTarget(p)}>
+                              <RotateCcw className="h-4 w-4" /> Khôi phục
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem variant="destructive" onClick={() => setHardDeleteTarget(p)}>
+                              <Trash2 className="h-4 w-4" /> Xóa vĩnh viễn
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      ) : (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="size-8 rounded-full text-muted-foreground" aria-label={`Hành động cho ${p.name}`}>
+                              <Ellipsis className="size-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem asChild>
+                              <Link href={`/dashboard/products/${p.id}`}>
+                                <Eye className="h-4 w-4" /> Xem chi tiết
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                              <Link href={`/dashboard/products/${p.id}/edit`}>
+                                <Pencil className="h-4 w-4" /> Chỉnh sửa
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => toggleActiveMutation.mutate(p)}>
+                              {p.active
+                                ? <><EyeOff className="h-4 w-4" /> Ẩn</>
+                                : <><Eye className="h-4 w-4" /> Hiển thị</>
+                              }
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem variant="destructive" onClick={() => setDeleteTarget(p)}>
+                              <Trash2 className="h-4 w-4" /> Xóa
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         )}
 
         {/* Footer: count + pagination */}
         {!loading && totalElements > 0 && (
-          <div className="flex items-center justify-between border-t border-slate-100 px-4 py-2.5">
-            <p className="text-xs text-slate-400">
+          <div className="flex items-center justify-between border-t px-4 py-3">
+            <p className="text-sm text-muted-foreground">
               {totalElements} sản phẩm · trang {currentPage + 1}/{totalPages}
             </p>
             <div className="flex items-center gap-1">
-              <Button variant="outline" size="icon-sm" onClick={() => void setCurrentPage(Math.max(0, currentPage - 1))} disabled={currentPage === 0} className="rounded-lg">
+              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => void setCurrentPage(Math.max(0, currentPage - 1))} disabled={currentPage === 0}>
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
                 const p = totalPages <= 7 ? i : currentPage < 4 ? i : currentPage > totalPages - 4 ? totalPages - 7 + i : currentPage - 3 + i;
                 return (
-                  <Button key={p} variant={currentPage === p ? 'default' : 'outline'} size="icon-sm" onClick={() => void setCurrentPage(p)} className="rounded-lg text-xs">
+                  <Button key={p} variant={currentPage === p ? 'default' : 'outline'} size="icon" className="h-8 w-8 text-xs" onClick={() => void setCurrentPage(p)}>
                     {p + 1}
                   </Button>
                 );
               })}
-              <Button variant="outline" size="icon-sm" onClick={() => void setCurrentPage(Math.min(totalPages - 1, currentPage + 1))} disabled={currentPage >= totalPages - 1} className="rounded-lg">
+              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => void setCurrentPage(Math.min(totalPages - 1, currentPage + 1))} disabled={currentPage >= totalPages - 1}>
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
@@ -504,6 +702,13 @@ export default function DashboardProductsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Import dialog */}
+      <ProductImportDialog
+        open={showImport}
+        onClose={() => setShowImport(false)}
+        onSuccess={() => void queryClient.invalidateQueries({ queryKey: ['products'] })}
+      />
     </div>
   );
 }

@@ -1,15 +1,15 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { ArrowLeft, ImageIcon, Save } from 'lucide-react';
+import { ArrowLeft, ImagePlus } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-
+import { Separator } from '@/components/ui/separator';
 import {
   createProduct,
   type CreateProductBody,
@@ -25,20 +25,36 @@ import { ApiException } from '@/lib/client';
 import { slugify } from '@/lib/utils';
 import { productSchema, type ProductFormData } from '@/lib/schemas/products';
 import MediaPickerDialog from '@/components/media-picker-dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { KeyValueEditor } from './key-value-editor';
 import { GalleryEditor } from './gallery-editor';
 import { VariantsEditor } from './variants-editor';
-
+import { RichTextEditor } from './rich-text-editor';
 
 interface ProductFormProps {
-  product?: Product; // undefined = create mode
+  product?: Product;
+}
+
+const inputCls = (hasError?: boolean) =>
+  `border-input placeholder:text-muted-foreground focus-visible:ring-ring flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:ring-1 focus-visible:outline-hidden disabled:cursor-not-allowed disabled:opacity-50${hasError ? ' border-destructive' : ''}`;
+
+const labelCls = 'text-sm font-medium';
+
+function FieldError({ message }: { message?: string }) {
+  if (!message) return null;
+  return <p className="mt-1 text-xs text-destructive">{message}</p>;
+}
+
+function Card({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
+  return (
+    <div className="bg-card text-card-foreground rounded-2xl border">
+      <div className="flex flex-col space-y-1 p-6">
+        <p className="font-semibold tracking-tight">{title}</p>
+        {description && <p className="text-muted-foreground text-sm">{description}</p>}
+      </div>
+      <div className="p-6 pt-0">{children}</div>
+    </div>
+  );
 }
 
 export function ProductForm({ product }: ProductFormProps) {
@@ -61,6 +77,7 @@ export function ProductForm({ product }: ProductFormProps) {
     setValue,
     watch,
     setError,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
@@ -74,15 +91,7 @@ export function ProductForm({ product }: ProductFormProps) {
           thumbnail: product.thumbnail ?? '',
           active: product.active,
         }
-      : {
-          name: '',
-          slug: '',
-          description: '',
-          categoryId: undefined,
-          brandId: null,
-          thumbnail: '',
-          active: true,
-        },
+      : { name: '', slug: '', description: '', categoryId: undefined, brandId: null, thumbnail: '', active: true },
   });
 
   const name = watch('name');
@@ -96,9 +105,7 @@ export function ProductForm({ product }: ProductFormProps) {
   useEffect(() => {
     Promise.all([getCategories({ tree: false }), getBrands({ size: 100 })])
       .then(([cats, brnds]) => {
-        const catList = Array.isArray(cats)
-          ? cats
-          : ((cats as { content: Category[] }).content ?? []);
+        const catList = Array.isArray(cats) ? cats : ((cats as { content: Category[] }).content ?? []);
         setCategories(catList);
         setBrands(brnds.content);
       })
@@ -114,7 +121,7 @@ export function ProductForm({ product }: ProductFormProps) {
           thumbnail: data.thumbnail || null,
           brandId: data.brandId ?? null,
           specs: Object.keys(specs).length > 0 ? specs : null,
-          images, // always send current images array
+          images,
         });
         toast.success('Đã cập nhật sản phẩm');
         router.push('/dashboard/products');
@@ -126,7 +133,7 @@ export function ProductForm({ product }: ProductFormProps) {
           brandId: data.brandId ?? null,
           specs: Object.keys(specs).length > 0 ? specs : null,
           images,
-          variants: [], // variants added after creation via VariantsEditor
+          variants: [],
         };
         const created = await createProduct(body);
         toast.success('Đã tạo sản phẩm');
@@ -145,222 +152,223 @@ export function ProductForm({ product }: ProductFormProps) {
     }
   }
 
-  const inputCls = (hasError: boolean) =>
-    `w-full rounded-xl border px-3.5 py-2.5 text-sm outline-none transition-colors focus:ring-2 ${hasError ? 'border-rose-300 bg-rose-50 focus:ring-rose-100' : 'border-slate-200 bg-slate-50 focus:border-ring focus:bg-white focus:ring-ring/20'}`;
-
-  const labelCls = 'mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500';
-
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate>
-      <div className="mb-4 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon-sm" asChild className="rounded-lg text-slate-400">
-            <Link href="/dashboard/products">
+      {/* Page header */}
+      <div className="mb-6 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
+            <Link href="/dashboard/products" aria-label="Quay lại">
               <ArrowLeft className="h-4 w-4" />
             </Link>
           </Button>
-          <div>
-            <h1 className="text-xl font-bold text-slate-900">
-              {isEdit ? 'Sửa sản phẩm' : 'Thêm sản phẩm'}
-            </h1>
-            {isEdit && <p className="text-xs text-slate-400">ID #{product!.id}</p>}
-          </div>
+          <Link href="/dashboard/products" className="hover:text-foreground">Sản phẩm</Link>
+          <span>/</span>
+          <span className="text-foreground font-medium">
+            {isEdit ? product!.name : 'Thêm mới'}
+          </span>
         </div>
-        <Button type="submit" disabled={isSubmitting} size="lg" className="rounded-xl">
-          <Save className="h-4 w-4" />
-          {isSubmitting ? 'Đang lưu...' : isEdit ? 'Cập nhật' : 'Tạo sản phẩm'}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button type="button" variant="outline" asChild>
+            <Link href="/dashboard/products">Hủy</Link>
+          </Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Đang lưu...' : isEdit ? 'Cập nhật' : 'Lưu sản phẩm'}
+          </Button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* ── Left column (2/3) ── */}
-        <div className="space-y-6 lg:col-span-2">
-          {/* Basic info */}
-          <div className="rounded-xl border border-slate-200 bg-white p-5">
-            <h2 className="mb-4 text-sm font-semibold text-slate-900">Thông tin cơ bản</h2>
-            <div className="space-y-4">
+      {/* Body: 2-col grid */}
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.55fr)_minmax(320px,0.78fr)]">
+
+        {/* ── Left column ── */}
+        <div className="flex flex-col gap-6">
+
+          <Card title="Thông tin sản phẩm" description="Tên, slug và mô tả hiển thị với khách hàng.">
+            <div className="flex flex-col gap-4">
               <div>
-                <label className={labelCls}>
-                  Tên sản phẩm <span className="text-rose-500">*</span>
+                <label className={labelCls} htmlFor="name">
+                  Tên sản phẩm <span className="text-destructive">*</span>
                 </label>
                 <input
+                  id="name"
                   {...register('name')}
                   placeholder="VD: iPhone 16 Pro Max"
                   autoFocus
-                  className={inputCls(!!errors.name)}
+                  className={`mt-1.5 ${inputCls(!!errors.name)}`}
                 />
-                {errors.name && <p className="mt-1 text-xs text-rose-500">{errors.name.message}</p>}
+                <FieldError message={errors.name?.message} />
               </div>
+
               <div>
-                <label className={labelCls}>
-                  Slug <span className="text-rose-500">*</span>
+                <label className={labelCls} htmlFor="slug">
+                  Slug <span className="text-destructive">*</span>
                 </label>
-                <div className="relative">
-                  <span className="absolute top-1/2 left-3.5 -translate-y-1/2 text-xs text-slate-400 select-none">
-                    /
-                  </span>
+                <div className="relative mt-1.5">
+                  <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm text-muted-foreground select-none">/</span>
                   <input
+                    id="slug"
                     {...register('slug')}
                     placeholder="iphone-16-pro-max"
-                    onFocus={() => {
-                      slugTouched.current = true;
-                    }}
-                    className={`w-full rounded-xl border py-2.5 pr-3.5 pl-6 font-mono text-sm transition-colors outline-none focus:ring-2 ${errors.slug ? 'border-rose-300 bg-rose-50 focus:ring-rose-100' : 'border-slate-200 bg-slate-50 focus:border-ring focus:bg-white focus:ring-ring/20'}`}
+                    onFocus={() => { slugTouched.current = true; }}
+                    className={`${inputCls(!!errors.slug)} pl-6 font-mono`}
                   />
                 </div>
-                {errors.slug && <p className="mt-1 text-xs text-rose-500">{errors.slug.message}</p>}
+                <FieldError message={errors.slug?.message} />
               </div>
+
               <div>
-                <label className={labelCls}>Mô tả</label>
-                <textarea
-                  {...register('description')}
-                  rows={4}
-                  placeholder="Mô tả chi tiết sản phẩm..."
-                  className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm transition-colors outline-none focus:border-ring focus:bg-white focus:ring-2 focus:ring-ring/20"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Specs */}
-          <div className="rounded-xl border border-slate-200 bg-white p-5">
-            <h2 className="mb-4 text-sm font-semibold text-slate-900">Thông số kỹ thuật</h2>
-            <KeyValueEditor
-              value={specs}
-              onChange={setSpecs}
-              keyPlaceholder="VD: RAM"
-              valuePlaceholder="VD: 8GB"
-            />
-          </div>
-
-          {/* Gallery */}
-          <div className="rounded-xl border border-slate-200 bg-white p-5">
-            <h2 className="mb-1 text-sm font-semibold text-slate-900">Thư viện ảnh</h2>
-            <p className="mb-4 text-xs text-slate-400">
-              Kéo để sắp xếp thứ tự. Ảnh đầu tiên là ảnh chính trong gallery.
-            </p>
-            <GalleryEditor images={images} onChange={setImages} />
-          </div>
-
-          {/* Variants */}
-          {isEdit && (
-            <div className="rounded-xl border border-slate-200 bg-white p-5">
-              <div className="mb-4 flex items-center justify-between">
-                <div>
-                  <h2 className="text-sm font-semibold text-slate-900">Variants</h2>
-                  <p className="text-xs text-slate-400">{variants.length} variant</p>
+                <label className={labelCls} htmlFor="description">Mô tả</label>
+                <div className="mt-1.5">
+                  <Controller
+                    name="description"
+                    control={control}
+                    render={({ field }) => (
+                      <RichTextEditor
+                        content={field.value ?? ''}
+                        onChange={field.onChange}
+                        disabled={isSubmitting}
+                      />
+                    )}
+                  />
                 </div>
               </div>
-              <VariantsEditor productId={product!.id} variants={variants} onChange={setVariants} />
             </div>
+          </Card>
+
+          <Card title="Thư viện ảnh" description="Kéo để sắp xếp thứ tự. Ảnh đầu tiên là ảnh chính.">
+            <GalleryEditor images={images} onChange={setImages} />
+          </Card>
+
+          <Card title="Thông số kỹ thuật" description="Các thông số chi tiết của sản phẩm.">
+            <KeyValueEditor value={specs} onChange={setSpecs} keyPlaceholder="VD: RAM" valuePlaceholder="VD: 8GB" />
+          </Card>
+
+          {isEdit && (
+            <Card title="Variants" description={`${variants.length} variant đã tạo.`}>
+              <VariantsEditor productId={product!.id} variants={variants} onChange={setVariants} />
+            </Card>
           )}
 
           {!isEdit && (
-            <div className="rounded-xl border border-primary/10 bg-primary/5 px-4 py-3 text-xs text-primary">
+            <p className="text-sm text-muted-foreground px-1">
               Sau khi tạo sản phẩm, bạn có thể thêm variants trong trang chỉnh sửa.
-            </div>
+            </p>
           )}
         </div>
 
-        {/* ── Right column (1/3) ── */}
-        <div className="space-y-4 lg:sticky lg:top-4 lg:self-start">
-          {/* Thumbnail */}
-          <div className="rounded-xl border border-slate-200 bg-white p-5">
-            <h2 className="mb-3 text-sm font-semibold text-slate-900">Thumbnail</h2>
-            {/* Đã thêm class 'relative' vào div bọc ngoài để Image fill hoạt động */}
-            <div
-              className="relative mb-3 flex aspect-video cursor-pointer items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 transition-colors hover:border-ring hover:bg-primary/5"
-              onClick={() => setShowThumbPicker(true)}
-            >
-              {thumbnail && thumbnail.startsWith('http') ? (
-                <Image
-                  src={thumbnail}
-                  alt="Thumbnail"
-                  fill
-                  sizes="(max-width: 768px) 100vw, 33vw"
-                  className="object-cover"
-                />
-              ) : (
-                <div className="flex flex-col items-center gap-2 text-slate-400">
-                  <ImageIcon className="h-8 w-8" />
-                  <span className="text-xs">Nhấn để chọn ảnh</span>
+        {/* ── Right column ── */}
+        <div className="flex flex-col gap-4 xl:self-start xl:sticky xl:top-4">
+          {/* Wrapper dashed như mẫu */}
+          <div className="bg-muted/35 flex flex-col gap-4 rounded-[28px] border border-dashed p-3">
+
+            {/* Thumbnail */}
+            <div className="bg-background/95 border-border/80 rounded-2xl border shadow-sm">
+              <div className="p-6 pb-3">
+                <p className="font-semibold tracking-tight">Thumbnail</p>
+                <p className="text-muted-foreground text-sm">Ảnh đại diện hiển thị trong danh sách.</p>
+              </div>
+              <div className="px-6 pb-6 flex flex-col gap-3">
+                {/* Preview */}
+                <div
+                  className="bg-muted/50 relative flex aspect-square w-20 cursor-pointer items-center justify-center overflow-hidden rounded-2xl border border-dashed transition-colors hover:border-ring"
+                  onClick={() => setShowThumbPicker(true)}
+                >
+                  {thumbnail && thumbnail.startsWith('http') ? (
+                    <Image src={thumbnail} alt="Thumbnail" fill sizes="80px" className="object-cover rounded-2xl" />
+                  ) : (
+                    <ImagePlus className="text-muted-foreground/70 h-5 w-5" />
+                  )}
                 </div>
-              )}
+                <div className="flex flex-wrap gap-2">
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setShowThumbPicker(true)}>
+                    Chọn ảnh
+                  </Button>
+                  {thumbnail && (
+                    <Button type="button" variant="ghost" size="sm" disabled={!thumbnail} onClick={() => setValue('thumbnail', '')}>
+                      Xóa
+                    </Button>
+                  )}
+                </div>
+                <input
+                  {...register('thumbnail')}
+                  placeholder="Hoặc nhập URL ảnh..."
+                  className={inputCls(!!errors.thumbnail)}
+                />
+                <FieldError message={errors.thumbnail?.message} />
+              </div>
             </div>
-            <input
-              {...register('thumbnail')}
-              placeholder="Hoặc nhập URL..."
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs transition-colors outline-none focus:border-ring focus:bg-white focus:ring-2 focus:ring-ring/20"
-            />
-            {errors.thumbnail && (
-              <p className="mt-1 text-xs text-rose-500">{errors.thumbnail.message}</p>
-            )}
-          </div>
 
-          {/* Category + Brand */}
-          <div className="rounded-xl border border-slate-200 bg-white p-5">
-            <h2 className="mb-3 text-sm font-semibold text-slate-900">Phân loại</h2>
-            <div className="space-y-3">
-              <div>
-                <label className={labelCls}>
-                  Danh mục <span className="text-rose-500">*</span>
-                </label>
-                <Select
-                  value={watch('categoryId') ? String(watch('categoryId')) : ''}
-                  onValueChange={(v) => setValue('categoryId', Number(v), { shouldValidate: true })}
-                >
-                  <SelectTrigger
-                    className={`w-full rounded-xl py-2.5 text-sm ${errors.categoryId ? 'border-rose-300 bg-rose-50' : 'border-slate-200 bg-slate-50'}`}
+            {/* Organization */}
+            <div className="bg-background/95 border-border/80 rounded-2xl border shadow-sm">
+              <div className="p-6 pb-3">
+                <p className="font-semibold tracking-tight">Phân loại</p>
+                <p className="text-muted-foreground text-sm">Gắn danh mục và thương hiệu cho sản phẩm.</p>
+              </div>
+              <div className="px-6 pb-6 flex flex-col gap-4">
+                <div>
+                  <label className={labelCls} htmlFor="categoryId">
+                    Danh mục <span className="text-destructive">*</span>
+                  </label>
+                  <Select
+                    value={watch('categoryId') ? String(watch('categoryId')) : ''}
+                    onValueChange={(v) => setValue('categoryId', Number(v), { shouldValidate: true })}
                   >
-                    <SelectValue placeholder="— Chọn danh mục —" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((c) => (
-                      <SelectItem key={c.id} value={String(c.id)}>
-                        {c.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {errors.categoryId && (
-                  <p className="mt-1 text-xs text-rose-500">{errors.categoryId.message}</p>
-                )}
-              </div>
-              <div>
-                <label className={labelCls}>Thương hiệu</label>
-                <Select
-                  value={watch('brandId') ? String(watch('brandId')) : 'none'}
-                  onValueChange={(v) => setValue('brandId', v === 'none' ? null : Number(v))}
-                >
-                  <SelectTrigger className="w-full rounded-xl border-slate-200 bg-slate-50 py-2.5 text-sm">
-                    <SelectValue placeholder="— Không có —" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">— Không có —</SelectItem>
-                    {brands.map((b) => (
-                      <SelectItem key={b.id} value={String(b.id)}>
-                        {b.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
+                    <SelectTrigger id="categoryId" className={`mt-1.5 w-full${errors.categoryId ? ' border-destructive' : ''}`}>
+                      <SelectValue placeholder="Chọn danh mục" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((c) => (
+                        <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FieldError message={errors.categoryId?.message} />
+                </div>
 
-          {/* Active toggle */}
-          <div className="rounded-xl border border-slate-200 bg-white p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-700">Hiển thị trên cửa hàng</p>
-                <p className="text-xs text-slate-400">Khách hàng có thể thấy sản phẩm này</p>
+                <div>
+                  <label className={labelCls} htmlFor="brandId">Thương hiệu</label>
+                  <Select
+                    value={watch('brandId') ? String(watch('brandId')) : 'none'}
+                    onValueChange={(v) => setValue('brandId', v === 'none' ? null : Number(v))}
+                  >
+                    <SelectTrigger id="brandId" className="mt-1.5 w-full">
+                      <SelectValue placeholder="Không có" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Không có</SelectItem>
+                      {brands.map((b) => (
+                        <SelectItem key={b.id} value={String(b.id)}>{b.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <Switch
-                checked={active}
-                onCheckedChange={(val) => setValue('active', val)}
-                aria-label="Hiển thị trên cửa hàng"
-              />
             </div>
+
+            {/* Status */}
+            <div className="bg-background/95 border-border/80 rounded-2xl border shadow-sm">
+              <div className="p-6 pb-3">
+                <p className="font-semibold tracking-tight">Trạng thái</p>
+                <p className="text-muted-foreground text-sm">Kiểm soát hiển thị trên cửa hàng.</p>
+              </div>
+              <div className="px-6 pb-6">
+                <Separator className="mb-4" />
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex flex-col gap-1">
+                    <label className={labelCls} htmlFor="active">Hiển thị trên cửa hàng</label>
+                    <p className="text-muted-foreground text-xs">Tắt để ẩn sản phẩm khỏi khách hàng.</p>
+                  </div>
+                  <Switch
+                    id="active"
+                    checked={active}
+                    onCheckedChange={(val) => setValue('active', val)}
+                    aria-label="Hiển thị trên cửa hàng"
+                  />
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>

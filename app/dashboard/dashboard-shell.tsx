@@ -29,14 +29,6 @@ import {
 } from '@/components/ui/sidebar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
@@ -88,13 +80,6 @@ export function DashboardShell({
 
   const displayName = user?.name ?? 'Admin';
   const displayEmail = user?.email ?? 'admin@nitrotech.vn';
-
-  // Breadcrumb label từ pathname
-  const segments = pathname.split('/').filter(Boolean);
-  const currentLabel =
-    segments.length > 1
-      ? segments[segments.length - 1].charAt(0).toUpperCase() + segments[segments.length - 1].slice(1)
-      : 'Dashboard';
 
   async function handleLogout() {
     try {
@@ -161,24 +146,6 @@ export function DashboardShell({
             <div className="flex items-center gap-4">
               <SidebarTrigger className="[&_svg]:!size-5" />
               <Separator orientation="vertical" className="hidden !h-4 sm:block" />
-              <Breadcrumb className="hidden sm:block">
-                <BreadcrumbList>
-                  <BreadcrumbItem>
-                    <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
-                  </BreadcrumbItem>
-                  {segments.length > 1 && (
-                    <>
-                      <BreadcrumbSeparator />
-                      <BreadcrumbItem>
-                        <BreadcrumbPage>{currentLabel}</BreadcrumbPage>
-                      </BreadcrumbItem>
-                    </>
-                  )}
-                </BreadcrumbList>
-              </Breadcrumb>
-            </div>
-
-            <div className="flex items-center gap-1.5">
               {/* Search — desktop */}
               <div className="relative hidden sm:block">
                 <SearchIcon className="text-muted-foreground/60 absolute top-1/2 left-3 size-4 -translate-y-1/2" />
@@ -189,6 +156,9 @@ export function DashboardShell({
                   aria-label="Tìm kiếm"
                 />
               </div>
+            </div>
+
+            <div className="flex items-center gap-1.5">
               {/* Search — mobile icon */}
               <Button variant="ghost" size="icon" className="sm:hidden" aria-label="Tìm kiếm">
                 <SearchIcon />

@@ -152,3 +152,72 @@ export async function deleteVariant(productId: number, variantId: number): Promi
     { method: 'DELETE' },
   );
 }
+
+// ── Bulk actions ──────────────────────────────────────────────────────────────
+
+export interface BulkActionResult {
+  success: number;
+  failed: number;
+  errors?: { id: number; message: string }[];
+}
+
+export async function bulkDeleteProducts(ids: number[]): Promise<BulkActionResult> {
+  const results = await Promise.allSettled(ids.map((id) => deleteProduct(id)));
+  const failed = results.filter((r) => r.status === 'rejected');
+  return { success: results.length - failed.length, failed: failed.length };
+}
+
+export async function bulkRestoreProducts(ids: number[]): Promise<BulkActionResult> {
+  const results = await Promise.allSettled(ids.map((id) => restoreProduct(id)));
+  const failed = results.filter((r) => r.status === 'rejected');
+  return { success: results.length - failed.length, failed: failed.length };
+}
+
+export async function bulkUpdateActive(ids: number[], active: boolean): Promise<BulkActionResult> {
+  const results = await Promise.allSettled(ids.map((id) => updateProduct(id, { active })));
+  const failed = results.filter((r) => r.status === 'rejected');
+  return { success: results.length - failed.length, failed: failed.length };
+}
+
+export async function bulkHardDeleteProducts(ids: number[]): Promise<BulkActionResult> {
+  const results = await Promise.allSettled(ids.map((id) => hardDeleteProduct(id)));
+  const failed = results.filter((r) => r.status === 'rejected');
+  return { success: results.length - failed.length, failed: failed.length };
+}
+
+// ── Export ────────────────────────────────────────────────────────────────────
+
+export async function exportProducts(query?: ProductsQuery): Promise<Page<Product>> {
+  // Fetch all pages for export (up to 10k)
+  const q = new URLSearchParams();
+  if (query?.search?.trim()) q.set('search', query.search.trim());
+  if (query?.active !== undefined) q.set('active', String(query.active));
+  if (query?.deleted !== undefined) q.set('deleted', String(query.deleted));
+  if (query?.categoryId !== undefined) q.set('categoryId', String(query.categoryId));
+  if (query?.brandId !== undefined) q.set('brandId', String(query.brandId));
+  q.set('page', '0');
+  q.set('size', '10000');
+  if (query?.sort) q.set('sort', query.sort);
+  const qs = q.toString() ? `?${q}` : '';
+  const res = await apiFetch<{ data: Page<Product> }>(`/api/products${qs}`);
+  return res.data;
+}
+
+// ── Import ────────────────────────────────────────────────────────────────────
+
+export interface ImportRow {
+  name: string;
+  slug: string;
+  description?: string;
+  categoryId: number;
+  brandId?: number;
+  thumbnail?: string;
+  active: boolean;
+  priceMin?: number;
+}
+
+export interface ImportResult {
+  success: number;
+  failed: number;
+  errors: { row: number; message: string }[];
+}
