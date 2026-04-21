@@ -2,7 +2,7 @@
 
 import { useEffect, useCallback, useMemo } from 'react';
 import { useDebouncedCallback } from 'use-debounce';
-import { EditorContent, useEditor } from '@tiptap/react';
+import { EditorContent, useEditor, type Editor } from '@tiptap/react';
 import { RichTextProvider } from 'reactjs-tiptap-editor';
 import { localeActions } from 'reactjs-tiptap-editor/locale-bundle';
 import { Document } from '@tiptap/extension-document';
@@ -80,7 +80,7 @@ export function RichTextEditor({ content, onChange, disabled = false }: RichText
   const debouncedOnChange = useDebouncedCallback(onChange, 300);
 
   const handleUpdate = useCallback(
-    ({ editor }: any) => {
+    ({ editor }: { editor: Editor }) => {
       const html = editor.getHTML();
       const normalized = html === '<p></p>' ? '' : html;
       debouncedOnChange(normalized);
@@ -107,7 +107,7 @@ export function RichTextEditor({ content, onChange, disabled = false }: RichText
     if (!editor) return;
     const current = editor.getHTML();
     const normalized = content || '';
-    if (current !== normalized && (normalized === '' || normalized !== current)) {
+    if (current !== normalized) {
       editor.commands.setContent(normalized, { emitUpdate: false });
     }
   }, [content, editor]);

@@ -102,7 +102,6 @@ export function ProductForm({ product }: ProductFormProps) {
 
   const name = watch('name');
   const thumbnail = watch('thumbnail');
-  const active = watch('active');
 
   useEffect(() => {
     if (!slugTouched.current && name) setValue('slug', slugify(name));
@@ -291,7 +290,7 @@ export function ProductForm({ product }: ProductFormProps) {
                     Chọn ảnh
                   </Button>
                   {thumbnail && (
-                    <Button type="button" variant="ghost" size="sm" disabled={!thumbnail} onClick={() => setValue('thumbnail', '')}>
+                    <Button type="button" variant="ghost" size="sm" onClick={() => setValue('thumbnail', '')}>
                       Xóa
                     </Button>
                   )}
@@ -316,38 +315,50 @@ export function ProductForm({ product }: ProductFormProps) {
                   <label className={labelCls} htmlFor="categoryId">
                     Danh mục <span className="text-destructive">*</span>
                   </label>
-                  <Select
-                    value={watch('categoryId') ? String(watch('categoryId')) : ''}
-                    onValueChange={(v) => setValue('categoryId', Number(v), { shouldValidate: true })}
-                  >
-                    <SelectTrigger id="categoryId" className={`mt-1.5 w-full${errors.categoryId ? ' border-destructive' : ''}`}>
-                      <SelectValue placeholder="Chọn danh mục" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((c) => (
-                        <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Controller
+                    name="categoryId"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        value={field.value ? String(field.value) : ''}
+                        onValueChange={(v) => field.onChange(Number(v))}
+                      >
+                        <SelectTrigger id="categoryId" className={`mt-1.5 w-full${errors.categoryId ? ' border-destructive' : ''}`}>
+                          <SelectValue placeholder="Chọn danh mục" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {categories.map((c) => (
+                            <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
                   <FieldError message={errors.categoryId?.message} />
                 </div>
 
                 <div>
                   <label className={labelCls} htmlFor="brandId">Thương hiệu</label>
-                  <Select
-                    value={watch('brandId') ? String(watch('brandId')) : 'none'}
-                    onValueChange={(v) => setValue('brandId', v === 'none' ? null : Number(v))}
-                  >
-                    <SelectTrigger id="brandId" className="mt-1.5 w-full">
-                      <SelectValue placeholder="Không có" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Không có</SelectItem>
-                      {brands.map((b) => (
-                        <SelectItem key={b.id} value={String(b.id)}>{b.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Controller
+                    name="brandId"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        value={field.value ? String(field.value) : 'none'}
+                        onValueChange={(v) => field.onChange(v === 'none' ? null : Number(v))}
+                      >
+                        <SelectTrigger id="brandId" className="mt-1.5 w-full">
+                          <SelectValue placeholder="Không có" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">Không có</SelectItem>
+                          {brands.map((b) => (
+                            <SelectItem key={b.id} value={String(b.id)}>{b.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
                 </div>
               </div>
             </div>
@@ -365,11 +376,17 @@ export function ProductForm({ product }: ProductFormProps) {
                     <label className={labelCls} htmlFor="active">Hiển thị trên cửa hàng</label>
                     <p className="text-muted-foreground text-xs">Tắt để ẩn sản phẩm khỏi khách hàng.</p>
                   </div>
-                  <Switch
-                    id="active"
-                    checked={active}
-                    onCheckedChange={(val) => setValue('active', val)}
-                    aria-label="Hiển thị trên cửa hàng"
+                  <Controller
+                    name="active"
+                    control={control}
+                    render={({ field }) => (
+                      <Switch
+                        id="active"
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        aria-label="Hiển thị trên cửa hàng"
+                      />
+                    )}
                   />
                 </div>
               </div>
