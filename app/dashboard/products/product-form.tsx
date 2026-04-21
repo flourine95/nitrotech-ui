@@ -11,6 +11,9 @@ import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import {
   createProduct,
   type CreateProductBody,
@@ -31,7 +34,6 @@ import { KeyValueEditor } from './key-value-editor';
 import { GalleryEditor } from './gallery-editor';
 import { VariantsEditor } from './variants-editor';
 
-// Lazy load RichTextEditor (Tiptap is heavy)
 const RichTextEditor = dynamic(
   () => import('./rich-text-editor').then((mod) => ({ default: mod.RichTextEditor })),
   { ssr: false, loading: () => <div className="h-[200px] animate-pulse rounded-md border bg-muted" /> }
@@ -41,26 +43,9 @@ interface ProductFormProps {
   product?: Product;
 }
 
-const inputCls = (hasError?: boolean) =>
-  `border-input placeholder:text-muted-foreground focus-visible:ring-ring flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:ring-1 focus-visible:outline-hidden disabled:cursor-not-allowed disabled:opacity-50${hasError ? ' border-destructive' : ''}`;
-
-const labelCls = 'text-sm font-medium';
-
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
   return <p className="mt-1 text-xs text-destructive">{message}</p>;
-}
-
-function Card({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
-  return (
-    <div className="bg-card text-card-foreground rounded-2xl border">
-      <div className="flex flex-col space-y-1 p-6">
-        <p className="font-semibold tracking-tight">{title}</p>
-        {description && <p className="text-muted-foreground text-sm">{description}</p>}
-      </div>
-      <div className="p-6 pt-0">{children}</div>
-    </div>
-  );
 }
 
 export function ProductForm({ product }: ProductFormProps) {
@@ -189,41 +174,47 @@ export function ProductForm({ product }: ProductFormProps) {
         {/* ── Left column ── */}
         <div className="flex flex-col gap-6">
 
-          <Card title="Thông tin sản phẩm" description="Tên, slug và mô tả hiển thị với khách hàng.">
-            <div className="flex flex-col gap-4">
+          <Card className="rounded-2xl">
+            <CardHeader>
+              <CardTitle>Thông tin sản phẩm</CardTitle>
+              <CardDescription>Tên, slug và mô tả hiển thị với khách hàng.</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-4">
               <div>
-                <label className={labelCls} htmlFor="name">
+                <Label htmlFor="name">
                   Tên sản phẩm <span className="text-destructive">*</span>
-                </label>
-                <input
+                </Label>
+                <Input
                   id="name"
                   {...register('name')}
                   placeholder="VD: iPhone 16 Pro Max"
                   autoFocus
-                  className={`mt-1.5 ${inputCls(!!errors.name)}`}
+                  aria-invalid={!!errors.name}
+                  className="mt-1.5"
                 />
                 <FieldError message={errors.name?.message} />
               </div>
 
               <div>
-                <label className={labelCls} htmlFor="slug">
+                <Label htmlFor="slug">
                   Slug <span className="text-destructive">*</span>
-                </label>
+                </Label>
                 <div className="relative mt-1.5">
                   <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm text-muted-foreground select-none">/</span>
-                  <input
+                  <Input
                     id="slug"
                     {...register('slug')}
                     placeholder="iphone-16-pro-max"
                     onFocus={() => { slugTouched.current = true; }}
-                    className={`${inputCls(!!errors.slug)} pl-6 font-mono`}
+                    aria-invalid={!!errors.slug}
+                    className="pl-6 font-mono"
                   />
                 </div>
                 <FieldError message={errors.slug?.message} />
               </div>
 
               <div>
-                <label className={labelCls} htmlFor="description">Mô tả</label>
+                <Label htmlFor="description">Mô tả</Label>
                 <div className="mt-1.5">
                   <Controller
                     name="description"
@@ -238,20 +229,38 @@ export function ProductForm({ product }: ProductFormProps) {
                   />
                 </div>
               </div>
-            </div>
+            </CardContent>
           </Card>
 
-          <Card title="Thư viện ảnh" description="Kéo để sắp xếp thứ tự. Ảnh đầu tiên là ảnh chính.">
-            <GalleryEditor images={images} onChange={setImages} />
+          <Card className="rounded-2xl">
+            <CardHeader>
+              <CardTitle>Thư viện ảnh</CardTitle>
+              <CardDescription>Kéo để sắp xếp thứ tự. Ảnh đầu tiên là ảnh chính.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <GalleryEditor images={images} onChange={setImages} />
+            </CardContent>
           </Card>
 
-          <Card title="Thông số kỹ thuật" description="Các thông số chi tiết của sản phẩm.">
-            <KeyValueEditor value={specs} onChange={setSpecs} keyPlaceholder="VD: RAM" valuePlaceholder="VD: 8GB" />
+          <Card className="rounded-2xl">
+            <CardHeader>
+              <CardTitle>Thông số kỹ thuật</CardTitle>
+              <CardDescription>Các thông số chi tiết của sản phẩm.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <KeyValueEditor value={specs} onChange={setSpecs} keyPlaceholder="VD: RAM" valuePlaceholder="VD: 8GB" />
+            </CardContent>
           </Card>
 
           {isEdit && (
-            <Card title="Variants" description={`${variants.length} variant đã tạo.`}>
-              <VariantsEditor productId={product!.id} variants={variants} onChange={setVariants} />
+            <Card className="rounded-2xl">
+              <CardHeader>
+                <CardTitle>Variants</CardTitle>
+                <CardDescription>{variants.length} variant đã tạo.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <VariantsEditor productId={product!.id} variants={variants} onChange={setVariants} />
+              </CardContent>
             </Card>
           )}
 
@@ -264,17 +273,15 @@ export function ProductForm({ product }: ProductFormProps) {
 
         {/* ── Right column ── */}
         <div className="flex flex-col gap-4 xl:self-start xl:sticky xl:top-4">
-          {/* Wrapper dashed như mẫu */}
           <div className="bg-muted/35 flex flex-col gap-4 rounded-[28px] border border-dashed p-3">
 
             {/* Thumbnail */}
-            <div className="bg-background/95 border-border/80 rounded-2xl border shadow-sm">
-              <div className="p-6 pb-3">
-                <p className="font-semibold tracking-tight">Thumbnail</p>
-                <p className="text-muted-foreground text-sm">Ảnh đại diện hiển thị trong danh sách.</p>
-              </div>
-              <div className="px-6 pb-6 flex flex-col gap-3">
-                {/* Preview */}
+            <Card className="bg-background/95 border-border/80 rounded-2xl shadow-sm">
+              <CardHeader>
+                <CardTitle>Thumbnail</CardTitle>
+                <CardDescription>Ảnh đại diện hiển thị trong danh sách.</CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-3">
                 <div
                   className="bg-muted/50 relative flex aspect-square w-20 cursor-pointer items-center justify-center overflow-hidden rounded-2xl border border-dashed transition-colors hover:border-ring"
                   onClick={() => setShowThumbPicker(true)}
@@ -295,26 +302,26 @@ export function ProductForm({ product }: ProductFormProps) {
                     </Button>
                   )}
                 </div>
-                <input
+                <Input
                   {...register('thumbnail')}
                   placeholder="Hoặc nhập URL ảnh..."
-                  className={inputCls(!!errors.thumbnail)}
+                  aria-invalid={!!errors.thumbnail}
                 />
                 <FieldError message={errors.thumbnail?.message} />
-              </div>
-            </div>
+              </CardContent>
+            </Card>
 
             {/* Organization */}
-            <div className="bg-background/95 border-border/80 rounded-2xl border shadow-sm">
-              <div className="p-6 pb-3">
-                <p className="font-semibold tracking-tight">Phân loại</p>
-                <p className="text-muted-foreground text-sm">Gắn danh mục và thương hiệu cho sản phẩm.</p>
-              </div>
-              <div className="px-6 pb-6 flex flex-col gap-4">
+            <Card className="bg-background/95 border-border/80 rounded-2xl shadow-sm">
+              <CardHeader>
+                <CardTitle>Phân loại</CardTitle>
+                <CardDescription>Gắn danh mục và thương hiệu cho sản phẩm.</CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-4">
                 <div>
-                  <label className={labelCls} htmlFor="categoryId">
+                  <Label htmlFor="categoryId">
                     Danh mục <span className="text-destructive">*</span>
-                  </label>
+                  </Label>
                   <Controller
                     name="categoryId"
                     control={control}
@@ -338,7 +345,7 @@ export function ProductForm({ product }: ProductFormProps) {
                 </div>
 
                 <div>
-                  <label className={labelCls} htmlFor="brandId">Thương hiệu</label>
+                  <Label htmlFor="brandId">Thương hiệu</Label>
                   <Controller
                     name="brandId"
                     control={control}
@@ -360,20 +367,20 @@ export function ProductForm({ product }: ProductFormProps) {
                     )}
                   />
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
 
             {/* Status */}
-            <div className="bg-background/95 border-border/80 rounded-2xl border shadow-sm">
-              <div className="p-6 pb-3">
-                <p className="font-semibold tracking-tight">Trạng thái</p>
-                <p className="text-muted-foreground text-sm">Kiểm soát hiển thị trên cửa hàng.</p>
-              </div>
-              <div className="px-6 pb-6">
+            <Card className="bg-background/95 border-border/80 rounded-2xl shadow-sm">
+              <CardHeader>
+                <CardTitle>Trạng thái</CardTitle>
+                <CardDescription>Kiểm soát hiển thị trên cửa hàng.</CardDescription>
+              </CardHeader>
+              <CardContent>
                 <Separator className="mb-4" />
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex flex-col gap-1">
-                    <label className={labelCls} htmlFor="active">Hiển thị trên cửa hàng</label>
+                    <Label htmlFor="active">Hiển thị trên cửa hàng</Label>
                     <p className="text-muted-foreground text-xs">Tắt để ẩn sản phẩm khỏi khách hàng.</p>
                   </div>
                   <Controller
@@ -389,8 +396,8 @@ export function ProductForm({ product }: ProductFormProps) {
                     )}
                   />
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
 
           </div>
         </div>
