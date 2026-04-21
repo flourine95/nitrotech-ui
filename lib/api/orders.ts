@@ -1,12 +1,7 @@
 import { apiFetch } from '@/lib/client';
 import type { Page } from '@/lib/types/pagination';
 
-export type OrderStatus =
-  | 'PENDING'
-  | 'CONFIRMED'
-  | 'SHIPPING'
-  | 'COMPLETED'
-  | 'CANCELLED';
+export type OrderStatus = 'PENDING' | 'CONFIRMED' | 'SHIPPING' | 'COMPLETED' | 'CANCELLED';
 
 export interface OrderItem {
   id: number;

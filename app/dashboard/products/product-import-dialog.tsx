@@ -4,7 +4,11 @@ import { AlertCircle, CheckCircle2, Download, FileUp, Upload, X } from 'lucide-r
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { createProduct } from '@/lib/api/products';
 import { parseImportCSV, type ParsedImportRow, downloadCSV } from './utils';
@@ -104,7 +108,10 @@ export function ProductImportDialog({ open, onClose, onSuccess }: ImportDialogPr
         });
         success++;
       } catch (e) {
-        errors.push({ row: row.row, message: e instanceof Error ? e.message : 'Lỗi không xác định' });
+        errors.push({
+          row: row.row,
+          message: e instanceof Error ? e.message : 'Lỗi không xác định',
+        });
       }
     }
 
@@ -124,7 +131,8 @@ export function ProductImportDialog({ open, onClose, onSuccess }: ImportDialogPr
           <DialogTitle>Import sản phẩm</DialogTitle>
           <DialogDescription>
             {step === 'upload' && 'Tải lên file CSV để import hàng loạt sản phẩm.'}
-            {step === 'preview' && `Xem trước ${rows.length} dòng — ${validCount} hợp lệ, ${errorCount} lỗi.`}
+            {step === 'preview' &&
+              `Xem trước ${rows.length} dòng — ${validCount} hợp lệ, ${errorCount} lỗi.`}
             {step === 'result' && 'Kết quả import.'}
           </DialogDescription>
         </DialogHeader>
@@ -133,7 +141,10 @@ export function ProductImportDialog({ open, onClose, onSuccess }: ImportDialogPr
         {step === 'upload' && (
           <div className="space-y-4">
             <div
-              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setDragOver(true);
+              }}
               onDragLeave={() => setDragOver(false)}
               onDrop={handleDrop}
               onClick={() => fileRef.current?.click()}
@@ -144,13 +155,21 @@ export function ProductImportDialog({ open, onClose, onSuccess }: ImportDialogPr
                 <p className="text-sm font-medium text-slate-700">Kéo thả file CSV vào đây</p>
                 <p className="text-xs text-slate-400">hoặc nhấn để chọn file</p>
               </div>
-              <input ref={fileRef} type="file" accept=".csv" className="hidden" onChange={handleFileChange} />
+              <input
+                ref={fileRef}
+                type="file"
+                accept=".csv"
+                className="hidden"
+                onChange={handleFileChange}
+              />
             </div>
 
             <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
               <div>
                 <p className="text-xs font-semibold text-slate-700">Tải template CSV</p>
-                <p className="text-xs text-slate-400">Cột: name, slug, categoryId, brandId, description, thumbnail, active</p>
+                <p className="text-xs text-slate-400">
+                  Cột: name, slug, categoryId, brandId, description, thumbnail, active
+                </p>
               </div>
               <Button
                 variant="outline"
@@ -183,9 +202,15 @@ export function ProductImportDialog({ open, onClose, onSuccess }: ImportDialogPr
                   {rows.map((r) => (
                     <tr key={r.row} className={r.error ? 'bg-rose-50' : ''}>
                       <td className="px-3 py-2 font-mono text-slate-400">{r.row}</td>
-                      <td className="px-3 py-2 font-medium text-slate-800">{r.name || <span className="text-rose-400">—</span>}</td>
-                      <td className="px-3 py-2 font-mono text-slate-500">{r.slug || <span className="text-rose-400">—</span>}</td>
-                      <td className="px-3 py-2 text-slate-500">{r.categoryId || <span className="text-rose-400">—</span>}</td>
+                      <td className="px-3 py-2 font-medium text-slate-800">
+                        {r.name || <span className="text-rose-400">—</span>}
+                      </td>
+                      <td className="px-3 py-2 font-mono text-slate-500">
+                        {r.slug || <span className="text-rose-400">—</span>}
+                      </td>
+                      <td className="px-3 py-2 text-slate-500">
+                        {r.categoryId || <span className="text-rose-400">—</span>}
+                      </td>
                       <td className="px-3 py-2">
                         {r.error ? (
                           <span className="inline-flex items-center gap-1 text-rose-600">
@@ -244,7 +269,9 @@ export function ProductImportDialog({ open, onClose, onSuccess }: ImportDialogPr
               <div className="max-h-40 overflow-auto rounded-xl border border-rose-200 bg-rose-50 p-3">
                 <p className="mb-2 text-xs font-semibold text-rose-700">Chi tiết lỗi:</p>
                 {result.errors.map((e) => (
-                  <p key={e.row} className="text-xs text-rose-600">Dòng {e.row}: {e.message}</p>
+                  <p key={e.row} className="text-xs text-rose-600">
+                    Dòng {e.row}: {e.message}
+                  </p>
                 ))}
               </div>
             )}

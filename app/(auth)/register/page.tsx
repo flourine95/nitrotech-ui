@@ -284,11 +284,21 @@ export default function RegisterPage() {
                   className="cursor-pointer text-sm leading-relaxed text-slate-600"
                 >
                   Tôi đồng ý với{' '}
-                  <Link href="/terms" className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">
+                  <Link
+                    href="/terms"
+                    className="text-blue-600 hover:underline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     Điều khoản sử dụng
                   </Link>{' '}
                   và{' '}
-                  <Link href="/privacy" className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">
+                  <Link
+                    href="/privacy"
+                    className="text-blue-600 hover:underline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     Chính sách bảo mật
                   </Link>
                 </label>

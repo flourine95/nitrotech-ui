@@ -126,7 +126,10 @@ export async function hardDeleteProduct(id: number): Promise<void> {
   await apiFetch<{ message: string }>(`/api/products/${id}/permanent`, { method: 'DELETE' });
 }
 
-export async function createVariant(productId: number, body: CreateVariantBody): Promise<ProductVariant> {
+export async function createVariant(
+  productId: number,
+  body: CreateVariantBody,
+): Promise<ProductVariant> {
   const res = await apiFetch<{ data: ProductVariant; message: string }>(
     `/api/products/${productId}/variants`,
     { method: 'POST', body: JSON.stringify(body) },
@@ -147,10 +150,9 @@ export async function updateVariant(
 }
 
 export async function deleteVariant(productId: number, variantId: number): Promise<void> {
-  await apiFetch<{ message: string }>(
-    `/api/products/${productId}/variants/${variantId}`,
-    { method: 'DELETE' },
-  );
+  await apiFetch<{ message: string }>(`/api/products/${productId}/variants/${variantId}`, {
+    method: 'DELETE',
+  });
 }
 
 // ── Bulk actions ──────────────────────────────────────────────────────────────

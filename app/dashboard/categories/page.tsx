@@ -8,13 +8,22 @@ import { CategoryTree } from './category-tree';
 import { CategoryPanel } from './category-panel';
 import { useCategories, type FilterStatus } from './use-categories';
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader,
-  AlertDialogMedia, AlertDialogTitle,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
 export default function DashboardCategoriesPage() {
-  const [panel, setPanel] = useState<{ open: boolean; category: Category | null }>({ open: false, category: null });
+  const [panel, setPanel] = useState<{ open: boolean; category: Category | null }>({
+    open: false,
+    category: null,
+  });
   const [deleteTarget, setDeleteTarget] = useState<Category | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [restoreTarget, setRestoreTarget] = useState<Category | null>(null);
@@ -23,15 +32,32 @@ export default function DashboardCategoriesPage() {
   const [hardDeleting, setHardDeleting] = useState(false);
 
   const {
-    flatList, loading, search, setSearch,
-    filterStatus, setFilterStatus,
-    total, activeCount, rootCount, subCount, deletedCount,
-    visibleTree, visibleDeleted, matchedIds,
-    expandedIds, togglingId,
-    toggleExpand, expandAll, collapseAll,
-    handleToggleActive, handleDelete,
-    handleMoveUp, handleMoveDown, handleChangeParent,
-    handleRestore, handleHardDelete,
+    flatList,
+    loading,
+    search,
+    setSearch,
+    filterStatus,
+    setFilterStatus,
+    total,
+    activeCount,
+    rootCount,
+    subCount,
+    deletedCount,
+    visibleTree,
+    visibleDeleted,
+    matchedIds,
+    expandedIds,
+    togglingId,
+    toggleExpand,
+    expandAll,
+    collapseAll,
+    handleToggleActive,
+    handleDelete,
+    handleMoveUp,
+    handleMoveDown,
+    handleChangeParent,
+    handleRestore,
+    handleHardDelete,
     reload,
   } = useCategories();
 
@@ -84,12 +110,14 @@ export default function DashboardCategoriesPage() {
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {([
-          { label: 'Tổng', value: total, color: 'text-foreground' },
-          { label: 'Hoạt động', value: activeCount, color: 'text-emerald-600' },
-          { label: 'Danh mục gốc', value: rootCount, color: 'text-primary' },
-          { label: 'Danh mục con', value: subCount, color: 'text-violet-600' },
-        ] as const).map((s) => (
+        {(
+          [
+            { label: 'Tổng', value: total, color: 'text-foreground' },
+            { label: 'Hoạt động', value: activeCount, color: 'text-emerald-600' },
+            { label: 'Danh mục gốc', value: rootCount, color: 'text-primary' },
+            { label: 'Danh mục con', value: subCount, color: 'text-violet-600' },
+          ] as const
+        ).map((s) => (
           <div key={s.label} className="rounded-xl border border-border bg-card px-4 py-3">
             <div className={`text-2xl font-bold tabular-nums ${s.color}`}>{s.value}</div>
             <div className="text-xs text-muted-foreground">{s.label}</div>
@@ -118,12 +146,14 @@ export default function DashboardCategoriesPage() {
           )}
         </div>
         <div className="flex gap-2">
-          {([
-            { value: 'all', label: 'Tất cả', count: total },
-            { value: 'active', label: 'Hoạt động', count: activeCount },
-            { value: 'inactive', label: 'Ẩn', count: total - activeCount },
-            { value: 'deleted', label: 'Đã xóa', count: deletedCount },
-          ] as { value: FilterStatus; label: string; count: number }[]).map((f) => (
+          {(
+            [
+              { value: 'all', label: 'Tất cả', count: total },
+              { value: 'active', label: 'Hoạt động', count: activeCount },
+              { value: 'inactive', label: 'Ẩn', count: total - activeCount },
+              { value: 'deleted', label: 'Đã xóa', count: deletedCount },
+            ] as { value: FilterStatus; label: string; count: number }[]
+          ).map((f) => (
             <button
               key={f.value}
               onClick={() => setFilterStatus(f.value)}
@@ -135,25 +165,44 @@ export default function DashboardCategoriesPage() {
                   : 'border-border bg-card text-muted-foreground hover:bg-muted/50'
               }`}
             >
-              {f.label}{f.count > 0 && <span className={`ml-1 ${filterStatus === f.value ? 'opacity-75' : 'text-muted-foreground/70'}`}>({f.count})</span>}
+              {f.label}
+              {f.count > 0 && (
+                <span
+                  className={`ml-1 ${filterStatus === f.value ? 'opacity-75' : 'text-muted-foreground/70'}`}
+                >
+                  ({f.count})
+                </span>
+              )}
             </button>
           ))}
           {filterStatus !== 'deleted' && (
             <>
-              <button onClick={expandAll} className="cursor-pointer rounded-xl border border-border bg-card px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/50">
+              <button
+                onClick={expandAll}
+                className="cursor-pointer rounded-xl border border-border bg-card px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/50"
+              >
                 Mở tất cả
               </button>
-              <button onClick={collapseAll} className="cursor-pointer rounded-xl border border-border bg-card px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/50">
+              <button
+                onClick={collapseAll}
+                className="cursor-pointer rounded-xl border border-border bg-card px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/50"
+              >
                 Đóng tất cả
               </button>
             </>
           )}
           {filterStatus === 'deleted' && (
             <>
-              <button disabled className="invisible rounded-xl border border-border bg-card px-3 py-2 text-xs font-medium text-muted-foreground">
+              <button
+                disabled
+                className="invisible rounded-xl border border-border bg-card px-3 py-2 text-xs font-medium text-muted-foreground"
+              >
                 Mở tất cả
               </button>
-              <button disabled className="invisible rounded-xl border border-border bg-card px-3 py-2 text-xs font-medium text-muted-foreground">
+              <button
+                disabled
+                className="invisible rounded-xl border border-border bg-card px-3 py-2 text-xs font-medium text-muted-foreground"
+              >
                 Đóng tất cả
               </button>
             </>
@@ -176,7 +225,10 @@ export default function DashboardCategoriesPage() {
                 {search ? `Không tìm thấy "${search}"` : 'Không có danh mục nào đã xóa'}
               </p>
               {search && (
-                <button onClick={() => setSearch('')} className="mt-2 cursor-pointer text-xs text-primary hover:underline">
+                <button
+                  onClick={() => setSearch('')}
+                  className="mt-2 cursor-pointer text-xs text-primary hover:underline"
+                >
                   Xóa bộ lọc
                 </button>
               )}
@@ -187,7 +239,9 @@ export default function DashboardCategoriesPage() {
                 <div key={cat.id} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50">
                   <Folder className="h-4 w-4 shrink-0 text-muted-foreground/40" />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-muted-foreground line-through">{cat.name}</p>
+                    <p className="truncate text-sm font-medium text-muted-foreground line-through">
+                      {cat.name}
+                    </p>
                     <p className="font-mono text-[11px] text-muted-foreground/70">{cat.slug}</p>
                   </div>
                   {cat.parentName && (
@@ -217,12 +271,15 @@ export default function DashboardCategoriesPage() {
           )
         ) : visibleTree.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-          <Folder className="mb-3 h-10 w-10 text-muted-foreground/40" />
+            <Folder className="mb-3 h-10 w-10 text-muted-foreground/40" />
             <p className="text-sm font-medium">
               {search ? `Không tìm thấy "${search}"` : 'Chưa có danh mục nào'}
             </p>
             {search && (
-              <button onClick={() => setSearch('')} className="mt-2 cursor-pointer text-xs text-primary hover:underline">
+              <button
+                onClick={() => setSearch('')}
+                className="mt-2 cursor-pointer text-xs text-primary hover:underline"
+              >
                 Xóa bộ lọc
               </button>
             )}
@@ -254,7 +311,9 @@ export default function DashboardCategoriesPage() {
         )}
         {!loading && filterStatus === 'deleted' && visibleDeleted.length > 0 && (
           <div className="border-t border-border px-4 py-2.5 text-xs text-muted-foreground/70">
-            {search ? `${visibleDeleted.length} kết quả cho "${search}"` : `${deletedCount} danh mục đã xóa`}
+            {search
+              ? `${visibleDeleted.length} kết quả cho "${search}"`
+              : `${deletedCount} danh mục đã xóa`}
           </div>
         )}
       </div>
@@ -264,7 +323,10 @@ export default function DashboardCategoriesPage() {
           category={panel.category}
           allCategories={flatList}
           onClose={() => setPanel({ open: false, category: null })}
-          onSaved={() => { reload(); setPanel({ open: false, category: null }); }}
+          onSaved={() => {
+            reload();
+            setPanel({ open: false, category: null });
+          }}
         />
       )}
 
@@ -278,7 +340,11 @@ export default function DashboardCategoriesPage() {
             <AlertDialogDescription>
               Bạn sắp xóa <strong className="text-foreground">{deleteTarget?.name}</strong>.
               {(deleteTarget?.children?.length ?? 0) > 0 && (
-                <> Danh mục này còn {deleteTarget!.children.length} danh mục con, hãy xóa chúng trước.</>
+                <>
+                  {' '}
+                  Danh mục này còn {deleteTarget!.children.length} danh mục con, hãy xóa chúng
+                  trước.
+                </>
               )}{' '}
               Danh mục sẽ bị ẩn và có thể khôi phục lại sau.
             </AlertDialogDescription>
@@ -305,7 +371,8 @@ export default function DashboardCategoriesPage() {
             </AlertDialogMedia>
             <AlertDialogTitle>Khôi phục danh mục?</AlertDialogTitle>
             <AlertDialogDescription>
-              Khôi phục <strong className="text-foreground">{restoreTarget?.name}</strong> về trạng thái hoạt động.
+              Khôi phục <strong className="text-foreground">{restoreTarget?.name}</strong> về trạng
+              thái hoạt động.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -328,7 +395,8 @@ export default function DashboardCategoriesPage() {
             </AlertDialogMedia>
             <AlertDialogTitle>Xóa vĩnh viễn?</AlertDialogTitle>
             <AlertDialogDescription>
-              <strong className="text-foreground">{hardDeleteTarget?.name}</strong> sẽ bị xóa hoàn toàn và không thể khôi phục.
+              <strong className="text-foreground">{hardDeleteTarget?.name}</strong> sẽ bị xóa hoàn
+              toàn và không thể khôi phục.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

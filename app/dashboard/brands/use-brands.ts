@@ -23,10 +23,7 @@ export function useBrands() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [active, deleted] = await Promise.all([
-        getBrands(),
-        getBrands({ deleted: true }),
-      ]);
+      const [active, deleted] = await Promise.all([getBrands(), getBrands({ deleted: true })]);
       setBrands(active.content);
       setDeletedBrands((deleted as Page<Brand>).content ?? []);
     } catch {
@@ -36,7 +33,9 @@ export function useBrands() {
     }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+  }, [load]);
 
   const total = brands.length;
   const activeCount = useMemo(() => brands.filter((b) => b.active).length, [brands]);
@@ -48,9 +47,13 @@ export function useBrands() {
     return brands.filter((b) => {
       const matchSearch = !q || b.name.toLowerCase().includes(q) || b.slug.includes(q);
       const matchStatus =
-        filterStatus === 'all' ? true :
-        filterStatus === 'active' ? b.active :
-        filterStatus === 'inactive' ? !b.active : false;
+        filterStatus === 'all'
+          ? true
+          : filterStatus === 'active'
+            ? b.active
+            : filterStatus === 'inactive'
+              ? !b.active
+              : false;
       return matchSearch && matchStatus;
     });
   }, [brands, search, filterStatus]);
@@ -58,9 +61,9 @@ export function useBrands() {
   const visibleDeleted = useMemo(() => {
     if (filterStatus !== 'deleted') return [];
     const q = search.toLowerCase();
-    return !q ? deletedBrands : deletedBrands.filter(
-      (b) => b.name.toLowerCase().includes(q) || b.slug.includes(q),
-    );
+    return !q
+      ? deletedBrands
+      : deletedBrands.filter((b) => b.name.toLowerCase().includes(q) || b.slug.includes(q));
   }, [deletedBrands, filterStatus, search]);
 
   const handleToggleActive = useCallback(async (brand: Brand) => {
@@ -73,17 +76,23 @@ export function useBrands() {
     }
   }, []);
 
-  const handleDelete = useCallback(async (brand: Brand) => {
-    await deleteBrand(brand.id);
-    await load();
-    toast.success('Đã xóa thương hiệu');
-  }, [load]);
+  const handleDelete = useCallback(
+    async (brand: Brand) => {
+      await deleteBrand(brand.id);
+      await load();
+      toast.success('Đã xóa thương hiệu');
+    },
+    [load],
+  );
 
-  const handleRestore = useCallback(async (brand: Brand) => {
-    await restoreBrand(brand.id);
-    await load();
-    toast.success('Đã khôi phục thương hiệu');
-  }, [load]);
+  const handleRestore = useCallback(
+    async (brand: Brand) => {
+      await restoreBrand(brand.id);
+      await load();
+      toast.success('Đã khôi phục thương hiệu');
+    },
+    [load],
+  );
 
   const handleHardDelete = useCallback(async (brand: Brand) => {
     await hardDeleteBrand(brand.id);
@@ -92,11 +101,21 @@ export function useBrands() {
   }, []);
 
   return {
-    loading, search, setSearch,
-    filterStatus, setFilterStatus,
-    total, activeCount, inactiveCount, deletedCount,
-    visibleBrands, visibleDeleted,
-    handleToggleActive, handleDelete, handleRestore, handleHardDelete,
+    loading,
+    search,
+    setSearch,
+    filterStatus,
+    setFilterStatus,
+    total,
+    activeCount,
+    inactiveCount,
+    deletedCount,
+    visibleBrands,
+    visibleDeleted,
+    handleToggleActive,
+    handleDelete,
+    handleRestore,
+    handleHardDelete,
     reload: load,
   };
 }

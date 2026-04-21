@@ -50,20 +50,19 @@ export function ProductFilterChips({
     <div className="flex flex-wrap items-center gap-2">
       <span className="text-sm text-muted-foreground">{totalElements} kết quả</span>
 
-      {hasSearch && (
-        <FilterChip label={`"${search}"`} onRemove={onClearSearch} />
-      )}
+      {hasSearch && <FilterChip label={`"${search}"`} onRemove={onClearSearch} />}
       {hasCategory && categoryName && (
         <FilterChip label={categoryName} onRemove={onClearCategory} />
       )}
-      {hasBrand && brandName && (
-        <FilterChip label={brandName} onRemove={onClearBrand} />
-      )}
-      {hasSort && sortLabel && (
-        <FilterChip label={sortLabel} onRemove={onClearSort} />
-      )}
+      {hasBrand && brandName && <FilterChip label={brandName} onRemove={onClearBrand} />}
+      {hasSort && sortLabel && <FilterChip label={sortLabel} onRemove={onClearSort} />}
 
-      <Button variant="ghost" size="sm" onClick={onClearAll} className="h-7 px-2 text-xs text-muted-foreground">
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={onClearAll}
+        className="h-7 px-2 text-xs text-muted-foreground"
+      >
         Xóa tất cả
       </Button>
     </div>

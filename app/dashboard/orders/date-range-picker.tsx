@@ -30,11 +30,11 @@ function getToday() {
 export function getPresets() {
   const today = getToday();
   return [
-    { label: 'Hôm nay',     range: { from: today, to: today } },
-    { label: '7 ngày qua',  range: { from: subDays(today, 6), to: today } },
+    { label: 'Hôm nay', range: { from: today, to: today } },
+    { label: '7 ngày qua', range: { from: subDays(today, 6), to: today } },
     { label: '30 ngày qua', range: { from: subDays(today, 29), to: today } },
-    { label: 'Tháng này',   range: { from: startOfMonth(today), to: endOfMonth(today) } },
-    { label: 'Từ đầu năm',  range: { from: startOfYear(today), to: today } },
+    { label: 'Tháng này', range: { from: startOfMonth(today), to: endOfMonth(today) } },
+    { label: 'Từ đầu năm', range: { from: startOfYear(today), to: today } },
   ];
 }
 
@@ -64,13 +64,17 @@ export function DateRangePicker({ value, onChange, className }: DateRangePickerP
       <PopoverTrigger asChild>
         <Button
           variant="outline"
-          className={cn('justify-start gap-2 font-normal', !value && 'text-muted-foreground', className)}
+          className={cn(
+            'justify-start gap-2 font-normal',
+            !value && 'text-muted-foreground',
+            className,
+          )}
         >
           <CalendarIcon className="size-4 shrink-0" />
           <span className="truncate">{label}</span>
           {value && (
             <XIcon
-              className="text-muted-foreground hover:text-foreground ml-auto size-3.5 shrink-0 transition-colors"
+              className="ml-auto size-3.5 shrink-0 text-muted-foreground transition-colors hover:text-foreground"
               onClick={clear}
               aria-label="Xóa khoảng ngày"
             />
@@ -80,14 +84,17 @@ export function DateRangePicker({ value, onChange, className }: DateRangePickerP
       <PopoverContent className="w-auto p-0" align="start">
         <div className="flex">
           {/* Presets */}
-          <div className="flex flex-col gap-0.5 border-r p-2 min-w-32">
+          <div className="flex min-w-32 flex-col gap-0.5 border-r p-2">
             {presets.map((p) => (
               <Button
                 key={p.label}
                 variant="ghost"
                 size="sm"
                 className="justify-start text-sm font-normal"
-                onClick={() => { onChange(p.range); setOpen(false); }}
+                onClick={() => {
+                  onChange(p.range);
+                  setOpen(false);
+                }}
               >
                 {p.label}
               </Button>
@@ -96,8 +103,11 @@ export function DateRangePicker({ value, onChange, className }: DateRangePickerP
             <Button
               variant="ghost"
               size="sm"
-              className="text-muted-foreground justify-start text-sm font-normal"
-              onClick={() => { onChange(undefined); setOpen(false); }}
+              className="justify-start text-sm font-normal text-muted-foreground"
+              onClick={() => {
+                onChange(undefined);
+                setOpen(false);
+              }}
             >
               Xóa lọc
             </Button>

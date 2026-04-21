@@ -40,9 +40,7 @@ export function VariantFormSheet({
   const [name, setName] = useState(variant?.name ?? '');
   const [price, setPrice] = useState(variant?.price?.toString() ?? '');
   const [active, setActive] = useState(variant?.active ?? true);
-  const [attributes, setAttributes] = useState<Record<string, string>>(
-    variant?.attributes ?? {}
-  );
+  const [attributes, setAttributes] = useState<Record<string, string>>(variant?.attributes ?? {});
   const [showMediaPicker, setShowMediaPicker] = useState(false);
 
   const createMutation = useMutation({
@@ -121,7 +119,7 @@ export function VariantFormSheet({
     <>
       <Sheet open={open} onOpenChange={onClose}>
         <SheetContent className="flex w-full flex-col gap-0 p-0 sm:max-w-2xl">
-          <SheetHeader className="border-border/70 border-b px-6 pt-6 pb-5">
+          <SheetHeader className="border-b border-border/70 px-6 pt-6 pb-5">
             <SheetTitle className="text-2xl">
               {isEdit ? 'Chỉnh sửa phiên bản' : 'Thêm phiên bản'}
             </SheetTitle>
@@ -135,9 +133,9 @@ export function VariantFormSheet({
               <div className="grid gap-6">
                 {/* Basic info card */}
                 <div className="rounded-2xl border bg-card shadow-none">
-                  <div className="flex flex-col space-y-1.5 gap-2 p-6">
+                  <div className="flex flex-col gap-2 space-y-1.5 p-6">
                     <div className="text-base font-semibold tracking-tight">Thông tin cơ bản</div>
-                    <div className="text-muted-foreground text-sm">
+                    <div className="text-sm text-muted-foreground">
                       SKU, tên và giá bán của phiên bản này.
                     </div>
                   </div>
@@ -184,7 +182,7 @@ export function VariantFormSheet({
                           className="h-12 pr-12"
                           disabled={isPending}
                         />
-                        <span className="text-muted-foreground pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-sm">
+                        <span className="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-sm text-muted-foreground">
                           đ
                         </span>
                       </div>
@@ -194,9 +192,9 @@ export function VariantFormSheet({
 
                 {/* Attributes card */}
                 <div className="rounded-2xl border bg-card shadow-none">
-                  <div className="flex flex-col space-y-1.5 gap-2 p-6">
+                  <div className="flex flex-col gap-2 space-y-1.5 p-6">
                     <div className="text-base font-semibold tracking-tight">Thuộc tính</div>
-                    <div className="text-muted-foreground text-sm">
+                    <div className="text-sm text-muted-foreground">
                       Các thuộc tính phân biệt phiên bản này (màu sắc, kích thước...).
                     </div>
                   </div>
@@ -252,9 +250,9 @@ export function VariantFormSheet({
 
                 {/* Status card */}
                 <div className="rounded-2xl border bg-card shadow-none">
-                  <div className="flex flex-col space-y-1.5 gap-2 p-6">
+                  <div className="flex flex-col gap-2 space-y-1.5 p-6">
                     <div className="text-base font-semibold tracking-tight">Trạng thái</div>
-                    <div className="text-muted-foreground text-sm">
+                    <div className="text-sm text-muted-foreground">
                       Bật/tắt phiên bản này trên cửa hàng.
                     </div>
                   </div>
@@ -264,7 +262,7 @@ export function VariantFormSheet({
                         <Label htmlFor="active" className="text-sm font-medium">
                           Hiển thị trên cửa hàng
                         </Label>
-                        <p className="text-muted-foreground text-xs">
+                        <p className="text-xs text-muted-foreground">
                           Tắt để ẩn phiên bản này khỏi khách hàng
                         </p>
                       </div>
@@ -281,7 +279,7 @@ export function VariantFormSheet({
             </div>
 
             {/* Footer actions */}
-            <div className="border-border/70 flex shrink-0 flex-col-reverse gap-3 border-t px-6 py-4 sm:flex-row sm:justify-between">
+            <div className="flex shrink-0 flex-col-reverse gap-3 border-t border-border/70 px-6 py-4 sm:flex-row sm:justify-between">
               <Button type="button" variant="ghost" onClick={onClose} disabled={isPending}>
                 Hủy
               </Button>

@@ -27,9 +27,9 @@ const customers = [
 ];
 
 const amounts = [
-  1290000, 2490000, 3290000, 4990000, 6580000, 7470000, 8990000,
-  9800000, 12990000, 15500000, 18750000, 22500000, 25000000, 29900000,
-  35990000, 38500000, 42990000, 45000000, 55000000, 68000000,
+  1290000, 2490000, 3290000, 4990000, 6580000, 7470000, 8990000, 9800000, 12990000, 15500000,
+  18750000, 22500000, 25000000, 29900000, 35990000, 38500000, 42990000, 45000000, 55000000,
+  68000000,
 ];
 
 function randomFrom<T>(arr: T[], seed: number): T {
@@ -81,11 +81,7 @@ export function mockOrdersPage(query?: {
   }
 
   // Status filter — support both single and multi
-  const statusList = query?.statuses?.length
-    ? query.statuses
-    : query?.status
-      ? [query.status]
-      : [];
+  const statusList = query?.statuses?.length ? query.statuses : query?.status ? [query.status] : [];
   if (statusList.length) {
     filtered = filtered.filter((o) => statusList.includes(o.status));
   }
@@ -106,10 +102,19 @@ export function mockOrdersPage(query?: {
   filtered.sort((a, b) => {
     let va: number | string = 0;
     let vb: number | string = 0;
-    if (sortBy === 'totalAmount') { va = a.totalAmount; vb = b.totalAmount; }
-    else if (sortBy === 'createdAt') { va = a.createdAt; vb = b.createdAt; }
-    else if (sortBy === 'customerName') { va = a.customerName; vb = b.customerName; }
-    else if (sortBy === 'code') { va = a.code; vb = b.code; }
+    if (sortBy === 'totalAmount') {
+      va = a.totalAmount;
+      vb = b.totalAmount;
+    } else if (sortBy === 'createdAt') {
+      va = a.createdAt;
+      vb = b.createdAt;
+    } else if (sortBy === 'customerName') {
+      va = a.customerName;
+      vb = b.customerName;
+    } else if (sortBy === 'code') {
+      va = a.code;
+      vb = b.code;
+    }
     if (va < vb) return sortDir === 'asc' ? -1 : 1;
     if (va > vb) return sortDir === 'asc' ? 1 : -1;
     return 0;

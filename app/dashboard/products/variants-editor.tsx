@@ -8,20 +8,35 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
-  type CreateVariantBody, type ProductVariant,
-  createVariant, deleteVariant, updateVariant,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  type CreateVariantBody,
+  type ProductVariant,
+  createVariant,
+  deleteVariant,
+  updateVariant,
 } from '@/lib/api/products';
 import { ApiException } from '@/lib/client';
 import { KeyValueEditor } from './key-value-editor';
 import { formatVariantPrice } from './utils';
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader,
-  AlertDialogMedia, AlertDialogTitle,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-
 
 interface VariantFormState {
   sku: string;
@@ -53,10 +68,17 @@ function VariantInlineForm({
   }
 
   function handleSave() {
-    if (!form.sku.trim()) { toast.error('SKU không được để trống'); return; }
-    if (!form.name.trim()) { toast.error('Tên không được để trống'); return; }
+    if (!form.sku.trim()) {
+      toast.error('SKU không được để trống');
+      return;
+    }
+    if (!form.name.trim()) {
+      toast.error('Tên không được để trống');
+      return;
+    }
     if (!form.price || isNaN(Number(form.price)) || Number(form.price) < 0) {
-      toast.error('Giá không hợp lệ'); return;
+      toast.error('Giá không hợp lệ');
+      return;
     }
     onSave(form);
   }
@@ -65,7 +87,9 @@ function VariantInlineForm({
     <div className="rounded-lg border p-4">
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div className="space-y-1.5">
-          <Label className="text-xs">SKU <span className="text-destructive">*</span></Label>
+          <Label className="text-xs">
+            SKU <span className="text-destructive">*</span>
+          </Label>
           <Input
             value={form.sku}
             onChange={(e) => set('sku', e.target.value)}
@@ -74,7 +98,9 @@ function VariantInlineForm({
           />
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs">Tên <span className="text-destructive">*</span></Label>
+          <Label className="text-xs">
+            Tên <span className="text-destructive">*</span>
+          </Label>
           <Input
             value={form.name}
             onChange={(e) => set('name', e.target.value)}
@@ -82,7 +108,9 @@ function VariantInlineForm({
           />
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs">Giá <span className="text-destructive">*</span></Label>
+          <Label className="text-xs">
+            Giá <span className="text-destructive">*</span>
+          </Label>
           <Input
             type="number"
             min={0}
@@ -171,7 +199,7 @@ export function VariantsEditor({ productId, variants, onChange }: VariantsEditor
         attributes: form.attributes,
         active: form.active,
       });
-      onChange(variants.map((v) => v.id === updated.id ? updated : v));
+      onChange(variants.map((v) => (v.id === updated.id ? updated : v)));
       setEditingId(null);
       toast.success('Đã cập nhật variant');
     } catch (e) {
@@ -219,7 +247,13 @@ export function VariantsEditor({ productId, variants, onChange }: VariantsEditor
                 <TableRow key={v.id}>
                   <TableCell colSpan={6} className="p-2">
                     <VariantInlineForm
-                      initial={{ sku: v.sku, name: v.name, price: String(v.price), attributes: v.attributes ?? {}, active: v.active }}
+                      initial={{
+                        sku: v.sku,
+                        name: v.name,
+                        price: String(v.price),
+                        attributes: v.attributes ?? {},
+                        active: v.active,
+                      }}
                       onSave={(form) => handleEdit(v, form)}
                       onCancel={() => setEditingId(null)}
                       saving={saving}
@@ -235,13 +269,19 @@ export function VariantsEditor({ productId, variants, onChange }: VariantsEditor
                     {v.attributes && Object.keys(v.attributes).length > 0 ? (
                       <div className="flex flex-wrap gap-1">
                         {Object.entries(v.attributes).map(([k, val]) => (
-                          <Badge key={k} variant="secondary">{k}: {val}</Badge>
+                          <Badge key={k} variant="secondary">
+                            {k}: {val}
+                          </Badge>
                         ))}
                       </div>
-                    ) : <span className="text-muted-foreground/50">—</span>}
+                    ) : (
+                      <span className="text-muted-foreground/50">—</span>
+                    )}
                   </TableCell>
                   <TableCell className="text-center">
-                    <span className={`inline-flex h-2 w-2 rounded-full ${v.active ? 'bg-emerald-500' : 'bg-muted-foreground'}`} />
+                    <span
+                      className={`inline-flex h-2 w-2 rounded-full ${v.active ? 'bg-emerald-500' : 'bg-muted-foreground'}`}
+                    />
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center justify-end gap-1">
@@ -257,7 +297,9 @@ export function VariantsEditor({ productId, variants, onChange }: VariantsEditor
                             <Pencil className="h-4 w-4" />
                           </Button>
                         </TooltipTrigger>
-                        <TooltipContent side="top"><p>Sửa</p></TooltipContent>
+                        <TooltipContent side="top">
+                          <p>Sửa</p>
+                        </TooltipContent>
                       </Tooltip>
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -271,12 +313,14 @@ export function VariantsEditor({ productId, variants, onChange }: VariantsEditor
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </TooltipTrigger>
-                        <TooltipContent side="top"><p>Xóa</p></TooltipContent>
+                        <TooltipContent side="top">
+                          <p>Xóa</p>
+                        </TooltipContent>
                       </Tooltip>
                     </div>
                   </TableCell>
                 </TableRow>
-              )
+              ),
             )}
           </TableBody>
         </Table>
@@ -305,10 +349,13 @@ export function VariantsEditor({ productId, variants, onChange }: VariantsEditor
       <AlertDialog open={!!deleteTarget} onOpenChange={(v) => !v && setDeleteTarget(null)}>
         <AlertDialogContent size="sm">
           <AlertDialogHeader>
-            <AlertDialogMedia className="bg-rose-100 text-rose-600"><Trash2 className="h-5 w-5" /></AlertDialogMedia>
+            <AlertDialogMedia className="bg-rose-100 text-rose-600">
+              <Trash2 className="h-5 w-5" />
+            </AlertDialogMedia>
             <AlertDialogTitle>Xóa variant?</AlertDialogTitle>
             <AlertDialogDescription>
-              Xóa variant <strong className="text-slate-900">{deleteTarget?.name}</strong> ({deleteTarget?.sku})?
+              Xóa variant <strong className="text-slate-900">{deleteTarget?.name}</strong> (
+              {deleteTarget?.sku})?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

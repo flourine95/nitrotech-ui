@@ -47,35 +47,38 @@ interface RichTextEditorProps {
 }
 
 export function RichTextEditor({ content, onChange, disabled = false }: RichTextEditorProps) {
-  const extensions = useMemo(() => [
-    Document,
-    Text,
-    Dropcursor,
-    Gapcursor,
-    HardBreak,
-    Paragraph,
-    TrailingNode,
-    ListItem,
-    TextStyle,
-    Placeholder.configure({ placeholder: "Nhập mô tả sản phẩm... (gõ '/' để xem lệnh)" }),
-    History.configure({
-      depth: 50,
-    }),
-    Bold,
-    Italic,
-    TextUnderline,
-    Strike,
-    Heading,
-    BulletList,
-    OrderedList,
-    Link,
-    Blockquote,
-    HorizontalRule,
-    TextAlign,
-    Color,
-    Image.configure({ resourceImage: 'both' }),
-    SlashCommand,
-  ], []);
+  const extensions = useMemo(
+    () => [
+      Document,
+      Text,
+      Dropcursor,
+      Gapcursor,
+      HardBreak,
+      Paragraph,
+      TrailingNode,
+      ListItem,
+      TextStyle,
+      Placeholder.configure({ placeholder: "Nhập mô tả sản phẩm... (gõ '/' để xem lệnh)" }),
+      History.configure({
+        depth: 50,
+      }),
+      Bold,
+      Italic,
+      TextUnderline,
+      Strike,
+      Heading,
+      BulletList,
+      OrderedList,
+      Link,
+      Blockquote,
+      HorizontalRule,
+      TextAlign,
+      Color,
+      Image.configure({ resourceImage: 'both' }),
+      SlashCommand,
+    ],
+    [],
+  );
 
   const debouncedOnChange = useDebouncedCallback(onChange, 300);
 
@@ -121,7 +124,7 @@ export function RichTextEditor({ content, onChange, disabled = false }: RichText
   return (
     <RichTextProvider editor={editor}>
       <div
-        className="bg-background shadow-sm transition-colors overflow-hidden"
+        className="overflow-hidden bg-background shadow-sm transition-colors"
         style={{
           borderWidth: '1px',
           borderStyle: 'solid',
@@ -134,7 +137,15 @@ export function RichTextEditor({ content, onChange, disabled = false }: RichText
       >
         <div className="flex max-h-full w-full flex-col">
           {/* Toolbar */}
-          <div className="flex flex-wrap items-center gap-0.5 px-2 py-1.5" style={{ backgroundColor: 'oklch(0.97 0 0)', borderBottomWidth: '1px', borderBottomStyle: 'solid', borderBottomColor: 'oklch(0.922 0 0)' }}>
+          <div
+            className="flex flex-wrap items-center gap-0.5 px-2 py-1.5"
+            style={{
+              backgroundColor: 'oklch(0.97 0 0)',
+              borderBottomWidth: '1px',
+              borderBottomStyle: 'solid',
+              borderBottomColor: 'oklch(0.922 0 0)',
+            }}
+          >
             <RichTextUndo />
             <RichTextRedo />
             <div className="mx-1 h-4 w-px bg-border" />
@@ -174,7 +185,6 @@ export function RichTextEditor({ content, onChange, disabled = false }: RichText
           <SlashCommandList />
         </div>
       </div>
-
     </RichTextProvider>
   );
 }

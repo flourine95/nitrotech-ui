@@ -5,13 +5,33 @@ import { toast } from 'sonner';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { parseAsInteger, parseAsString, parseAsStringEnum, useQueryState } from 'nuqs';
 import {
-  ArrowUpDown, ChevronLeft, ChevronRight, Download, Ellipsis, Eye, EyeOff, Package,
-  Pencil, Plus, RotateCcw, Search, Trash2, Upload, X,
+  ArrowUpDown,
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  Ellipsis,
+  Eye,
+  EyeOff,
+  Package,
+  Pencil,
+  Plus,
+  RotateCcw,
+  Search,
+  Trash2,
+  Upload,
+  X,
 } from 'lucide-react';
 import {
-  deleteProduct, getProducts, hardDeleteProduct,
-  type Product, restoreProduct, updateProduct,
-  bulkDeleteProducts, bulkRestoreProducts, bulkUpdateActive, bulkHardDeleteProducts,
+  deleteProduct,
+  getProducts,
+  hardDeleteProduct,
+  type Product,
+  restoreProduct,
+  updateProduct,
+  bulkDeleteProducts,
+  bulkRestoreProducts,
+  bulkUpdateActive,
+  bulkHardDeleteProducts,
   exportProducts,
 } from '@/lib/api/products';
 import type { Category } from '@/lib/api/categories';
@@ -19,26 +39,53 @@ import { getCategories } from '@/lib/api/categories';
 import { getBrands } from '@/lib/api/brands';
 import { ApiException } from '@/lib/client';
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader,
-  AlertDialogMedia, AlertDialogTitle,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
-  DropdownMenuSeparator, DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from '@/components/ui/table';
 import { useDeferredValue, useState } from 'react';
-import { formatPrice, PAGE_SIZE, SORT_OPTIONS, type SortValue, productsToCSV, downloadCSV } from './utils';
+import {
+  formatPrice,
+  PAGE_SIZE,
+  SORT_OPTIONS,
+  type SortValue,
+  productsToCSV,
+  downloadCSV,
+} from './utils';
 import { ProductFilterChips } from './product-filter-chips';
 import { ProductBulkBar } from './product-bulk-bar';
 import { ProductImportDialog } from './product-import-dialog';
@@ -58,7 +105,9 @@ export default function DashboardProductsPage() {
   const [currentPage, setCurrentPage] = useQueryState('page', parseAsInteger.withDefault(0));
   const [sortBy, setSortBy] = useQueryState(
     'sort',
-    parseAsStringEnum<SortValue>(SORT_OPTIONS.map((o) => o.value) as SortValue[]).withDefault('createdAt,desc'),
+    parseAsStringEnum<SortValue>(SORT_OPTIONS.map((o) => o.value) as SortValue[]).withDefault(
+      'createdAt,desc',
+    ),
   );
 
   const deferredSearch = useDeferredValue(search);
@@ -76,7 +125,13 @@ export default function DashboardProductsPage() {
     filterStatus === 'active' ? true : filterStatus === 'inactive' ? false : undefined;
 
   const queryKey = [
-    'products', deferredSearch, filterStatus, filterCategoryId, filterBrandId, currentPage, sortBy,
+    'products',
+    deferredSearch,
+    filterStatus,
+    filterCategoryId,
+    filterBrandId,
+    currentPage,
+    sortBy,
   ] as const;
 
   const productsQuery = useQuery({
@@ -114,12 +169,10 @@ export default function DashboardProductsPage() {
   const toggleActiveMutation = useMutation({
     mutationFn: (product: Product) => updateProduct(product.id, { active: !product.active }),
     onSuccess: (updated) => {
-      queryClient.setQueryData(
-        queryKey,
-        (old: typeof productsQuery.data) =>
-          old
-            ? { ...old, content: old.content.map((p) => (p.id === updated.id ? updated : p)) }
-            : old,
+      queryClient.setQueryData(queryKey, (old: typeof productsQuery.data) =>
+        old
+          ? { ...old, content: old.content.map((p) => (p.id === updated.id ? updated : p)) }
+          : old,
       );
       toast.success(updated.active ? 'Đã hiển thị' : 'Đã ẩn');
     },
@@ -217,7 +270,9 @@ export default function DashboardProductsPage() {
   async function handleBulkHardDelete() {
     const ids = [...selectedIds];
     const r = await bulkHardDeleteProducts(ids);
-    toast.success(`Đã xóa vĩnh viễn ${r.success} sản phẩm${r.failed ? `, ${r.failed} thất bại` : ''}`);
+    toast.success(
+      `Đã xóa vĩnh viễn ${r.success} sản phẩm${r.failed ? `, ${r.failed} thất bại` : ''}`,
+    );
     void queryClient.invalidateQueries({ queryKey: ['products'] });
     clearSelection();
   }
@@ -290,10 +345,7 @@ export default function DashboardProductsPage() {
             Export
           </Button>
           <Button asChild size="sm">
-            <Link
-              href="/dashboard/products/new"
-              onMouseEnter={() => import('./rich-text-editor')}
-            >
+            <Link href="/dashboard/products/new" onMouseEnter={() => import('./rich-text-editor')}>
               <Plus className="h-4 w-4" />
               Thêm sản phẩm
             </Link>
@@ -314,13 +366,17 @@ export default function DashboardProductsPage() {
               void setCurrentPage(0);
               clearSelection();
             }}
-            className="pl-9 pr-10"
+            className="pr-10 pl-9"
           />
           {search && (
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => { void setSearch(null); void setCurrentPage(0); clearSelection(); }}
+              onClick={() => {
+                void setSearch(null);
+                void setCurrentPage(0);
+                clearSelection();
+              }}
               className="absolute top-1/2 right-1 h-7 w-7 -translate-y-1/2"
             >
               <X className="h-3.5 w-3.5" />
@@ -340,7 +396,11 @@ export default function DashboardProductsPage() {
               key={f.value}
               variant={filterStatus === f.value ? 'default' : 'outline'}
               size="sm"
-              onClick={() => { void setFilterStatus(f.value); void setCurrentPage(0); clearSelection(); }}
+              onClick={() => {
+                void setFilterStatus(f.value);
+                void setCurrentPage(0);
+                clearSelection();
+              }}
             >
               {f.label}
             </Button>
@@ -359,7 +419,9 @@ export default function DashboardProductsPage() {
             <SelectContent>
               <SelectItem value="all">Tất cả danh mục</SelectItem>
               {categories.map((c) => (
-                <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
+                <SelectItem key={c.id} value={String(c.id)}>
+                  {c.name}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -377,13 +439,18 @@ export default function DashboardProductsPage() {
             <SelectContent>
               <SelectItem value="all">Tất cả thương hiệu</SelectItem>
               {brands.map((b) => (
-                <SelectItem key={b.id} value={String(b.id)}>{b.name}</SelectItem>
+                <SelectItem key={b.id} value={String(b.id)}>
+                  {b.name}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
           <Select
             value={sortBy}
-            onValueChange={(v) => { void setSortBy(v as SortValue); void setCurrentPage(0); }}
+            onValueChange={(v) => {
+              void setSortBy(v as SortValue);
+              void setCurrentPage(0);
+            }}
           >
             <SelectTrigger className="h-9 w-auto min-w-36">
               <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
@@ -391,7 +458,9 @@ export default function DashboardProductsPage() {
             </SelectTrigger>
             <SelectContent>
               {SORT_OPTIONS.map((o) => (
-                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                <SelectItem key={o.value} value={o.value}>
+                  {o.label}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -408,10 +477,24 @@ export default function DashboardProductsPage() {
         categoryName={categoryName}
         brandName={brandName}
         totalElements={totalElements}
-        onClearSearch={() => { void setSearch(null); void setCurrentPage(0); clearSelection(); }}
-        onClearCategory={() => { void setFilterCategoryId(null); void setCurrentPage(0); clearSelection(); }}
-        onClearBrand={() => { void setFilterBrandId(null); void setCurrentPage(0); clearSelection(); }}
-        onClearSort={() => { void setSortBy(null); }}
+        onClearSearch={() => {
+          void setSearch(null);
+          void setCurrentPage(0);
+          clearSelection();
+        }}
+        onClearCategory={() => {
+          void setFilterCategoryId(null);
+          void setCurrentPage(0);
+          clearSelection();
+        }}
+        onClearBrand={() => {
+          void setFilterBrandId(null);
+          void setCurrentPage(0);
+          clearSelection();
+        }}
+        onClearSort={() => {
+          void setSortBy(null);
+        }}
         onClearAll={clearAllFilters}
       />
 
@@ -447,7 +530,12 @@ export default function DashboardProductsPage() {
                   : 'Chưa có sản phẩm nào'}
             </p>
             {(search || filterCategoryId || filterBrandId) && (
-              <Button variant="link" size="sm" onClick={clearAllFilters} className="mt-1 h-auto p-0 text-xs">
+              <Button
+                variant="link"
+                size="sm"
+                onClick={clearAllFilters}
+                className="mt-1 h-auto p-0 text-xs"
+              >
                 Xóa bộ lọc
               </Button>
             )}
@@ -473,10 +561,7 @@ export default function DashboardProductsPage() {
             </TableHeader>
             <TableBody>
               {products.map((p) => (
-                <TableRow
-                  key={p.id}
-                  data-state={selectedIds.has(p.id) ? 'selected' : undefined}
-                >
+                <TableRow key={p.id} data-state={selectedIds.has(p.id) ? 'selected' : undefined}>
                   <TableCell className="px-4">
                     <Checkbox
                       checked={selectedIds.has(p.id)}
@@ -490,9 +575,15 @@ export default function DashboardProductsPage() {
                     <div className="flex items-center gap-3">
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <div className="bg-muted relative size-10 shrink-0 overflow-hidden rounded-md">
+                          <div className="relative size-10 shrink-0 overflow-hidden rounded-md bg-muted">
                             {p.thumbnail && p.thumbnail.startsWith('http') ? (
-                              <Image src={p.thumbnail} alt={p.name} fill className="object-cover" sizes="40px" />
+                              <Image
+                                src={p.thumbnail}
+                                alt={p.name}
+                                fill
+                                className="object-cover"
+                                sizes="40px"
+                              />
                             ) : (
                               <Package className="absolute inset-0 m-auto h-5 w-5 text-muted-foreground" />
                             )}
@@ -500,11 +591,19 @@ export default function DashboardProductsPage() {
                         </TooltipTrigger>
                         {p.thumbnail && p.thumbnail.startsWith('http') && (
                           <TooltipContent side="right" className="p-1.5">
-                            <Image src={p.thumbnail} alt={p.name} width={160} height={160} className="rounded object-contain" />
+                            <Image
+                              src={p.thumbnail}
+                              alt={p.name}
+                              width={160}
+                              height={160}
+                              className="rounded object-contain"
+                            />
                           </TooltipContent>
                         )}
                       </Tooltip>
-                      <span className={`max-w-[260px] truncate text-sm font-medium ${!p.active ? 'text-muted-foreground' : ''}`}>
+                      <span
+                        className={`max-w-[260px] truncate text-sm font-medium ${!p.active ? 'text-muted-foreground' : ''}`}
+                      >
                         {p.name}
                       </span>
                     </div>
@@ -514,12 +613,16 @@ export default function DashboardProductsPage() {
                   <TableCell>
                     <div className="flex flex-col gap-0.5">
                       {p.categoryName && (
-                        <Badge variant="secondary" className="w-fit font-normal">{p.categoryName}</Badge>
+                        <Badge variant="secondary" className="w-fit font-normal">
+                          {p.categoryName}
+                        </Badge>
                       )}
                       {p.brandName && (
                         <span className="text-xs text-muted-foreground">{p.brandName}</span>
                       )}
-                      {!p.categoryName && !p.brandName && <span className="text-muted-foreground">—</span>}
+                      {!p.categoryName && !p.brandName && (
+                        <span className="text-muted-foreground">—</span>
+                      )}
                     </div>
                   </TableCell>
 
@@ -530,7 +633,9 @@ export default function DashboardProductsPage() {
 
                   {/* Variants */}
                   <TableCell className="text-center">
-                    <Badge variant="secondary" className="font-normal">{p.variantCount}</Badge>
+                    <Badge variant="secondary" className="font-normal">
+                      {p.variantCount}
+                    </Badge>
                   </TableCell>
 
                   {/* Status toggle */}
@@ -551,7 +656,12 @@ export default function DashboardProductsPage() {
                       {isDeleted ? (
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="size-8 rounded-full text-muted-foreground" aria-label={`Hành động cho ${p.name}`}>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-8 rounded-full text-muted-foreground"
+                              aria-label={`Hành động cho ${p.name}`}
+                            >
                               <Ellipsis className="size-4" />
                             </Button>
                           </DropdownMenuTrigger>
@@ -560,7 +670,10 @@ export default function DashboardProductsPage() {
                               <RotateCcw className="h-4 w-4" /> Khôi phục
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem variant="destructive" onClick={() => setHardDeleteTarget(p)}>
+                            <DropdownMenuItem
+                              variant="destructive"
+                              onClick={() => setHardDeleteTarget(p)}
+                            >
                               <Trash2 className="h-4 w-4" /> Xóa vĩnh viễn
                             </DropdownMenuItem>
                           </DropdownMenuContent>
@@ -568,7 +681,12 @@ export default function DashboardProductsPage() {
                       ) : (
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="size-8 rounded-full text-muted-foreground" aria-label={`Hành động cho ${p.name}`}>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-8 rounded-full text-muted-foreground"
+                              aria-label={`Hành động cho ${p.name}`}
+                            >
                               <Ellipsis className="size-4" />
                             </Button>
                           </DropdownMenuTrigger>
@@ -584,13 +702,21 @@ export default function DashboardProductsPage() {
                               </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => toggleActiveMutation.mutate(p)}>
-                              {p.active
-                                ? <><EyeOff className="h-4 w-4" /> Ẩn</>
-                                : <><Eye className="h-4 w-4" /> Hiển thị</>
-                              }
+                              {p.active ? (
+                                <>
+                                  <EyeOff className="h-4 w-4" /> Ẩn
+                                </>
+                              ) : (
+                                <>
+                                  <Eye className="h-4 w-4" /> Hiển thị
+                                </>
+                              )}
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem variant="destructive" onClick={() => setDeleteTarget(p)}>
+                            <DropdownMenuItem
+                              variant="destructive"
+                              onClick={() => setDeleteTarget(p)}
+                            >
                               <Trash2 className="h-4 w-4" /> Xóa
                             </DropdownMenuItem>
                           </DropdownMenuContent>
@@ -611,18 +737,43 @@ export default function DashboardProductsPage() {
               {totalElements} sản phẩm · trang {currentPage + 1}/{totalPages}
             </p>
             <div className="flex items-center gap-1">
-              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => void setCurrentPage(Math.max(0, currentPage - 1))} disabled={currentPage === 0}>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => void setCurrentPage(Math.max(0, currentPage - 1))}
+                disabled={currentPage === 0}
+              >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
-                const p = totalPages <= 7 ? i : currentPage < 4 ? i : currentPage > totalPages - 4 ? totalPages - 7 + i : currentPage - 3 + i;
+                const p =
+                  totalPages <= 7
+                    ? i
+                    : currentPage < 4
+                      ? i
+                      : currentPage > totalPages - 4
+                        ? totalPages - 7 + i
+                        : currentPage - 3 + i;
                 return (
-                  <Button key={p} variant={currentPage === p ? 'default' : 'outline'} size="icon" className="h-8 w-8 text-xs" onClick={() => void setCurrentPage(p)}>
+                  <Button
+                    key={p}
+                    variant={currentPage === p ? 'default' : 'outline'}
+                    size="icon"
+                    className="h-8 w-8 text-xs"
+                    onClick={() => void setCurrentPage(p)}
+                  >
                     {p + 1}
                   </Button>
                 );
               })}
-              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => void setCurrentPage(Math.min(totalPages - 1, currentPage + 1))} disabled={currentPage >= totalPages - 1}>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => void setCurrentPage(Math.min(totalPages - 1, currentPage + 1))}
+                disabled={currentPage >= totalPages - 1}
+              >
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>

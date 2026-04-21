@@ -4,9 +4,15 @@ import { Eye, EyeOff, RotateCcw, Trash2, X, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader,
-  AlertDialogMedia, AlertDialogTitle,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
 interface BulkBarProps {
@@ -40,24 +46,36 @@ export function ProductBulkBar({
 
   async function run(fn: () => Promise<void>) {
     setLoading(true);
-    try { await fn(); } finally { setLoading(false); }
+    try {
+      await fn();
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
     <>
       <div className="flex items-center gap-2 rounded-md border bg-muted/50 px-3 py-2">
-        <span className="text-sm text-muted-foreground">
-          {selectedCount} đã chọn
-        </span>
+        <span className="text-sm text-muted-foreground">{selectedCount} đã chọn</span>
         <Separator orientation="vertical" className="h-4" />
 
         {isDeleted ? (
           <>
-            <Button variant="outline" size="sm" disabled={loading} onClick={() => run(onBulkRestore)}>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={loading}
+              onClick={() => run(onBulkRestore)}
+            >
               <RotateCcw className="h-3.5 w-3.5" />
               Khôi phục
             </Button>
-            <Button variant="outline" size="sm" disabled={loading} onClick={() => setConfirmHardDelete(true)}>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={loading}
+              onClick={() => setConfirmHardDelete(true)}
+            >
               <Trash2 className="h-3.5 w-3.5" />
               Xóa vĩnh viễn
             </Button>
@@ -76,7 +94,12 @@ export function ProductBulkBar({
               <Download className="h-3.5 w-3.5" />
               Xuất CSV
             </Button>
-            <Button variant="outline" size="sm" disabled={loading} onClick={() => setConfirmDelete(true)}>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={loading}
+              onClick={() => setConfirmDelete(true)}
+            >
               <Trash2 className="h-3.5 w-3.5" />
               Xóa
             </Button>
@@ -110,7 +133,10 @@ export function ProductBulkBar({
             <AlertDialogAction
               variant="destructive"
               disabled={loading}
-              onClick={async () => { await run(onBulkDelete); setConfirmDelete(false); }}
+              onClick={async () => {
+                await run(onBulkDelete);
+                setConfirmDelete(false);
+              }}
             >
               {loading ? 'Đang xóa...' : 'Xóa'}
             </AlertDialogAction>
@@ -125,16 +151,17 @@ export function ProductBulkBar({
               <Trash2 className="h-5 w-5" />
             </AlertDialogMedia>
             <AlertDialogTitle>Xóa vĩnh viễn {selectedCount} sản phẩm?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Hành động này không thể hoàn tác.
-            </AlertDialogDescription>
+            <AlertDialogDescription>Hành động này không thể hoàn tác.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Hủy</AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
               disabled={loading}
-              onClick={async () => { await run(onBulkHardDelete); setConfirmHardDelete(false); }}
+              onClick={async () => {
+                await run(onBulkHardDelete);
+                setConfirmHardDelete(false);
+              }}
             >
               {loading ? 'Đang xóa...' : 'Xóa vĩnh viễn'}
             </AlertDialogAction>

@@ -50,7 +50,9 @@ export function useCategories() {
       ]);
       setTree(active);
       setFlatList(flattenTree(active));
-      setDeletedList(Array.isArray(deleted) ? deleted : (deleted as Page<Category>).content ?? []);
+      setDeletedList(
+        Array.isArray(deleted) ? deleted : ((deleted as Page<Category>).content ?? []),
+      );
     } catch {
       toast.error('Không thể tải danh sách danh mục');
     } finally {
@@ -58,13 +60,15 @@ export function useCategories() {
     }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+  }, [load]);
 
   useEffect(() => {
     if (!prevSearch.current && search) expandedBeforeSearch.current = new Set(expandedIds);
     else if (prevSearch.current && !search) setExpandedIds(expandedBeforeSearch.current);
     prevSearch.current = search;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
 
   const total = flatList.length;
@@ -137,7 +141,9 @@ export function useCategories() {
         );
       }
       setTree((prev) => patch(prev));
-      setFlatList((prev) => prev.map((c) => (c.id === updated.id ? { ...c, active: updated.active } : c)));
+      setFlatList((prev) =>
+        prev.map((c) => (c.id === updated.id ? { ...c, active: updated.active } : c)),
+      );
       toast.success(updated.active ? 'Đã hiển thị' : 'Đã ẩn');
     } catch {
       toast.error('Cập nhật thất bại');
@@ -146,111 +152,157 @@ export function useCategories() {
     }
   }, []);
 
-  const handleDelete = useCallback(async (cat: Category) => {
-    try {
-      await deleteCategory(cat.id);
-      await load();
-      toast.success('Đã xóa danh mục');
-    } catch (e) {
-      if (e instanceof ApiException && e.error.code === 'CATEGORY_HAS_CHILDREN')
-        toast.error('Không thể xóa — còn danh mục con đang hoạt động');
-      else toast.error(e instanceof ApiException ? e.error.message : 'Xóa thất bại');
-      throw e;
-    }
-  }, [load]);
+  const handleDelete = useCallback(
+    async (cat: Category) => {
+      try {
+        await deleteCategory(cat.id);
+        await load();
+        toast.success('Đã xóa danh mục');
+      } catch (e) {
+        if (e instanceof ApiException && e.error.code === 'CATEGORY_HAS_CHILDREN')
+          toast.error('Không thể xóa — còn danh mục con đang hoạt động');
+        else toast.error(e instanceof ApiException ? e.error.message : 'Xóa thất bại');
+        throw e;
+      }
+    },
+    [load],
+  );
 
-  const applyReorder = useCallback((parentId: number | null, reordered: Category[]) => {
-    const orderMap = new Map(reordered.map((c, i) => [c.id, i]));
-    const next = flatList.map((c) =>
-      c.parentId === parentId && orderMap.has(c.id) ? { ...c, sortOrder: orderMap.get(c.id)! } : c,
-    );
-    setFlatList(next);
-    setTree(buildTree(next));
-  }, [flatList]);
+  const applyReorder = useCallback(
+    (parentId: number | null, reordered: Category[]) => {
+      const orderMap = new Map(reordered.map((c, i) => [c.id, i]));
+      const next = flatList.map((c) =>
+        c.parentId === parentId && orderMap.has(c.id)
+          ? { ...c, sortOrder: orderMap.get(c.id)! }
+          : c,
+      );
+      setFlatList(next);
+      setTree(buildTree(next));
+    },
+    [flatList],
+  );
 
-  const applyChangeParent = useCallback((id: number, from: number | null, to: number | null) => {
-    const next = flatList.map((c) => (c.id === id ? { ...c, parentId: to } : c));
-    const reindex = (pid: number | null) => {
-      next
-        .filter((c) => c.parentId === pid)
-        .sort((a, b) => a.sortOrder - b.sortOrder)
-        .forEach((c, i) => { const item = next.find((x) => x.id === c.id); if (item) item.sortOrder = i; });
-    };
-    reindex(from);
-    reindex(to);
-    setFlatList([...next]);
-    setTree(buildTree(next));
-  }, [flatList]);
+  const applyChangeParent = useCallback(
+    (id: number, from: number | null, to: number | null) => {
+      const next = flatList.map((c) => (c.id === id ? { ...c, parentId: to } : c));
+      const reindex = (pid: number | null) => {
+        next
+          .filter((c) => c.parentId === pid)
+          .sort((a, b) => a.sortOrder - b.sortOrder)
+          .forEach((c, i) => {
+            const item = next.find((x) => x.id === c.id);
+            if (item) item.sortOrder = i;
+          });
+      };
+      reindex(from);
+      reindex(to);
+      setFlatList([...next]);
+      setTree(buildTree(next));
+    },
+    [flatList],
+  );
 
-  const handleMoveUp = useCallback(async (id: number, parentId: number | null) => {
-    const siblings = flatList.filter((c) => c.parentId === parentId).sort((a, b) => a.sortOrder - b.sortOrder);
-    const idx = siblings.findIndex((c) => c.id === id);
-    if (idx <= 0) return;
-    const reordered = [...siblings];
-    [reordered[idx - 1], reordered[idx]] = [reordered[idx], reordered[idx - 1]];
-    const snapshot = { flatList, tree };
-    applyReorder(parentId, reordered);
-    try {
-      await moveCategories({ movedId: id, fromParentId: parentId, toParentId: parentId, targetOrderedIds: reordered.map((c) => c.id) });
-    } catch {
-      setFlatList(snapshot.flatList);
-      setTree(snapshot.tree);
-      toast.error('Sắp xếp thất bại');
-    }
-  }, [flatList, tree, applyReorder]);
+  const handleMoveUp = useCallback(
+    async (id: number, parentId: number | null) => {
+      const siblings = flatList
+        .filter((c) => c.parentId === parentId)
+        .sort((a, b) => a.sortOrder - b.sortOrder);
+      const idx = siblings.findIndex((c) => c.id === id);
+      if (idx <= 0) return;
+      const reordered = [...siblings];
+      [reordered[idx - 1], reordered[idx]] = [reordered[idx], reordered[idx - 1]];
+      const snapshot = { flatList, tree };
+      applyReorder(parentId, reordered);
+      try {
+        await moveCategories({
+          movedId: id,
+          fromParentId: parentId,
+          toParentId: parentId,
+          targetOrderedIds: reordered.map((c) => c.id),
+        });
+      } catch {
+        setFlatList(snapshot.flatList);
+        setTree(snapshot.tree);
+        toast.error('Sắp xếp thất bại');
+      }
+    },
+    [flatList, tree, applyReorder],
+  );
 
-  const handleMoveDown = useCallback(async (id: number, parentId: number | null) => {
-    const siblings = flatList.filter((c) => c.parentId === parentId).sort((a, b) => a.sortOrder - b.sortOrder);
-    const idx = siblings.findIndex((c) => c.id === id);
-    if (idx < 0 || idx >= siblings.length - 1) return;
-    const reordered = [...siblings];
-    [reordered[idx], reordered[idx + 1]] = [reordered[idx + 1], reordered[idx]];
-    const snapshot = { flatList, tree };
-    applyReorder(parentId, reordered);
-    try {
-      await moveCategories({ movedId: id, fromParentId: parentId, toParentId: parentId, targetOrderedIds: reordered.map((c) => c.id) });
-    } catch {
-      setFlatList(snapshot.flatList);
-      setTree(snapshot.tree);
-      toast.error('Sắp xếp thất bại');
-    }
-  }, [flatList, tree, applyReorder]);
+  const handleMoveDown = useCallback(
+    async (id: number, parentId: number | null) => {
+      const siblings = flatList
+        .filter((c) => c.parentId === parentId)
+        .sort((a, b) => a.sortOrder - b.sortOrder);
+      const idx = siblings.findIndex((c) => c.id === id);
+      if (idx < 0 || idx >= siblings.length - 1) return;
+      const reordered = [...siblings];
+      [reordered[idx], reordered[idx + 1]] = [reordered[idx + 1], reordered[idx]];
+      const snapshot = { flatList, tree };
+      applyReorder(parentId, reordered);
+      try {
+        await moveCategories({
+          movedId: id,
+          fromParentId: parentId,
+          toParentId: parentId,
+          targetOrderedIds: reordered.map((c) => c.id),
+        });
+      } catch {
+        setFlatList(snapshot.flatList);
+        setTree(snapshot.tree);
+        toast.error('Sắp xếp thất bại');
+      }
+    },
+    [flatList, tree, applyReorder],
+  );
 
-  const handleChangeParent = useCallback(async (id: number, newParentId: number | null) => {
-    const node = flatList.find((c) => c.id === id);
-    if (!node || node.parentId === newParentId) return;
-    const fromParentId = node.parentId;
-    const snapshot = { flatList, tree };
-    applyChangeParent(id, fromParentId, newParentId);
-    const destSiblings = [
-      ...flatList.filter((c) => c.parentId === newParentId).sort((a, b) => a.sortOrder - b.sortOrder).map((c) => c.id),
-      id,
-    ];
-    try {
-      await moveCategories({
-        movedId: id,
-        fromParentId,
-        toParentId: newParentId,
-        targetOrderedIds: destSiblings,
-        sourceOrderedIds: flatList.filter((c) => c.parentId === fromParentId && c.id !== id).sort((a, b) => a.sortOrder - b.sortOrder).map((c) => c.id),
-      });
-      toast.success('Đã đổi danh mục cha');
-    } catch {
-      setFlatList(snapshot.flatList);
-      setTree(snapshot.tree);
-      toast.error('Đổi danh mục cha thất bại');
-    }
-  }, [flatList, tree, applyChangeParent]);
+  const handleChangeParent = useCallback(
+    async (id: number, newParentId: number | null) => {
+      const node = flatList.find((c) => c.id === id);
+      if (!node || node.parentId === newParentId) return;
+      const fromParentId = node.parentId;
+      const snapshot = { flatList, tree };
+      applyChangeParent(id, fromParentId, newParentId);
+      const destSiblings = [
+        ...flatList
+          .filter((c) => c.parentId === newParentId)
+          .sort((a, b) => a.sortOrder - b.sortOrder)
+          .map((c) => c.id),
+        id,
+      ];
+      try {
+        await moveCategories({
+          movedId: id,
+          fromParentId,
+          toParentId: newParentId,
+          targetOrderedIds: destSiblings,
+          sourceOrderedIds: flatList
+            .filter((c) => c.parentId === fromParentId && c.id !== id)
+            .sort((a, b) => a.sortOrder - b.sortOrder)
+            .map((c) => c.id),
+        });
+        toast.success('Đã đổi danh mục cha');
+      } catch {
+        setFlatList(snapshot.flatList);
+        setTree(snapshot.tree);
+        toast.error('Đổi danh mục cha thất bại');
+      }
+    },
+    [flatList, tree, applyChangeParent],
+  );
 
-  const handleRestore = useCallback(async (cat: Category) => {
-    try {
-      await restoreCategory(cat.id);
-      await load();
-      toast.success('Đã khôi phục danh mục');
-    } catch {
-      toast.error('Khôi phục thất bại');
-    }
-  }, [load]);
+  const handleRestore = useCallback(
+    async (cat: Category) => {
+      try {
+        await restoreCategory(cat.id);
+        await load();
+        toast.success('Đã khôi phục danh mục');
+      } catch {
+        toast.error('Khôi phục thất bại');
+      }
+    },
+    [load],
+  );
 
   const handleHardDelete = useCallback(async (cat: Category) => {
     try {
@@ -263,16 +315,32 @@ export function useCategories() {
   }, []);
 
   return {
-    flatList, loading, search, setSearch,
-    filterStatus, setFilterStatus,
-    total, activeCount, rootCount, subCount, deletedCount,
-    visibleTree, visibleDeleted, matchedIds,
+    flatList,
+    loading,
+    search,
+    setSearch,
+    filterStatus,
+    setFilterStatus,
+    total,
+    activeCount,
+    rootCount,
+    subCount,
+    deletedCount,
+    visibleTree,
+    visibleDeleted,
+    matchedIds,
     expandedIds: activeExpandedIds,
     togglingId,
-    toggleExpand, expandAll, collapseAll,
-    handleToggleActive, handleDelete,
-    handleMoveUp, handleMoveDown, handleChangeParent,
-    handleRestore, handleHardDelete,
+    toggleExpand,
+    expandAll,
+    collapseAll,
+    handleToggleActive,
+    handleDelete,
+    handleMoveUp,
+    handleMoveDown,
+    handleChangeParent,
+    handleRestore,
+    handleHardDelete,
     reload: load,
   };
 }

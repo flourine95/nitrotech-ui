@@ -15,11 +15,7 @@ async function fetchProduct(id: number) {
   return json.data;
 }
 
-export default async function EditProductPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default async function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const product = await fetchProduct(Number(id));
 

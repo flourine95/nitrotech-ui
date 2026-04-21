@@ -7,14 +7,23 @@ import { ApiException } from '@/lib/client';
 import { BrandPanel } from './brand-panel';
 import { useBrands, type FilterStatus } from './use-brands';
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader,
-  AlertDialogMedia, AlertDialogTitle,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 export default function DashboardBrandsPage() {
-  const [panel, setPanel] = useState<{ open: boolean; brand: Brand | null }>({ open: false, brand: null });
+  const [panel, setPanel] = useState<{ open: boolean; brand: Brand | null }>({
+    open: false,
+    brand: null,
+  });
   const [deleteTarget, setDeleteTarget] = useState<Brand | null>(null);
   const [restoreTarget, setRestoreTarget] = useState<Brand | null>(null);
   const [hardDeleteTarget, setHardDeleteTarget] = useState<Brand | null>(null);
@@ -23,11 +32,21 @@ export default function DashboardBrandsPage() {
   const [hardDeleting, setHardDeleting] = useState(false);
 
   const {
-    loading, search, setSearch,
-    filterStatus, setFilterStatus,
-    total, activeCount, inactiveCount, deletedCount,
-    visibleBrands, visibleDeleted,
-    handleToggleActive, handleDelete, handleRestore, handleHardDelete,
+    loading,
+    search,
+    setSearch,
+    filterStatus,
+    setFilterStatus,
+    total,
+    activeCount,
+    inactiveCount,
+    deletedCount,
+    visibleBrands,
+    visibleDeleted,
+    handleToggleActive,
+    handleDelete,
+    handleRestore,
+    handleHardDelete,
     reload,
   } = useBrands();
 
@@ -82,12 +101,14 @@ export default function DashboardBrandsPage() {
 
       {/* KPI cards */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {([
-          { label: 'Tổng', value: total, color: 'text-foreground' },
-          { label: 'Hiển thị', value: activeCount, color: 'text-emerald-600' },
-          { label: 'Ẩn', value: inactiveCount, color: 'text-muted-foreground/70' },
-          { label: 'Đã xóa', value: deletedCount, color: 'text-rose-500' },
-        ] as const).map((s) => (
+        {(
+          [
+            { label: 'Tổng', value: total, color: 'text-foreground' },
+            { label: 'Hiển thị', value: activeCount, color: 'text-emerald-600' },
+            { label: 'Ẩn', value: inactiveCount, color: 'text-muted-foreground/70' },
+            { label: 'Đã xóa', value: deletedCount, color: 'text-rose-500' },
+          ] as const
+        ).map((s) => (
           <div key={s.label} className="rounded-xl border border-border bg-card px-4 py-3">
             <div className={`text-2xl font-bold tabular-nums ${s.color}`}>{s.value}</div>
             <div className="text-xs text-muted-foreground">{s.label}</div>
@@ -107,30 +128,40 @@ export default function DashboardBrandsPage() {
             className="w-full rounded-xl border border-border bg-card py-2.5 pr-4 pl-9 text-sm text-foreground/80 outline-none placeholder:text-muted-foreground/70 focus:border-ring focus:ring-2 focus:ring-ring/20"
           />
           {search && (
-            <button onClick={() => setSearch('')} aria-label="Xóa" className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-muted-foreground/70 hover:text-muted-foreground">
+            <button
+              onClick={() => setSearch('')}
+              aria-label="Xóa"
+              className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-muted-foreground/70 hover:text-muted-foreground"
+            >
               <X className="h-3.5 w-3.5" />
             </button>
           )}
         </div>
         <div className="flex gap-2">
-          {([
-            { value: 'all', label: 'Tất cả', count: total },
-            { value: 'active', label: 'Hiển thị', count: activeCount },
-            { value: 'inactive', label: 'Ẩn', count: inactiveCount },
-            { value: 'deleted', label: 'Đã xóa', count: deletedCount },
-          ] as { value: FilterStatus; label: string; count: number }[]).map((f) => (
+          {(
+            [
+              { value: 'all', label: 'Tất cả', count: total },
+              { value: 'active', label: 'Hiển thị', count: activeCount },
+              { value: 'inactive', label: 'Ẩn', count: inactiveCount },
+              { value: 'deleted', label: 'Đã xóa', count: deletedCount },
+            ] as { value: FilterStatus; label: string; count: number }[]
+          ).map((f) => (
             <button
               key={f.value}
               onClick={() => setFilterStatus(f.value)}
               className={`cursor-pointer rounded-xl border px-3 py-2 text-xs font-medium transition-colors ${
                 filterStatus === f.value
-                  ? f.value === 'deleted' ? 'border-rose-600 bg-rose-600 text-white' : 'border-slate-900 bg-slate-900 text-white'
+                  ? f.value === 'deleted'
+                    ? 'border-rose-600 bg-rose-600 text-white'
+                    : 'border-slate-900 bg-slate-900 text-white'
                   : 'border-border bg-card text-muted-foreground hover:bg-muted/50'
               }`}
             >
               {f.label}
               {f.count > 0 && (
-                <span className={`ml-1 ${filterStatus === f.value ? 'opacity-75' : 'text-muted-foreground/70'}`}>
+                <span
+                  className={`ml-1 ${filterStatus === f.value ? 'opacity-75' : 'text-muted-foreground/70'}`}
+                >
                   ({f.count})
                 </span>
               )}
@@ -143,7 +174,9 @@ export default function DashboardBrandsPage() {
       <div className="overflow-hidden rounded-xl border border-border bg-card">
         {loading ? (
           <div className="space-y-2 p-4">
-            {[1, 2, 3, 4].map((i) => <div key={i} className="h-14 animate-pulse rounded-lg bg-muted" />)}
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-14 animate-pulse rounded-lg bg-muted" />
+            ))}
           </div>
         ) : filterStatus === 'deleted' ? (
           visibleDeleted.length === 0 ? (
@@ -152,19 +185,34 @@ export default function DashboardBrandsPage() {
               <p className="text-sm font-medium">
                 {search ? `Không tìm thấy "${search}"` : 'Không có thương hiệu nào đã xóa'}
               </p>
-              {search && <button onClick={() => setSearch('')} className="mt-2 cursor-pointer text-xs text-primary hover:underline">Xóa bộ lọc</button>}
+              {search && (
+                <button
+                  onClick={() => setSearch('')}
+                  className="mt-2 cursor-pointer text-xs text-primary hover:underline"
+                >
+                  Xóa bộ lọc
+                </button>
+              )}
             </div>
           ) : (
             <div className="divide-y divide-border">
               {visibleDeleted.map((b) => (
                 <div key={b.id} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50">
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-muted text-xs font-bold text-muted-foreground/70">
-                    {b.logo && b.logo.startsWith('http')
-                      ? <img src={b.logo} alt={b.name} className="h-full w-full object-contain p-1 opacity-50" />
-                      : b.name[0].toUpperCase()}
+                    {b.logo && b.logo.startsWith('http') ? (
+                      <img
+                        src={b.logo}
+                        alt={b.name}
+                        className="h-full w-full object-contain p-1 opacity-50"
+                      />
+                    ) : (
+                      b.name[0].toUpperCase()
+                    )}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-muted-foreground/70 line-through">{b.name}</p>
+                    <p className="truncate text-sm font-medium text-muted-foreground/70 line-through">
+                      {b.name}
+                    </p>
                     <p className="font-mono text-[11px] text-muted-foreground/70">{b.slug}</p>
                   </div>
                   <div className="flex shrink-0 items-center gap-1">
@@ -193,18 +241,35 @@ export default function DashboardBrandsPage() {
             <p className="text-sm font-medium">
               {search ? `Không tìm thấy "${search}"` : 'Chưa có thương hiệu nào'}
             </p>
-            {search && <button onClick={() => setSearch('')} className="mt-2 cursor-pointer text-xs text-primary hover:underline">Xóa bộ lọc</button>}
+            {search && (
+              <button
+                onClick={() => setSearch('')}
+                className="mt-2 cursor-pointer text-xs text-primary hover:underline"
+              >
+                Xóa bộ lọc
+              </button>
+            )}
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/50">
-                  <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Thương hiệu</th>
-                  <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Slug</th>
-                  <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Mô tả</th>
-                  <th className="px-5 py-3.5 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">Trạng thái</th>
-                  <th className="px-5 py-3.5 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">Ngày tạo</th>
+                  <th className="px-5 py-3.5 text-left text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                    Thương hiệu
+                  </th>
+                  <th className="px-5 py-3.5 text-left text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                    Slug
+                  </th>
+                  <th className="px-5 py-3.5 text-left text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                    Mô tả
+                  </th>
+                  <th className="px-5 py-3.5 text-center text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                    Trạng thái
+                  </th>
+                  <th className="px-5 py-3.5 text-center text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                    Ngày tạo
+                  </th>
                   <th className="px-5 py-3.5" />
                 </tr>
               </thead>
@@ -216,21 +281,39 @@ export default function DashboardBrandsPage() {
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <div className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-xl bg-muted text-xs font-bold text-muted-foreground">
-                              {b.logo && b.logo.startsWith('http')
-                                ? <img src={b.logo} alt={b.name} className="h-full w-full object-contain p-1" />
-                                : b.name[0].toUpperCase()}
+                              {b.logo && b.logo.startsWith('http') ? (
+                                <img
+                                  src={b.logo}
+                                  alt={b.name}
+                                  className="h-full w-full object-contain p-1"
+                                />
+                              ) : (
+                                b.name[0].toUpperCase()
+                              )}
                             </div>
                           </TooltipTrigger>
                           {b.logo && b.logo.startsWith('http') ? (
                             <TooltipContent side="right" className="p-2">
-                              <img src={b.logo} alt={b.name} className="h-40 w-40 rounded-lg object-contain" />
-                              <p className="mt-1.5 text-center text-xs text-muted-foreground">{b.name}</p>
+                              <img
+                                src={b.logo}
+                                alt={b.name}
+                                className="h-40 w-40 rounded-lg object-contain"
+                              />
+                              <p className="mt-1.5 text-center text-xs text-muted-foreground">
+                                {b.name}
+                              </p>
                             </TooltipContent>
                           ) : (
-                            <TooltipContent side="right"><p>Chưa có logo</p></TooltipContent>
+                            <TooltipContent side="right">
+                              <p>Chưa có logo</p>
+                            </TooltipContent>
                           )}
                         </Tooltip>
-                        <span className={`font-semibold ${b.active ? 'text-foreground' : 'text-muted-foreground/70'}`}>{b.name}</span>
+                        <span
+                          className={`font-semibold ${b.active ? 'text-foreground' : 'text-muted-foreground/70'}`}
+                        >
+                          {b.name}
+                        </span>
                       </div>
                     </td>
                     <td className="px-5 py-4 font-mono text-xs text-muted-foreground">{b.slug}</td>
@@ -244,11 +327,15 @@ export default function DashboardBrandsPage() {
                             onClick={() => handleToggleActive(b)}
                             className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus:outline-none ${b.active ? 'bg-emerald-500' : 'bg-slate-300'}`}
                           >
-                            <span className={`inline-flex h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${b.active ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                            <span
+                              className={`inline-flex h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${b.active ? 'translate-x-4' : 'translate-x-0.5'}`}
+                            />
                           </button>
                         </TooltipTrigger>
                         <TooltipContent side="top">
-                          <p>{b.active ? 'Đang hiển thị — nhấn để ẩn' : 'Đang ẩn — nhấn để hiển thị'}</p>
+                          <p>
+                            {b.active ? 'Đang hiển thị — nhấn để ẩn' : 'Đang ẩn — nhấn để hiển thị'}
+                          </p>
                         </TooltipContent>
                       </Tooltip>
                     </td>
@@ -283,12 +370,16 @@ export default function DashboardBrandsPage() {
         {/* Footer count */}
         {!loading && filterStatus !== 'deleted' && visibleBrands.length > 0 && (
           <div className="border-t border-border px-4 py-2.5 text-xs text-muted-foreground/70">
-            {search ? `${visibleBrands.length} kết quả cho "${search}"` : `${total} thương hiệu · ${activeCount} hiển thị · ${inactiveCount} ẩn`}
+            {search
+              ? `${visibleBrands.length} kết quả cho "${search}"`
+              : `${total} thương hiệu · ${activeCount} hiển thị · ${inactiveCount} ẩn`}
           </div>
         )}
         {!loading && filterStatus === 'deleted' && visibleDeleted.length > 0 && (
           <div className="border-t border-border px-4 py-2.5 text-xs text-muted-foreground/70">
-            {search ? `${visibleDeleted.length} kết quả cho "${search}"` : `${deletedCount} thương hiệu đã xóa`}
+            {search
+              ? `${visibleDeleted.length} kết quả cho "${search}"`
+              : `${deletedCount} thương hiệu đã xóa`}
           </div>
         )}
       </div>
@@ -298,7 +389,10 @@ export default function DashboardBrandsPage() {
         <BrandPanel
           brand={panel.brand}
           onClose={() => setPanel({ open: false, brand: null })}
-          onSaved={() => { reload(); setPanel({ open: false, brand: null }); }}
+          onSaved={() => {
+            reload();
+            setPanel({ open: false, brand: null });
+          }}
         />
       )}
 
@@ -311,8 +405,8 @@ export default function DashboardBrandsPage() {
             </AlertDialogMedia>
             <AlertDialogTitle>Xóa thương hiệu?</AlertDialogTitle>
             <AlertDialogDescription>
-              Bạn sắp xóa <strong className="text-foreground">{deleteTarget?.name}</strong>.
-              Thương hiệu sẽ bị ẩn và có thể khôi phục lại sau.
+              Bạn sắp xóa <strong className="text-foreground">{deleteTarget?.name}</strong>. Thương
+              hiệu sẽ bị ẩn và có thể khôi phục lại sau.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -338,12 +432,16 @@ export default function DashboardBrandsPage() {
             </AlertDialogMedia>
             <AlertDialogTitle>Khôi phục thương hiệu?</AlertDialogTitle>
             <AlertDialogDescription>
-              Khôi phục <strong className="text-foreground">{restoreTarget?.name}</strong> về trạng thái hiển thị.
+              Khôi phục <strong className="text-foreground">{restoreTarget?.name}</strong> về trạng
+              thái hiển thị.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Hủy</AlertDialogCancel>
-            <AlertDialogAction onClick={() => restoreTarget && confirmRestore(restoreTarget)} disabled={restoring}>
+            <AlertDialogAction
+              onClick={() => restoreTarget && confirmRestore(restoreTarget)}
+              disabled={restoring}
+            >
               {restoring ? 'Đang khôi phục...' : 'Khôi phục'}
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -359,7 +457,8 @@ export default function DashboardBrandsPage() {
             </AlertDialogMedia>
             <AlertDialogTitle>Xóa vĩnh viễn?</AlertDialogTitle>
             <AlertDialogDescription>
-              <strong className="text-foreground">{hardDeleteTarget?.name}</strong> sẽ bị xóa hoàn toàn và không thể khôi phục.
+              <strong className="text-foreground">{hardDeleteTarget?.name}</strong> sẽ bị xóa hoàn
+              toàn và không thể khôi phục.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

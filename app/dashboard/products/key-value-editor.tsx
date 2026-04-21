@@ -91,13 +91,7 @@ export function KeyValueEditor({
           </Button>
         </div>
       ))}
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        onClick={addRow}
-        className="w-full"
-      >
+      <Button type="button" variant="outline" size="sm" onClick={addRow} className="w-full">
         <Plus className="mr-2 h-4 w-4" />
         Thêm dòng
       </Button>

@@ -3,13 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import {
-  BoltIcon,
-  BellIcon,
-  LogOutIcon,
-  UserIcon,
-  SearchIcon,
-} from 'lucide-react';
+import { BoltIcon, BellIcon, LogOutIcon, UserIcon, SearchIcon } from 'lucide-react';
 
 import {
   Sidebar,
@@ -45,9 +39,7 @@ function NavGroup({ items, pathname }: { items: NavItem[]; pathname: string }) {
     <SidebarMenu>
       {items.map((item) => {
         const isActive =
-          item.href === '/dashboard'
-            ? pathname === '/dashboard'
-            : pathname.startsWith(item.href);
+          item.href === '/dashboard' ? pathname === '/dashboard' : pathname.startsWith(item.href);
         return (
           <SidebarMenuItem key={item.href}>
             <SidebarMenuButton asChild isActive={isActive} tooltip={item.label}>
@@ -57,7 +49,7 @@ function NavGroup({ items, pathname }: { items: NavItem[]; pathname: string }) {
               </Link>
             </SidebarMenuButton>
             {item.badge ? (
-              <SidebarMenuBadge className="bg-primary/20 text-primary rounded-full">
+              <SidebarMenuBadge className="rounded-full bg-primary/20 text-primary">
                 {item.badge}
               </SidebarMenuBadge>
             ) : null}
@@ -95,14 +87,13 @@ export function DashboardShell({
   return (
     <SidebarProvider>
       <Sidebar collapsible="icon">
-
         {/* Logo */}
         <SidebarHeader>
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton size="lg" asChild tooltip="NitroTech">
                 <Link href="/dashboard">
-                  <div className="bg-foreground text-background flex size-8 shrink-0 items-center justify-center rounded-lg">
+                  <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-foreground text-background">
                     <BoltIcon className="size-4" />
                   </div>
                   <span className="text-base font-bold tracking-tight">NitroTech</span>
@@ -141,14 +132,14 @@ export function DashboardShell({
 
       <SidebarInset>
         {/* Header */}
-        <header className="bg-card sticky top-0 z-40 border-b">
+        <header className="sticky top-0 z-40 border-b bg-card">
           <div className="flex h-14 items-center justify-between gap-4 px-4 sm:px-6">
             <div className="flex items-center gap-4">
               <SidebarTrigger className="size-8 [&_svg]:!size-5" />
               <Separator orientation="vertical" className="hidden h-4 sm:block" />
               {/* Search — desktop */}
               <div className="relative hidden sm:block">
-                <SearchIcon className="text-muted-foreground/60 absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+                <SearchIcon className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground/60" />
                 <Input
                   type="search"
                   placeholder="Tìm kiếm..."
@@ -160,12 +151,22 @@ export function DashboardShell({
 
             <div className="flex items-center gap-1.5">
               {/* Search — mobile icon */}
-              <Button variant="ghost" size="icon" className="size-8 sm:hidden" aria-label="Tìm kiếm">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-8 sm:hidden"
+                aria-label="Tìm kiếm"
+              >
                 <SearchIcon />
               </Button>
 
               {/* Notifications */}
-              <Button variant="ghost" size="icon" className="relative size-8" aria-label="Thông báo">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative size-8"
+                aria-label="Thông báo"
+              >
                 <BellIcon />
                 <Badge className="absolute -top-0.5 -right-0.5 size-4 justify-center rounded-full p-0 text-[10px]">
                   3
@@ -179,7 +180,12 @@ export function DashboardShell({
                     <Avatar className="size-8 rounded-md">
                       <AvatarImage src="https://cdn.shadcnstudio.com/ss-assets/avatar/avatar-1.png" />
                       <AvatarFallback>
-                        {displayName.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase()}
+                        {displayName
+                          .split(' ')
+                          .map((n) => n[0])
+                          .slice(0, 2)
+                          .join('')
+                          .toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                   </Button>

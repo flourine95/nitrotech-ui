@@ -5,9 +5,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  Copy, Ellipsis, Package, Pencil, Plus, Trash2,
-} from 'lucide-react';
+import { Copy, Ellipsis, Package, Pencil, Plus, Trash2 } from 'lucide-react';
 import type { Product, ProductVariant } from '@/lib/api/products';
 import { deleteProduct, updateProduct } from '@/lib/api/products';
 import { Button } from '@/components/ui/button';
@@ -16,13 +14,22 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
-  DropdownMenuSeparator, DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader,
-  AlertDialogMedia, AlertDialogTitle,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { formatPrice } from '../utils';
 import { VariantFormSheet } from './variant-form-sheet';
@@ -46,7 +53,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
   const [showVariantForm, setShowVariantForm] = useState(false);
   const [editingVariant, setEditingVariant] = useState<ProductVariant | undefined>();
   const [selectedImage, setSelectedImage] = useState(
-    product.thumbnail ?? (product.images && product.images[0]) ?? ''
+    product.thumbnail ?? (product.images && product.images[0]) ?? '',
   );
 
   const toggleActiveMutation = useMutation({
@@ -100,7 +107,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
       {/* Mobile header */}
       <div className="flex flex-col gap-5 pb-8 md:hidden">
         <div className="flex items-center gap-2 text-xs">
-          <Link href="/dashboard/products" className="text-foreground font-medium hover:underline">
+          <Link href="/dashboard/products" className="font-medium text-foreground hover:underline">
             Sản phẩm
           </Link>
           <span className="text-muted-foreground">/</span>
@@ -118,8 +125,9 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
         </div>
         <div className="flex flex-col gap-2">
           <h1 className="text-3xl font-semibold tracking-tight">{product.name}</h1>
-          <p className="text-muted-foreground text-sm">
-            {product.variantCount} variants • {product.categoryName ?? 'Chưa phân loại'} • {product.brandName ?? 'Không có thương hiệu'}
+          <p className="text-sm text-muted-foreground">
+            {product.variantCount} variants • {product.categoryName ?? 'Chưa phân loại'} •{' '}
+            {product.brandName ?? 'Không có thương hiệu'}
           </p>
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
@@ -142,7 +150,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
           <div className="flex min-w-0 flex-col gap-3 pt-1">
             <h1 className="text-4xl font-medium tracking-tight">{product.name}</h1>
             <div className="flex flex-wrap items-center gap-2 text-sm">
-              <Badge 
+              <Badge
                 variant={product.active ? 'default' : 'secondary'}
                 className="rounded-md px-2.5 py-1 font-medium"
               >
@@ -151,9 +159,13 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
               <span className="text-muted-foreground">•</span>
               <span className="text-muted-foreground">{product.variantCount} variants</span>
               <span className="text-muted-foreground">•</span>
-              <span className="text-muted-foreground">{product.categoryName ?? 'Chưa phân loại'}</span>
+              <span className="text-muted-foreground">
+                {product.categoryName ?? 'Chưa phân loại'}
+              </span>
               <span className="text-muted-foreground">•</span>
-              <span className="text-muted-foreground">{product.brandName ?? 'Không có thương hiệu'}</span>
+              <span className="text-muted-foreground">
+                {product.brandName ?? 'Không có thương hiệu'}
+              </span>
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-3">
@@ -206,26 +218,26 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="min-w-0 pb-2">
         <div className="overflow-x-auto border-b">
           <TabsList variant="line" className="h-auto justify-start gap-5 bg-transparent p-0">
-            <TabsTrigger 
-              value="overview" 
+            <TabsTrigger
+              value="overview"
               className="rounded-none border-x-0 border-t-0 border-b-2 border-transparent px-0 pt-0 pb-3 text-sm data-[state=active]:border-b-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none"
             >
               Tổng quan
             </TabsTrigger>
-            <TabsTrigger 
-              value="variants" 
+            <TabsTrigger
+              value="variants"
               className="rounded-none border-x-0 border-t-0 border-b-2 border-transparent px-0 pt-0 pb-3 text-sm data-[state=active]:border-b-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none"
             >
               Variants
             </TabsTrigger>
-            <TabsTrigger 
-              value="inventory" 
+            <TabsTrigger
+              value="inventory"
               className="rounded-none border-x-0 border-t-0 border-b-2 border-transparent px-0 pt-0 pb-3 text-sm data-[state=active]:border-b-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none"
             >
               Kho hàng
             </TabsTrigger>
-            <TabsTrigger 
-              value="activity" 
+            <TabsTrigger
+              value="activity"
               className="rounded-none border-x-0 border-t-0 border-b-2 border-transparent px-0 pt-0 pb-3 text-sm data-[state=active]:border-b-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none"
             >
               Hoạt động
@@ -238,8 +250,8 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
           <div className="grid min-w-0 gap-8 xl:grid-cols-[360px_minmax(0,1fr)] xl:items-start">
             {/* Left: Gallery */}
             <div className="flex min-w-0 flex-col gap-5">
-              <div className="border-border/60 bg-muted/20 rounded-3xl border p-4">
-                <div className="bg-background border-border/60 relative h-[300px] overflow-hidden rounded-2xl border md:h-[360px]">
+              <div className="rounded-3xl border border-border/60 bg-muted/20 p-4">
+                <div className="relative h-[300px] overflow-hidden rounded-2xl border border-border/60 bg-background md:h-[360px]">
                   {selectedImage && selectedImage.startsWith('http') ? (
                     <Image
                       src={selectedImage}
@@ -259,9 +271,9 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                         key={idx}
                         type="button"
                         onClick={() => setSelectedImage(img)}
-                        className={`bg-background relative h-18 w-18 shrink-0 overflow-hidden rounded-xl border transition-all ${
+                        className={`relative h-18 w-18 shrink-0 overflow-hidden rounded-xl border bg-background transition-all ${
                           selectedImage === img
-                            ? 'border-foreground ring-foreground/10 ring-2'
+                            ? 'border-foreground ring-2 ring-foreground/10'
                             : 'border-border/60 opacity-80 hover:opacity-100'
                         }`}
                       >
@@ -273,34 +285,44 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                       </button>
                     ))
                   ) : (
-                    <p className="text-muted-foreground text-sm">Không có ảnh</p>
+                    <p className="text-sm text-muted-foreground">Không có ảnh</p>
                   )}
                 </div>
               </div>
 
               {/* Product info card */}
               <div className="rounded-2xl border bg-card shadow-none">
-                <div className="flex flex-col space-y-1.5 gap-2 p-6">
+                <div className="flex flex-col gap-2 space-y-1.5 p-6">
                   <div className="text-base font-semibold tracking-tight">Thông tin sản phẩm</div>
-                  <div className="text-muted-foreground text-sm">Thông tin cơ bản về sản phẩm này.</div>
+                  <div className="text-sm text-muted-foreground">
+                    Thông tin cơ bản về sản phẩm này.
+                  </div>
                 </div>
                 <div className="grid gap-4 p-6 pt-0 sm:grid-cols-2">
                   <div>
-                    <p className="text-muted-foreground text-[11px] font-semibold uppercase tracking-[0.14em]">Danh mục</p>
+                    <p className="text-[11px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+                      Danh mục
+                    </p>
                     <p className="mt-2 font-medium">{product.categoryName ?? '—'}</p>
                   </div>
                   <div>
-                    <p className="text-muted-foreground text-[11px] font-semibold uppercase tracking-[0.14em]">Thương hiệu</p>
+                    <p className="text-[11px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+                      Thương hiệu
+                    </p>
                     <p className="mt-2 font-medium">{product.brandName ?? '—'}</p>
                   </div>
                   <div>
-                    <p className="text-muted-foreground text-[11px] font-semibold uppercase tracking-[0.14em]">Giá thấp nhất</p>
+                    <p className="text-[11px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+                      Giá thấp nhất
+                    </p>
                     <p className="mt-2 font-medium">
                       {product.priceMin ? `${product.priceMin.toLocaleString('vi-VN')}đ` : '—'}
                     </p>
                   </div>
                   <div>
-                    <p className="text-muted-foreground text-[11px] font-semibold uppercase tracking-[0.14em]">Giá cao nhất</p>
+                    <p className="text-[11px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+                      Giá cao nhất
+                    </p>
                     <p className="mt-2 font-medium">
                       {product.priceMax ? `${product.priceMax.toLocaleString('vi-VN')}đ` : '—'}
                     </p>
@@ -315,23 +337,31 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
               <div className="grid gap-3 sm:grid-cols-3">
                 <div className="rounded-2xl border bg-card shadow-none">
                   <div className="p-5">
-                    <p className="text-muted-foreground text-[11px] font-semibold uppercase tracking-[0.14em]">Tổng tồn kho</p>
+                    <p className="text-[11px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+                      Tổng tồn kho
+                    </p>
                     <p className="mt-3 text-3xl font-semibold tracking-tight">{totalStock}</p>
-                    <p className="text-muted-foreground mt-1 text-sm">Trên {product.variantCount} variants</p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Trên {product.variantCount} variants
+                    </p>
                   </div>
                 </div>
                 <div className="rounded-2xl border bg-card shadow-none">
                   <div className="p-5">
-                    <p className="text-muted-foreground text-[11px] font-semibold uppercase tracking-[0.14em]">Sắp hết hàng</p>
+                    <p className="text-[11px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+                      Sắp hết hàng
+                    </p>
                     <p className="mt-3 text-3xl font-semibold tracking-tight">{lowStockCount}</p>
-                    <p className="text-muted-foreground mt-1 text-sm">Variants dưới ngưỡng</p>
+                    <p className="mt-1 text-sm text-muted-foreground">Variants dưới ngưỡng</p>
                   </div>
                 </div>
                 <div className="rounded-2xl border bg-card shadow-none">
                   <div className="p-5">
-                    <p className="text-muted-foreground text-[11px] font-semibold uppercase tracking-[0.14em]">Trung bình</p>
+                    <p className="text-[11px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+                      Trung bình
+                    </p>
                     <p className="mt-3 text-3xl font-semibold tracking-tight">{avgStock}</p>
-                    <p className="text-muted-foreground mt-1 text-sm">Đơn vị mỗi variant</p>
+                    <p className="mt-1 text-sm text-muted-foreground">Đơn vị mỗi variant</p>
                   </div>
                 </div>
               </div>
@@ -340,7 +370,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
               <div className="flex min-w-0 items-center justify-between gap-3">
                 <div className="min-w-0">
                   <p className="font-medium">Danh sách phiên bản</p>
-                  <p className="text-muted-foreground text-sm">Click vào phiên bản để chỉnh sửa.</p>
+                  <p className="text-sm text-muted-foreground">Click vào phiên bản để chỉnh sửa.</p>
                 </div>
               </div>
 
@@ -359,9 +389,15 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                     >
                       <div className="grid gap-3 lg:grid-cols-[minmax(0,1.4fr)_100px_auto] lg:items-center">
                         <div className="flex min-w-0 items-center gap-3">
-                          <div className="bg-muted/30 border-border/60 relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border">
+                          <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-border/60 bg-muted/30">
                             {product.thumbnail && product.thumbnail.startsWith('http') ? (
-                              <Image src={product.thumbnail} alt={variant.name} fill className="object-cover" sizes="56px" />
+                              <Image
+                                src={product.thumbnail}
+                                alt={variant.name}
+                                fill
+                                className="object-cover"
+                                sizes="56px"
+                              />
                             ) : (
                               <Package className="absolute inset-0 m-auto h-6 w-6 text-muted-foreground" />
                             )}
@@ -370,12 +406,15 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                             <div className="flex flex-wrap items-center gap-2">
                               <p className="truncate font-medium">{variant.name}</p>
                               {idx === 0 && (
-                                <Badge variant="secondary" className="rounded-md px-2 py-0.5 text-[11px] font-semibold">
+                                <Badge
+                                  variant="secondary"
+                                  className="rounded-md px-2 py-0.5 text-[11px] font-semibold"
+                                >
                                   Chính
                                 </Badge>
                               )}
                             </div>
-                            <div className="text-muted-foreground mt-1 flex flex-wrap items-center gap-2 text-sm">
+                            <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                               <span>{variant.sku}</span>
                               <span>•</span>
                               <span className={variant.active ? '' : 'text-rose-600'}>
@@ -385,11 +424,15 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                           </div>
                         </div>
                         <div>
-                          <p className="text-muted-foreground text-[11px] font-semibold uppercase tracking-[0.14em]">Giá</p>
-                          <p className="mt-1 font-medium">{variant.price.toLocaleString('vi-VN')}đ</p>
+                          <p className="text-[11px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+                            Giá
+                          </p>
+                          <p className="mt-1 font-medium">
+                            {variant.price.toLocaleString('vi-VN')}đ
+                          </p>
                         </div>
                         <div className="flex items-center justify-end">
-                          <span className="text-muted-foreground inline-flex h-9 w-9 items-center justify-center rounded-lg">
+                          <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground">
                             <Ellipsis className="h-4 w-4" />
                           </span>
                         </div>
@@ -419,21 +462,21 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
         {/* Variants Tab */}
         <TabsContent value="variants" className="mt-0 pt-6">
           <div className="rounded-2xl border bg-card p-6">
-            <p className="text-muted-foreground text-sm">Tab Variants - Đang phát triển</p>
+            <p className="text-sm text-muted-foreground">Tab Variants - Đang phát triển</p>
           </div>
         </TabsContent>
 
         {/* Inventory Tab */}
         <TabsContent value="inventory" className="mt-0 pt-6">
           <div className="rounded-2xl border bg-card p-6">
-            <p className="text-muted-foreground text-sm">Tab Kho hàng - Đang phát triển</p>
+            <p className="text-sm text-muted-foreground">Tab Kho hàng - Đang phát triển</p>
           </div>
         </TabsContent>
 
         {/* Activity Tab */}
         <TabsContent value="activity" className="mt-0 pt-6">
           <div className="rounded-2xl border bg-card p-6">
-            <p className="text-muted-foreground text-sm">Tab Hoạt động - Đang phát triển</p>
+            <p className="text-sm text-muted-foreground">Tab Hoạt động - Đang phát triển</p>
           </div>
         </TabsContent>
       </Tabs>

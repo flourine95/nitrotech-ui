@@ -52,7 +52,7 @@ function SortableImage({ url, index, onRemove }: SortableImageProps) {
           variant="secondary"
           size="icon"
           onClick={onRemove}
-          className="h-7 w-7 shadow-sm hover:bg-destructive hover:text-destructive-foreground"
+          className="hover:text-destructive-foreground h-7 w-7 shadow-sm hover:bg-destructive"
           aria-label="Xóa ảnh"
         >
           <Trash2 className="h-3.5 w-3.5" />
@@ -125,7 +125,12 @@ export function GalleryEditor({ images, onChange }: GalleryEditorProps) {
         ) : (
           <div className="grid grid-cols-5 gap-2">
             {localImages.map((url, index) => (
-              <SortableImage key={url} url={url} index={index} onRemove={() => removeImage(index)} />
+              <SortableImage
+                key={url}
+                url={url}
+                index={index}
+                onRemove={() => removeImage(index)}
+              />
             ))}
             <button
               type="button"

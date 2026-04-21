@@ -44,8 +44,16 @@ function escapeCsv(val: string | number | null | undefined): string {
 
 export function productsToCSV(products: Product[]): string {
   const headers = [
-    'ID', 'Tên', 'Slug', 'Danh mục', 'Thương hiệu',
-    'Giá min', 'Giá max', 'Số variants', 'Trạng thái', 'Ngày tạo',
+    'ID',
+    'Tên',
+    'Slug',
+    'Danh mục',
+    'Thương hiệu',
+    'Giá min',
+    'Giá max',
+    'Số variants',
+    'Trạng thái',
+    'Ngày tạo',
   ];
   const rows = products.map((p) => [
     p.id,
