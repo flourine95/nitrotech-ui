@@ -3,8 +3,12 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { Check, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
   type CreateVariantBody, type ProductVariant,
   createVariant, deleteVariant, updateVariant,
@@ -58,51 +62,49 @@ function VariantInlineForm({
   }
 
   return (
-    <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+    <div className="rounded-lg border p-4">
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <div>
-          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">SKU *</label>
-          <input
+        <div className="space-y-1.5">
+          <Label className="text-xs">SKU <span className="text-destructive">*</span></Label>
+          <Input
             value={form.sku}
             onChange={(e) => set('sku', e.target.value)}
             placeholder="SKU-001"
-            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 font-mono text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
+            className="font-mono"
           />
         </div>
-        <div>
-          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Tên *</label>
-          <input
+        <div className="space-y-1.5">
+          <Label className="text-xs">Tên <span className="text-destructive">*</span></Label>
+          <Input
             value={form.name}
             onChange={(e) => set('name', e.target.value)}
             placeholder="Size S"
-            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
           />
         </div>
-        <div>
-          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Giá *</label>
-          <input
+        <div className="space-y-1.5">
+          <Label className="text-xs">Giá <span className="text-destructive">*</span></Label>
+          <Input
             type="number"
             min={0}
             value={form.price}
             onChange={(e) => set('price', e.target.value)}
             placeholder="100000"
-            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
           />
         </div>
         <div className="flex items-end">
-          <div className="flex w-full items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2">
-            <span className="text-xs text-slate-600">Hiển thị</span>
+          <div className="flex w-full items-center justify-between rounded-md border px-3 py-2">
+            <Label className="text-xs font-normal">Hiển thị</Label>
             <Switch
               checked={form.active}
               onCheckedChange={(val) => set('active', val)}
-              aria-label="Hiển thị variant"
+              aria-label="Hiển thị biến thể"
             />
           </div>
         </div>
       </div>
 
-      <div className="mt-3">
-        <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">Thuộc tính</label>
+      <div className="mt-3 space-y-1.5">
+        <Label className="text-xs">Thuộc tính</Label>
         <KeyValueEditor
           value={form.attributes}
           onChange={(v) => set('attributes', v)}
@@ -112,10 +114,10 @@ function VariantInlineForm({
       </div>
 
       <div className="mt-3 flex justify-end gap-2">
-        <Button type="button" variant="outline" size="sm" onClick={onCancel} className="rounded-xl">
+        <Button type="button" variant="outline" size="sm" onClick={onCancel}>
           <X className="h-3.5 w-3.5" /> Hủy
         </Button>
-        <Button type="button" size="sm" onClick={handleSave} disabled={saving} className="rounded-xl">
+        <Button type="button" size="sm" onClick={handleSave} disabled={saving}>
           <Check className="h-3.5 w-3.5" /> {saving ? 'Đang lưu...' : 'Lưu'}
         </Button>
       </div>
@@ -200,90 +202,84 @@ export function VariantsEditor({ productId, variants, onChange }: VariantsEditor
   return (
     <div className="space-y-3">
       {variants.length > 0 && (
-        <div className="overflow-hidden rounded-xl border border-slate-200">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50">
-                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">SKU</th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Tên</th>
-                <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Giá</th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Thuộc tính</th>
-                <th className="px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-slate-500">Hiển thị</th>
-                <th className="px-4 py-2.5" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {variants.map((v) =>
-                editingId === v.id ? (
-                  <tr key={v.id}>
-                    <td colSpan={6} className="p-2">
-                      <VariantInlineForm
-                        initial={{ sku: v.sku, name: v.name, price: String(v.price), attributes: v.attributes ?? {}, active: v.active }}
-                        onSave={(form) => handleEdit(v, form)}
-                        onCancel={() => setEditingId(null)}
-                        saving={saving}
-                      />
-                    </td>
-                  </tr>
-                ) : (
-                  <tr key={v.id} className="hover:bg-slate-50">
-                    <td className="px-4 py-3 font-mono text-xs text-slate-500">{v.sku}</td>
-                    <td className="px-4 py-3 font-medium text-slate-800">{v.name}</td>
-                    <td className="px-4 py-3 text-right font-semibold text-slate-900">{fmt(v.price)}</td>
-                    <td className="px-4 py-3">
-                      {v.attributes && Object.keys(v.attributes).length > 0 ? (
-                        <div className="flex flex-wrap gap-1">
-                          {Object.entries(v.attributes).map(([k, val]) => (
-                            <span key={k} className="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] text-slate-600">
-                              {k}: {val}
-                            </span>
-                          ))}
-                        </div>
-                      ) : <span className="text-slate-300">—</span>}
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <span className={`inline-flex h-2 w-2 rounded-full ${v.active ? 'bg-emerald-500' : 'bg-slate-300'}`} />
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-1">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon-sm"
-                              onClick={() => setEditingId(v.id)}
-                              className="rounded-lg text-slate-400 hover:bg-amber-50 hover:text-amber-600"
-                              aria-label="Sửa variant"
-                            >
-                              <Pencil className="h-3.5 w-3.5" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent side="top"><p>Sửa</p></TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon-sm"
-                              onClick={() => setDeleteTarget(v)}
-                              className="rounded-lg text-slate-400 hover:bg-rose-50 hover:text-rose-600"
-                              aria-label="Xóa variant"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent side="top"><p>Xóa</p></TooltipContent>
-                        </Tooltip>
+        <Table className="border">
+          <TableHeader>
+            <TableRow>
+              <TableHead>SKU</TableHead>
+              <TableHead>Tên</TableHead>
+              <TableHead className="text-right">Giá</TableHead>
+              <TableHead>Thuộc tính</TableHead>
+              <TableHead className="text-center">Hiển thị</TableHead>
+              <TableHead />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {variants.map((v) =>
+              editingId === v.id ? (
+                <TableRow key={v.id}>
+                  <TableCell colSpan={6} className="p-2">
+                    <VariantInlineForm
+                      initial={{ sku: v.sku, name: v.name, price: String(v.price), attributes: v.attributes ?? {}, active: v.active }}
+                      onSave={(form) => handleEdit(v, form)}
+                      onCancel={() => setEditingId(null)}
+                      saving={saving}
+                    />
+                  </TableCell>
+                </TableRow>
+              ) : (
+                <TableRow key={v.id} className="hover:bg-transparent">
+                  <TableCell className="font-mono text-muted-foreground">{v.sku}</TableCell>
+                  <TableCell className="font-medium">{v.name}</TableCell>
+                  <TableCell className="text-right font-semibold">{fmt(v.price)}</TableCell>
+                  <TableCell>
+                    {v.attributes && Object.keys(v.attributes).length > 0 ? (
+                      <div className="flex flex-wrap gap-1">
+                        {Object.entries(v.attributes).map(([k, val]) => (
+                          <Badge key={k} variant="secondary">{k}: {val}</Badge>
+                        ))}
                       </div>
-                    </td>
-                  </tr>
-                )
-              )}
-            </tbody>
-          </table>
-        </div>
+                    ) : <span className="text-muted-foreground/50">—</span>}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <span className={`inline-flex h-2 w-2 rounded-full ${v.active ? 'bg-emerald-500' : 'bg-muted-foreground'}`} />
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center justify-end gap-1">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setEditingId(v.id)}
+                            aria-label="Sửa variant"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top"><p>Sửa</p></TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setDeleteTarget(v)}
+                            aria-label="Xóa variant"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top"><p>Xóa</p></TooltipContent>
+                      </Tooltip>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )
+            )}
+          </TableBody>
+        </Table>
       )}
 
       {adding ? (
@@ -299,9 +295,9 @@ export function VariantsEditor({ productId, variants, onChange }: VariantsEditor
           variant="outline"
           size="sm"
           onClick={() => setAdding(true)}
-          className="w-full rounded-xl border-dashed text-slate-500 hover:border-ring hover:bg-primary/5 hover:text-primary"
+          className="w-full"
         >
-          <Plus className="h-3.5 w-3.5" />
+          <Plus className="mr-2 h-4 w-4" />
           Thêm variant
         </Button>
       )}

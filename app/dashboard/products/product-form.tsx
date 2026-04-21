@@ -256,8 +256,8 @@ export function ProductForm({ product }: ProductFormProps) {
           {isEdit && (
             <Card className="rounded-2xl">
               <CardHeader>
-                <CardTitle>Variants</CardTitle>
-                <CardDescription>{variants.length} variant đã tạo.</CardDescription>
+                <CardTitle>Biến thể</CardTitle>
+                <CardDescription>{variants.length} biến thể đã tạo.</CardDescription>
               </CardHeader>
               <CardContent>
                 <VariantsEditor productId={product!.id} variants={variants} onChange={setVariants} />
@@ -267,7 +267,7 @@ export function ProductForm({ product }: ProductFormProps) {
 
           {!isEdit && (
             <p className="text-sm text-muted-foreground px-1">
-              Sau khi tạo sản phẩm, bạn có thể thêm variants trong trang chỉnh sửa.
+              Sau khi tạo sản phẩm, bạn có thể thêm biến thể trong trang chỉnh sửa.
             </p>
           )}
         </div>
@@ -334,7 +334,7 @@ export function ProductForm({ product }: ProductFormProps) {
                         <SelectTrigger id="categoryId" className={`mt-1.5 w-full${errors.categoryId ? ' border-destructive' : ''}`}>
                           <SelectValue placeholder="Chọn danh mục" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent position="popper" sideOffset={4}>
                           {categories.map((c) => (
                             <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
                           ))}
@@ -358,7 +358,7 @@ export function ProductForm({ product }: ProductFormProps) {
                         <SelectTrigger id="brandId" className="mt-1.5 w-full">
                           <SelectValue placeholder="Không có" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent position="popper" sideOffset={4}>
                           <SelectItem value="none">Không có</SelectItem>
                           {brands.map((b) => (
                             <SelectItem key={b.id} value={String(b.id)}>{b.name}</SelectItem>

@@ -26,6 +26,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
@@ -304,7 +305,7 @@ export default function DashboardProductsPage() {
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         <div className="relative flex-1">
           <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input
+          <Input
             type="text"
             placeholder="Tìm tên, slug..."
             value={search}
@@ -313,7 +314,7 @@ export default function DashboardProductsPage() {
               void setCurrentPage(0);
               clearSelection();
             }}
-            className="border-input placeholder:text-muted-foreground focus-visible:ring-ring flex h-9 w-full rounded-md border bg-transparent py-1 pr-4 pl-9 text-sm shadow-xs transition-colors focus-visible:ring-1 focus-visible:outline-hidden"
+            className="pl-9 pr-10"
           />
           {search && (
             <Button
@@ -465,7 +466,7 @@ export default function DashboardProductsPage() {
                 <TableHead>Sản phẩm</TableHead>
                 <TableHead>Danh mục / Thương hiệu</TableHead>
                 <TableHead className="text-right">Giá</TableHead>
-                <TableHead className="text-center">Variants</TableHead>
+                <TableHead className="text-center">Biến thể</TableHead>
                 {!isDeleted && <TableHead className="text-center">Trạng thái</TableHead>}
                 <TableHead />
               </TableRow>
