@@ -127,7 +127,7 @@ export function GalleryEditor({ images, onChange }: GalleryEditorProps) {
       </DragDropProvider>
 
       {localImages.length === 0 && (
-        <div className="mt-2 flex items-center gap-2 rounded-xl border border-dashed border-slate-200 px-4 py-3 text-xs text-slate-400">
+        <div className="mt-2 flex items-center gap-2 rounded-lg border border-dashed px-4 py-3 text-xs text-muted-foreground">
           <ImageIcon className="h-4 w-4 shrink-0" />
           Chưa có ảnh nào. Nhấn {'"Thêm ảnh"'} để chọn từ thư viện.
         </div>

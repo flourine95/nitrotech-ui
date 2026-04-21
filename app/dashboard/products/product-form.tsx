@@ -14,6 +14,7 @@ import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Field, FieldError } from '@/components/ui/field';
 import {
   createProduct,
   type CreateProductBody,
@@ -41,11 +42,6 @@ const RichTextEditor = dynamic(
 
 interface ProductFormProps {
   product?: Product;
-}
-
-function FieldError({ message }: { message?: string }) {
-  if (!message) return null;
-  return <p className="mt-1 text-xs text-destructive">{message}</p>;
 }
 
 export function ProductForm({ product }: ProductFormProps) {
@@ -89,8 +85,13 @@ export function ProductForm({ product }: ProductFormProps) {
   const thumbnail = watch('thumbnail');
 
   useEffect(() => {
-    if (!slugTouched.current && name) setValue('slug', slugify(name));
-  }, [name, setValue]);
+    const { unsubscribe } = watch((values, { name: field }) => {
+      if (field === 'name' && !slugTouched.current) {
+        setValue('slug', slugify(values.name ?? ''));
+      }
+    });
+    return unsubscribe;
+  }, [watch, setValue]);
 
   useEffect(() => {
     Promise.all([getCategories({ tree: false }), getBrands({ size: 100 })])
@@ -192,7 +193,7 @@ export function ProductForm({ product }: ProductFormProps) {
                   aria-invalid={!!errors.name}
                   className="mt-1.5"
                 />
-                <FieldError message={errors.name?.message} />
+                <FieldError errors={[errors.name]} className="mt-1" />
               </div>
 
               <div>
@@ -210,7 +211,7 @@ export function ProductForm({ product }: ProductFormProps) {
                     className="pl-6 font-mono"
                   />
                 </div>
-                <FieldError message={errors.slug?.message} />
+                <FieldError errors={[errors.slug]} className="mt-1" />
               </div>
 
               <div>
@@ -307,7 +308,7 @@ export function ProductForm({ product }: ProductFormProps) {
                   placeholder="Hoặc nhập URL ảnh..."
                   aria-invalid={!!errors.thumbnail}
                 />
-                <FieldError message={errors.thumbnail?.message} />
+                <FieldError errors={[errors.thumbnail]} className="mt-1" />
               </CardContent>
             </Card>
 
@@ -341,7 +342,7 @@ export function ProductForm({ product }: ProductFormProps) {
                       </Select>
                     )}
                   />
-                  <FieldError message={errors.categoryId?.message} />
+                  <FieldError errors={[errors.categoryId]} className="mt-1" />
                 </div>
 
                 <div>
