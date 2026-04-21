@@ -289,7 +289,10 @@ export default function DashboardProductsPage() {
             Export
           </Button>
           <Button asChild size="sm">
-            <Link href="/dashboard/products/new">
+            <Link
+              href="/dashboard/products/new"
+              onMouseEnter={() => import('./rich-text-editor')}
+            >
               <Plus className="h-4 w-4" />
               Thêm sản phẩm
             </Link>

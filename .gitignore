@@ -39,3 +39,6 @@ next-env.d.ts
 .vscode
 
 *.pyc
+
+# local playwright mcp artifacts
+.playwright-mcp/

@@ -4,6 +4,7 @@ import { useEffect, useCallback, useMemo } from 'react';
 import { useDebouncedCallback } from 'use-debounce';
 import { EditorContent, useEditor } from '@tiptap/react';
 import { RichTextProvider } from 'reactjs-tiptap-editor';
+import { localeActions } from 'reactjs-tiptap-editor/locale-bundle';
 import { Document } from '@tiptap/extension-document';
 import { Text } from '@tiptap/extension-text';
 import { Paragraph } from '@tiptap/extension-paragraph';
@@ -30,11 +31,15 @@ import {
   RichTextBubbleLink,
   RichTextBubbleImage,
   RichTextBubbleTable,
+  RichTextBubbleMenuDragHandle,
 } from 'reactjs-tiptap-editor/bubble';
 import { SlashCommand, SlashCommandList } from 'reactjs-tiptap-editor/slashcommand';
 
 import 'reactjs-tiptap-editor/style.css';
 import 'react-image-crop/dist/ReactCrop.css';
+
+// Set Vietnamese locale once
+localeActions.setLang('vi');
 
 interface RichTextEditorProps {
   content: string;
@@ -121,7 +126,7 @@ export function RichTextEditor({ content, onChange, disabled = false }: RichText
   return (
     <RichTextProvider editor={editor}>
       <div
-        className="overflow-hidden rounded-md bg-background"
+        className="rounded-md bg-background"
         style={{
           border: '1px solid hsl(var(--input))',
           transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
@@ -176,6 +181,7 @@ export function RichTextEditor({ content, onChange, disabled = false }: RichText
           <RichTextBubbleLink />
           <RichTextBubbleImage />
           <RichTextBubbleTable />
+          <RichTextBubbleMenuDragHandle />
           <SlashCommandList />
         </div>
       </div>
