@@ -13,7 +13,8 @@
         "browser_click",
         "browser_type",
         "browser_run_code",
-        "browser_take_screenshot"
+        "browser_take_screenshot",
+        "browser_snapshot"
       ]
     }
   }

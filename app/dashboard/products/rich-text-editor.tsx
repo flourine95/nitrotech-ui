@@ -38,7 +38,6 @@ import { SlashCommand, SlashCommandList } from 'reactjs-tiptap-editor/slashcomma
 import 'reactjs-tiptap-editor/style.css';
 import 'react-image-crop/dist/ReactCrop.css';
 
-// Set Vietnamese locale once
 localeActions.setLang('vi');
 
 interface RichTextEditorProps {
@@ -48,7 +47,6 @@ interface RichTextEditorProps {
 }
 
 export function RichTextEditor({ content, onChange, disabled = false }: RichTextEditorProps) {
-  // Memoize extensions để không tạo lại mỗi render
   const extensions = useMemo(() => [
     Document,
     Text,
@@ -61,7 +59,7 @@ export function RichTextEditor({ content, onChange, disabled = false }: RichText
     TextStyle,
     Placeholder.configure({ placeholder: "Nhập mô tả sản phẩm... (gõ '/' để xem lệnh)" }),
     History.configure({
-      depth: 50, // Giảm history depth để nhẹ hơn
+      depth: 50,
     }),
     Bold,
     Italic,
@@ -79,10 +77,8 @@ export function RichTextEditor({ content, onChange, disabled = false }: RichText
     SlashCommand,
   ], []);
 
-  // Debounce onChange 300ms
   const debouncedOnChange = useDebouncedCallback(onChange, 300);
 
-  // Handle update
   const handleUpdate = useCallback(
     ({ editor }: any) => {
       const html = editor.getHTML();
@@ -107,7 +103,6 @@ export function RichTextEditor({ content, onChange, disabled = false }: RichText
     },
   });
 
-  // sync external content changes (e.g. reset form)
   useEffect(() => {
     if (!editor) return;
     const current = editor.getHTML();
@@ -126,26 +121,20 @@ export function RichTextEditor({ content, onChange, disabled = false }: RichText
   return (
     <RichTextProvider editor={editor}>
       <div
-        className="rounded-md bg-background"
+        className="bg-background shadow-sm transition-colors overflow-hidden"
         style={{
-          border: '1px solid hsl(var(--input))',
-          transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
+          borderWidth: '1px',
+          borderStyle: 'solid',
+          borderColor: 'oklch(0.922 0 0)',
+          borderRadius: '8px',
         }}
         onKeyDown={(e) => {
           if (e.ctrlKey || e.metaKey) e.stopPropagation();
         }}
-        onFocus={(e) => {
-          e.currentTarget.style.border = '1px solid hsl(var(--ring))';
-          e.currentTarget.style.boxShadow = '0 0 0 1px hsl(var(--ring))';
-        }}
-        onBlur={(e) => {
-          e.currentTarget.style.border = '1px solid hsl(var(--input))';
-          e.currentTarget.style.boxShadow = 'none';
-        }}
       >
         <div className="flex max-h-full w-full flex-col">
           {/* Toolbar */}
-          <div className="flex flex-wrap items-center gap-0.5 border-b border-input bg-muted/40 px-2 py-1.5">
+          <div className="flex flex-wrap items-center gap-0.5 px-2 py-1.5" style={{ backgroundColor: 'oklch(0.97 0 0)', borderBottomWidth: '1px', borderBottomStyle: 'solid', borderBottomColor: 'oklch(0.922 0 0)' }}>
             <RichTextUndo />
             <RichTextRedo />
             <div className="mx-1 h-4 w-px bg-border" />

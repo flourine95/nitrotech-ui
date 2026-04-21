@@ -151,13 +151,11 @@
   }
 }
 
-/* Bubble menu và tooltip của rich text editor — phải nằm trên sidebar (z-10/z-20) */
 [data-richtext-portal="true"],
 [data-radix-popper-content-wrapper] {
   z-index: 9999 !important;
 }
 
-/* Bubble menu absolute positioning — nằm trên sidebar */
 .reactjs-tiptap-editor [style*="position: absolute"][style*="opacity"] {
   z-index: 50 !important;
 }
