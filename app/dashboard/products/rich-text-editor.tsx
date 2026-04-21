@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useCallback, useMemo, useRef } from 'react';
+import { useEffect, useCallback, useMemo } from 'react';
+import { useDebouncedCallback } from 'use-debounce';
 import { EditorContent, useEditor } from '@tiptap/react';
 import { RichTextProvider } from 'reactjs-tiptap-editor';
 import { Document } from '@tiptap/extension-document';
@@ -73,14 +74,10 @@ export function RichTextEditor({ content, onChange, disabled = false }: RichText
     SlashCommand,
   ], []);
 
-  // Debounce onChange 300ms inline — không cần thư viện
-  const timerRef = useRef<ReturnType<typeof setTimeout>>();
-  const debouncedOnChange = useCallback((value: string) => {
-    clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => onChange(value), 300);
-  }, [onChange]);
+  // Debounce onChange 300ms
+  const debouncedOnChange = useDebouncedCallback(onChange, 300);
 
-  // Handle update với debounce
+  // Handle update
   const handleUpdate = useCallback(
     ({ editor }: any) => {
       const html = editor.getHTML();
