@@ -7,7 +7,6 @@ import { GripVertical, Plus, Trash2 } from 'lucide-react';
 import MediaPickerDialog from '@/components/media-picker-dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Empty } from '@/components/ui/empty';
 
 function arrayMove<T>(arr: T[], from: number, to: number): T[] {
   const next = [...arr];
@@ -114,27 +113,31 @@ export function GalleryEditor({ images, onChange }: GalleryEditorProps) {
   return (
     <>
       <DragDropProvider onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
-        <div className="grid grid-cols-4 gap-2">
-          {localImages.map((url, index) => (
-            <SortableImage key={url} url={url} index={index} onRemove={() => removeImage(index)} />
-          ))}
-          <Button
+        {localImages.length === 0 ? (
+          <button
             type="button"
-            variant="outline"
             onClick={() => setShowPicker(true)}
-            className="flex aspect-square h-auto w-full flex-col items-center justify-center gap-1.5 border-dashed"
+            className="flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed py-8 text-muted-foreground transition-colors hover:border-ring hover:text-foreground"
           >
             <Plus className="h-5 w-5" />
-            <span className="text-xs">Thêm ảnh</span>
-          </Button>
-        </div>
+            <span className="text-sm">Thêm ảnh từ thư viện</span>
+          </button>
+        ) : (
+          <div className="grid grid-cols-5 gap-2">
+            {localImages.map((url, index) => (
+              <SortableImage key={url} url={url} index={index} onRemove={() => removeImage(index)} />
+            ))}
+            <button
+              type="button"
+              onClick={() => setShowPicker(true)}
+              className="flex aspect-square w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed text-muted-foreground transition-colors hover:border-ring hover:text-foreground"
+            >
+              <Plus className="h-4 w-4" />
+              <span className="text-[10px]">Thêm</span>
+            </button>
+          </div>
+        )}
       </DragDropProvider>
-
-      {localImages.length === 0 && (
-        <Empty className="py-6 text-xs">
-          Chưa có ảnh nào. Nhấn {"'Thêm ảnh'"} để chọn từ thư viện.
-        </Empty>
-      )}
 
       {showPicker && (
         <MediaPickerDialog
