@@ -150,3 +150,8 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+
+.reactjs-tiptap-editor [style*="position: absolute"] {
+  z-index: 51 !important;
+}

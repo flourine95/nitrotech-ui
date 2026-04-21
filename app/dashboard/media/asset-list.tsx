@@ -1,7 +1,7 @@
 'use client';
 import { useCopy } from '@/hooks/use-copy';
 import { formatBytes, formatDate } from '@/lib/utils';
-import { type AssetViewProps } from './types';
+import { type AssetViewProps } from './media-types';
 
 export function AssetList({ assets, selected, active, onToggle, onSelect }: AssetViewProps) {
   const { copied, copy } = useCopy();

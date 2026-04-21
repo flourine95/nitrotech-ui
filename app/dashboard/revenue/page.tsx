@@ -104,10 +104,11 @@ export default function DashboardRevenuePage() {
                 borderRadius: '12px',
                 fontSize: '12px',
               }}
-              formatter={(value: number, name: string) => [
-                `${(value / 1000000).toFixed(1)}M₫`,
-                name === 'revenue' ? 'Doanh thu' : 'Lợi nhuận',
-              ]}
+              formatter={(value, name) => {
+                const numValue = typeof value === 'number' ? value : 0;
+                const label = name === 'revenue' ? 'Doanh thu' : 'Lợi nhuận';
+                return [`${(numValue / 1000000).toFixed(1)}M₫`, label];
+              }}
             />
             <Legend formatter={(v) => (v === 'revenue' ? 'Doanh thu' : 'Lợi nhuận')} />
             <Area
@@ -149,7 +150,10 @@ export default function DashboardRevenuePage() {
                   ))}
                 </Pie>
                 <Tooltip
-                  formatter={(v: number) => [`${v}%`, 'Tỷ trọng']}
+                  formatter={(v) => {
+                    const numValue = typeof v === 'number' ? v : 0;
+                    return [`${numValue}%`, 'Tỷ trọng'];
+                  }}
                   contentStyle={{ borderRadius: '12px', fontSize: '12px' }}
                 />
               </PieChart>
@@ -193,7 +197,10 @@ export default function DashboardRevenuePage() {
                   borderRadius: '12px',
                   fontSize: '12px',
                 }}
-                formatter={(v: number) => [`${(v / 1000000).toFixed(0)}M₫`, 'Doanh thu']}
+                formatter={(v) => {
+                  const numValue = typeof v === 'number' ? v : 0;
+                  return [`${(numValue / 1000000).toFixed(0)}M₫`, 'Doanh thu'];
+                }}
               />
               <Bar dataKey="revenue" fill="#2563eb" radius={[0, 6, 6, 0]} />
             </BarChart>

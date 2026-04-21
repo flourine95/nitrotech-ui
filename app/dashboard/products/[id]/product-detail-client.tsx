@@ -8,7 +8,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Copy, Ellipsis, Package, Pencil, Plus, Trash2,
 } from 'lucide-react';
-import type { Product } from '@/lib/api/products';
+import type { Product, ProductVariant } from '@/lib/api/products';
 import { deleteProduct, updateProduct } from '@/lib/api/products';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -44,7 +44,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
   const [activeTab, setActiveTab] = useState('overview');
   const [deleteTarget, setDeleteTarget] = useState(false);
   const [showVariantForm, setShowVariantForm] = useState(false);
-  const [editingVariant, setEditingVariant] = useState<typeof product.variants[0] | undefined>();
+  const [editingVariant, setEditingVariant] = useState<ProductVariant | undefined>();
   const [selectedImage, setSelectedImage] = useState(
     product.thumbnail ?? (product.images && product.images[0]) ?? ''
   );
@@ -76,7 +76,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
     setShowVariantForm(true);
   }
 
-  function handleEditVariant(variant: typeof product.variants[0]) {
+  function handleEditVariant(variant: ProductVariant) {
     setEditingVariant(variant);
     setShowVariantForm(true);
   }

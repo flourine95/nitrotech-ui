@@ -212,7 +212,10 @@ export default function DashboardPage() {
                   borderRadius: '12px',
                   fontSize: '12px',
                 }}
-                formatter={(value: number) => [`${(value / 1000000).toFixed(1)}M₫`, 'Doanh thu']}
+                formatter={(value) => {
+                  const numValue = typeof value === 'number' ? value : 0;
+                  return [`${(numValue / 1000000).toFixed(1)}M₫`, 'Doanh thu'];
+                }}
               />
               <Line
                 type="monotone"
@@ -249,7 +252,10 @@ export default function DashboardPage() {
                   borderRadius: '12px',
                   fontSize: '12px',
                 }}
-                formatter={(value: number) => [value, 'Đơn hàng']}
+                formatter={(value) => {
+                  const numValue = typeof value === 'number' ? value : 0;
+                  return [numValue, 'Đơn hàng'];
+                }}
               />
               <Bar dataKey="orders" fill="#f59e0b" radius={[8, 8, 0, 0]} />
             </BarChart>

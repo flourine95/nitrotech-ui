@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useCallback, useMemo, useRef } from 'react';
 import { EditorContent, useEditor } from '@tiptap/react';
 import { RichTextProvider } from 'reactjs-tiptap-editor';
 import { Document } from '@tiptap/extension-document';
@@ -35,34 +35,6 @@ import { SlashCommand, SlashCommandList } from 'reactjs-tiptap-editor/slashcomma
 import 'reactjs-tiptap-editor/style.css';
 import 'react-image-crop/dist/ReactCrop.css';
 
-const extensions = [
-  Document,
-  Text,
-  Dropcursor,
-  Gapcursor,
-  HardBreak,
-  Paragraph,
-  TrailingNode,
-  ListItem,
-  TextStyle,
-  Placeholder.configure({ placeholder: "Nhập mô tả sản phẩm... (gõ '/' để xem lệnh)" }),
-  History,
-  Bold,
-  Italic,
-  TextUnderline,
-  Strike,
-  Heading,
-  BulletList,
-  OrderedList,
-  Link,
-  Blockquote,
-  HorizontalRule,
-  TextAlign,
-  Color,
-  Image.configure({ resourceImage: 'both' }),
-  SlashCommand,
-];
-
 interface RichTextEditorProps {
   content: string;
   onChange: (value: string) => void;
@@ -70,15 +42,66 @@ interface RichTextEditorProps {
 }
 
 export function RichTextEditor({ content, onChange, disabled = false }: RichTextEditorProps) {
+  // Memoize extensions để không tạo lại mỗi render
+  const extensions = useMemo(() => [
+    Document,
+    Text,
+    Dropcursor,
+    Gapcursor,
+    HardBreak,
+    Paragraph,
+    TrailingNode,
+    ListItem,
+    TextStyle,
+    Placeholder.configure({ placeholder: "Nhập mô tả sản phẩm... (gõ '/' để xem lệnh)" }),
+    History.configure({
+      depth: 50, // Giảm history depth để nhẹ hơn
+    }),
+    Bold,
+    Italic,
+    TextUnderline,
+    Strike,
+    Heading,
+    BulletList,
+    OrderedList,
+    Link,
+    Blockquote,
+    HorizontalRule,
+    TextAlign,
+    Color,
+    Image.configure({ resourceImage: 'both' }),
+    SlashCommand,
+  ], []);
+
+  // Debounce onChange 300ms inline — không cần thư viện
+  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+  const debouncedOnChange = useCallback((value: string) => {
+    clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => onChange(value), 300);
+  }, [onChange]);
+
+  // Handle update với debounce
+  const handleUpdate = useCallback(
+    ({ editor }: any) => {
+      const html = editor.getHTML();
+      const normalized = html === '<p></p>' ? '' : html;
+      debouncedOnChange(normalized);
+    },
+    [debouncedOnChange],
+  );
+
   const editor = useEditor({
     immediatelyRender: false,
+    shouldRerenderOnTransaction: false,
     textDirection: 'auto',
     extensions,
     content,
     editable: !disabled,
-    onUpdate: ({ editor }) => {
-      const html = editor.getHTML();
-      onChange(html === '<p></p>' ? '' : html);
+    onUpdate: handleUpdate,
+    editorProps: {
+      attributes: {
+        class: 'prose prose-sm dark:prose-invert max-w-none focus:outline-none',
+      },
     },
   });
 
@@ -100,46 +123,66 @@ export function RichTextEditor({ content, onChange, disabled = false }: RichText
 
   return (
     <RichTextProvider editor={editor}>
-      {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-0.5 rounded-t-md border border-b-0 border-input bg-muted/40 px-2 py-1.5">
-        <RichTextUndo />
-        <RichTextRedo />
-        <div className="mx-1 h-4 w-px bg-border" />
-        <RichTextHeading />
-        <div className="mx-1 h-4 w-px bg-border" />
-        <RichTextBold />
-        <RichTextItalic />
-        <RichTextUnderline />
-        <RichTextStrike />
-        <div className="mx-1 h-4 w-px bg-border" />
-        <RichTextColor />
-        <div className="mx-1 h-4 w-px bg-border" />
-        <RichTextAlign />
-        <div className="mx-1 h-4 w-px bg-border" />
-        <RichTextBulletList />
-        <RichTextOrderedList />
-        <div className="mx-1 h-4 w-px bg-border" />
-        <RichTextLink />
-        <RichTextImage />
-        <div className="mx-1 h-4 w-px bg-border" />
-        <RichTextBlockquote />
-        <RichTextHorizontalRule />
+      <div
+        className="overflow-hidden rounded-md bg-background"
+        style={{
+          border: '1px solid hsl(var(--input))',
+          transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
+        }}
+        onKeyDown={(e) => {
+          if (e.ctrlKey || e.metaKey) e.stopPropagation();
+        }}
+        onFocus={(e) => {
+          e.currentTarget.style.border = '1px solid hsl(var(--ring))';
+          e.currentTarget.style.boxShadow = '0 0 0 1px hsl(var(--ring))';
+        }}
+        onBlur={(e) => {
+          e.currentTarget.style.border = '1px solid hsl(var(--input))';
+          e.currentTarget.style.boxShadow = 'none';
+        }}
+      >
+        <div className="flex max-h-full w-full flex-col">
+          {/* Toolbar */}
+          <div className="flex flex-wrap items-center gap-0.5 border-b border-input bg-muted/40 px-2 py-1.5">
+            <RichTextUndo />
+            <RichTextRedo />
+            <div className="mx-1 h-4 w-px bg-border" />
+            <RichTextHeading />
+            <div className="mx-1 h-4 w-px bg-border" />
+            <RichTextBold />
+            <RichTextItalic />
+            <RichTextUnderline />
+            <RichTextStrike />
+            <div className="mx-1 h-4 w-px bg-border" />
+            <RichTextColor />
+            <div className="mx-1 h-4 w-px bg-border" />
+            <RichTextAlign />
+            <div className="mx-1 h-4 w-px bg-border" />
+            <RichTextBulletList />
+            <RichTextOrderedList />
+            <div className="mx-1 h-4 w-px bg-border" />
+            <RichTextLink />
+            <RichTextImage />
+            <div className="mx-1 h-4 w-px bg-border" />
+            <RichTextBlockquote />
+            <RichTextHorizontalRule />
+          </div>
+
+          {/* Editor area */}
+          <EditorContent
+            editor={editor}
+            className="px-3 py-2 text-sm [&_.tiptap]:min-h-36 [&_.tiptap]:outline-none"
+          />
+
+          {/* Bubble menus */}
+          <RichTextBubbleText />
+          <RichTextBubbleLink />
+          <RichTextBubbleImage />
+          <RichTextBubbleTable />
+          <SlashCommandList />
+        </div>
       </div>
 
-      {/* Editor area */}
-      <div className="min-h-40 rounded-b-md border border-input bg-transparent focus-within:ring-1 focus-within:ring-ring">
-        <EditorContent
-          editor={editor}
-          className="prose prose-sm dark:prose-invert max-w-none px-3 py-2 text-sm focus:outline-none [&_.tiptap]:min-h-36 [&_.tiptap]:outline-none"
-        />
-      </div>
-
-      {/* Bubble menus */}
-      <RichTextBubbleText />
-      <RichTextBubbleLink />
-      <RichTextBubbleImage />
-      <RichTextBubbleTable />
-      <SlashCommandList />
     </RichTextProvider>
   );
 }

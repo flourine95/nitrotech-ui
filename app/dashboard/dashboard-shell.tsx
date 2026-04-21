@@ -141,18 +141,18 @@ export function DashboardShell({
 
       <SidebarInset>
         {/* Header */}
-        <header className="bg-card sticky top-0 z-50 border-b">
-          <div className="flex items-center justify-between gap-4 px-4 py-2 sm:px-6">
+        <header className="bg-card sticky top-0 z-40 border-b">
+          <div className="flex h-14 items-center justify-between gap-4 px-4 sm:px-6">
             <div className="flex items-center gap-4">
-              <SidebarTrigger className="[&_svg]:!size-5" />
-              <Separator orientation="vertical" className="hidden !h-4 sm:block" />
+              <SidebarTrigger className="size-8 [&_svg]:!size-5" />
+              <Separator orientation="vertical" className="hidden h-4 sm:block" />
               {/* Search — desktop */}
               <div className="relative hidden sm:block">
                 <SearchIcon className="text-muted-foreground/60 absolute top-1/2 left-3 size-4 -translate-y-1/2" />
                 <Input
                   type="search"
                   placeholder="Tìm kiếm..."
-                  className="w-48 pl-9 lg:w-64"
+                  className="h-8 w-48 pl-9 lg:w-64"
                   aria-label="Tìm kiếm"
                 />
               </div>
@@ -160,12 +160,12 @@ export function DashboardShell({
 
             <div className="flex items-center gap-1.5">
               {/* Search — mobile icon */}
-              <Button variant="ghost" size="icon" className="sm:hidden" aria-label="Tìm kiếm">
+              <Button variant="ghost" size="icon" className="size-8 sm:hidden" aria-label="Tìm kiếm">
                 <SearchIcon />
               </Button>
 
               {/* Notifications */}
-              <Button variant="ghost" size="icon" className="relative" aria-label="Thông báo">
+              <Button variant="ghost" size="icon" className="relative size-8" aria-label="Thông báo">
                 <BellIcon />
                 <Badge className="absolute -top-0.5 -right-0.5 size-4 justify-center rounded-full p-0 text-[10px]">
                   3
@@ -175,8 +175,8 @@ export function DashboardShell({
               {/* Profile */}
               <ProfileDropdown
                 trigger={
-                  <Button variant="ghost" size="icon" className="size-9.5">
-                    <Avatar className="size-9.5 rounded-md">
+                  <Button variant="ghost" size="icon" className="size-8">
+                    <Avatar className="size-8 rounded-md">
                       <AvatarImage src="https://cdn.shadcnstudio.com/ss-assets/avatar/avatar-1.png" />
                       <AvatarFallback>
                         {displayName.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase()}

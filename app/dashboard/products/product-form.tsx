@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { ArrowLeft, ImagePlus } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
@@ -29,7 +30,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { KeyValueEditor } from './key-value-editor';
 import { GalleryEditor } from './gallery-editor';
 import { VariantsEditor } from './variants-editor';
-import { RichTextEditor } from './rich-text-editor';
+
+// Lazy load RichTextEditor (Tiptap is heavy)
+const RichTextEditor = dynamic(
+  () => import('./rich-text-editor').then((mod) => ({ default: mod.RichTextEditor })),
+  { ssr: false, loading: () => <div className="h-[200px] animate-pulse rounded-md border bg-muted" /> }
+);
 
 interface ProductFormProps {
   product?: Product;
