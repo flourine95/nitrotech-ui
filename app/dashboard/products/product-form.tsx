@@ -42,7 +42,7 @@ import { GalleryEditor } from './gallery-editor';
 import { VariantsEditor } from './variants-editor';
 
 const RichTextEditor = dynamic(
-  () => import('./rich-text-editor').then((mod) => ({ default: mod.RichTextEditor })),
+  () => import('./rich-text-editor-v2').then((mod) => ({ default: mod.RichTextEditorV2 })),
   {
     ssr: false,
     loading: () => <div className="h-50 animate-pulse rounded-md border bg-muted" />,
@@ -100,14 +100,16 @@ export function ProductForm({ product }: ProductFormProps) {
 
   const thumbnail = watch('thumbnail');
 
+  // Auto-generate slug from name (only before user touches slug)
   useEffect(() => {
     const { unsubscribe } = watch((values, { name: field }) => {
       if (field === 'name' && !slugTouched.current) {
-        setValue('slug', slugify(values.name ?? ''));
+        setValue('slug', slugify(values.name ?? ''), { shouldValidate: false });
       }
     });
     return unsubscribe;
-  }, [watch, setValue]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     Promise.all([getCategories({ tree: false }), getBrands({ size: 100 })])
@@ -243,6 +245,7 @@ export function ProductForm({ product }: ProductFormProps) {
                       <RichTextEditor
                         content={field.value ?? ''}
                         onChange={field.onChange}
+                        onBlur={field.onBlur}
                         disabled={isSubmitting}
                       />
                     )}
