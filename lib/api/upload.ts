@@ -85,12 +85,15 @@ export async function uploadFile(file: File, folder: AllowedFolder): Promise<Upl
 }
 
 export async function getAssets(
-  folder: string,
+  folder?: string,
   cursor?: string,
   maxResults = 50,
+  startAt?: string,
 ): Promise<AssetsResponse> {
-  const params = new URLSearchParams({ folder, maxResults: String(maxResults) });
+  const params = new URLSearchParams({ maxResults: String(maxResults) });
+  if (folder) params.set('folder', folder);
   if (cursor) params.set('cursor', cursor);
+  if (startAt) params.set('startAt', startAt);
   const res = await apiFetch<{ data: AssetsResponse }>(`/api/upload/assets?${params}`);
   return res.data;
 }
