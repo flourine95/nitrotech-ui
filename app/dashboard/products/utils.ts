@@ -31,6 +31,8 @@ export const SORT_OPTIONS = [
 
 export type SortValue = (typeof SORT_OPTIONS)[number]['value'];
 
+export const SORT_VALUES = SORT_OPTIONS.map((o) => o.value) as SortValue[];
+
 // ── CSV export ────────────────────────────────────────────────────────────────
 
 function escapeCsv(val: string | number | null | undefined): string {

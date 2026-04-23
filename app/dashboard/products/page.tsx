@@ -3,17 +3,13 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { toast } from 'sonner';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { parseAsInteger, parseAsString, parseAsStringEnum, useQueryState } from 'nuqs';
+import { parseAsInteger, parseAsString, parseAsStringEnum, useQueryStates } from 'nuqs';
 import {
-  ArrowUpDown,
   ChevronLeft,
   ChevronRight,
   Download,
   Ellipsis,
-  Eye,
-  EyeOff,
   Package,
-  Pencil,
   Plus,
   RotateCcw,
   Search,
@@ -22,17 +18,17 @@ import {
   X,
 } from 'lucide-react';
 import {
+  bulkDeleteProducts,
+  bulkHardDeleteProducts,
+  bulkRestoreProducts,
+  bulkUpdateActive,
   deleteProduct,
+  exportProducts,
   getProducts,
   hardDeleteProduct,
   type Product,
   restoreProduct,
   updateProduct,
-  bulkDeleteProducts,
-  bulkRestoreProducts,
-  bulkUpdateActive,
-  bulkHardDeleteProducts,
-  exportProducts,
 } from '@/lib/api/products';
 import type { Category } from '@/lib/api/categories';
 import { getCategories } from '@/lib/api/categories';
@@ -77,14 +73,15 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { useDeferredValue, useState } from 'react';
+import { memo, useCallback, useRef, useState } from 'react';
 import {
+  downloadCSV,
   formatPrice,
   PAGE_SIZE,
-  SORT_OPTIONS,
-  type SortValue,
   productsToCSV,
-  downloadCSV,
+  SORT_OPTIONS,
+  SORT_VALUES,
+  type SortValue,
 } from './utils';
 import { ProductFilterChips } from './product-filter-chips';
 import { ProductBulkBar } from './product-bulk-bar';
@@ -92,25 +89,170 @@ import { ProductImportDialog } from './product-import-dialog';
 
 type FilterStatus = 'all' | 'active' | 'inactive' | 'deleted';
 
+// Module-level stable parsers — outside component to avoid re-creating on every render
+const FILTER_STATUS_VALUES: FilterStatus[] = ['all', 'active', 'inactive', 'deleted'];
+
+const filterParsers = {
+  q: parseAsString.withDefault(''),
+  status: parseAsStringEnum<FilterStatus>(FILTER_STATUS_VALUES).withDefault('all'),
+  cat: parseAsInteger,
+  brand: parseAsInteger,
+  page: parseAsInteger.withDefault(0),
+  sort: parseAsStringEnum<SortValue>(SORT_VALUES).withDefault('createdAt,desc'),
+};
+
+const EMPTY_CATEGORIES: Category[] = [];
+const EMPTY_BRANDS: Brand[] = [];
+
+const STATUS_FILTERS: { value: FilterStatus; label: string }[] = [
+  { value: 'all', label: 'Tất cả' },
+  { value: 'active', label: 'Hiển thị' },
+  { value: 'inactive', label: 'Ẩn' },
+  { value: 'deleted', label: 'Đã xóa' },
+];
+
+type Brand = { id: number; name: string };
+
+const FilterBar = memo(function FilterBar({
+  searchValue,
+  filterStatus,
+  filterCategoryId,
+  filterBrandId,
+  sortBy,
+  categories,
+  brands,
+  onSearchCommit,
+  onStatusChange,
+  onCategoryChange,
+  onBrandChange,
+  onSortChange,
+}: {
+  searchValue: string;
+  filterStatus: FilterStatus;
+  filterCategoryId: number | null;
+  filterBrandId: number | null;
+  sortBy: SortValue;
+  categories: Category[];
+  brands: Brand[];
+  onSearchCommit: (val: string) => void;
+  onStatusChange: (val: FilterStatus) => void;
+  onCategoryChange: (val: number | null) => void;
+  onBrandChange: (val: number | null) => void;
+  onSortChange: (val: SortValue) => void;
+}) {
+  // Local state for input — decoupled from URL/nuqs to avoid re-render on every keystroke
+  const [inputVal, setInputVal] = useState(searchValue);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Sync if external value changes (e.g. clearAllFilters)
+  const prevSearchRef = useRef(searchValue);
+  if (prevSearchRef.current !== searchValue) {
+    prevSearchRef.current = searchValue;
+    if (inputVal !== searchValue) setInputVal(searchValue);
+  }
+
+  function handleInputChange(val: string) {
+    setInputVal(val);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => onSearchCommit(val), 300);
+  }
+
+  return (
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+      <div className="relative flex-1">
+        <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          type="text"
+          placeholder="Tìm tên, slug..."
+          value={inputVal}
+          onChange={(e) => handleInputChange(e.target.value)}
+          className="pr-10 pl-9"
+        />
+        {inputVal && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => { setInputVal(''); onSearchCommit(''); if (debounceRef.current) clearTimeout(debounceRef.current); }}
+            className="absolute top-1/2 right-1 h-7 w-7 -translate-y-1/2"
+          >
+            <X className="h-3.5 w-3.5" />
+          </Button>
+        )}
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {STATUS_FILTERS.map((f) => (
+          <Button
+            key={f.value}
+            variant={filterStatus === f.value ? 'default' : 'outline'}
+            size="sm"
+            className="h-8"
+            onClick={() => onStatusChange(f.value)}
+          >
+            {f.label}
+          </Button>
+        ))}
+        <Select
+          value={filterCategoryId ? String(filterCategoryId) : 'all'}
+          onValueChange={(v) => onCategoryChange(v === 'all' ? null : Number(v))}
+        >
+          <SelectTrigger className="w-36">
+            <SelectValue placeholder="Danh mục" />
+          </SelectTrigger>
+          <SelectContent position="popper" sideOffset={4}>
+            <SelectItem value="all">Tất cả danh mục</SelectItem>
+            {categories.map((c) => (
+              <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select
+          value={filterBrandId ? String(filterBrandId) : 'all'}
+          onValueChange={(v) => onBrandChange(v === 'all' ? null : Number(v))}
+        >
+          <SelectTrigger className="w-36">
+            <SelectValue placeholder="Thương hiệu" />
+          </SelectTrigger>
+          <SelectContent position="popper" sideOffset={4}>
+            <SelectItem value="all">Tất cả thương hiệu</SelectItem>
+            {brands.map((b) => (
+              <SelectItem key={b.id} value={String(b.id)}>{b.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select
+          value={sortBy}
+          onValueChange={(v) => onSortChange(v as SortValue)}
+        >
+          <SelectTrigger className="w-36">
+            <SelectValue placeholder="Sắp xếp" />
+          </SelectTrigger>
+          <SelectContent position="popper" sideOffset={4}>
+            {SORT_OPTIONS.map((o) => (
+              <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+  );
+});
+
 export default function DashboardProductsPage() {
   const queryClient = useQueryClient();
 
-  const [search, setSearch] = useQueryState('q', parseAsString.withDefault(''));
-  const [filterStatus, setFilterStatus] = useQueryState(
-    'status',
-    parseAsStringEnum<FilterStatus>(['all', 'active', 'inactive', 'deleted']).withDefault('all'),
-  );
-  const [filterCategoryId, setFilterCategoryId] = useQueryState('cat', parseAsInteger);
-  const [filterBrandId, setFilterBrandId] = useQueryState('brand', parseAsInteger);
-  const [currentPage, setCurrentPage] = useQueryState('page', parseAsInteger.withDefault(0));
-  const [sortBy, setSortBy] = useQueryState(
-    'sort',
-    parseAsStringEnum<SortValue>(SORT_OPTIONS.map((o) => o.value) as SortValue[]).withDefault(
-      'createdAt,desc',
-    ),
-  );
+  const [filters, setFilters] = useQueryStates(filterParsers, {
+    shallow: true,
+    history: 'replace',
+    throttleMs: 100,
+  });
+  const { q: search, status: filterStatus, cat: filterCategoryId, brand: filterBrandId, page: currentPage, sort: sortBy } = filters;
 
-  const deferredSearch = useDeferredValue(search);
+  const setSearch = useCallback((val: string | null) => { void setFilters({ q: val, page: 0 }); }, [setFilters]);
+  const setFilterStatus = useCallback((val: FilterStatus) => { void setFilters({ status: val, page: 0 }); }, [setFilters]);
+  const setFilterCategoryId = useCallback((val: number | null) => { void setFilters({ cat: val, page: 0 }); }, [setFilters]);
+  const setFilterBrandId = useCallback((val: number | null) => { void setFilters({ brand: val, page: 0 }); }, [setFilters]);
+  const setCurrentPage = useCallback((val: number) => { void setFilters({ page: val }); }, [setFilters]);
+  const setSortBy = useCallback((val: SortValue | null) => { void setFilters({ sort: val, page: 0 }); }, [setFilters]);
 
   // Multi-select state
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
@@ -126,7 +268,7 @@ export default function DashboardProductsPage() {
 
   const queryKey = [
     'products',
-    deferredSearch,
+    search,
     filterStatus,
     filterCategoryId,
     filterBrandId,
@@ -138,7 +280,7 @@ export default function DashboardProductsPage() {
     queryKey,
     queryFn: () =>
       getProducts({
-        search: deferredSearch || undefined,
+        search: search || undefined,
         active: isDeleted ? undefined : activeFilter,
         deleted: isDeleted ? true : undefined,
         categoryId: filterCategoryId ?? undefined,
@@ -157,13 +299,15 @@ export default function DashboardProductsPage() {
         ? (res as Category[])
         : ((res as { content: Category[] }).content ?? []);
     },
-    staleTime: 5 * 60 * 1000, // 5 min — categories don't change often
+    staleTime: Infinity,
+    gcTime: Infinity,
   });
 
   const brandsQuery = useQuery({
     queryKey: ['brands-all'],
     queryFn: () => getBrands({ size: 100 }).then((r) => r.content),
-    staleTime: 5 * 60 * 1000,
+    staleTime: Infinity,
+    gcTime: Infinity,
   });
 
   const toggleActiveMutation = useMutation({
@@ -229,9 +373,13 @@ export default function DashboardProductsPage() {
     }
   }
 
-  function clearSelection() {
-    setSelectedIds(new Set());
-  }
+  const clearSelection = useCallback(() => { setSelectedIds(new Set()); }, []);
+
+  const onSearchChange = useCallback((val: string) => { setSearch(val || null); clearSelection(); }, [setSearch, clearSelection]);
+  const onStatusChange = useCallback((val: FilterStatus) => { setFilterStatus(val); clearSelection(); }, [setFilterStatus, clearSelection]);
+  const onCategoryChange = useCallback((val: number | null) => { setFilterCategoryId(val); clearSelection(); }, [setFilterCategoryId, clearSelection]);
+  const onBrandChange = useCallback((val: number | null) => { setFilterBrandId(val); clearSelection(); }, [setFilterBrandId, clearSelection]);
+  const onSortChange = useCallback((val: SortValue) => { setSortBy(val); }, [setSortBy]);
 
   // ── Bulk actions ───────────────────────────────────────────────────────────
 
@@ -289,7 +437,7 @@ export default function DashboardProductsPage() {
     toast.info('Đang xuất dữ liệu...');
     try {
       const data = await exportProducts({
-        search: deferredSearch || undefined,
+        search: search || undefined,
         active: isDeleted ? undefined : activeFilter,
         deleted: isDeleted ? true : undefined,
         categoryId: filterCategoryId ?? undefined,
@@ -306,11 +454,7 @@ export default function DashboardProductsPage() {
   // ── Filter clear helpers ───────────────────────────────────────────────────
 
   function clearAllFilters() {
-    void setSearch(null);
-    void setFilterCategoryId(null);
-    void setFilterBrandId(null);
-    void setSortBy(null);
-    void setCurrentPage(0);
+    void setFilters({ q: null, cat: null, brand: null, sort: null, page: 0 });
     clearSelection();
   }
 
@@ -318,8 +462,8 @@ export default function DashboardProductsPage() {
   const totalPages = productsQuery.data?.totalPages ?? 0;
   const totalElements = productsQuery.data?.totalElements ?? 0;
   const loading = productsQuery.isLoading;
-  const categories = categoriesQuery.data ?? [];
-  const brands = brandsQuery.data ?? [];
+  const categories = categoriesQuery.data ?? EMPTY_CATEGORIES;
+  const brands = brandsQuery.data ?? EMPTY_BRANDS;
 
   const allSelected = products.length > 0 && products.every((p) => selectedIds.has(p.id));
   const someSelected = products.some((p) => selectedIds.has(p.id)) && !allSelected;
@@ -345,7 +489,10 @@ export default function DashboardProductsPage() {
             Export
           </Button>
           <Button asChild size="sm">
-            <Link href="/dashboard/products/new" onMouseEnter={() => import('./rich-text-editor-v2')}>
+            <Link
+              href="/dashboard/products/new"
+              onMouseEnter={() => import('./rich-text-editor-v2')}
+            >
               <Plus className="h-4 w-4" />
               Thêm sản phẩm
             </Link>
@@ -354,118 +501,20 @@ export default function DashboardProductsPage() {
       </div>
 
       {/* Search + filters */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-        <div className="relative flex-1">
-          <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            type="text"
-            placeholder="Tìm tên, slug..."
-            value={search}
-            onChange={(e) => {
-              void setSearch(e.target.value || null);
-              void setCurrentPage(0);
-              clearSelection();
-            }}
-            className="pr-10 pl-9"
-          />
-          {search && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => {
-                void setSearch(null);
-                void setCurrentPage(0);
-                clearSelection();
-              }}
-              className="absolute top-1/2 right-1 h-7 w-7 -translate-y-1/2"
-            >
-              <X className="h-3.5 w-3.5" />
-            </Button>
-          )}
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {(
-            [
-              { value: 'all', label: 'Tất cả' },
-              { value: 'active', label: 'Hiển thị' },
-              { value: 'inactive', label: 'Ẩn' },
-              { value: 'deleted', label: 'Đã xóa' },
-            ] as { value: FilterStatus; label: string }[]
-          ).map((f) => (
-            <Button
-              key={f.value}
-              variant={filterStatus === f.value ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => {
-                void setFilterStatus(f.value);
-                void setCurrentPage(0);
-                clearSelection();
-              }}
-            >
-              {f.label}
-            </Button>
-          ))}
-          <Select
-            value={filterCategoryId ? String(filterCategoryId) : 'all'}
-            onValueChange={(v) => {
-              void setFilterCategoryId(v === 'all' ? null : Number(v));
-              void setCurrentPage(0);
-              clearSelection();
-            }}
-          >
-            <SelectTrigger className="h-9 w-auto min-w-36">
-              <SelectValue placeholder="Danh mục" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tất cả danh mục</SelectItem>
-              {categories.map((c) => (
-                <SelectItem key={c.id} value={String(c.id)}>
-                  {c.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select
-            value={filterBrandId ? String(filterBrandId) : 'all'}
-            onValueChange={(v) => {
-              void setFilterBrandId(v === 'all' ? null : Number(v));
-              void setCurrentPage(0);
-              clearSelection();
-            }}
-          >
-            <SelectTrigger className="h-9 w-auto min-w-36">
-              <SelectValue placeholder="Thương hiệu" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tất cả thương hiệu</SelectItem>
-              {brands.map((b) => (
-                <SelectItem key={b.id} value={String(b.id)}>
-                  {b.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select
-            value={sortBy}
-            onValueChange={(v) => {
-              void setSortBy(v as SortValue);
-              void setCurrentPage(0);
-            }}
-          >
-            <SelectTrigger className="h-9 w-auto min-w-36">
-              <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {SORT_OPTIONS.map((o) => (
-                <SelectItem key={o.value} value={o.value}>
-                  {o.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+      <FilterBar
+        searchValue={search}
+        filterStatus={filterStatus}
+        filterCategoryId={filterCategoryId}
+        filterBrandId={filterBrandId}
+        sortBy={sortBy as SortValue}
+        categories={categories}
+        brands={brands}
+        onSearchCommit={onSearchChange}
+        onStatusChange={onStatusChange}
+        onCategoryChange={onCategoryChange}
+        onBrandChange={onBrandChange}
+        onSortChange={onSortChange}
+      />
 
       {/* Active filter chips */}
       <ProductFilterChips
@@ -477,24 +526,10 @@ export default function DashboardProductsPage() {
         categoryName={categoryName}
         brandName={brandName}
         totalElements={totalElements}
-        onClearSearch={() => {
-          void setSearch(null);
-          void setCurrentPage(0);
-          clearSelection();
-        }}
-        onClearCategory={() => {
-          void setFilterCategoryId(null);
-          void setCurrentPage(0);
-          clearSelection();
-        }}
-        onClearBrand={() => {
-          void setFilterBrandId(null);
-          void setCurrentPage(0);
-          clearSelection();
-        }}
-        onClearSort={() => {
-          void setSortBy(null);
-        }}
+        onClearSearch={() => { setSearch(null); clearSelection(); }}
+        onClearCategory={() => { setFilterCategoryId(null); clearSelection(); }}
+        onClearBrand={() => { setFilterBrandId(null); clearSelection(); }}
+        onClearSort={() => { setSortBy(null); }}
         onClearAll={clearAllFilters}
       />
 
@@ -667,14 +702,14 @@ export default function DashboardProductsPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => setRestoreTarget(p)}>
-                              <RotateCcw className="h-4 w-4" /> Khôi phục
+                              Khôi phục
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
                               variant="destructive"
                               onClick={() => setHardDeleteTarget(p)}
                             >
-                              <Trash2 className="h-4 w-4" /> Xóa vĩnh viễn
+                              Xóa vĩnh viễn
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -692,32 +727,20 @@ export default function DashboardProductsPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem asChild>
-                              <Link href={`/dashboard/products/${p.id}`}>
-                                <Eye className="h-4 w-4" /> Xem chi tiết
-                              </Link>
+                              <Link href={`/dashboard/products/${p.id}`}>Xem chi tiết</Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem asChild>
-                              <Link href={`/dashboard/products/${p.id}/edit`}>
-                                <Pencil className="h-4 w-4" /> Chỉnh sửa
-                              </Link>
+                              <Link href={`/dashboard/products/${p.id}/edit`}>Chỉnh sửa</Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => toggleActiveMutation.mutate(p)}>
-                              {p.active ? (
-                                <>
-                                  <EyeOff className="h-4 w-4" /> Ẩn
-                                </>
-                              ) : (
-                                <>
-                                  <Eye className="h-4 w-4" /> Hiển thị
-                                </>
-                              )}
+                              {p.active ? 'Ẩn' : 'Hiển thị'}
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
                               variant="destructive"
                               onClick={() => setDeleteTarget(p)}
                             >
-                              <Trash2 className="h-4 w-4" /> Xóa
+                              Xóa
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -741,7 +764,7 @@ export default function DashboardProductsPage() {
                 variant="outline"
                 size="icon"
                 className="h-8 w-8"
-                onClick={() => void setCurrentPage(Math.max(0, currentPage - 1))}
+                onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
                 disabled={currentPage === 0}
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -761,7 +784,7 @@ export default function DashboardProductsPage() {
                     variant={currentPage === p ? 'default' : 'outline'}
                     size="icon"
                     className="h-8 w-8 text-xs"
-                    onClick={() => void setCurrentPage(p)}
+                    onClick={() => setCurrentPage(p)}
                   >
                     {p + 1}
                   </Button>
@@ -771,7 +794,7 @@ export default function DashboardProductsPage() {
                 variant="outline"
                 size="icon"
                 className="h-8 w-8"
-                onClick={() => void setCurrentPage(Math.min(totalPages - 1, currentPage + 1))}
+                onClick={() => setCurrentPage(Math.min(totalPages - 1, currentPage + 1))}
                 disabled={currentPage >= totalPages - 1}
               >
                 <ChevronRight className="h-4 w-4" />

@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { BoltIcon, BellIcon, LogOutIcon, UserIcon, SearchIcon } from 'lucide-react';
+import { BoltIcon, BellIcon, SearchIcon } from 'lucide-react';
+import { memo, useMemo } from 'react';
 
 import {
   Sidebar,
@@ -34,7 +35,13 @@ type User = {
   email?: string | null;
 };
 
-function NavGroup({ items, pathname }: { items: NavItem[]; pathname: string }) {
+const NavGroup = memo(function NavGroup({
+  items,
+  pathname,
+}: {
+  items: NavItem[];
+  pathname: string;
+}) {
   return (
     <SidebarMenu>
       {items.map((item) => {
@@ -58,7 +65,29 @@ function NavGroup({ items, pathname }: { items: NavItem[]; pathname: string }) {
       })}
     </SidebarMenu>
   );
-}
+});
+
+const ProfileTrigger = memo(function ProfileTrigger({
+  displayName,
+}: {
+  displayName: string;
+}) {
+  return (
+    <Button variant="ghost" size="icon" className="size-8">
+      <Avatar className="size-8 rounded-md">
+        <AvatarImage src="https://cdn.shadcnstudio.com/ss-assets/avatar/avatar-1.png" />
+        <AvatarFallback>
+          {displayName
+            .split(' ')
+            .map((n) => n[0])
+            .slice(0, 2)
+            .join('')
+            .toUpperCase()}
+        </AvatarFallback>
+      </Avatar>
+    </Button>
+  );
+});
 
 export function DashboardShell({
   children,
@@ -72,6 +101,11 @@ export function DashboardShell({
 
   const displayName = user?.name ?? 'Admin';
   const displayEmail = user?.email ?? 'admin@nitrotech.vn';
+
+  const profileTrigger = useMemo(
+    () => <ProfileTrigger displayName={displayName} />,
+    [displayName],
+  );
 
   async function handleLogout() {
     try {
@@ -174,23 +208,7 @@ export function DashboardShell({
               </Button>
 
               {/* Profile */}
-              <ProfileDropdown
-                trigger={
-                  <Button variant="ghost" size="icon" className="size-8">
-                    <Avatar className="size-8 rounded-md">
-                      <AvatarImage src="https://cdn.shadcnstudio.com/ss-assets/avatar/avatar-1.png" />
-                      <AvatarFallback>
-                        {displayName
-                          .split(' ')
-                          .map((n) => n[0])
-                          .slice(0, 2)
-                          .join('')
-                          .toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                  </Button>
-                }
-              />
+              <ProfileDropdown trigger={profileTrigger} />
             </div>
           </div>
         </header>
