@@ -86,7 +86,7 @@ function VariantInlineForm({
   return (
     <div className="rounded-lg border p-4">
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <div className="space-y-1.5">
+        <div className="flex flex-col gap-1.5">
           <Label className="text-xs">
             SKU <span className="text-destructive">*</span>
           </Label>
@@ -97,7 +97,7 @@ function VariantInlineForm({
             className="font-mono"
           />
         </div>
-        <div className="space-y-1.5">
+        <div className="flex flex-col gap-1.5">
           <Label className="text-xs">
             Tên <span className="text-destructive">*</span>
           </Label>
@@ -107,7 +107,7 @@ function VariantInlineForm({
             placeholder="Size S"
           />
         </div>
-        <div className="space-y-1.5">
+        <div className="flex flex-col gap-1.5">
           <Label className="text-xs">
             Giá <span className="text-destructive">*</span>
           </Label>
@@ -131,7 +131,7 @@ function VariantInlineForm({
         </div>
       </div>
 
-      <div className="mt-3 space-y-1.5">
+      <div className="mt-3 flex flex-col gap-1.5">
         <Label className="text-xs">Thuộc tính</Label>
         <KeyValueEditor
           value={form.attributes}
@@ -228,8 +228,8 @@ export function VariantsEditor({ productId, variants, onChange }: VariantsEditor
   const fmt = formatVariantPrice;
 
   return (
-    <div className="space-y-3">
-      {variants.length > 0 && (
+    <div className="flex flex-col gap-3">
+      {variants.length > 0 ? (
         <Table className="border">
           <TableHeader>
             <TableRow>
@@ -326,7 +326,7 @@ export function VariantsEditor({ productId, variants, onChange }: VariantsEditor
             )}
           </TableBody>
         </Table>
-      )}
+      ) : null}
 
       {adding ? (
         <VariantInlineForm
@@ -351,7 +351,7 @@ export function VariantsEditor({ productId, variants, onChange }: VariantsEditor
       <AlertDialog open={!!deleteTarget} onOpenChange={(v) => !v && setDeleteTarget(null)}>
         <AlertDialogContent size="sm">
           <AlertDialogHeader>
-            <AlertDialogMedia className="bg-rose-100 text-rose-600">
+            <AlertDialogMedia className="bg-destructive/10 text-destructive">
               <Trash2 className="h-5 w-5" />
             </AlertDialogMedia>
             <AlertDialogTitle>Xóa biến thể?</AlertDialogTitle>

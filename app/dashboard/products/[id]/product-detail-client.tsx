@@ -299,8 +299,8 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
               {/* Variants list */}
               <div className="flex min-w-0 items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="font-medium">Danh sách phiên bản</p>
-                  <p className="text-sm text-muted-foreground">Click vào phiên bản để chỉnh sửa.</p>
+                  <p className="font-medium">Danh sách biến thể</p>
+                  <p className="text-sm text-muted-foreground">Click vào biến thể để chỉnh sửa.</p>
                 </div>
               </div>
 
@@ -373,15 +373,15 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
               ) : (
                 <div className="flex flex-col items-center justify-center rounded-2xl border bg-card py-12">
                   <Package className="mb-3 h-10 w-10 text-muted-foreground/30" />
-                  <p className="text-sm text-muted-foreground">Chưa có phiên bản nào</p>
+                  <p className="text-sm text-muted-foreground">Chưa có biến thể nào</p>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={handleAddVariant}
-                    className="mt-3 text-emerald-600 hover:text-emerald-700"
+                    className="mt-3"
                   >
                     <Plus className="h-4 w-4" />
-                    Thêm phiên bản đầu tiên
+                    Thêm biến thể đầu tiên
                   </Button>
                 </div>
               )}
@@ -415,7 +415,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
       <AlertDialog open={deleteTarget} onOpenChange={setDeleteTarget}>
         <AlertDialogContent size="sm">
           <AlertDialogHeader>
-            <AlertDialogMedia className="bg-rose-100 text-rose-600">
+            <AlertDialogMedia className="bg-destructive/10 text-destructive">
               <Trash2 className="h-5 w-5" />
             </AlertDialogMedia>
             <AlertDialogTitle>Xóa sản phẩm?</AlertDialogTitle>

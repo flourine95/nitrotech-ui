@@ -3,12 +3,7 @@ import Link from 'next/link';
 import { toast } from 'sonner';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { parseAsInteger, parseAsString, parseAsStringEnum, useQueryStates } from 'nuqs';
-import { Download, Filter, Plus, Search, Upload, X } from 'lucide-react';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+import { Download, Plus, Upload } from 'lucide-react';
 import {
   bulkDeleteProducts,
   bulkHardDeleteProducts,
@@ -26,22 +21,13 @@ import type { Category } from '@/lib/api/categories';
 import { getCategories } from '@/lib/api/categories';
 import { getBrands } from '@/lib/api/brands';
 import { ApiException } from '@/lib/client';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { memo, useCallback, useEffect, useMemo, useRef, useState, startTransition } from 'react';
+import { useCallback, useMemo, useState, startTransition } from 'react';
 import {
   downloadCSV,
   PAGE_SIZE,
   PAGE_SIZE_OPTIONS,
   productsToCSV,
-  SORT_OPTIONS,
   SORT_VALUES,
   type PageSizeOption,
   type SortValue,
@@ -51,11 +37,10 @@ import { ProductBulkBar } from './product-bulk-bar';
 import { ProductImportDialog } from './product-import-dialog';
 import { ProductTable } from './product-table';
 import { ProductDialogs } from './product-dialogs';
-
-type FilterStatus = 'all' | 'active' | 'inactive' | 'deleted';
+import { ProductFilterBar, type FilterStatus, STATUS_FILTERS } from './product-filter-bar';
 
 // Module-level stable parsers — outside component to avoid re-creating on every render
-const FILTER_STATUS_VALUES: FilterStatus[] = ['all', 'active', 'inactive', 'deleted'];
+const FILTER_STATUS_VALUES: FilterStatus[] = STATUS_FILTERS.map((f) => f.value);
 
 const filterParsers = {
   q: parseAsString.withDefault(''),
@@ -70,186 +55,7 @@ const filterParsers = {
 const EMPTY_CATEGORIES: Category[] = [];
 const EMPTY_BRANDS: Brand[] = [];
 
-const STATUS_FILTERS: { value: FilterStatus; label: string }[] = [
-  { value: 'all', label: 'Tất cả' },
-  { value: 'active', label: 'Hiển thị' },
-  { value: 'inactive', label: 'Ẩn' },
-  { value: 'deleted', label: 'Đã xóa' },
-];
-
 type Brand = { id: number; name: string };
-
-const FilterBar = memo(function FilterBar({
-  searchValue,
-  filterStatus,
-  filterCategoryId,
-  filterBrandId,
-  sortBy,
-  categories,
-  brands,
-  onSearchCommit,
-  onStatusChange,
-  onCategoryChange,
-  onBrandChange,
-  onSortChange,
-}: {
-  searchValue: string;
-  filterStatus: FilterStatus;
-  filterCategoryId: number | null;
-  filterBrandId: number | null;
-  sortBy: SortValue;
-  categories: Category[];
-  brands: Brand[];
-  onSearchCommit: (val: string) => void;
-  onStatusChange: (val: FilterStatus) => void;
-  onCategoryChange: (val: number | null) => void;
-  onBrandChange: (val: number | null) => void;
-  onSortChange: (val: SortValue) => void;
-}) {
-  const [inputVal, setInputVal] = useState(searchValue);
-  const [localStatus, setLocalStatus] = useState(filterStatus);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => { setInputVal(searchValue); }, [searchValue]);
-  useEffect(() => { setLocalStatus(filterStatus); }, [filterStatus]);
-
-  function handleInputChange(val: string) {
-    setInputVal(val);
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => onSearchCommit(val), 300);
-  }
-
-  function handleStatusChange(val: FilterStatus) {
-    setLocalStatus(val);
-    startTransition(() => onStatusChange(val));
-  }
-
-  const activeFilterCount = [
-    filterCategoryId !== null,
-    filterBrandId !== null,
-    sortBy !== 'createdAt,desc',
-  ].filter(Boolean).length;
-
-  return (
-    <div className="flex items-center gap-2">
-      {/* Search */}
-      <div className="relative flex-1">
-        <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          type="text"
-          placeholder="Tìm tên, slug..."
-          value={inputVal}
-          onChange={(e) => handleInputChange(e.target.value)}
-          className="h-9 pr-8 pl-9"
-        />
-        {inputVal && (
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="Xóa tìm kiếm"
-            onClick={() => {
-              setInputVal('');
-              onSearchCommit('');
-              if (debounceRef.current) clearTimeout(debounceRef.current);
-            }}
-            className="absolute top-1/2 right-1 h-7 w-7 -translate-y-1/2"
-          >
-            <X className="h-3.5 w-3.5" />
-          </Button>
-        )}
-      </div>
-
-      {/* Status — segmented control */}
-      <div className="flex h-9 items-center rounded-md border bg-muted/40 p-0.5">
-        {STATUS_FILTERS.map((f) => (
-          <button
-            key={f.value}
-            onClick={() => handleStatusChange(f.value)}
-            className={`h-8 rounded px-3 text-sm transition-all ${
-              localStatus === f.value
-                ? 'bg-background font-medium text-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Advanced filters — popover */}
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button variant="outline" className="h-9 gap-1.5">
-            <Filter className="h-3.5 w-3.5" />
-            Bộ lọc
-            {activeFilterCount > 0 && (
-              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-foreground text-[10px] font-semibold text-background">
-                {activeFilterCount}
-              </span>
-            )}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent align="end" className="w-64 p-3">
-          <div className="flex flex-col gap-3">
-            <div className="flex flex-col gap-1.5">
-              <span className="text-xs font-medium text-muted-foreground">Danh mục</span>
-              <Select
-                value={filterCategoryId ? String(filterCategoryId) : 'all'}
-                onValueChange={(v) => onCategoryChange(v === 'all' ? null : Number(v))}
-              >
-                <SelectTrigger className="h-8 w-full text-sm">
-                  <SelectValue placeholder="Tất cả danh mục" />
-                </SelectTrigger>
-                <SelectContent position="popper" sideOffset={4}>
-                  <SelectItem value="all">Tất cả danh mục</SelectItem>
-                  {categories.map((c) => (
-                    <SelectItem key={c.id} value={String(c.id)}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <span className="text-xs font-medium text-muted-foreground">Thương hiệu</span>
-              <Select
-                value={filterBrandId ? String(filterBrandId) : 'all'}
-                onValueChange={(v) => onBrandChange(v === 'all' ? null : Number(v))}
-              >
-                <SelectTrigger className="h-8 w-full text-sm">
-                  <SelectValue placeholder="Tất cả thương hiệu" />
-                </SelectTrigger>
-                <SelectContent position="popper" sideOffset={4}>
-                  <SelectItem value="all">Tất cả thương hiệu</SelectItem>
-                  {brands.map((b) => (
-                    <SelectItem key={b.id} value={String(b.id)}>
-                      {b.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <span className="text-xs font-medium text-muted-foreground">Sắp xếp</span>
-              <Select value={sortBy} onValueChange={(v) => onSortChange(v as SortValue)}>
-                <SelectTrigger className="h-8 w-full text-sm">
-                  <SelectValue placeholder="Sắp xếp" />
-                </SelectTrigger>
-                <SelectContent position="popper" sideOffset={4}>
-                  {SORT_OPTIONS.map((o) => (
-                    <SelectItem key={o.value} value={o.value}>
-                      {o.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </PopoverContent>
-      </Popover>
-    </div>
-  );
-});
 
 export default function DashboardProductsPage() {
   const queryClient = useQueryClient();
@@ -592,7 +398,7 @@ export default function DashboardProductsPage() {
   );
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-4">
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
@@ -621,7 +427,7 @@ export default function DashboardProductsPage() {
       </div>
 
       {/* Search + filters */}
-      <FilterBar
+      <ProductFilterBar
         searchValue={search}
         filterStatus={filterStatus}
         filterCategoryId={filterCategoryId}

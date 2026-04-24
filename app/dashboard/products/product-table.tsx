@@ -30,6 +30,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { Product } from '@/lib/api/products';
 import { formatPrice, PAGE_SIZE_OPTIONS, type PageSizeOption } from './utils';
@@ -105,16 +106,15 @@ export const ProductTable = memo(function ProductTable({
         <div className="divide-y">
           {Array.from({ length: pageSize }).map((_, i) => (
             <div key={i} className="flex items-center gap-3 px-4 py-3">
-              <div className="h-4 w-4 animate-pulse rounded bg-muted" />
-              <div className="h-10 w-10 animate-pulse rounded-md bg-muted" />
-              <div className="flex-1 space-y-1.5">
-                <div className="h-3.5 w-48 animate-pulse rounded bg-muted" />
-                <div className="h-3 w-32 animate-pulse rounded bg-muted" />
+              <Skeleton className="size-4 rounded" />
+              <Skeleton className="size-10 rounded-md" />
+              <div className="flex flex-1 flex-col gap-1.5">
+                <Skeleton className="h-3.5 w-48" />
+                <Skeleton className="h-3 w-32" />
               </div>
-              <div className="h-3.5 w-20 animate-pulse rounded bg-muted" />
-              <div className="h-5 w-8 animate-pulse rounded bg-muted" />
-              <div className="h-5 w-8 animate-pulse rounded bg-muted" />
-              <div className="h-3.5 w-16 animate-pulse rounded bg-muted" />
+              <Skeleton className="h-3.5 w-20" />
+              <Skeleton className="h-5 w-8" />
+              <Skeleton className="h-3.5 w-16" />
             </div>
           ))}
         </div>

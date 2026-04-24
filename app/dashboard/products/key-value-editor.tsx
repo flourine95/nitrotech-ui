@@ -65,7 +65,7 @@ export function KeyValueEditor({
   }
 
   return (
-    <div className="space-y-2">
+    <div className="flex flex-col gap-2">
       {rows.map((row, index) => (
         <div key={row.id} className="flex items-center gap-2">
           <Input

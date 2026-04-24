@@ -128,7 +128,7 @@ export function VariantFormSheet({
               {isEdit ? 'Chỉnh sửa biến thể' : 'Thêm biến thể'}
             </SheetTitle>
             <SheetDescription>
-              {productName} / {isEdit ? variant.name : 'Phiên bản mới'}
+              {productName} / {isEdit ? variant.name : 'Biến thể mới'}
             </SheetDescription>
           </SheetHeader>
 
