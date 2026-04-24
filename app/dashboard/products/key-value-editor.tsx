@@ -10,16 +10,16 @@ interface Row {
   value: string;
 }
 
-let nextId = 0;
-function makeRow(key = '', value = ''): Row {
-  return { id: nextId++, key, value };
-}
-
 interface KeyValueEditorProps {
   value: Record<string, string>;
   onChange: (val: Record<string, string>) => void;
   keyPlaceholder?: string;
   valuePlaceholder?: string;
+}
+
+let _id = 0;
+function nextId() {
+  return _id++;
 }
 
 export function KeyValueEditor({
@@ -28,6 +28,10 @@ export function KeyValueEditor({
   keyPlaceholder = 'Thuộc tính',
   valuePlaceholder = 'Giá trị',
 }: KeyValueEditorProps) {
+  function makeRow(key = '', val = ''): Row {
+    return { id: nextId(), key, value: val };
+  }
+
   const [rows, setRows] = useState<Row[]>(() =>
     Object.entries(value).map(([k, v]) => makeRow(k, v)),
   );

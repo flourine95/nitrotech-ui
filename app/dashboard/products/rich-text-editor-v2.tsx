@@ -1,5 +1,5 @@
 'use client';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { type ComponentType, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { EditorContent, useEditor, useEditorState } from '@tiptap/react';
 import { StarterKit } from '@tiptap/starter-kit';
 import { Placeholder } from '@tiptap/extension-placeholder';
@@ -30,8 +30,13 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Toggle } from '@/components/ui/toggle';
 import { cn } from '@/lib/utils';
-import MediaPickerDialog from '@/components/media-picker-dialog';
+import dynamic from 'next/dynamic';
+import type { MediaPickerProps } from '@/components/media-picker-dialog';
 import type { Editor } from '@tiptap/react';
+
+const MediaPickerDialog = dynamic(() => import('@/components/media-picker-dialog'), {
+  ssr: false,
+}) as ComponentType<MediaPickerProps>;
 
 interface RichTextEditorProps {
   content: string;
@@ -40,10 +45,9 @@ interface RichTextEditorProps {
   disabled?: boolean;
 }
 
-// ── Toolbar helpers ───────────────────────────────────────────────────────────
 
 function ToolbarButton({ onClick, disabled, title, children }: {
-  onClick: () => void; disabled?: boolean; title?: string; children: React.ReactNode;
+  onClick: () => void; disabled?: boolean; title?: string; children: ReactNode;
 }) {
   return (
     <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={onClick} disabled={disabled} title={title}>
@@ -53,7 +57,7 @@ function ToolbarButton({ onClick, disabled, title, children }: {
 }
 
 function ToolbarToggle({ pressed, onPressedChange, title, children }: {
-  pressed: boolean; onPressedChange: () => void; title?: string; children: React.ReactNode;
+  pressed: boolean; onPressedChange: () => void; title?: string; children: ReactNode;
 }) {
   return (
     <Toggle size="sm" pressed={pressed} onPressedChange={onPressedChange} title={title} className="h-7 w-7 p-0">
@@ -62,7 +66,6 @@ function ToolbarToggle({ pressed, onPressedChange, title, children }: {
   );
 }
 
-// ── Toolbar — isolated, uses useEditorState to avoid unnecessary re-renders ───
 
 function Toolbar({ editor, onInsertImage }: { editor: Editor; onInsertImage: () => void }) {
   const s = useEditorState({
@@ -198,19 +201,17 @@ function Toolbar({ editor, onInsertImage }: { editor: Editor; onInsertImage: () 
   );
 }
 
-// ── Editor ────────────────────────────────────────────────────────────────────
-
 export function RichTextEditorV2({ content, onChange, onBlur, disabled = false }: RichTextEditorProps) {
   const onChangeRef = useRef(onChange);
-  onChangeRef.current = onChange;
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  });
   const [showImagePicker, setShowImagePicker] = useState(false);
-  const editorRef = useRef<Editor | null>(null);
 
   const extensions = useMemo(() => [
     StarterKit.configure({
       heading: { levels: [1, 2, 3] },
       codeBlock: false,
-      // Disable to avoid duplicate warnings with separately added extensions
       link: false,
       underline: false,
     }),
@@ -262,15 +263,11 @@ export function RichTextEditorV2({ content, onChange, onBlur, disabled = false }
   });
 
   useEffect(() => {
-    editorRef.current = editor ?? null;
-  }, [editor]);
-
-  useEffect(() => {
     if (!editor) return;
     const current = editor.getHTML();
     const normalized = content || '';
     if (current !== normalized) {
-      editor.commands.setContent(normalized, false);
+      editor.commands.setContent(normalized, { emitUpdate: false });
     }
   }, [content, editor]);
 
@@ -296,7 +293,7 @@ export function RichTextEditorV2({ content, onChange, onBlur, disabled = false }
           multiple
           onInsert={(urls) => {
             urls.forEach((url) => {
-              editorRef.current?.chain().focus().setImage({ src: url }).run();
+              editor?.chain().focus().setImage({ src: url }).run();
             });
           }}
           onClose={() => setShowImagePicker(false)}

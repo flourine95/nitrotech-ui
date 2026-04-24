@@ -1,12 +1,17 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { type ComponentType, useEffect, useState } from 'react';
 import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import { DragDropProvider, type DragEndEvent, type DragOverEvent } from '@dnd-kit/react';
 import { useSortable } from '@dnd-kit/react/sortable';
 import { GripVertical, Plus, Trash2 } from 'lucide-react';
-import MediaPickerDialog from '@/components/media-picker-dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import type { MediaPickerProps } from '@/components/media-picker-dialog';
+
+const MediaPickerDialog = dynamic(() => import('@/components/media-picker-dialog'), {
+  ssr: false,
+}) as ComponentType<MediaPickerProps>;
 
 function arrayMove<T>(arr: T[], from: number, to: number): T[] {
   const next = [...arr];
@@ -74,7 +79,7 @@ export function GalleryEditor({ images, onChange }: GalleryEditorProps) {
   const [showPicker, setShowPicker] = useState(false);
   const [localImages, setLocalImages] = useState<string[]>(images);
 
-  // Sync when parent resets externally (e.g. after initial load)
+  // Sync when parent resets externally (e.g. after form reset)
   useEffect(() => {
     setLocalImages(images);
   }, [images]);

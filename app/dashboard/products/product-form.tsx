@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { type ComponentType, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -23,13 +23,11 @@ import {
   updateProduct,
 } from '@/lib/api/products';
 import type { Category } from '@/lib/api/categories';
-import { getCategories } from '@/lib/api/categories';
 import type { Brand } from '@/lib/api/brands';
-import { getBrands } from '@/lib/api/brands';
 import { ApiException } from '@/lib/client';
 import { slugify } from '@/lib/utils';
 import { type ProductFormData, productSchema } from '@/lib/schemas/products';
-import MediaPickerDialog from '@/components/media-picker-dialog';
+import type { MediaPickerProps } from '@/components/media-picker-dialog';
 import {
   Select,
   SelectContent,
@@ -49,11 +47,21 @@ const RichTextEditor = dynamic(
   },
 );
 
+const MediaPickerDialog = dynamic(() => import('@/components/media-picker-dialog'), {
+  ssr: false,
+}) as ComponentType<MediaPickerProps>;
+
 interface ProductFormProps {
   product?: Product;
+  categories?: Category[];
+  brands?: Brand[];
 }
 
-export function ProductForm({ product }: ProductFormProps) {
+export function ProductForm({
+  product,
+  categories: initialCategories = [],
+  brands: initialBrands = [],
+}: ProductFormProps) {
   const router = useRouter();
   const isEdit = !!product;
   const slugTouched = useRef(isEdit);
@@ -63,8 +71,8 @@ export function ProductForm({ product }: ProductFormProps) {
   );
   const [images, setImages] = useState<string[]>(product?.images ?? []);
   const [variants, setVariants] = useState<ProductVariant[]>(product?.variants ?? []);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [brands, setBrands] = useState<Brand[]>([]);
+  const categories = initialCategories;
+  const brands = initialBrands;
   const [showThumbPicker, setShowThumbPicker] = useState(false);
 
   const {
@@ -100,7 +108,6 @@ export function ProductForm({ product }: ProductFormProps) {
 
   const thumbnail = watch('thumbnail');
 
-  // Auto-generate slug from name (only before user touches slug)
   useEffect(() => {
     const { unsubscribe } = watch((values, { name: field }) => {
       if (field === 'name' && !slugTouched.current) {
@@ -108,19 +115,8 @@ export function ProductForm({ product }: ProductFormProps) {
       }
     });
     return unsubscribe;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    Promise.all([getCategories({ tree: false }), getBrands({ size: 100 })])
-      .then(([cats, brnds]) => {
-        const catList = Array.isArray(cats)
-          ? cats
-          : ((cats as { content: Category[] }).content ?? []);
-        setCategories(catList);
-        setBrands(brnds.content);
-      })
-      .catch(() => {});
+    // watch and setValue are stable RHF refs — safe to omit
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function onSubmit(data: ProductFormData) {
@@ -165,7 +161,6 @@ export function ProductForm({ product }: ProductFormProps) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate>
-      {/* Page header */}
       <div className="mb-6 flex items-center justify-between gap-4">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
@@ -189,9 +184,7 @@ export function ProductForm({ product }: ProductFormProps) {
         </div>
       </div>
 
-      {/* Body: 2-col grid */}
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.55fr)_minmax(300px,0.78fr)]">
-        {/* ── Left column ── */}
         <div className="flex flex-col gap-6">
           <Card className="rounded-2xl">
             <CardHeader>
@@ -302,7 +295,6 @@ export function ProductForm({ product }: ProductFormProps) {
           )}
         </div>
 
-        {/* ── Right column ── */}
         <div className="flex flex-col gap-4 lg:sticky lg:top-4 lg:self-start">
           <Card className="rounded-2xl">
             <CardHeader>

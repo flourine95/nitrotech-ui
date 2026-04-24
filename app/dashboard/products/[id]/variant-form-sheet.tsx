@@ -1,10 +1,9 @@
 'use client';
-import { useState } from 'react';
-import Image from 'next/image';
+import { type ComponentType, type SyntheticEvent, useState } from 'react';
 import { toast } from 'sonner';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { ImagePlus, Upload, X } from 'lucide-react';
-import { createVariant, updateVariant, type ProductVariant } from '@/lib/api/products';
+import { ImagePlus, X } from 'lucide-react';
+import { createVariant, type ProductVariant, updateVariant } from '@/lib/api/products';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,7 +15,12 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import MediaPickerDialog from '@/components/media-picker-dialog';
+import dynamic from 'next/dynamic';
+import type { MediaPickerProps } from '@/components/media-picker-dialog';
+
+const MediaPickerDialog = dynamic(() => import('@/components/media-picker-dialog'), {
+  ssr: false,
+}) as ComponentType<MediaPickerProps>;
 
 interface VariantFormSheetProps {
   open: boolean;
@@ -54,10 +58,10 @@ export function VariantFormSheet({
       }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['products'] });
-      toast.success('Đã tạo phiên bản');
+      toast.success('Đã tạo biến thể');
       onClose();
     },
-    onError: () => toast.error('Tạo phiên bản thất bại'),
+    onError: () => toast.error('Tạo biến thể thất bại'),
   });
 
   const updateMutation = useMutation({
@@ -71,13 +75,13 @@ export function VariantFormSheet({
       }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['products'] });
-      toast.success('Đã cập nhật phiên bản');
+      toast.success('Đã cập nhật biến thể');
       onClose();
     },
-    onError: () => toast.error('Cập nhật phiên bản thất bại'),
+    onError: () => toast.error('Cập nhật biến thể thất bại'),
   });
 
-  function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!sku.trim() || !name.trim() || !price) {
       toast.error('Vui lòng điền đầy đủ thông tin');
@@ -121,7 +125,7 @@ export function VariantFormSheet({
         <SheetContent className="flex w-full flex-col gap-0 p-0 sm:max-w-2xl">
           <SheetHeader className="border-b border-border/70 px-6 pt-6 pb-5">
             <SheetTitle className="text-2xl">
-              {isEdit ? 'Chỉnh sửa phiên bản' : 'Thêm phiên bản'}
+              {isEdit ? 'Chỉnh sửa biến thể' : 'Thêm biến thể'}
             </SheetTitle>
             <SheetDescription>
               {productName} / {isEdit ? variant.name : 'Phiên bản mới'}
@@ -136,7 +140,7 @@ export function VariantFormSheet({
                   <div className="flex flex-col gap-2 space-y-1.5 p-6">
                     <div className="text-base font-semibold tracking-tight">Thông tin cơ bản</div>
                     <div className="text-sm text-muted-foreground">
-                      SKU, tên và giá bán của phiên bản này.
+                      SKU, tên và giá bán của biến thể này.
                     </div>
                   </div>
                   <div className="grid gap-4 p-6 pt-0">
@@ -156,7 +160,7 @@ export function VariantFormSheet({
 
                     <div className="grid gap-2">
                       <Label htmlFor="name">
-                        Tên phiên bản <span className="text-destructive">*</span>
+                        Tên biến thể <span className="text-destructive">*</span>
                       </Label>
                       <Input
                         id="name"
@@ -195,7 +199,7 @@ export function VariantFormSheet({
                   <div className="flex flex-col gap-2 space-y-1.5 p-6">
                     <div className="text-base font-semibold tracking-tight">Thuộc tính</div>
                     <div className="text-sm text-muted-foreground">
-                      Các thuộc tính phân biệt phiên bản này (màu sắc, kích thước...).
+                      Các thuộc tính phân biệt biến thể này (màu sắc, kích thước...).
                     </div>
                   </div>
                   <div className="grid gap-4 p-6 pt-0">
@@ -253,7 +257,7 @@ export function VariantFormSheet({
                   <div className="flex flex-col gap-2 space-y-1.5 p-6">
                     <div className="text-base font-semibold tracking-tight">Trạng thái</div>
                     <div className="text-sm text-muted-foreground">
-                      Bật/tắt phiên bản này trên cửa hàng.
+                      Bật/tắt biến thể này trên cửa hàng.
                     </div>
                   </div>
                   <div className="p-6 pt-0">
@@ -263,7 +267,7 @@ export function VariantFormSheet({
                           Hiển thị trên cửa hàng
                         </Label>
                         <p className="text-xs text-muted-foreground">
-                          Tắt để ẩn phiên bản này khỏi khách hàng
+                          Tắt để ẩn biến thể này khỏi khách hàng
                         </p>
                       </div>
                       <Switch
@@ -284,7 +288,7 @@ export function VariantFormSheet({
                 Hủy
               </Button>
               <Button type="submit" disabled={isPending} className="px-8">
-                {isPending ? 'Đang lưu...' : isEdit ? 'Cập nhật' : 'Lưu phiên bản'}
+                {isPending ? 'Đang lưu...' : isEdit ? 'Cập nhật' : 'Lưu biến thể'}
               </Button>
             </div>
           </form>
@@ -295,9 +299,9 @@ export function VariantFormSheet({
         <MediaPickerDialog
           folder="products"
           multiple={false}
-          onInsert={(urls) => {
+          onInsert={() => {
             // Handle image selection for variant
-            toast.info('Tính năng ảnh cho phiên bản đang được phát triển');
+            toast.info('Tính năng ảnh cho biến thể đang được phát triển');
             setShowMediaPicker(false);
           }}
           onClose={() => setShowMediaPicker(false)}

@@ -1,5 +1,5 @@
 'use client';
-import { useRef, useState } from 'react';
+import { type ChangeEvent, type DragEvent, useRef, useState } from 'react';
 import { AlertCircle, CheckCircle2, Download, FileUp, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -70,13 +70,13 @@ export function ProductImportDialog({ open, onClose, onSuccess }: ImportDialogPr
     reader.readAsText(file, 'utf-8');
   }
 
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleFileChange(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (file) processFile(file);
     e.target.value = '';
   }
 
-  function handleDrop(e: React.DragEvent) {
+  function handleDrop(e: DragEvent) {
     e.preventDefault();
     setDragOver(false);
     const file = e.dataTransfer.files[0];
@@ -121,8 +121,17 @@ export function ProductImportDialog({ open, onClose, onSuccess }: ImportDialogPr
     if (success > 0) onSuccess();
   }
 
-  const validCount = rows.filter((r) => !r.error).length;
-  const errorCount = rows.filter((r) => !!r.error).length;
+  const { validCount, errorCount } = rows.reduce(
+    (acc, r) => {
+      if (r.error) {
+        acc.errorCount++;
+      } else {
+        acc.validCount++;
+      }
+      return acc;
+    },
+    { validCount: 0, errorCount: 0 },
+  );
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
