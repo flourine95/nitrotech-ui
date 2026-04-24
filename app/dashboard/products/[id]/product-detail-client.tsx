@@ -72,10 +72,6 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
     onError: () => toast.error('Xóa thất bại'),
   });
 
-  async function handleClone() {
-    toast.info('Tính năng nhân bản đang được phát triển');
-  }
-
   function handleAddVariant() {
     setEditingVariant(undefined);
     setShowVariantForm(true);
@@ -117,11 +113,11 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
           <span className="font-medium text-foreground truncate max-w-[200px]">{product.name}</span>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={handleAddVariant}>
+          <Button variant="outline" size="sm" className="h-9" onClick={handleAddVariant}>
             <Plus className="h-4 w-4" />
             Thêm biến thể
           </Button>
-          <Button variant="outline" size="sm" asChild>
+          <Button variant="outline" size="sm" className="h-9" asChild>
             <Link href={`/dashboard/products/${product.id}/edit`}>
               <Pencil className="h-4 w-4" />
               Chỉnh sửa
@@ -129,7 +125,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" className="h-8 w-8">
+              <Button variant="outline" size="icon" className="h-9 w-9">
                 <Ellipsis className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>

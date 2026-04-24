@@ -52,7 +52,7 @@ export function ProductDialogs({
             </AlertDialogMedia>
             <AlertDialogTitle>Xóa sản phẩm?</AlertDialogTitle>
             <AlertDialogDescription>
-              Bạn sắp xóa <strong className="text-slate-900">{deleteTarget?.name}</strong>. Sản phẩm
+              Bạn sắp xóa <strong className="text-foreground">{deleteTarget?.name}</strong>. Sản phẩm
               sẽ bị ẩn và có thể khôi phục lại sau.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -73,12 +73,12 @@ export function ProductDialogs({
       <AlertDialog open={!!restoreTarget} onOpenChange={(v) => !v && onRestoreClose()}>
         <AlertDialogContent size="sm">
           <AlertDialogHeader>
-            <AlertDialogMedia className="bg-emerald-100 text-emerald-600">
+            <AlertDialogMedia className="bg-green-100 text-green-700">
               <RotateCcw className="h-5 w-5" />
             </AlertDialogMedia>
             <AlertDialogTitle>Khôi phục sản phẩm?</AlertDialogTitle>
             <AlertDialogDescription>
-              Khôi phục <strong className="text-slate-900">{restoreTarget?.name}</strong> về trạng
+              Khôi phục <strong className="text-foreground">{restoreTarget?.name}</strong> về trạng
               thái hiển thị.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -99,7 +99,7 @@ export function ProductDialogs({
             </AlertDialogMedia>
             <AlertDialogTitle>Xóa vĩnh viễn?</AlertDialogTitle>
             <AlertDialogDescription>
-              <strong className="text-slate-900">{hardDeleteTarget?.name}</strong> sẽ bị xóa hoàn
+              <strong className="text-foreground">{hardDeleteTarget?.name}</strong> sẽ bị xóa hoàn
               toàn và không thể khôi phục.
             </AlertDialogDescription>
           </AlertDialogHeader>

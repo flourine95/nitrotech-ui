@@ -2,7 +2,7 @@
 import { type ComponentType, type SyntheticEvent, useState } from 'react';
 import { toast } from 'sonner';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { ImagePlus, X } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 import { createVariant, type ProductVariant, updateVariant } from '@/lib/api/products';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -243,10 +243,10 @@ export function VariantFormSheet({
                       type="button"
                       variant="ghost"
                       onClick={addAttribute}
-                      className="w-fit px-0 text-emerald-600 hover:text-emerald-700"
+                      className="w-fit px-0 text-muted-foreground hover:text-foreground"
                       disabled={isPending}
                     >
-                      <ImagePlus className="h-4 w-4" />
+                      <Plus className="h-4 w-4" />
                       Thêm thuộc tính
                     </Button>
                   </div>

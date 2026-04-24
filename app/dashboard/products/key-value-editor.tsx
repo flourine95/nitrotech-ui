@@ -68,12 +68,13 @@ export function KeyValueEditor({
 
   return (
     <div className="space-y-2">
-      {rows.map((row) => (
+      {rows.map((row, index) => (
         <div key={row.id} className="flex items-center gap-2">
           <Input
             value={row.key}
             onChange={(e) => updateKey(row.id, e.target.value)}
             placeholder={keyPlaceholder}
+            aria-label={`${keyPlaceholder} ${index + 1}`}
             className="w-2/5"
           />
           <span className="text-muted-foreground">:</span>
@@ -81,6 +82,7 @@ export function KeyValueEditor({
             value={row.value}
             onChange={(e) => updateValue(row.id, e.target.value)}
             placeholder={valuePlaceholder}
+            aria-label={`${valuePlaceholder} ${index + 1}`}
             className="flex-1"
           />
           <Button

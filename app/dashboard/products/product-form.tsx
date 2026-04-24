@@ -175,10 +175,10 @@ export function ProductForm({
           <span className="font-medium text-foreground">{isEdit ? product!.name : 'Thêm mới'}</span>
         </div>
         <div className="flex items-center gap-2">
-          <Button type="button" variant="outline" asChild>
+          <Button type="button" variant="outline" size="sm" className="h-9" asChild>
             <Link href="/dashboard/products">Hủy</Link>
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
+          <Button type="submit" size="sm" className="h-9" disabled={isSubmitting}>
             {isSubmitting ? 'Đang lưu...' : isEdit ? 'Cập nhật' : 'Lưu sản phẩm'}
           </Button>
         </div>

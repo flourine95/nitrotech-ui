@@ -179,11 +179,11 @@ export function VariantsEditor({ productId, variants, onChange }: VariantsEditor
       const created = await createVariant(productId, body);
       onChange([...variants, created]);
       setAdding(false);
-      toast.success('Đã thêm variant');
+      toast.success('Đã thêm biến thể');
     } catch (e) {
       if (e instanceof ApiException && e.error.code === 'VARIANT_SKU_EXISTS')
         toast.error('SKU đã tồn tại');
-      else toast.error('Thêm variant thất bại');
+      else toast.error('Thêm biến thể thất bại');
     } finally {
       setSaving(false);
     }
@@ -201,7 +201,7 @@ export function VariantsEditor({ productId, variants, onChange }: VariantsEditor
       });
       onChange(variants.map((v) => (v.id === updated.id ? updated : v)));
       setEditingId(null);
-      toast.success('Đã cập nhật variant');
+      toast.success('Đã cập nhật biến thể');
     } catch (e) {
       if (e instanceof ApiException && e.error.code === 'VARIANT_SKU_EXISTS')
         toast.error('SKU đã tồn tại');
@@ -216,9 +216,9 @@ export function VariantsEditor({ productId, variants, onChange }: VariantsEditor
     try {
       await deleteVariant(productId, variant.id);
       onChange(variants.filter((v) => v.id !== variant.id));
-      toast.success('Đã xóa variant');
+      toast.success('Đã xóa biến thể');
     } catch {
-      toast.error('Xóa variant thất bại');
+      toast.error('Xóa biến thể thất bại');
     } finally {
       setDeleting(false);
       setDeleteTarget(null);
@@ -247,6 +247,7 @@ export function VariantsEditor({ productId, variants, onChange }: VariantsEditor
                 <TableRow key={v.id}>
                   <TableCell colSpan={6} className="p-2">
                     <VariantInlineForm
+                      key={v.id}
                       initial={{
                         sku: v.sku,
                         name: v.name,
@@ -280,7 +281,8 @@ export function VariantsEditor({ productId, variants, onChange }: VariantsEditor
                   </TableCell>
                   <TableCell className="text-center">
                     <span
-                      className={`inline-flex h-2 w-2 rounded-full ${v.active ? 'bg-emerald-500' : 'bg-muted-foreground'}`}
+                      className={`inline-flex h-2 w-2 rounded-full ${v.active ? 'bg-green-500' : 'bg-muted-foreground/40'}`}
+                      aria-label={v.active ? 'Hiển thị' : 'Ẩn'}
                     />
                   </TableCell>
                   <TableCell>
@@ -342,7 +344,7 @@ export function VariantsEditor({ productId, variants, onChange }: VariantsEditor
           className="w-full"
         >
           <Plus className="mr-2 h-4 w-4" />
-          Thêm variant
+          Thêm biến thể
         </Button>
       )}
 
@@ -352,9 +354,9 @@ export function VariantsEditor({ productId, variants, onChange }: VariantsEditor
             <AlertDialogMedia className="bg-rose-100 text-rose-600">
               <Trash2 className="h-5 w-5" />
             </AlertDialogMedia>
-            <AlertDialogTitle>Xóa variant?</AlertDialogTitle>
+            <AlertDialogTitle>Xóa biến thể?</AlertDialogTitle>
             <AlertDialogDescription>
-              Xóa variant <strong className="text-slate-900">{deleteTarget?.name}</strong> (
+              Xóa biến thể <strong className="text-foreground">{deleteTarget?.name}</strong> (
               {deleteTarget?.sku})?
             </AlertDialogDescription>
           </AlertDialogHeader>

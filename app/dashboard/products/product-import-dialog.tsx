@@ -157,12 +157,12 @@ export function ProductImportDialog({ open, onClose, onSuccess }: ImportDialogPr
               onDragLeave={() => setDragOver(false)}
               onDrop={handleDrop}
               onClick={() => fileRef.current?.click()}
-              className={`flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed py-12 transition-colors ${dragOver ? 'border-primary bg-primary/5' : 'border-slate-200 hover:border-primary/50 hover:bg-slate-50'}`}
+              className={`flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed py-12 transition-colors ${dragOver ? 'border-primary bg-primary/5' : 'border-border hover:border-ring hover:bg-muted/50'}`}
             >
-              <FileUp className={`h-10 w-10 ${dragOver ? 'text-primary' : 'text-slate-300'}`} />
+              <FileUp className={`h-10 w-10 ${dragOver ? 'text-primary' : 'text-muted-foreground/40'}`} />
               <div className="text-center">
-                <p className="text-sm font-medium text-slate-700">Kéo thả file CSV vào đây</p>
-                <p className="text-xs text-slate-400">hoặc nhấn để chọn file</p>
+                <p className="text-sm font-medium text-foreground">Kéo thả file CSV vào đây</p>
+                <p className="text-xs text-muted-foreground">hoặc nhấn để chọn file</p>
               </div>
               <input
                 ref={fileRef}
@@ -173,10 +173,10 @@ export function ProductImportDialog({ open, onClose, onSuccess }: ImportDialogPr
               />
             </div>
 
-            <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+            <div className="flex items-center justify-between rounded-lg border bg-muted/50 px-4 py-3">
               <div>
-                <p className="text-xs font-semibold text-slate-700">Tải template CSV</p>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs font-semibold text-foreground">Tải template CSV</p>
+                <p className="text-xs text-muted-foreground">
                   Cột: name, slug, categoryId, brandId, description, thumbnail, active
                 </p>
               </div>
@@ -196,29 +196,29 @@ export function ProductImportDialog({ open, onClose, onSuccess }: ImportDialogPr
         {/* Step: Preview */}
         {step === 'preview' && (
           <div className="space-y-3">
-            <div className="max-h-80 overflow-auto rounded-xl border border-slate-200">
+            <div className="max-h-80 overflow-auto rounded-lg border">
               <table className="w-full text-xs">
-                <thead className="sticky top-0 bg-slate-50">
-                  <tr className="border-b border-slate-200">
-                    <th className="px-3 py-2 text-left font-semibold text-slate-500">Dòng</th>
-                    <th className="px-3 py-2 text-left font-semibold text-slate-500">Tên</th>
-                    <th className="px-3 py-2 text-left font-semibold text-slate-500">Slug</th>
-                    <th className="px-3 py-2 text-left font-semibold text-slate-500">Cat ID</th>
-                    <th className="px-3 py-2 text-left font-semibold text-slate-500">Trạng thái</th>
+                <thead className="sticky top-0 bg-muted/80 backdrop-blur-sm">
+                  <tr className="border-b">
+                    <th className="px-3 py-2 text-left font-semibold text-muted-foreground">Dòng</th>
+                    <th className="px-3 py-2 text-left font-semibold text-muted-foreground">Tên</th>
+                    <th className="px-3 py-2 text-left font-semibold text-muted-foreground">Slug</th>
+                    <th className="px-3 py-2 text-left font-semibold text-muted-foreground">Cat ID</th>
+                    <th className="px-3 py-2 text-left font-semibold text-muted-foreground">Trạng thái</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y">
                   {rows.map((r) => (
-                    <tr key={r.row} className={r.error ? 'bg-rose-50' : ''}>
-                      <td className="px-3 py-2 font-mono text-slate-400">{r.row}</td>
-                      <td className="px-3 py-2 font-medium text-slate-800">
-                        {r.name || <span className="text-rose-400">—</span>}
+                    <tr key={r.row} className={r.error ? 'bg-destructive/5' : ''}>
+                      <td className="px-3 py-2 font-mono text-muted-foreground">{r.row}</td>
+                      <td className="px-3 py-2 font-medium text-foreground">
+                        {r.name || <span className="text-destructive">—</span>}
                       </td>
-                      <td className="px-3 py-2 font-mono text-slate-500">
-                        {r.slug || <span className="text-rose-400">—</span>}
+                      <td className="px-3 py-2 font-mono text-muted-foreground">
+                        {r.slug || <span className="text-destructive">—</span>}
                       </td>
-                      <td className="px-3 py-2 text-slate-500">
-                        {r.categoryId || <span className="text-rose-400">—</span>}
+                      <td className="px-3 py-2 text-muted-foreground">
+                        {r.categoryId || <span className="text-destructive">—</span>}
                       </td>
                       <td className="px-3 py-2">
                         {r.error ? (
@@ -226,7 +226,7 @@ export function ProductImportDialog({ open, onClose, onSuccess }: ImportDialogPr
                             <AlertCircle className="h-3 w-3" /> {r.error}
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 text-emerald-600">
+                          <span className="inline-flex items-center gap-1 text-green-700">
                             <CheckCircle2 className="h-3 w-3" /> Hợp lệ
                           </span>
                         )}
@@ -264,13 +264,13 @@ export function ProductImportDialog({ open, onClose, onSuccess }: ImportDialogPr
         {step === 'result' && result && (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-center">
-                <p className="text-2xl font-bold text-emerald-700">{result.success}</p>
-                <p className="text-xs text-emerald-600">Thành công</p>
+              <div className="rounded-lg border border-green-200 bg-green-50 p-4 text-center dark:border-green-900 dark:bg-green-950">
+                <p className="text-2xl font-bold text-green-700 dark:text-green-400">{result.success}</p>
+                <p className="text-xs text-green-600 dark:text-green-500">Thành công</p>
               </div>
-              <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-center">
-                <p className="text-2xl font-bold text-rose-700">{result.failed}</p>
-                <p className="text-xs text-rose-600">Thất bại</p>
+              <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-center">
+                <p className="text-2xl font-bold text-destructive">{result.failed}</p>
+                <p className="text-xs text-destructive/80">Thất bại</p>
               </div>
             </div>
 

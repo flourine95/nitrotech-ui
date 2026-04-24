@@ -35,7 +35,7 @@ function SortableImage({ url, index, onRemove }: SortableImageProps) {
     >
       <Image
         src={url}
-        alt="Gallery image"
+        alt={`Ảnh ${index + 1}`}
         fill
         className="object-cover"
         sizes="(max-width: 768px) 33vw, 25vw"
