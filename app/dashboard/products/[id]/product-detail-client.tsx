@@ -5,11 +5,12 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Ellipsis, Package, Pencil, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Ellipsis, Package, Pencil, Plus, Trash2, AlertTriangle, TrendingDown } from 'lucide-react';
 import type { Product, ProductVariant } from '@/lib/api/products';
 import { deleteProduct, updateProduct } from '@/lib/api/products';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   DropdownMenu,
@@ -153,12 +154,6 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
               className="rounded-none border-x-0 border-t-0 border-b-2 border-transparent px-0 pt-0 pb-3 text-sm data-[state=active]:border-b-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none"
             >
               Tổng quan
-            </TabsTrigger>
-            <TabsTrigger
-              value="variants"
-              className="rounded-none border-x-0 border-t-0 border-b-2 border-transparent px-0 pt-0 pb-3 text-sm data-[state=active]:border-b-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-            >
-              Biến thể
             </TabsTrigger>
             <TabsTrigger
               value="inventory"
@@ -389,25 +384,16 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
           </div>
         </TabsContent>
 
-        {/* Variants Tab */}
-        <TabsContent value="variants" className="mt-0 pt-6">
-          <div className="rounded-2xl border bg-card p-6">
-            <p className="text-sm text-muted-foreground">Tab Biến thể - Đang phát triển</p>
-          </div>
-        </TabsContent>
+        {/* Variants Tab — removed, edit page handles CRUD */}
 
         {/* Inventory Tab */}
         <TabsContent value="inventory" className="mt-0 pt-6">
-          <div className="rounded-2xl border bg-card p-6">
-            <p className="text-sm text-muted-foreground">Tab Kho hàng - Đang phát triển</p>
-          </div>
+          <InventoryTab product={product} />
         </TabsContent>
 
         {/* Activity Tab */}
         <TabsContent value="activity" className="mt-0 pt-6">
-          <div className="rounded-2xl border bg-card p-6">
-            <p className="text-sm text-muted-foreground">Tab Hoạt động - Đang phát triển</p>
-          </div>
+          <ActivityTab product={product} />
         </TabsContent>
       </Tabs>
 
@@ -420,7 +406,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
             </AlertDialogMedia>
             <AlertDialogTitle>Xóa sản phẩm?</AlertDialogTitle>
             <AlertDialogDescription>
-              Bạn sắp xóa <strong className="text-slate-900">{product.name}</strong>. Sản phẩm sẽ bị
+              Bạn sắp xóa <strong className="text-foreground">{product.name}</strong>. Sản phẩm sẽ bị
               ẩn và có thể khôi phục lại sau.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -446,6 +432,194 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
         productName={product.name}
         variant={editingVariant}
       />
+    </div>
+  );
+}
+
+// ── Inventory Tab ─────────────────────────────────────────────────────────────
+
+const MOCK_WAREHOUSES = ['Kho Hà Nội', 'Kho TP.HCM', 'Kho Đà Nẵng'];
+
+const MOCK_INVENTORY: Record<string, Record<string, number>> = {
+  'Đen - 128GB':  { 'Kho Hà Nội': 42, 'Kho TP.HCM': 28, 'Kho Đà Nẵng': 5 },
+  'Đen - 256GB':  { 'Kho Hà Nội': 18, 'Kho TP.HCM': 11, 'Kho Đà Nẵng': 2 },
+  'Trắng - 128GB':{ 'Kho Hà Nội': 35, 'Kho TP.HCM': 22, 'Kho Đà Nẵng': 8 },
+  'Trắng - 256GB':{ 'Kho Hà Nội': 9,  'Kho TP.HCM': 4,  'Kho Đà Nẵng': 0 },
+};
+
+const LOW_THRESHOLD = 10;
+
+function stockLevel(qty: number): 'out' | 'low' | 'ok' {
+  if (qty === 0) return 'out';
+  if (qty <= LOW_THRESHOLD) return 'low';
+  return 'ok';
+}
+
+function StockBadge({ qty }: { qty: number }) {
+  const level = stockLevel(qty);
+  if (level === 'out')
+    return <span className="text-xs font-medium text-destructive">Hết hàng</span>;
+  if (level === 'low')
+    return <span className="text-xs font-medium text-amber-600">{qty}</span>;
+  return <span className="text-sm tabular-nums">{qty}</span>;
+}
+
+function InventoryTab({ product }: { product: Product }) {
+  const variants = product.variants ?? [];
+
+  // Use real variant names if available, else fall back to mock keys
+  const rows = variants.length > 0
+    ? variants.map((v) => ({ name: v.name, data: MOCK_INVENTORY[v.name] ?? { 'Kho Hà Nội': 0, 'Kho TP.HCM': 0, 'Kho Đà Nẵng': 0 } }))
+    : Object.entries(MOCK_INVENTORY).map(([name, data]) => ({ name, data }));
+
+  const totals = MOCK_WAREHOUSES.reduce<Record<string, number>>((acc, wh) => {
+    acc[wh] = rows.reduce((s, r) => s + (r.data[wh] ?? 0), 0);
+    return acc;
+  }, {});
+  const grandTotal = Object.values(totals).reduce((s, v) => s + v, 0);
+
+  const lowCount = rows.filter((r) =>
+    MOCK_WAREHOUSES.some((wh) => stockLevel(r.data[wh] ?? 0) !== 'ok'),
+  ).length;
+
+  return (
+    <div className="flex flex-col gap-6">
+      {/* Summary strip */}
+      {lowCount > 0 && (
+        <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          <AlertTriangle className="size-4 shrink-0 text-amber-500" />
+          <span>{lowCount} biến thể sắp hết hoặc đã hết hàng</span>
+        </div>
+      )}
+
+      {/* Inventory grid */}
+      <div className="overflow-x-auto rounded-lg border">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b bg-muted/40">
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Biến thể</th>
+              {MOCK_WAREHOUSES.map((wh) => (
+                <th key={wh} className="px-4 py-3 text-right font-medium text-muted-foreground">
+                  {wh}
+                </th>
+              ))}
+              <th className="px-4 py-3 text-right font-medium text-muted-foreground">Tổng</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y">
+            {rows.map((row) => {
+              const rowTotal = MOCK_WAREHOUSES.reduce((s, wh) => s + (row.data[wh] ?? 0), 0);
+              const hasIssue = MOCK_WAREHOUSES.some((wh) => stockLevel(row.data[wh] ?? 0) !== 'ok');
+              return (
+                <tr key={row.name} className={hasIssue ? 'bg-amber-50/40' : ''}>
+                  <td className="px-4 py-3 font-medium">{row.name}</td>
+                  {MOCK_WAREHOUSES.map((wh) => (
+                    <td key={wh} className="px-4 py-3 text-right">
+                      <StockBadge qty={row.data[wh] ?? 0} />
+                    </td>
+                  ))}
+                  <td className="px-4 py-3 text-right font-medium tabular-nums">{rowTotal}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+          <tfoot>
+            <tr className="border-t bg-muted/20">
+              <td className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Tổng kho
+              </td>
+              {MOCK_WAREHOUSES.map((wh) => (
+                <td key={wh} className="px-4 py-3 text-right font-semibold tabular-nums">
+                  {totals[wh]}
+                </td>
+              ))}
+              <td className="px-4 py-3 text-right font-semibold tabular-nums">{grandTotal}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <p className="text-xs text-muted-foreground">
+        * Dữ liệu kho hàng thực tế sẽ được đồng bộ khi tính năng quản lý kho được triển khai.
+      </p>
+    </div>
+  );
+}
+
+// ── Activity Tab ──────────────────────────────────────────────────────────────
+
+type ActivityType = 'create' | 'update' | 'price' | 'status' | 'stock' | 'delete';
+
+interface ActivityItem {
+  id: string;
+  type: ActivityType;
+  actor: string;
+  message: string;
+  detail?: string;
+  time: string;
+}
+
+const MOCK_ACTIVITY: ActivityItem[] = [
+  { id: '1', type: 'create',  actor: 'Nguyễn Văn A', message: 'Tạo sản phẩm',           time: '2 giờ trước' },
+  { id: '2', type: 'update',  actor: 'Nguyễn Văn A', message: 'Cập nhật mô tả',          time: '2 giờ trước' },
+  { id: '3', type: 'price',   actor: 'Trần Thị B',   message: 'Thay đổi giá biến thể',   detail: 'Đen - 256GB: 28.990.000đ → 27.490.000đ', time: '5 giờ trước' },
+  { id: '4', type: 'status',  actor: 'Trần Thị B',   message: 'Hiển thị sản phẩm',       time: 'Hôm qua, 14:32' },
+  { id: '5', type: 'stock',   actor: 'Lê Văn C',     message: 'Nhập kho Hà Nội',         detail: '+50 Đen - 128GB', time: 'Hôm qua, 09:15' },
+  { id: '6', type: 'update',  actor: 'Nguyễn Văn A', message: 'Cập nhật ảnh sản phẩm',   time: '3 ngày trước' },
+  { id: '7', type: 'price',   actor: 'Trần Thị B',   message: 'Thay đổi giá biến thể',   detail: 'Trắng - 256GB: 29.990.000đ → 28.990.000đ', time: '5 ngày trước' },
+  { id: '8', type: 'create',  actor: 'Nguyễn Văn A', message: 'Thêm biến thể Trắng - 256GB', time: '1 tuần trước' },
+];
+
+const ACTIVITY_ICON: Record<ActivityType, string> = {
+  create: '✦',
+  update: '✎',
+  price:  '₫',
+  status: '◉',
+  stock:  '⊕',
+  delete: '✕',
+};
+
+const ACTIVITY_COLOR: Record<ActivityType, string> = {
+  create: 'bg-green-100 text-green-700',
+  update: 'bg-blue-100 text-blue-700',
+  price:  'bg-amber-100 text-amber-700',
+  status: 'bg-purple-100 text-purple-700',
+  stock:  'bg-cyan-100 text-cyan-700',
+  delete: 'bg-destructive/10 text-destructive',
+};
+
+function ActivityTab({ product: _ }: { product: Product }) {
+  return (
+    <div className="flex flex-col gap-1">
+      {MOCK_ACTIVITY.map((item, idx) => (
+        <div key={item.id} className="flex gap-3">
+          {/* Timeline line */}
+          <div className="flex flex-col items-center">
+            <span className={`flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${ACTIVITY_COLOR[item.type]}`}>
+              {ACTIVITY_ICON[item.type]}
+            </span>
+            {idx < MOCK_ACTIVITY.length - 1 && (
+              <div className="mt-1 w-px flex-1 bg-border" />
+            )}
+          </div>
+
+          {/* Content */}
+          <div className={`min-w-0 pb-5 ${idx === MOCK_ACTIVITY.length - 1 ? 'pb-0' : ''}`}>
+            <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+              <span className="text-sm font-medium">{item.actor}</span>
+              <span className="text-sm text-muted-foreground">{item.message}</span>
+            </div>
+            {item.detail && (
+              <p className="mt-0.5 text-xs text-muted-foreground">{item.detail}</p>
+            )}
+            <p className="mt-1 text-xs text-muted-foreground/60">{item.time}</p>
+          </div>
+        </div>
+      ))}
+
+      <p className="mt-4 text-xs text-muted-foreground">
+        * Lịch sử hoạt động thực tế sẽ được ghi lại khi tính năng audit log được triển khai.
+      </p>
     </div>
   );
 }
