@@ -66,7 +66,7 @@ const recentOrders = [
 ];
 
 const statusColors: Record<string, string> = {
-  'Đang giao': 'bg-blue-100 text-blue-700',
+  'Đang giao': 'bg-primary/10 text-primary',
   'Đã xác nhận': 'bg-amber-100 text-amber-700',
   'Hoàn thành': 'bg-green-100 text-green-700',
 };
@@ -89,10 +89,10 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-2xl border border-slate-200 bg-white p-5">
           <div className="mb-3 flex items-center justify-between">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
               <svg
                 viewBox="0 0 24 24"
-                className="h-5 w-5 text-blue-600"
+                className="h-5 w-5 text-primary"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2"
@@ -212,7 +212,10 @@ export default function DashboardPage() {
                   borderRadius: '12px',
                   fontSize: '12px',
                 }}
-                formatter={(value: number) => [`${(value / 1000000).toFixed(1)}M₫`, 'Doanh thu']}
+                formatter={(value) => {
+                  const numValue = typeof value === 'number' ? value : 0;
+                  return [`${(numValue / 1000000).toFixed(1)}M₫`, 'Doanh thu'];
+                }}
               />
               <Line
                 type="monotone"
@@ -249,7 +252,10 @@ export default function DashboardPage() {
                   borderRadius: '12px',
                   fontSize: '12px',
                 }}
-                formatter={(value: number) => [value, 'Đơn hàng']}
+                formatter={(value) => {
+                  const numValue = typeof value === 'number' ? value : 0;
+                  return [numValue, 'Đơn hàng'];
+                }}
               />
               <Bar dataKey="orders" fill="#f59e0b" radius={[8, 8, 0, 0]} />
             </BarChart>
@@ -265,7 +271,7 @@ export default function DashboardPage() {
             <h2 className="text-base font-bold text-slate-900">Sản phẩm bán chạy</h2>
             <Link
               href="/dashboard/products"
-              className="cursor-pointer text-sm font-medium text-blue-600 hover:text-blue-700"
+              className="cursor-pointer text-sm font-medium text-primary hover:text-primary"
             >
               Xem tất cả
             </Link>
@@ -297,7 +303,7 @@ export default function DashboardPage() {
             <h2 className="text-base font-bold text-slate-900">Đơn hàng gần đây</h2>
             <Link
               href="/dashboard/orders"
-              className="cursor-pointer text-sm font-medium text-blue-600 hover:text-blue-700"
+              className="cursor-pointer text-sm font-medium text-primary hover:text-primary"
             >
               Xem tất cả
             </Link>

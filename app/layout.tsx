@@ -6,6 +6,7 @@ import { ScrollToTop } from '@/components/scroll-to-top';
 import { CompareProvider } from '@/components/compare-bar';
 import { Toaster } from '@/components/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { Providers } from '@/components/providers';
 import { ReactNode } from 'react';
 
 const beVietnamPro = Be_Vietnam_Pro({
@@ -28,9 +29,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="vi" suppressHydrationWarning className={beVietnamPro.variable}>
       <body className="bg-[#F8FAFC] font-sans text-[#0F172A] antialiased">
         <ProgressBar />
-        <TooltipProvider>
-          <CompareProvider>{children}</CompareProvider>
-        </TooltipProvider>
+        <Providers>
+          <TooltipProvider>
+            <CompareProvider>{children}</CompareProvider>
+          </TooltipProvider>
+        </Providers>
         <Toaster />
         <ScrollToTop />
       </body>

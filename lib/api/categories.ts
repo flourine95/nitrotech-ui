@@ -35,7 +35,9 @@ export interface CategoriesQuery {
   sort?: string;
 }
 
-export async function getCategories(params?: CategoriesQuery): Promise<Page<Category> | Category[]> {
+export async function getCategories(
+  params?: CategoriesQuery,
+): Promise<Page<Category> | Category[]> {
   const q = new URLSearchParams();
   if (params?.search?.trim()) q.set('search', params.search.trim());
   if (params?.active !== undefined) q.set('active', String(params.active));

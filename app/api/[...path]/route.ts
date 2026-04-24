@@ -24,9 +24,7 @@ async function handler(request: NextRequest) {
   const cookieHeader = request.headers.get('cookie') ?? '';
 
   const body =
-    request.method !== 'GET' && request.method !== 'HEAD'
-      ? await request.text()
-      : undefined;
+    request.method !== 'GET' && request.method !== 'HEAD' ? await request.text() : undefined;
 
   const springRes = await backendFetch(`${pathname}${search}`, {
     method: request.method,

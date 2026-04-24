@@ -1,15 +1,29 @@
 'use client';
-import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
-import { createPortal } from 'react-dom';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { toast } from 'sonner';
+import { Check, ChevronDown, Loader2, Search, Upload, X } from 'lucide-react';
 import {
   getAssets,
   uploadFile,
   getFolders,
-  type CloudinaryResource,
   type AllowedFolder,
   type CloudinaryFolder,
 } from '@/lib/api/upload';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
+import { format, subDays, subMonths, startOfDay } from 'date-fns';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -20,9 +34,20 @@ export interface MediaPickerProps {
   onClose: () => void;
 }
 
-type Tab = 'library' | 'upload';
+interface MediaAsset {
+  publicId: string;
+  secureUrl: string;
+  width: number;
+  height: number;
+  format: string;
+  bytes: number;
+  createdAt: string;
+}
+
 type SortKey = 'newest' | 'oldest' | 'largest' | 'smallest';
-type DateFilter = 'all' | 'today' | 'week' | 'month';
+type DatePreset = 'all' | 'today' | 'week' | 'month' | 'custom';
+
+const ALL_FOLDER = '__all__';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -32,15 +57,36 @@ function formatBytes(b: number) {
   return `${(b / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function isWithinRange(iso: string, filter: DateFilter): boolean {
-  if (filter === 'all') return true;
-  const d = new Date(iso);
-  const now = new Date();
-  const diff = now.getTime() - d.getTime();
-  if (filter === 'today') return diff < 86400000;
-  if (filter === 'week') return diff < 7 * 86400000;
-  if (filter === 'month') return diff < 30 * 86400000;
-  return true;
+function toThumbnail(url: string, size = 200): string {
+  return url.replace('/upload/', `/upload/w_${size},h_${size},c_fill,f_auto,q_auto/`);
+}
+
+function presetToStartAt(preset: DatePreset, customDate?: Date): string | undefined {
+  if (preset === 'today') return startOfDay(new Date()).toISOString();
+  if (preset === 'week') return subDays(new Date(), 7).toISOString();
+  if (preset === 'month') return subMonths(new Date(), 1).toISOString();
+  if (preset === 'custom' && customDate) return startOfDay(customDate).toISOString();
+  return undefined;
+}
+
+async function fetchAssets(
+  folder: string,
+  cursor?: string,
+  startAt?: string,
+): Promise<{ assets: MediaAsset[]; nextCursor: string | undefined }> {
+  const res = await getAssets(folder === ALL_FOLDER ? undefined : folder, cursor, 50, startAt);
+  return {
+    assets: res.resources.map((r) => ({
+      publicId: r.public_id,
+      secureUrl: r.secure_url,
+      width: r.width,
+      height: r.height,
+      format: r.format,
+      bytes: r.bytes,
+      createdAt: r.created_at,
+    })),
+    nextCursor: res.nextCursor ?? undefined,
+  };
 }
 
 // ── Upload Tab ────────────────────────────────────────────────────────────────
@@ -100,55 +146,36 @@ function UploadTab({
           processFiles(e.dataTransfer.files);
         }}
         onClick={() => !uploading && inputRef.current?.click()}
-        className={`flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed py-12 transition-all ${
-          dragging
-            ? 'border-indigo-400 bg-indigo-50'
-            : 'border-slate-200 hover:border-indigo-300 hover:bg-slate-50'
-        } ${uploading ? 'pointer-events-none opacity-60' : ''}`}
+        className={cn(
+          'flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed py-14 transition-colors',
+          dragging ? 'border-ring bg-accent' : 'border-border hover:border-ring hover:bg-accent/50',
+          uploading && 'pointer-events-none opacity-60',
+        )}
       >
         {uploading ? (
           <div className="flex flex-col items-center gap-3">
-            <svg
-              viewBox="0 0 24 24"
-              className="h-8 w-8 animate-spin text-indigo-500"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" strokeOpacity=".2" />
-              <path d="M21 12a9 9 0 00-9-9" />
-            </svg>
-            <p className="text-sm text-slate-500">Đang upload {queue.length} file...</p>
-            <div className="w-48 space-y-1">
-              {queue.map((n) => (
-                <div key={n} className="h-1 w-full animate-pulse rounded-full bg-indigo-200" />
-              ))}
-            </div>
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">Đang upload {queue.length} file...</p>
           </div>
         ) : (
           <>
             <div
-              className={`flex h-12 w-12 items-center justify-center rounded-2xl border transition-colors ${dragging ? 'border-indigo-300 bg-indigo-100' : 'border-slate-200 bg-white shadow-sm'}`}
+              className={cn(
+                'flex h-12 w-12 items-center justify-center rounded-xl border bg-background shadow-sm',
+                dragging && 'border-ring',
+              )}
             >
-              <svg
-                viewBox="0 0 24 24"
-                className={`h-6 w-6 ${dragging ? 'text-indigo-600' : 'text-slate-400'}`}
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-              >
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-                <polyline points="17 8 12 3 7 8" />
-                <line x1="12" y1="3" x2="12" y2="15" />
-              </svg>
+              <Upload
+                className={cn('h-5 w-5', dragging ? 'text-foreground' : 'text-muted-foreground')}
+              />
             </div>
             <div className="text-center">
-              <p className="text-sm font-semibold text-slate-700">
+              <p className="text-sm font-medium">
                 {dragging ? 'Thả ảnh vào đây' : 'Kéo thả hoặc click để chọn'}
               </p>
-              <p className="mt-1 text-xs text-slate-400">
-                PNG, JPG, WebP, GIF · Folder:{' '}
-                <span className="font-medium text-slate-600">{folder}</span>
+              <p className="mt-1 text-xs text-muted-foreground">
+                PNG, JPG, WebP · Folder:{' '}
+                <span className="font-medium text-foreground">{folder}</span>
               </p>
             </div>
           </>
@@ -173,143 +200,177 @@ function LibraryTab({
   multiple,
   selected,
   onToggle,
+  assets,
+  loading,
+  nextCursor,
+  onLoadMore,
+  folders,
+  onFolderChange,
 }: {
   folder: string;
   multiple: boolean;
   selected: Set<string>;
   onToggle: (asset: MediaAsset) => void;
+  assets: MediaAsset[];
+  loading: boolean;
+  nextCursor: string | undefined;
+  onLoadMore: () => Promise<void>;
+  folders: CloudinaryFolder[];
+  onFolderChange: (f: string) => void;
 }) {
-  const [assets, setAssets] = useState<MediaAsset[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [nextCursor, setNextCursor] = useState<string | undefined>();
   const [loadingMore, setLoadingMore] = useState(false);
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<SortKey>('newest');
-  const [dateFilter, setDateFilter] = useState<DateFilter>('all');
+  const [datePreset, setDatePreset] = useState<DatePreset>('all');
+  const [customDate, setCustomDate] = useState<Date | undefined>();
+  const [calendarOpen, setCalendarOpen] = useState(false);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await getMediaAssets(folder);
-      setAssets(res.assets);
-      setNextCursor(res.nextCursor);
-    } catch {
-      toast.error('Không thể tải danh sách ảnh');
-    } finally {
-      setLoading(false);
-    }
+  // Reset filters when folder changes
+  useEffect(() => {
+    setSearch('');
+    setSort('newest');
+    setDatePreset('all');
+    setCustomDate(undefined);
   }, [folder]);
 
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  async function loadMore() {
-    if (!nextCursor) return;
+  async function handleLoadMore() {
     setLoadingMore(true);
     try {
-      const res = await getMediaAssets(folder, nextCursor);
-      setAssets((prev) => [...prev, ...res.assets]);
-      setNextCursor(res.nextCursor);
+      await onLoadMore();
     } finally {
       setLoadingMore(false);
     }
   }
 
-  const filtered = useMemo(() => {
-    let list = assets.filter((a) => {
-      const matchSearch = !search || a.publicId.toLowerCase().includes(search.toLowerCase());
-      const matchDate = isWithinRange(a.createdAt, dateFilter);
-      return matchSearch && matchDate;
-    });
-    if (sort === 'newest')
-      list = [...list].sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-      );
-    if (sort === 'oldest')
-      list = [...list].sort(
-        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-      );
-    if (sort === 'largest') list = [...list].sort((a, b) => b.bytes - a.bytes);
-    if (sort === 'smallest') list = [...list].sort((a, b) => a.bytes - b.bytes);
-    return list;
-  }, [assets, search, sort, dateFilter]);
+  const sorted = [...assets].sort((a, b) => {
+    if (sort === 'newest') return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    if (sort === 'oldest') return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    if (sort === 'largest') return b.bytes - a.bytes;
+    return a.bytes - b.bytes;
+  });
+
+  const filtered = sorted.filter(
+    (a) => !search || a.publicId.toLowerCase().includes(search.toLowerCase()),
+  );
+
+  const dateLabel =
+    datePreset === 'today'
+      ? 'Hôm nay'
+      : datePreset === 'week'
+        ? '7 ngày qua'
+        : datePreset === 'month'
+          ? '30 ngày qua'
+          : datePreset === 'custom' && customDate
+            ? format(customDate, 'dd/MM/yyyy')
+            : 'Tất cả ngày';
 
   return (
-    <div className="flex flex-col gap-0">
+    <div className="flex flex-col overflow-hidden" style={{ height: 'calc(85vh - 120px)' }}>
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-2 border-b border-slate-100 px-4 py-2.5">
-        {/* Search */}
+      <div className="flex shrink-0 flex-wrap items-center gap-2 border-b px-4 py-2.5">
         <div className="relative min-w-32 flex-1">
-          <svg
-            viewBox="0 0 24 24"
-            className="absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2 text-slate-400"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <circle cx="11" cy="11" r="8" />
-            <path d="m21 21-4.35-4.35" />
-          </svg>
-          <input
+          <Search className="absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+          <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Tìm ảnh..."
-            className="w-full rounded-lg border border-slate-200 bg-slate-50 py-1.5 pr-3 pl-8 text-xs text-slate-700 outline-none placeholder:text-slate-400 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100"
+            className="h-8 pl-8 text-xs"
           />
         </div>
 
+        {/* Folder */}
+        <Select value={folder} onValueChange={onFolderChange}>
+          <SelectTrigger className="h-8 w-32 text-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent position="popper" sideOffset={4}>
+            <SelectItem value={ALL_FOLDER}>Tất cả</SelectItem>
+            {folders.map((f) => (
+              <SelectItem key={f.path} value={f.path}>
+                {f.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
         {/* Date filter */}
-        <select
-          value={dateFilter}
-          onChange={(e) => setDateFilter(e.target.value as DateFilter)}
-          className="cursor-pointer rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-600 outline-none focus:border-indigo-400"
-        >
-          <option value="all">Tất cả ngày</option>
-          <option value="today">Hôm nay</option>
-          <option value="week">7 ngày qua</option>
-          <option value="month">30 ngày qua</option>
-        </select>
+        <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="sm" className="h-8 gap-1 text-xs">
+              {dateLabel}
+              <ChevronDown className="h-3 w-3" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <div className="flex flex-col">
+              {(['all', 'today', 'week', 'month'] as DatePreset[]).map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => {
+                    setDatePreset(p);
+                    setCustomDate(undefined);
+                    setCalendarOpen(false);
+                  }}
+                  className={cn(
+                    'px-4 py-2 text-left text-sm hover:bg-accent',
+                    datePreset === p && 'bg-accent font-medium',
+                  )}
+                >
+                  {p === 'all'
+                    ? 'Tất cả ngày'
+                    : p === 'today'
+                      ? 'Hôm nay'
+                      : p === 'week'
+                        ? '7 ngày qua'
+                        : '30 ngày qua'}
+                </button>
+              ))}
+              <div className="border-t">
+                <p className="px-4 pt-2 pb-1 text-xs text-muted-foreground">Chọn ngày cụ thể</p>
+                <Calendar
+                  mode="single"
+                  selected={customDate}
+                  onSelect={(d) => {
+                    setCustomDate(d);
+                    setDatePreset('custom');
+                    setCalendarOpen(false);
+                  }}
+                  disabled={(d) => d > new Date()}
+                  captionLayout="dropdown"
+                />
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
 
         {/* Sort */}
-        <select
-          value={sort}
-          onChange={(e) => setSort(e.target.value as SortKey)}
-          className="cursor-pointer rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-600 outline-none focus:border-indigo-400"
-        >
-          <option value="newest">Mới nhất</option>
-          <option value="oldest">Cũ nhất</option>
-          <option value="largest">Lớn nhất</option>
-          <option value="smallest">Nhỏ nhất</option>
-        </select>
+        <Select value={sort} onValueChange={(v) => setSort(v as SortKey)}>
+          <SelectTrigger className="h-8 w-28 text-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent position="popper" sideOffset={4}>
+            <SelectItem value="newest">Mới nhất</SelectItem>
+            <SelectItem value="oldest">Cũ nhất</SelectItem>
+            <SelectItem value="largest">Lớn nhất</SelectItem>
+            <SelectItem value="smallest">Nhỏ nhất</SelectItem>
+          </SelectContent>
+        </Select>
 
-        <span className="text-xs text-slate-400">{filtered.length} ảnh</span>
+        <span className="text-xs text-muted-foreground">{filtered.length} ảnh</span>
       </div>
 
       {/* Grid */}
-      <div className="overflow-y-auto p-4" style={{ maxHeight: 'calc(85vh - 220px)' }}>
+      <div className="flex-1 overflow-y-auto p-4">
         {loading ? (
           <div className="grid grid-cols-4 gap-2.5">
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="aspect-square animate-pulse rounded-xl bg-slate-100" />
+              <div key={i} className="aspect-square animate-pulse rounded-lg bg-muted" />
             ))}
           </div>
         ) : !filtered.length ? (
-          <div className="flex flex-col items-center justify-center py-16 text-slate-400">
-            <svg
-              viewBox="0 0 24 24"
-              className="mb-3 h-10 w-10 text-slate-200"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-            >
-              <rect x="3" y="3" width="18" height="18" rx="2" />
-              <circle cx="8.5" cy="8.5" r="1.5" />
-              <polyline points="21 15 16 10 5 21" />
-            </svg>
-            <p className="text-sm">
-              {search || dateFilter !== 'all' ? 'Không tìm thấy ảnh nào' : 'Chưa có ảnh nào'}
-            </p>
+          <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+            {search ? 'Không tìm thấy ảnh nào' : 'Chưa có ảnh nào'}
           </div>
         ) : (
           <div className="grid grid-cols-4 gap-2.5">
@@ -318,38 +379,32 @@ function LibraryTab({
               return (
                 <button
                   key={asset.publicId}
+                  type="button"
                   onClick={() => onToggle(asset)}
-                  className={`group relative aspect-square cursor-pointer overflow-hidden rounded-xl border-2 transition-all ${
+                  className={cn(
+                    'group relative aspect-square cursor-pointer overflow-hidden rounded-lg border-2 transition-all',
                     isSel
-                      ? 'border-indigo-500 ring-2 ring-indigo-200'
-                      : 'border-transparent hover:border-slate-300'
-                  }`}
+                      ? 'border-primary ring-2 ring-primary/20'
+                      : 'border-transparent hover:border-border',
+                  )}
                 >
                   <img
-                    src={asset.secureUrl}
+                    src={toThumbnail(asset.secureUrl)}
                     alt=""
                     className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
                     loading="lazy"
                   />
-                  {/* Overlay */}
                   <div
-                    className={`pointer-events-none absolute inset-0 transition-colors ${isSel ? 'bg-indigo-500/20' : 'bg-black/0 group-hover:bg-black/15'}`}
+                    className={cn(
+                      'pointer-events-none absolute inset-0 transition-colors',
+                      isSel ? 'bg-primary/15' : 'bg-black/0 group-hover:bg-black/10',
+                    )}
                   />
-                  {/* Checkmark */}
                   {isSel && (
-                    <div className="absolute top-1.5 right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-indigo-500 shadow">
-                      <svg
-                        viewBox="0 0 24 24"
-                        className="h-3 w-3 text-white"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="3"
-                      >
-                        <path d="M20 6L9 17l-5-5" />
-                      </svg>
+                    <div className="absolute top-1.5 right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary shadow">
+                      <Check className="h-3 w-3 text-primary-foreground" strokeWidth={3} />
                     </div>
                   )}
-                  {/* Info on hover */}
                   <div className="absolute right-0 bottom-0 left-0 translate-y-full bg-gradient-to-t from-black/70 to-transparent px-2 pt-3 pb-1.5 transition-transform duration-200 group-hover:translate-y-0">
                     <p className="text-[10px] text-white/80">
                       {asset.width}×{asset.height} · {formatBytes(asset.bytes)}
@@ -360,16 +415,11 @@ function LibraryTab({
             })}
           </div>
         )}
-
         {nextCursor && (
           <div className="mt-4 flex justify-center">
-            <button
-              onClick={loadMore}
-              disabled={loadingMore}
-              className="cursor-pointer rounded-full border border-slate-200 px-5 py-1.5 text-xs text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-50"
-            >
-              {loadingMore ? 'Đang tải...' : 'Tải thêm'}
-            </button>
+            <Button variant="outline" size="sm" onClick={handleLoadMore} disabled={loadingMore}>
+              {loadingMore ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Tải thêm'}
+            </Button>
           </div>
         )}
       </div>
@@ -385,11 +435,56 @@ export default function MediaPickerDialog({
   onInsert,
   onClose,
 }: MediaPickerProps) {
-  const [tab, setTab] = useState<Tab>('library');
+  const [tab, setTab] = useState<'library' | 'upload'>('library');
   const [selected, setSelected] = useState<Map<string, MediaAsset>>(new Map());
-  const [libraryKey, setLibraryKey] = useState(0);
   const [folders, setFolders] = useState<CloudinaryFolder[]>([]);
-  const [activeFolder, setActiveFolder] = useState<string>(defaultFolder);
+  const [activeFolder, setActiveFolder] = useState<string>(ALL_FOLDER);
+
+  // Cache: `${folder}::${startAt}` → { assets, nextCursor, loading }
+  type CacheEntry = { assets: MediaAsset[]; nextCursor: string | undefined; loading: boolean };
+  const [cache, setCache] = useState<Map<string, CacheEntry>>(new Map());
+  const cacheRef = useRef(cache);
+  cacheRef.current = cache;
+
+  // Date filter lives here so loadFolder can use it
+  const [datePreset, setDatePreset] = useState<'all' | 'today' | 'week' | 'month' | 'custom'>(
+    'all',
+  );
+  const [customDate, setCustomDate] = useState<Date | undefined>();
+  const startAt = presetToStartAt(datePreset, customDate);
+  const cacheKey = `${activeFolder}::${startAt ?? ''}`;
+
+  const currentCache = cache.get(cacheKey) ?? { assets: [], nextCursor: undefined, loading: false };
+
+  const loadFolder = useCallback(
+    async (folder: string, startAtParam: string | undefined, force = false) => {
+      const key = `${folder}::${startAtParam ?? ''}`;
+      if (!force && cacheRef.current.has(key)) return;
+      setCache((prev) =>
+        new Map(prev).set(key, { assets: [], nextCursor: undefined, loading: true }),
+      );
+      try {
+        const res = await fetchAssets(folder, undefined, startAtParam);
+        setCache((prev) =>
+          new Map(prev).set(key, {
+            assets: res.assets,
+            nextCursor: res.nextCursor,
+            loading: false,
+          }),
+        );
+      } catch {
+        toast.error('Không thể tải danh sách ảnh');
+        setCache((prev) =>
+          new Map(prev).set(key, { assets: [], nextCursor: undefined, loading: false }),
+        );
+      }
+    },
+    [],
+  );
+
+  useEffect(() => {
+    loadFolder(activeFolder, startAt);
+  }, [activeFolder, startAt, loadFolder]);
 
   useEffect(() => {
     getFolders()
@@ -397,14 +492,19 @@ export default function MediaPickerDialog({
       .catch(() => {});
   }, []);
 
-  // Esc to close
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose();
-    }
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
+  async function loadMore() {
+    const cur = cacheRef.current.get(cacheKey);
+    if (!cur?.nextCursor) return;
+    const res = await fetchAssets(activeFolder, cur.nextCursor, startAt);
+    setCache((prev) => {
+      const existing = prev.get(cacheKey)!;
+      return new Map(prev).set(cacheKey, {
+        ...existing,
+        assets: [...existing.assets, ...res.assets],
+        nextCursor: res.nextCursor,
+      });
+    });
+  }
 
   function toggleAsset(asset: MediaAsset) {
     setSelected((prev) => {
@@ -422,12 +522,11 @@ export default function MediaPickerDialog({
   function handleFolderChange(f: string) {
     setActiveFolder(f);
     setSelected(new Map());
-    setLibraryKey((k) => k + 1);
   }
 
   function handleUploaded(asset: MediaAsset) {
     toggleAsset(asset);
-    setLibraryKey((k) => k + 1);
+    loadFolder(activeFolder, startAt, true);
     setTab('library');
     toast.success('Upload thành công');
   }
@@ -438,114 +537,83 @@ export default function MediaPickerDialog({
     onClose();
   }
 
-  return createPortal(
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
-      onClick={onClose}
-      onMouseDown={(e) => e.stopPropagation()}
-    >
-      <div
-        className="flex w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
-        style={{ maxHeight: '85vh' }}
-        onClick={(e) => e.stopPropagation()}
+  return (
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent
+        showCloseButton={false}
+        className="flex h-[85vh] w-full max-w-3xl flex-col gap-0 overflow-hidden p-0 sm:max-w-3xl"
       >
-        {/* Header */}
-        <div className="flex shrink-0 items-center gap-3 border-b border-slate-100 px-5 py-3.5">
-          {/* Tabs */}
-          <div className="flex gap-0.5 rounded-xl bg-slate-100 p-1">
-            {(['library', 'upload'] as Tab[]).map((t) => (
-              <button
-                key={t}
-                onClick={() => setTab(t)}
-                className={`cursor-pointer rounded-lg px-4 py-1.5 text-sm font-medium transition-colors ${
-                  tab === t
-                    ? 'bg-white text-slate-900 shadow-sm'
-                    : 'text-slate-500 hover:text-slate-700'
-                }`}
-              >
-                {t === 'library' ? 'Thư viện' : 'Upload'}
-              </button>
-            ))}
+        <DialogTitle className="sr-only">Chọn ảnh</DialogTitle>
+
+        <Tabs
+          value={tab}
+          onValueChange={(v) => setTab(v as 'library' | 'upload')}
+          className="flex flex-1 flex-col overflow-hidden"
+        >
+          {/* Header */}
+          <div className="flex shrink-0 items-center gap-3 border-b px-5 py-3">
+            <TabsList className="h-8">
+              <TabsTrigger value="library" className="text-xs">
+                Thư viện
+              </TabsTrigger>
+              <TabsTrigger value="upload" className="text-xs">
+                Upload
+              </TabsTrigger>
+            </TabsList>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              className="ml-auto h-7 w-7 shrink-0"
+              onClick={onClose}
+              aria-label="Đóng"
+            >
+              {' '}
+              <X className="h-4 w-4" />
+            </Button>
           </div>
 
-          {/* Folder pills — only in library */}
-          {tab === 'library' && folders.length > 0 && (
-            <div className="flex flex-1 items-center gap-1.5 overflow-x-auto">
-              {folders.map((f) => (
-                <button
-                  key={f.path}
-                  onClick={() => handleFolderChange(f.path)}
-                  className={`shrink-0 cursor-pointer rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                    activeFolder === f.path
-                      ? 'bg-indigo-600 text-white'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
-                >
-                  {f.name}
-                </button>
-              ))}
-            </div>
-          )}
-
-          <button
-            onClick={onClose}
-            className="ml-auto shrink-0 cursor-pointer rounded-full p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
-            aria-label="Đóng"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              className="h-4 w-4"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M18 6L6 18M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Body */}
-        <div className="min-h-0 flex-1 overflow-hidden">
-          {tab === 'library' ? (
-            <LibraryTab
-              key={libraryKey}
-              folder={activeFolder}
-              multiple={multiple}
-              selected={new Set(selected.keys())}
-              onToggle={toggleAsset}
-            />
-          ) : (
-            <UploadTab folder={activeFolder as AllowedFolder} onUploaded={handleUploaded} />
-          )}
-        </div>
+          {/* Body */}
+          <div className="min-h-0 flex-1 overflow-hidden">
+            <TabsContent value="library" className="mt-0 h-full data-[state=inactive]:hidden">
+              <LibraryTab
+                folder={activeFolder}
+                multiple={multiple}
+                selected={new Set(selected.keys())}
+                onToggle={toggleAsset}
+                assets={currentCache.assets}
+                loading={currentCache.loading}
+                nextCursor={currentCache.nextCursor}
+                onLoadMore={loadMore}
+                folders={folders}
+                onFolderChange={handleFolderChange}
+              />
+            </TabsContent>
+            <TabsContent value="upload" className="mt-0 h-full data-[state=inactive]:hidden">
+              <UploadTab folder={defaultFolder} onUploaded={handleUploaded} />
+            </TabsContent>
+          </div>
+        </Tabs>
 
         {/* Footer */}
-        <div className="flex shrink-0 items-center justify-between border-t border-slate-100 px-5 py-3.5">
-          <span className="text-sm text-slate-400">
+        <div className="flex shrink-0 items-center justify-between border-t px-5 py-3">
+          <span className="text-sm text-muted-foreground">
             {selected.size > 0 ? (
-              <span className="font-medium text-slate-700">{selected.size} ảnh đã chọn</span>
+              <span className="font-medium text-foreground">{selected.size} ảnh đã chọn</span>
             ) : (
               'Chưa chọn ảnh nào'
             )}
           </span>
-          <div className="flex gap-2.5">
-            <button
-              onClick={onClose}
-              className="cursor-pointer rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
-            >
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={onClose}>
               Hủy
-            </button>
-            <button
-              onClick={handleInsert}
-              disabled={!selected.size}
-              className="cursor-pointer rounded-xl bg-indigo-600 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-indigo-700 disabled:opacity-40"
-            >
+            </Button>
+            <Button size="sm" onClick={handleInsert} disabled={!selected.size}>
               Chèn {selected.size > 0 ? `(${selected.size})` : ''}
-            </button>
+            </Button>
           </div>
         </div>
-      </div>
-    </div>,
-    document.body,
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -66,7 +66,7 @@ const customers = [
 
 const tierConfig: Record<string, string> = {
   VIP: 'bg-amber-100 text-amber-700',
-  'Thân thiết': 'bg-blue-100 text-blue-700',
+  'Thân thiết': 'bg-primary/10 text-primary',
   Mới: 'bg-green-100 text-green-700',
 };
 
@@ -87,7 +87,7 @@ export default function DashboardCustomersPage() {
           <h1 className="text-2xl font-bold text-slate-900">Khách hàng</h1>
           <p className="mt-1 text-sm text-slate-500">{customers.length} khách hàng đã đăng ký</p>
         </div>
-        <button className="flex cursor-pointer items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700">
+        <button className="flex cursor-pointer items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90">
           <svg
             viewBox="0 0 24 24"
             className="h-4 w-4"
@@ -115,7 +115,7 @@ export default function DashboardCustomersPage() {
           {
             label: 'Thân thiết',
             count: customers.filter((c) => c.tier === 'Thân thiết').length,
-            color: 'bg-blue-100 text-blue-700',
+            color: 'bg-primary/10 text-primary',
           },
           {
             label: 'Mới',
@@ -156,7 +156,7 @@ export default function DashboardCustomersPage() {
             placeholder="Tìm theo tên, email, mã KH..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-xl border-0 bg-slate-100 py-2 pr-4 pl-9 text-sm text-slate-700 outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500"
+            className="w-full rounded-xl border-0 bg-slate-100 py-2 pr-4 pl-9 text-sm text-slate-700 outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-ring"
             aria-label="Tìm kiếm khách hàng"
           />
         </div>
@@ -194,7 +194,7 @@ export default function DashboardCustomersPage() {
                 <tr key={c.id} className="transition-colors hover:bg-slate-50">
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-600">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
                         {c.name.split(' ').pop()?.[0]}
                       </div>
                       <div>
@@ -221,7 +221,7 @@ export default function DashboardCustomersPage() {
                   </td>
                   <td className="px-5 py-4">
                     <button
-                      className="cursor-pointer rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-blue-50 hover:text-blue-600"
+                      className="cursor-pointer rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-primary/5 hover:text-primary"
                       aria-label={`Xem ${c.name}`}
                     >
                       <svg
