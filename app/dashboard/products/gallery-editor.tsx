@@ -47,7 +47,7 @@ function SortableImage({ url, index, onRemove }: SortableImageProps) {
           type="button"
           variant="secondary"
           size="icon"
-          className="h-7 w-7 cursor-grab shadow-sm active:cursor-grabbing"
+          className="h-8 w-8 cursor-grab shadow-sm active:cursor-grabbing"
           aria-label="Kéo để sắp xếp"
         >
           <GripVertical className="h-3.5 w-3.5" />
@@ -57,7 +57,7 @@ function SortableImage({ url, index, onRemove }: SortableImageProps) {
           variant="secondary"
           size="icon"
           onClick={onRemove}
-          className="hover:text-destructive-foreground h-7 w-7 shadow-sm hover:bg-destructive"
+          className="hover:text-destructive-foreground h-8 w-8 shadow-sm hover:bg-destructive"
           aria-label="Xóa ảnh"
         >
           <Trash2 className="h-3.5 w-3.5" />

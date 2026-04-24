@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,17 +17,15 @@ interface KeyValueEditorProps {
   valuePlaceholder?: string;
 }
 
-let _id = 0;
-function nextId() {
-  return _id++;
-}
-
 export function KeyValueEditor({
   value,
   onChange,
   keyPlaceholder = 'Thuộc tính',
   valuePlaceholder = 'Giá trị',
 }: KeyValueEditorProps) {
+  const idRef = useRef(0);
+  function nextId() { return idRef.current++; }
+
   function makeRow(key = '', val = ''): Row {
     return { id: nextId(), key, value: val };
   }

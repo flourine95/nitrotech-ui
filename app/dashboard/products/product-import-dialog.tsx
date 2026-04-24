@@ -222,7 +222,7 @@ export function ProductImportDialog({ open, onClose, onSuccess }: ImportDialogPr
                       </td>
                       <td className="px-3 py-2">
                         {r.error ? (
-                          <span className="inline-flex items-center gap-1 text-rose-600">
+                          <span className="inline-flex items-center gap-1 text-destructive">
                             <AlertCircle className="h-3 w-3" /> {r.error}
                           </span>
                         ) : (
@@ -244,12 +244,11 @@ export function ProductImportDialog({ open, onClose, onSuccess }: ImportDialogPr
             )}
 
             <div className="flex justify-end gap-2">
-              <Button variant="outline" size="sm" className="rounded-xl" onClick={reset}>
+              <Button variant="outline" size="sm" onClick={reset}>
                 <X className="h-3.5 w-3.5" /> Chọn lại
               </Button>
               <Button
                 size="sm"
-                className="rounded-xl"
                 disabled={validCount === 0 || importing}
                 onClick={handleImport}
               >
@@ -275,10 +274,10 @@ export function ProductImportDialog({ open, onClose, onSuccess }: ImportDialogPr
             </div>
 
             {result.errors.length > 0 && (
-              <div className="max-h-40 overflow-auto rounded-xl border border-rose-200 bg-rose-50 p-3">
-                <p className="mb-2 text-xs font-semibold text-rose-700">Chi tiết lỗi:</p>
+              <div className="max-h-40 overflow-auto rounded-lg border border-destructive/30 bg-destructive/5 p-3">
+                <p className="mb-2 text-xs font-semibold text-destructive">Chi tiết lỗi:</p>
                 {result.errors.map((e) => (
-                  <p key={e.row} className="text-xs text-rose-600">
+                  <p key={e.row} className="text-xs text-destructive/80">
                     Dòng {e.row}: {e.message}
                   </p>
                 ))}
@@ -286,10 +285,10 @@ export function ProductImportDialog({ open, onClose, onSuccess }: ImportDialogPr
             )}
 
             <div className="flex justify-end gap-2">
-              <Button variant="outline" size="sm" className="rounded-xl" onClick={reset}>
+              <Button variant="outline" size="sm" onClick={reset}>
                 Import thêm
               </Button>
-              <Button size="sm" className="rounded-xl" onClick={handleClose}>
+              <Button size="sm" onClick={handleClose}>
                 Đóng
               </Button>
             </div>
