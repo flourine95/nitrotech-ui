@@ -5,14 +5,12 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Copy, Ellipsis, Package, Pencil, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Ellipsis, Package, Pencil, Plus, Trash2 } from 'lucide-react';
 import type { Product, ProductVariant } from '@/lib/api/products';
 import { deleteProduct, updateProduct } from '@/lib/api/products';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Separator } from '@/components/ui/separator';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -103,37 +101,25 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
   const avgStock = product.variantCount > 0 ? Math.round(totalStock / product.variantCount) : 0;
 
   return (
-    <div className="flex min-w-0 flex-col p-4 sm:p-6 md:p-8">
-      {/* Mobile header */}
-      <div className="flex flex-col gap-5 pb-8 md:hidden">
-        <div className="flex items-center gap-2 text-xs">
-          <Link href="/dashboard/products" className="font-medium text-foreground hover:underline">
+    <div className="flex min-w-0 flex-col">
+      {/* Header — same pattern as ProductForm */}
+      <div className="mb-6 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
+            <Link href="/dashboard/products" aria-label="Quay lại">
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
+          </Button>
+          <Link href="/dashboard/products" className="hover:text-foreground">
             Sản phẩm
           </Link>
-          <span className="text-muted-foreground">/</span>
-          <span className="text-muted-foreground">Chi tiết</span>
+          <span>/</span>
+          <span className="font-medium text-foreground truncate max-w-[200px]">{product.name}</span>
         </div>
-        <div className="flex justify-end">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">Hiển thị</span>
-            <Switch
-              checked={product.active}
-              onCheckedChange={() => toggleActiveMutation.mutate()}
-              disabled={toggleActiveMutation.isPending}
-            />
-          </div>
-        </div>
-        <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-semibold tracking-tight">{product.name}</h1>
-          <p className="text-sm text-muted-foreground">
-            {product.variantCount} variants • {product.categoryName ?? 'Chưa phân loại'} •{' '}
-            {product.brandName ?? 'Không có thương hiệu'}
-          </p>
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Button size="sm" onClick={handleAddVariant}>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={handleAddVariant}>
             <Plus className="h-4 w-4" />
-            Thêm phiên bản
+            Thêm biến thể
           </Button>
           <Button variant="outline" size="sm" asChild>
             <Link href={`/dashboard/products/${product.id}/edit`}>
@@ -141,76 +127,24 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
               Chỉnh sửa
             </Link>
           </Button>
-        </div>
-      </div>
-
-      {/* Desktop header */}
-      <div className="hidden flex-col gap-6 pb-8 md:flex">
-        <div className="flex items-start justify-between gap-8">
-          <div className="flex min-w-0 flex-col gap-3 pt-1">
-            <h1 className="text-4xl font-medium tracking-tight">{product.name}</h1>
-            <div className="flex flex-wrap items-center gap-2 text-sm">
-              <Badge
-                variant={product.active ? 'default' : 'secondary'}
-                className="rounded-md px-2.5 py-1 font-medium"
-              >
-                {product.active ? 'Active' : 'Inactive'}
-              </Badge>
-              <span className="text-muted-foreground">•</span>
-              <span className="text-muted-foreground">{product.variantCount} variants</span>
-              <span className="text-muted-foreground">•</span>
-              <span className="text-muted-foreground">
-                {product.categoryName ?? 'Chưa phân loại'}
-              </span>
-              <span className="text-muted-foreground">•</span>
-              <span className="text-muted-foreground">
-                {product.brandName ?? 'Không có thương hiệu'}
-              </span>
-            </div>
-          </div>
-          <div className="flex shrink-0 items-center gap-3">
-            <div className="flex items-center gap-3 rounded-full border px-3 py-2">
-              <Switch
-                checked={product.active}
-                onCheckedChange={() => toggleActiveMutation.mutate()}
-                disabled={toggleActiveMutation.isPending}
-              />
-              <span className="text-sm font-medium">Hiển thị</span>
-            </div>
-            <Separator orientation="vertical" className="h-8" />
-            <Button size="sm" className="h-9" onClick={handleAddVariant}>
-              <Plus className="h-4 w-4" />
-              Thêm phiên bản
-            </Button>
-            <Button variant="outline" size="sm" className="h-9" asChild>
-              <Link href={`/dashboard/products/${product.id}/edit`}>
-                <Pencil className="h-4 w-4" />
-                Chỉnh sửa
-              </Link>
-            </Button>
-            <Button variant="outline" size="sm" className="h-9" onClick={handleClone}>
-              <Copy className="h-4 w-4" />
-              Nhân bản
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" className="h-9 w-9">
-                  <Ellipsis className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem asChild>
-                  <Link href={`/products/${product.slug}`} target="_blank">
-                    Xem trên cửa hàng
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem variant="destructive" onClick={() => setDeleteTarget(true)}>
-                  Xóa sản phẩm
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon" className="h-8 w-8">
+                <Ellipsis className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem asChild>
+                <Link href={`/products/${product.slug}`} target="_blank">
+                  Xem trên cửa hàng
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem variant="destructive" onClick={() => setDeleteTarget(true)}>
+                Xóa sản phẩm
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
@@ -228,7 +162,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
               value="variants"
               className="rounded-none border-x-0 border-t-0 border-b-2 border-transparent px-0 pt-0 pb-3 text-sm data-[state=active]:border-b-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none"
             >
-              Variants
+              Biến thể
             </TabsTrigger>
             <TabsTrigger
               value="inventory"
@@ -342,7 +276,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                     </p>
                     <p className="mt-3 text-3xl font-semibold tracking-tight">{totalStock}</p>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      Trên {product.variantCount} variants
+                      Trên {product.variantCount} biến thể
                     </p>
                   </div>
                 </div>
@@ -352,7 +286,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                       Sắp hết hàng
                     </p>
                     <p className="mt-3 text-3xl font-semibold tracking-tight">{lowStockCount}</p>
-                    <p className="mt-1 text-sm text-muted-foreground">Variants dưới ngưỡng</p>
+                    <p className="mt-1 text-sm text-muted-foreground">Biến thể dưới ngưỡng</p>
                   </div>
                 </div>
                 <div className="rounded-2xl border bg-card shadow-none">
@@ -361,7 +295,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                       Trung bình
                     </p>
                     <p className="mt-3 text-3xl font-semibold tracking-tight">{avgStock}</p>
-                    <p className="mt-1 text-sm text-muted-foreground">Đơn vị mỗi variant</p>
+                    <p className="mt-1 text-sm text-muted-foreground">Đơn vị mỗi biến thể</p>
                   </div>
                 </div>
               </div>
@@ -462,7 +396,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
         {/* Variants Tab */}
         <TabsContent value="variants" className="mt-0 pt-6">
           <div className="rounded-2xl border bg-card p-6">
-            <p className="text-sm text-muted-foreground">Tab Variants - Đang phát triển</p>
+            <p className="text-sm text-muted-foreground">Tab Biến thể - Đang phát triển</p>
           </div>
         </TabsContent>
 
