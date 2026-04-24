@@ -30,7 +30,7 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState, startTransition } from 'react';
 import {
   downloadCSV,
   PAGE_SIZE,
@@ -102,17 +102,23 @@ const FilterBar = memo(function FilterBar({
   onSortChange: (val: SortValue) => void;
 }) {
   const [inputVal, setInputVal] = useState(searchValue);
+  // Optimistic local status — updates instantly, URL syncs after
+  const [localStatus, setLocalStatus] = useState(filterStatus);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Sync input when external searchValue changes (e.g. clearAllFilters)
-  useEffect(() => {
-    setInputVal(searchValue);
-  }, [searchValue]);
+  // Sync when external value changes (e.g. clearAllFilters, back/forward)
+  useEffect(() => { setInputVal(searchValue); }, [searchValue]);
+  useEffect(() => { setLocalStatus(filterStatus); }, [filterStatus]);
 
   function handleInputChange(val: string) {
     setInputVal(val);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => onSearchCommit(val), 300);
+  }
+
+  function handleStatusChange(val: FilterStatus) {
+    setLocalStatus(val); // instant paint
+    startTransition(() => onStatusChange(val)); // defer URL sync
   }
 
   return (
@@ -145,10 +151,10 @@ const FilterBar = memo(function FilterBar({
         {STATUS_FILTERS.map((f) => (
           <Button
             key={f.value}
-            variant={filterStatus === f.value ? 'default' : 'outline'}
+            variant={localStatus === f.value ? 'default' : 'outline'}
             size="sm"
             className="h-8"
-            onClick={() => onStatusChange(f.value)}
+            onClick={() => handleStatusChange(f.value)}
           >
             {f.label}
           </Button>
@@ -208,7 +214,7 @@ export default function DashboardProductsPage() {
   const [filters, setFilters] = useQueryStates(filterParsers, {
     shallow: true,
     history: 'replace',
-    throttleMs: 100,
+    throttleMs: 300,
   });
   const {
     q: search,
@@ -246,19 +252,19 @@ export default function DashboardProductsPage() {
   );
   const setCurrentPage = useCallback(
     (val: number) => {
-      void setFilters({ page: val });
+      startTransition(() => { void setFilters({ page: val }); });
     },
     [setFilters],
   );
   const setPageSize = useCallback(
     (val: PageSizeOption) => {
-      void setFilters({ size: val, page: 0 });
+      startTransition(() => { void setFilters({ size: val, page: 0 }); });
     },
     [setFilters],
   );
   const setSortBy = useCallback(
     (val: SortValue | null) => {
-      void setFilters({ sort: val, page: 0 });
+      startTransition(() => { void setFilters({ sort: val, page: 0 }); });
     },
     [setFilters],
   );
@@ -368,25 +374,21 @@ export default function DashboardProductsPage() {
 
   // ── Selection helpers ──────────────────────────────────────────────────────
 
-  function toggleSelect(id: number) {
+  const toggleSelect = useCallback((id: number) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
-  }
+  }, []);
 
-  function toggleSelectAll() {
-    if (selectedIds.size === products.length) {
-      setSelectedIds(new Set());
-    } else {
-      setSelectedIds(new Set(products.map((p) => p.id)));
-    }
-  }
+  const toggleSelectAll = useCallback(() => {
+    const currentProducts = productsQuery.data?.content ?? [];
+    setSelectedIds((prev) =>
+      prev.size === currentProducts.length ? new Set() : new Set(currentProducts.map((p) => p.id)),
+    );
+  }, [productsQuery.data]);
 
   const clearSelection = useCallback(() => {
     setSelectedIds(new Set());
@@ -401,22 +403,28 @@ export default function DashboardProductsPage() {
   );
   const onStatusChange = useCallback(
     (val: FilterStatus) => {
-      setFilterStatus(val);
-      clearSelection();
+      startTransition(() => {
+        setFilterStatus(val);
+        clearSelection();
+      });
     },
     [setFilterStatus, clearSelection],
   );
   const onCategoryChange = useCallback(
     (val: number | null) => {
-      setFilterCategoryId(val);
-      clearSelection();
+      startTransition(() => {
+        setFilterCategoryId(val);
+        clearSelection();
+      });
     },
     [setFilterCategoryId, clearSelection],
   );
   const onBrandChange = useCallback(
     (val: number | null) => {
-      setFilterBrandId(val);
-      clearSelection();
+      startTransition(() => {
+        setFilterBrandId(val);
+        clearSelection();
+      });
     },
     [setFilterBrandId, clearSelection],
   );
@@ -508,15 +516,25 @@ export default function DashboardProductsPage() {
   const totalPages = productsQuery.data?.totalPages ?? 0;
   const totalElements = productsQuery.data?.totalElements ?? 0;
   const loading = productsQuery.isLoading;
-  const isFetching = productsQuery.isFetching;
   const categories = categoriesQuery.data ?? EMPTY_CATEGORIES;
   const brands = brandsQuery.data ?? EMPTY_BRANDS;
 
-  const allSelected = products.length > 0 && products.every((p) => selectedIds.has(p.id));
-  const someSelected = products.some((p) => selectedIds.has(p.id)) && !allSelected;
-
-  const categoryName = categories.find((c) => c.id === filterCategoryId)?.name;
-  const brandName = brands.find((b) => b.id === filterBrandId)?.name;
+  const allSelected = useMemo(
+    () => products.length > 0 && products.every((p) => selectedIds.has(p.id)),
+    [products, selectedIds],
+  );
+  const someSelected = useMemo(
+    () => products.some((p) => selectedIds.has(p.id)) && !allSelected,
+    [products, selectedIds, allSelected],
+  );
+  const categoryName = useMemo(
+    () => categories.find((c) => c.id === filterCategoryId)?.name,
+    [categories, filterCategoryId],
+  );
+  const brandName = useMemo(
+    () => brands.find((b) => b.id === filterBrandId)?.name,
+    [brands, filterBrandId],
+  );
 
   return (
     <div className="space-y-4">
@@ -608,7 +626,6 @@ export default function DashboardProductsPage() {
       <ProductTable
         products={products}
         loading={loading}
-        isFetching={isFetching}
         isDeleted={isDeleted}
         selectedIds={selectedIds}
         allSelected={allSelected}

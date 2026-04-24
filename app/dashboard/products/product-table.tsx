@@ -1,4 +1,6 @@
 'use client';
+import { memo } from 'react';
+import { useIsFetching } from '@tanstack/react-query';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Ellipsis, Package } from 'lucide-react';
@@ -35,7 +37,6 @@ import { formatPrice, PAGE_SIZE_OPTIONS, type PageSizeOption } from './utils';
 interface ProductTableProps {
   products: Product[];
   loading: boolean;
-  isFetching: boolean;
   isDeleted: boolean;
   selectedIds: Set<number>;
   allSelected: boolean;
@@ -57,10 +58,9 @@ interface ProductTableProps {
   hasActiveFilters: boolean;
 }
 
-export function ProductTable({
+export const ProductTable = memo(function ProductTable({
   products,
   loading,
-  isFetching,
   isDeleted,
   selectedIds,
   allSelected,
@@ -83,6 +83,7 @@ export function ProductTable({
 }: ProductTableProps) {
   const from = totalElements === 0 ? 0 : currentPage * pageSize + 1;
   const to = Math.min((currentPage + 1) * pageSize, totalElements);
+  const isFetching = useIsFetching({ queryKey: ['products'] }) > 0;
   return (
     <div className="rounded-md border">
       {loading ? (
@@ -377,4 +378,4 @@ export function ProductTable({
       )}
     </div>
   );
-}
+});
