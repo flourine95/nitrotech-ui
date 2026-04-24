@@ -3,7 +3,12 @@ import Link from 'next/link';
 import { toast } from 'sonner';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { parseAsInteger, parseAsString, parseAsStringEnum, useQueryStates } from 'nuqs';
-import { Download, Plus, Search, Upload, X } from 'lucide-react';
+import { Download, Filter, Plus, Search, Upload, X } from 'lucide-react';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import {
   bulkDeleteProducts,
   bulkHardDeleteProducts,
@@ -102,11 +107,9 @@ const FilterBar = memo(function FilterBar({
   onSortChange: (val: SortValue) => void;
 }) {
   const [inputVal, setInputVal] = useState(searchValue);
-  // Optimistic local status — updates instantly, URL syncs after
   const [localStatus, setLocalStatus] = useState(filterStatus);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Sync when external value changes (e.g. clearAllFilters, back/forward)
   useEffect(() => { setInputVal(searchValue); }, [searchValue]);
   useEffect(() => { setLocalStatus(filterStatus); }, [filterStatus]);
 
@@ -117,12 +120,19 @@ const FilterBar = memo(function FilterBar({
   }
 
   function handleStatusChange(val: FilterStatus) {
-    setLocalStatus(val); // instant paint
-    startTransition(() => onStatusChange(val)); // defer URL sync
+    setLocalStatus(val);
+    startTransition(() => onStatusChange(val));
   }
 
+  const activeFilterCount = [
+    filterCategoryId !== null,
+    filterBrandId !== null,
+    sortBy !== 'createdAt,desc',
+  ].filter(Boolean).length;
+
   return (
-    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+    <div className="flex items-center gap-2">
+      {/* Search */}
       <div className="relative flex-1">
         <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
@@ -130,12 +140,13 @@ const FilterBar = memo(function FilterBar({
           placeholder="Tìm tên, slug..."
           value={inputVal}
           onChange={(e) => handleInputChange(e.target.value)}
-          className="pr-10 pl-9"
+          className="h-9 pr-8 pl-9"
         />
         {inputVal && (
           <Button
             variant="ghost"
             size="icon"
+            aria-label="Xóa tìm kiếm"
             onClick={() => {
               setInputVal('');
               onSearchCommit('');
@@ -147,63 +158,95 @@ const FilterBar = memo(function FilterBar({
           </Button>
         )}
       </div>
-      <div className="flex flex-wrap gap-2">
+
+      {/* Status — segmented control */}
+      <div className="flex h-9 items-center rounded-md border bg-muted/40 p-0.5">
         {STATUS_FILTERS.map((f) => (
-          <Button
+          <button
             key={f.value}
-            variant={localStatus === f.value ? 'default' : 'outline'}
-            size="sm"
-            className="h-8"
             onClick={() => handleStatusChange(f.value)}
+            className={`h-8 rounded px-3 text-sm transition-all ${
+              localStatus === f.value
+                ? 'bg-background font-medium text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
           >
             {f.label}
-          </Button>
+          </button>
         ))}
-        <Select
-          value={filterCategoryId ? String(filterCategoryId) : 'all'}
-          onValueChange={(v) => onCategoryChange(v === 'all' ? null : Number(v))}
-        >
-          <SelectTrigger className="w-36">
-            <SelectValue placeholder="Danh mục" />
-          </SelectTrigger>
-          <SelectContent position="popper" sideOffset={4}>
-            <SelectItem value="all">Tất cả danh mục</SelectItem>
-            {categories.map((c) => (
-              <SelectItem key={c.id} value={String(c.id)}>
-                {c.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select
-          value={filterBrandId ? String(filterBrandId) : 'all'}
-          onValueChange={(v) => onBrandChange(v === 'all' ? null : Number(v))}
-        >
-          <SelectTrigger className="w-36">
-            <SelectValue placeholder="Thương hiệu" />
-          </SelectTrigger>
-          <SelectContent position="popper" sideOffset={4}>
-            <SelectItem value="all">Tất cả thương hiệu</SelectItem>
-            {brands.map((b) => (
-              <SelectItem key={b.id} value={String(b.id)}>
-                {b.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={sortBy} onValueChange={(v) => onSortChange(v as SortValue)}>
-          <SelectTrigger className="w-36">
-            <SelectValue placeholder="Sắp xếp" />
-          </SelectTrigger>
-          <SelectContent position="popper" sideOffset={4}>
-            {SORT_OPTIONS.map((o) => (
-              <SelectItem key={o.value} value={o.value}>
-                {o.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
       </div>
+
+      {/* Advanced filters — popover */}
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="outline" className="h-9 gap-1.5">
+            <Filter className="h-3.5 w-3.5" />
+            Bộ lọc
+            {activeFilterCount > 0 && (
+              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-foreground text-[10px] font-semibold text-background">
+                {activeFilterCount}
+              </span>
+            )}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent align="end" className="w-64 p-3">
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-1.5">
+              <span className="text-xs font-medium text-muted-foreground">Danh mục</span>
+              <Select
+                value={filterCategoryId ? String(filterCategoryId) : 'all'}
+                onValueChange={(v) => onCategoryChange(v === 'all' ? null : Number(v))}
+              >
+                <SelectTrigger className="h-8 w-full text-sm">
+                  <SelectValue placeholder="Tất cả danh mục" />
+                </SelectTrigger>
+                <SelectContent position="popper" sideOffset={4}>
+                  <SelectItem value="all">Tất cả danh mục</SelectItem>
+                  {categories.map((c) => (
+                    <SelectItem key={c.id} value={String(c.id)}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <span className="text-xs font-medium text-muted-foreground">Thương hiệu</span>
+              <Select
+                value={filterBrandId ? String(filterBrandId) : 'all'}
+                onValueChange={(v) => onBrandChange(v === 'all' ? null : Number(v))}
+              >
+                <SelectTrigger className="h-8 w-full text-sm">
+                  <SelectValue placeholder="Tất cả thương hiệu" />
+                </SelectTrigger>
+                <SelectContent position="popper" sideOffset={4}>
+                  <SelectItem value="all">Tất cả thương hiệu</SelectItem>
+                  {brands.map((b) => (
+                    <SelectItem key={b.id} value={String(b.id)}>
+                      {b.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <span className="text-xs font-medium text-muted-foreground">Sắp xếp</span>
+              <Select value={sortBy} onValueChange={(v) => onSortChange(v as SortValue)}>
+                <SelectTrigger className="h-8 w-full text-sm">
+                  <SelectValue placeholder="Sắp xếp" />
+                </SelectTrigger>
+                <SelectContent position="popper" sideOffset={4}>
+                  {SORT_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>
+                      {o.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 });
@@ -335,7 +378,13 @@ export default function DashboardProductsPage() {
           ? { ...old, content: old.content.map((p) => (p.id === updated.id ? updated : p)) }
           : old,
       );
-      toast.success(updated.active ? 'Đã hiển thị' : 'Đã ẩn');
+      const msg = updated.active ? 'Đã hiển thị' : 'Đã ẩn';
+      toast.success(msg, {
+        action: {
+          label: 'Hoàn tác',
+          onClick: () => toggleActiveMutation.mutate(updated),
+        },
+      });
     },
     onError: () => toast.error('Cập nhật thất bại'),
   });
@@ -487,7 +536,10 @@ export default function DashboardProductsPage() {
     toast.success(`Đã xuất ${selected.length} sản phẩm`);
   }
 
+  const [exportLoading, setExportLoading] = useState(false);
+
   async function handleExportFiltered() {
+    setExportLoading(true);
     toast.info('Đang xuất dữ liệu...');
     try {
       const data = await exportProducts({
@@ -502,6 +554,8 @@ export default function DashboardProductsPage() {
       toast.success(`Đã xuất ${data.content.length} sản phẩm`);
     } catch {
       toast.error('Xuất thất bại');
+    } finally {
+      setExportLoading(false);
     }
   }
 
@@ -516,6 +570,7 @@ export default function DashboardProductsPage() {
   const totalPages = productsQuery.data?.totalPages ?? 0;
   const totalElements = productsQuery.data?.totalElements ?? 0;
   const loading = productsQuery.isLoading;
+  const isError = productsQuery.isError;
   const categories = categoriesQuery.data ?? EMPTY_CATEGORIES;
   const brands = brandsQuery.data ?? EMPTY_BRANDS;
 
@@ -545,15 +600,15 @@ export default function DashboardProductsPage() {
           <p className="mt-1 text-sm text-muted-foreground">Quản lý danh sách sản phẩm</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => setShowImport(true)}>
+          <Button variant="outline" size="sm" className="h-9" onClick={() => setShowImport(true)}>
             <Upload className="h-4 w-4" />
             Import
           </Button>
-          <Button variant="outline" size="sm" onClick={handleExportFiltered}>
+          <Button variant="outline" size="sm" className="h-9" onClick={handleExportFiltered} disabled={exportLoading}>
             <Download className="h-4 w-4" />
-            Export
+            {exportLoading ? 'Đang xuất...' : 'Export'}
           </Button>
-          <Button asChild size="sm">
+          <Button asChild size="sm" className="h-9">
             <Link
               href="/dashboard/products/new"
               onMouseEnter={() => import('./rich-text-editor-v2')}
@@ -626,6 +681,7 @@ export default function DashboardProductsPage() {
       <ProductTable
         products={products}
         loading={loading}
+        isError={isError}
         isDeleted={isDeleted}
         selectedIds={selectedIds}
         allSelected={allSelected}

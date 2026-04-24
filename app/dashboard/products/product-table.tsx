@@ -1,11 +1,11 @@
 'use client';
 import { memo } from 'react';
 import { useIsFetching } from '@tanstack/react-query';
+import { AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Ellipsis, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -34,9 +34,23 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import type { Product } from '@/lib/api/products';
 import { formatPrice, PAGE_SIZE_OPTIONS, type PageSizeOption } from './utils';
 
+function formatRelativeDate(dateStr: string): string {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) return 'Hôm nay';
+  if (diffDays === 1) return 'Hôm qua';
+  if (diffDays < 7) return `${diffDays} ngày trước`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)} tuần trước`;
+  return date.toLocaleDateString('vi-VN');
+}
+
 interface ProductTableProps {
   products: Product[];
   loading: boolean;
+  isError: boolean;
   isDeleted: boolean;
   selectedIds: Set<number>;
   allSelected: boolean;
@@ -61,6 +75,7 @@ interface ProductTableProps {
 export const ProductTable = memo(function ProductTable({
   products,
   loading,
+  isError,
   isDeleted,
   selectedIds,
   allSelected,
@@ -103,6 +118,12 @@ export const ProductTable = memo(function ProductTable({
             </div>
           ))}
         </div>
+      ) : isError ? (
+        <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+          <AlertCircle className="mb-3 h-10 w-10 text-destructive/40" />
+          <p className="text-sm font-medium text-foreground">Không thể tải dữ liệu</p>
+          <p className="mt-1 text-xs">Kiểm tra kết nối và thử lại</p>
+        </div>
       ) : products.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
           <Package className="mb-3 h-10 w-10 text-muted-foreground/30" />
@@ -139,7 +160,6 @@ export const ProductTable = memo(function ProductTable({
               <TableHead>Sản phẩm</TableHead>
               <TableHead className="text-right">Giá</TableHead>
               <TableHead className="text-center">Biến thể</TableHead>
-              {!isDeleted && <TableHead className="text-center">Trạng thái</TableHead>}
               <TableHead>Ngày tạo</TableHead>
               <TableHead />
             </TableRow>
@@ -187,11 +207,33 @@ export const ProductTable = memo(function ProductTable({
                       )}
                     </Tooltip>
                     <div className="min-w-0">
-                      <span
-                        className={`block truncate text-sm font-medium ${!p.active ? 'text-muted-foreground' : ''}`}
-                      >
-                        {p.name}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className={`block max-w-56 truncate text-sm font-medium ${!p.active ? 'text-muted-foreground' : ''}`}>
+                              {p.name}
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="max-w-xs">
+                            {p.name}
+                          </TooltipContent>
+                        </Tooltip>
+                        {!isDeleted && (
+                          <button
+                            onClick={() => onToggleActive(p)}
+                            disabled={toggleActivePending}
+                            className="shrink-0"
+                            aria-label={p.active ? 'Ẩn sản phẩm' : 'Hiển thị sản phẩm'}
+                          >
+                            <Badge
+                              variant={p.active ? 'default' : 'secondary'}
+                              className={`cursor-pointer text-[11px] transition-opacity hover:opacity-80 ${toggleActivePending ? 'pointer-events-none opacity-50' : ''}`}
+                            >
+                              {p.active ? 'Hiển thị' : 'Ẩn'}
+                            </Badge>
+                          </button>
+                        )}
+                      </div>
                       {(p.categoryName || p.brandName) && (
                         <span className="text-xs text-muted-foreground">
                           {[p.categoryName, p.brandName].filter(Boolean).join(' · ')}
@@ -200,8 +242,6 @@ export const ProductTable = memo(function ProductTable({
                     </div>
                   </div>
                 </TableCell>
-
-                {/* Category / Brand — removed, now inline above */}
 
                 {/* Price */}
                 <TableCell className="text-right text-sm text-muted-foreground">
@@ -215,21 +255,9 @@ export const ProductTable = memo(function ProductTable({
                   </Badge>
                 </TableCell>
 
-                {/* Status toggle */}
-                {!isDeleted && (
-                  <TableCell className="text-center">
-                    <Switch
-                      checked={p.active}
-                      onCheckedChange={() => onToggleActive(p)}
-                      disabled={toggleActivePending}
-                      aria-label={p.active ? 'Đang hiển thị' : 'Đang ẩn'}
-                    />
-                  </TableCell>
-                )}
-
                 {/* Created at */}
                 <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                  {new Date(p.createdAt).toLocaleDateString('vi-VN')}
+                  {formatRelativeDate(p.createdAt)}
                 </TableCell>
 
                 {/* Actions */}
@@ -293,12 +321,12 @@ export const ProductTable = memo(function ProductTable({
             <span>{from}–{to} / {totalElements} sản phẩm</span>
             <span className="text-border">|</span>
             <div className="flex items-center gap-1.5">
-              <span>Hiển thị</span>
+              <span>Mỗi trang</span>
               <Select
                 value={String(pageSize)}
                 onValueChange={(v) => onPageSizeChange(Number(v) as PageSizeOption)}
               >
-                <SelectTrigger className="h-8 w-16">
+                <SelectTrigger className="h-9 w-16">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -317,7 +345,7 @@ export const ProductTable = memo(function ProductTable({
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8"
+              className="h-9 w-9"
               onClick={() => onPageChange(0)}
               disabled={currentPage === 0}
               aria-label="Trang đầu"
@@ -327,9 +355,10 @@ export const ProductTable = memo(function ProductTable({
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8"
+              className="h-9 w-9"
               onClick={() => onPageChange(currentPage - 1)}
               disabled={currentPage === 0}
+              aria-label="Trang trước"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
@@ -347,8 +376,10 @@ export const ProductTable = memo(function ProductTable({
                   key={page}
                   variant={currentPage === page ? 'outline' : 'ghost'}
                   size="icon"
-                  className={`h-8 w-8 text-sm ${currentPage === page ? 'font-medium text-foreground' : ''}`}
+                  className={`h-9 w-9 text-sm ${currentPage === page ? 'font-medium text-foreground' : ''}`}
                   onClick={() => onPageChange(page)}
+                  aria-label={`Trang ${page + 1}`}
+                  aria-current={currentPage === page ? 'page' : undefined}
                 >
                   {page + 1}
                 </Button>
@@ -357,16 +388,17 @@ export const ProductTable = memo(function ProductTable({
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8"
+              className="h-9 w-9"
               onClick={() => onPageChange(currentPage + 1)}
               disabled={currentPage >= totalPages - 1}
+              aria-label="Trang sau"
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8"
+              className="h-9 w-9"
               onClick={() => onPageChange(totalPages - 1)}
               disabled={currentPage >= totalPages - 1}
               aria-label="Trang cuối"
