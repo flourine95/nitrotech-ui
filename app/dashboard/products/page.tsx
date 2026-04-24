@@ -34,9 +34,11 @@ import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import {
   downloadCSV,
   PAGE_SIZE,
+  PAGE_SIZE_OPTIONS,
   productsToCSV,
   SORT_OPTIONS,
   SORT_VALUES,
+  type PageSizeOption,
   type SortValue,
 } from './utils';
 import { ProductFilterChips } from './product-filter-chips';
@@ -56,6 +58,7 @@ const filterParsers = {
   cat: parseAsInteger,
   brand: parseAsInteger,
   page: parseAsInteger.withDefault(0),
+  size: parseAsInteger.withDefault(PAGE_SIZE),
   sort: parseAsStringEnum<SortValue>(SORT_VALUES).withDefault('createdAt,desc'),
 };
 
@@ -213,6 +216,7 @@ export default function DashboardProductsPage() {
     cat: filterCategoryId,
     brand: filterBrandId,
     page: currentPage,
+    size: pageSize,
     sort: sortBy,
   } = filters;
 
@@ -246,6 +250,12 @@ export default function DashboardProductsPage() {
     },
     [setFilters],
   );
+  const setPageSize = useCallback(
+    (val: PageSizeOption) => {
+      void setFilters({ size: val, page: 0 });
+    },
+    [setFilters],
+  );
   const setSortBy = useCallback(
     (val: SortValue | null) => {
       void setFilters({ sort: val, page: 0 });
@@ -272,6 +282,7 @@ export default function DashboardProductsPage() {
     filterCategoryId,
     filterBrandId,
     currentPage,
+    pageSize,
     sortBy,
   ] as const;
 
@@ -285,9 +296,10 @@ export default function DashboardProductsPage() {
         categoryId: filterCategoryId ?? undefined,
         brandId: filterBrandId ?? undefined,
         page: currentPage,
-        size: PAGE_SIZE,
+        size: pageSize,
         sort: sortBy,
       }),
+    placeholderData: (prev) => prev,
   });
 
   const categoriesQuery = useQuery({
@@ -488,7 +500,7 @@ export default function DashboardProductsPage() {
   // ── Filter clear helpers ───────────────────────────────────────────────────
 
   function clearAllFilters() {
-    void setFilters({ q: null, cat: null, brand: null, sort: null, page: 0 });
+    void setFilters({ q: null, cat: null, brand: null, sort: null, page: 0, size: PAGE_SIZE });
     clearSelection();
   }
 
@@ -496,6 +508,7 @@ export default function DashboardProductsPage() {
   const totalPages = productsQuery.data?.totalPages ?? 0;
   const totalElements = productsQuery.data?.totalElements ?? 0;
   const loading = productsQuery.isLoading;
+  const isFetching = productsQuery.isFetching;
   const categories = categoriesQuery.data ?? EMPTY_CATEGORIES;
   const brands = brandsQuery.data ?? EMPTY_BRANDS;
 
@@ -595,6 +608,7 @@ export default function DashboardProductsPage() {
       <ProductTable
         products={products}
         loading={loading}
+        isFetching={isFetching}
         isDeleted={isDeleted}
         selectedIds={selectedIds}
         allSelected={allSelected}
@@ -602,6 +616,7 @@ export default function DashboardProductsPage() {
         currentPage={currentPage}
         totalPages={totalPages}
         totalElements={totalElements}
+        pageSize={pageSize}
         toggleActivePending={toggleActiveMutation.isPending}
         onToggleSelect={toggleSelect}
         onToggleSelectAll={toggleSelectAll}
@@ -610,6 +625,7 @@ export default function DashboardProductsPage() {
         onRestore={setRestoreTarget}
         onHardDelete={setHardDeleteTarget}
         onPageChange={setCurrentPage}
+        onPageSizeChange={setPageSize}
         onClearFilters={clearAllFilters}
         hasActiveFilters={!!(search || filterCategoryId || filterBrandId)}
       />

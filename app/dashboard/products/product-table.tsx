@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ChevronLeft, ChevronRight, Ellipsis, Package } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Ellipsis, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -14,6 +14,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Table,
   TableBody,
   TableCell,
@@ -23,11 +30,12 @@ import {
 } from '@/components/ui/table';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { Product } from '@/lib/api/products';
-import { formatPrice } from './utils';
+import { formatPrice, PAGE_SIZE_OPTIONS, type PageSizeOption } from './utils';
 
 interface ProductTableProps {
   products: Product[];
   loading: boolean;
+  isFetching: boolean;
   isDeleted: boolean;
   selectedIds: Set<number>;
   allSelected: boolean;
@@ -35,6 +43,7 @@ interface ProductTableProps {
   currentPage: number;
   totalPages: number;
   totalElements: number;
+  pageSize: number;
   toggleActivePending: boolean;
   onToggleSelect: (id: number) => void;
   onToggleSelectAll: () => void;
@@ -43,6 +52,7 @@ interface ProductTableProps {
   onRestore: (product: Product) => void;
   onHardDelete: (product: Product) => void;
   onPageChange: (page: number) => void;
+  onPageSizeChange: (size: PageSizeOption) => void;
   onClearFilters: () => void;
   hasActiveFilters: boolean;
 }
@@ -50,6 +60,7 @@ interface ProductTableProps {
 export function ProductTable({
   products,
   loading,
+  isFetching,
   isDeleted,
   selectedIds,
   allSelected,
@@ -57,6 +68,7 @@ export function ProductTable({
   currentPage,
   totalPages,
   totalElements,
+  pageSize,
   toggleActivePending,
   onToggleSelect,
   onToggleSelectAll,
@@ -65,15 +77,29 @@ export function ProductTable({
   onRestore,
   onHardDelete,
   onPageChange,
+  onPageSizeChange,
   onClearFilters,
   hasActiveFilters,
 }: ProductTableProps) {
+  const from = totalElements === 0 ? 0 : currentPage * pageSize + 1;
+  const to = Math.min((currentPage + 1) * pageSize, totalElements);
   return (
     <div className="rounded-md border">
       {loading ? (
-        <div className="space-y-2 p-4">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="h-14 animate-pulse rounded-lg bg-muted" />
+        <div className="divide-y">
+          {Array.from({ length: pageSize }).map((_, i) => (
+            <div key={i} className="flex items-center gap-3 px-4 py-3">
+              <div className="h-4 w-4 animate-pulse rounded bg-muted" />
+              <div className="h-10 w-10 animate-pulse rounded-md bg-muted" />
+              <div className="flex-1 space-y-1.5">
+                <div className="h-3.5 w-48 animate-pulse rounded bg-muted" />
+                <div className="h-3 w-32 animate-pulse rounded bg-muted" />
+              </div>
+              <div className="h-3.5 w-20 animate-pulse rounded bg-muted" />
+              <div className="h-5 w-8 animate-pulse rounded bg-muted" />
+              <div className="h-5 w-8 animate-pulse rounded bg-muted" />
+              <div className="h-3.5 w-16 animate-pulse rounded bg-muted" />
+            </div>
           ))}
         </div>
       ) : products.length === 0 ? (
@@ -98,7 +124,8 @@ export function ProductTable({
           )}
         </div>
       ) : (
-        <Table>
+        <div className={isFetching ? 'pointer-events-none opacity-50 transition-opacity duration-150' : 'transition-opacity duration-150'}>
+          <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
               <TableHead className="w-10 px-4">
@@ -109,10 +136,10 @@ export function ProductTable({
                 />
               </TableHead>
               <TableHead>Sản phẩm</TableHead>
-              <TableHead>Danh mục / Thương hiệu</TableHead>
               <TableHead className="text-right">Giá</TableHead>
               <TableHead className="text-center">Biến thể</TableHead>
               {!isDeleted && <TableHead className="text-center">Trạng thái</TableHead>}
+              <TableHead>Ngày tạo</TableHead>
               <TableHead />
             </TableRow>
           </TableHeader>
@@ -158,30 +185,22 @@ export function ProductTable({
                         </TooltipContent>
                       )}
                     </Tooltip>
-                    <span
-                      className={`max-w-65 truncate text-sm font-medium ${!p.active ? 'text-muted-foreground' : ''}`}
-                    >
-                      {p.name}
-                    </span>
+                    <div className="min-w-0">
+                      <span
+                        className={`block truncate text-sm font-medium ${!p.active ? 'text-muted-foreground' : ''}`}
+                      >
+                        {p.name}
+                      </span>
+                      {(p.categoryName || p.brandName) && (
+                        <span className="text-xs text-muted-foreground">
+                          {[p.categoryName, p.brandName].filter(Boolean).join(' · ')}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </TableCell>
 
-                {/* Category / Brand */}
-                <TableCell>
-                  <div className="flex flex-col gap-0.5">
-                    {p.categoryName && (
-                      <Badge variant="secondary" className="w-fit font-normal">
-                        {p.categoryName}
-                      </Badge>
-                    )}
-                    {p.brandName && (
-                      <span className="text-xs text-muted-foreground">{p.brandName}</span>
-                    )}
-                    {!p.categoryName && !p.brandName && (
-                      <span className="text-muted-foreground">—</span>
-                    )}
-                  </div>
-                </TableCell>
+                {/* Category / Brand — removed, now inline above */}
 
                 {/* Price */}
                 <TableCell className="text-right text-sm text-muted-foreground">
@@ -206,6 +225,11 @@ export function ProductTable({
                     />
                   </TableCell>
                 )}
+
+                {/* Created at */}
+                <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                  {new Date(p.createdAt).toLocaleDateString('vi-VN')}
+                </TableCell>
 
                 {/* Actions */}
                 <TableCell>
@@ -256,40 +280,73 @@ export function ProductTable({
               </TableRow>
             ))}
           </TableBody>
-        </Table>
+          </Table>
+        </div>
       )}
 
-      {/* Footer: count + pagination */}
+      {/* Footer */}
       {!loading && totalElements > 0 && (
-        <div className="flex items-center justify-between border-t px-4 py-3">
-          <p className="text-sm text-muted-foreground">
-            {totalElements} sản phẩm · trang {currentPage + 1}/{totalPages}
-          </p>
+        <div className="flex items-center justify-between gap-4 border-t px-4 py-3 text-sm text-muted-foreground">
+          {/* Left: range + page size */}
+          <div className="flex items-center gap-2">
+            <span>{from}–{to} / {totalElements} sản phẩm</span>
+            <span className="text-border">|</span>
+            <div className="flex items-center gap-1.5">
+              <span>Hiển thị</span>
+              <Select
+                value={String(pageSize)}
+                onValueChange={(v) => onPageSizeChange(Number(v) as PageSizeOption)}
+              >
+                <SelectTrigger className="h-8 w-16">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PAGE_SIZE_OPTIONS.map((s) => (
+                    <SelectItem key={s} value={String(s)}>
+                      {s}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Right: pagination */}
           <div className="flex items-center gap-1">
             <Button
-              variant="outline"
+              variant="ghost"
               size="icon"
               className="h-8 w-8"
-              onClick={() => onPageChange(Math.max(0, currentPage - 1))}
+              onClick={() => onPageChange(0)}
+              disabled={currentPage === 0}
+              aria-label="Trang đầu"
+            >
+              <ChevronsLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => onPageChange(currentPage - 1)}
               disabled={currentPage === 0}
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+            {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
               const page =
-                totalPages <= 7
+                totalPages <= 5
                   ? i
-                  : currentPage < 4
+                  : currentPage < 3
                     ? i
-                    : currentPage > totalPages - 4
-                      ? totalPages - 7 + i
-                      : currentPage - 3 + i;
+                    : currentPage > totalPages - 3
+                      ? totalPages - 5 + i
+                      : currentPage - 2 + i;
               return (
                 <Button
                   key={page}
-                  variant={currentPage === page ? 'default' : 'outline'}
+                  variant={currentPage === page ? 'outline' : 'ghost'}
                   size="icon"
-                  className="h-8 w-8 text-xs"
+                  className={`h-8 w-8 text-sm ${currentPage === page ? 'font-medium text-foreground' : ''}`}
                   onClick={() => onPageChange(page)}
                 >
                   {page + 1}
@@ -297,13 +354,23 @@ export function ProductTable({
               );
             })}
             <Button
-              variant="outline"
+              variant="ghost"
               size="icon"
               className="h-8 w-8"
-              onClick={() => onPageChange(Math.min(totalPages - 1, currentPage + 1))}
+              onClick={() => onPageChange(currentPage + 1)}
               disabled={currentPage >= totalPages - 1}
             >
               <ChevronRight className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => onPageChange(totalPages - 1)}
+              disabled={currentPage >= totalPages - 1}
+              aria-label="Trang cuối"
+            >
+              <ChevronsRight className="h-4 w-4" />
             </Button>
           </div>
         </div>
