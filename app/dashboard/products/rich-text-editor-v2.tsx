@@ -1,5 +1,13 @@
 'use client';
-import { type ComponentType, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  type ComponentType,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { EditorContent, useEditor, useEditorState } from '@tiptap/react';
 import { StarterKit } from '@tiptap/starter-kit';
 import { Placeholder } from '@tiptap/extension-placeholder';
@@ -19,12 +27,29 @@ import { TableCell } from '@tiptap/extension-table-cell';
 import { TableHeader } from '@tiptap/extension-table-header';
 import { useDebouncedCallback } from 'use-debounce';
 import {
-  Bold, Italic, Underline as UnderlineIcon, Strikethrough,
-  List, ListOrdered, Quote, Minus, Undo, Redo,
-  AlignLeft, AlignCenter, AlignRight, Link as LinkIcon,
-  Heading1, Heading2, Heading3, Highlighter,
-  Code, Table as TableIcon, ImageIcon,
-  Subscript as SubscriptIcon, Superscript as SuperscriptIcon,
+  Bold,
+  Italic,
+  Underline as UnderlineIcon,
+  Strikethrough,
+  List,
+  ListOrdered,
+  Quote,
+  Minus,
+  Undo,
+  Redo,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  Link as LinkIcon,
+  Heading1,
+  Heading2,
+  Heading3,
+  Highlighter,
+  Code,
+  Table as TableIcon,
+  ImageIcon,
+  Subscript as SubscriptIcon,
+  Superscript as SuperscriptIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -45,27 +70,55 @@ interface RichTextEditorProps {
   disabled?: boolean;
 }
 
-
-function ToolbarButton({ onClick, disabled, title, children }: {
-  onClick: () => void; disabled?: boolean; title?: string; children: ReactNode;
+function ToolbarButton({
+  onClick,
+  disabled,
+  title,
+  children,
+}: {
+  onClick: () => void;
+  disabled?: boolean;
+  title?: string;
+  children: ReactNode;
 }) {
   return (
-    <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={onClick} disabled={disabled} title={title}>
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      className="h-7 w-7"
+      onClick={onClick}
+      disabled={disabled}
+      title={title}
+    >
       {children}
     </Button>
   );
 }
 
-function ToolbarToggle({ pressed, onPressedChange, title, children }: {
-  pressed: boolean; onPressedChange: () => void; title?: string; children: ReactNode;
+function ToolbarToggle({
+  pressed,
+  onPressedChange,
+  title,
+  children,
+}: {
+  pressed: boolean;
+  onPressedChange: () => void;
+  title?: string;
+  children: ReactNode;
 }) {
   return (
-    <Toggle size="sm" pressed={pressed} onPressedChange={onPressedChange} title={title} className="h-7 w-7 p-0">
+    <Toggle
+      size="sm"
+      pressed={pressed}
+      onPressedChange={onPressedChange}
+      title={title}
+      className="h-7 w-7 p-0"
+    >
       {children}
     </Toggle>
   );
 }
-
 
 function Toolbar({ editor, onInsertImage }: { editor: Editor; onInsertImage: () => void }) {
   const s = useEditorState({
@@ -97,7 +150,10 @@ function Toolbar({ editor, onInsertImage }: { editor: Editor; onInsertImage: () 
   const setLink = useCallback(() => {
     const url = window.prompt('URL:', editor.getAttributes('link').href);
     if (url === null) return;
-    if (url === '') { editor.chain().focus().unsetLink().run(); return; }
+    if (url === '') {
+      editor.chain().focus().unsetLink().run();
+      return;
+    }
     editor.chain().focus().setLink({ href: url }).run();
   }, [editor]);
 
@@ -108,80 +164,159 @@ function Toolbar({ editor, onInsertImage }: { editor: Editor; onInsertImage: () 
   return (
     <div className="flex flex-wrap items-center gap-0.5 border-b bg-muted/40 px-2 py-1">
       {/* History */}
-      <ToolbarButton onClick={() => editor.chain().focus().undo().run()} disabled={!s.canUndo} title="Undo">
+      <ToolbarButton
+        onClick={() => editor.chain().focus().undo().run()}
+        disabled={!s.canUndo}
+        title="Undo"
+      >
         <Undo className="h-3.5 w-3.5" />
       </ToolbarButton>
-      <ToolbarButton onClick={() => editor.chain().focus().redo().run()} disabled={!s.canRedo} title="Redo">
+      <ToolbarButton
+        onClick={() => editor.chain().focus().redo().run()}
+        disabled={!s.canRedo}
+        title="Redo"
+      >
         <Redo className="h-3.5 w-3.5" />
       </ToolbarButton>
 
       <Separator orientation="vertical" className="mx-0.5 h-5" />
 
       {/* Headings */}
-      <ToolbarToggle pressed={s.isH1} onPressedChange={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} title="Heading 1">
+      <ToolbarToggle
+        pressed={s.isH1}
+        onPressedChange={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+        title="Heading 1"
+      >
         <Heading1 className="h-3.5 w-3.5" />
       </ToolbarToggle>
-      <ToolbarToggle pressed={s.isH2} onPressedChange={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} title="Heading 2">
+      <ToolbarToggle
+        pressed={s.isH2}
+        onPressedChange={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+        title="Heading 2"
+      >
         <Heading2 className="h-3.5 w-3.5" />
       </ToolbarToggle>
-      <ToolbarToggle pressed={s.isH3} onPressedChange={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} title="Heading 3">
+      <ToolbarToggle
+        pressed={s.isH3}
+        onPressedChange={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+        title="Heading 3"
+      >
         <Heading3 className="h-3.5 w-3.5" />
       </ToolbarToggle>
 
       <Separator orientation="vertical" className="mx-0.5 h-5" />
 
       {/* Inline marks */}
-      <ToolbarToggle pressed={s.isBold} onPressedChange={() => editor.chain().focus().toggleBold().run()} title="Bold (Ctrl+B)">
+      <ToolbarToggle
+        pressed={s.isBold}
+        onPressedChange={() => editor.chain().focus().toggleBold().run()}
+        title="Bold (Ctrl+B)"
+      >
         <Bold className="h-3.5 w-3.5" />
       </ToolbarToggle>
-      <ToolbarToggle pressed={s.isItalic} onPressedChange={() => editor.chain().focus().toggleItalic().run()} title="Italic (Ctrl+I)">
+      <ToolbarToggle
+        pressed={s.isItalic}
+        onPressedChange={() => editor.chain().focus().toggleItalic().run()}
+        title="Italic (Ctrl+I)"
+      >
         <Italic className="h-3.5 w-3.5" />
       </ToolbarToggle>
-      <ToolbarToggle pressed={s.isUnderline} onPressedChange={() => editor.chain().focus().toggleUnderline().run()} title="Underline (Ctrl+U)">
+      <ToolbarToggle
+        pressed={s.isUnderline}
+        onPressedChange={() => editor.chain().focus().toggleUnderline().run()}
+        title="Underline (Ctrl+U)"
+      >
         <UnderlineIcon className="h-3.5 w-3.5" />
       </ToolbarToggle>
-      <ToolbarToggle pressed={s.isStrike} onPressedChange={() => editor.chain().focus().toggleStrike().run()} title="Strikethrough">
+      <ToolbarToggle
+        pressed={s.isStrike}
+        onPressedChange={() => editor.chain().focus().toggleStrike().run()}
+        title="Strikethrough"
+      >
         <Strikethrough className="h-3.5 w-3.5" />
       </ToolbarToggle>
-      <ToolbarToggle pressed={s.isHighlight} onPressedChange={() => editor.chain().focus().toggleHighlight().run()} title="Highlight">
+      <ToolbarToggle
+        pressed={s.isHighlight}
+        onPressedChange={() => editor.chain().focus().toggleHighlight().run()}
+        title="Highlight"
+      >
         <Highlighter className="h-3.5 w-3.5" />
       </ToolbarToggle>
-      <ToolbarToggle pressed={s.isSubscript} onPressedChange={() => editor.chain().focus().toggleSubscript().run()} title="Subscript (H₂O)">
+      <ToolbarToggle
+        pressed={s.isSubscript}
+        onPressedChange={() => editor.chain().focus().toggleSubscript().run()}
+        title="Subscript (H₂O)"
+      >
         <SubscriptIcon className="h-3.5 w-3.5" />
       </ToolbarToggle>
-      <ToolbarToggle pressed={s.isSuperscript} onPressedChange={() => editor.chain().focus().toggleSuperscript().run()} title="Superscript (m²)">
+      <ToolbarToggle
+        pressed={s.isSuperscript}
+        onPressedChange={() => editor.chain().focus().toggleSuperscript().run()}
+        title="Superscript (m²)"
+      >
         <SuperscriptIcon className="h-3.5 w-3.5" />
       </ToolbarToggle>
 
       <Separator orientation="vertical" className="mx-0.5 h-5" />
 
       {/* Alignment */}
-      <ToolbarToggle pressed={s.alignLeft} onPressedChange={() => editor.chain().focus().setTextAlign('left').run()} title="Align left">
+      <ToolbarToggle
+        pressed={s.alignLeft}
+        onPressedChange={() => editor.chain().focus().setTextAlign('left').run()}
+        title="Align left"
+      >
         <AlignLeft className="h-3.5 w-3.5" />
       </ToolbarToggle>
-      <ToolbarToggle pressed={s.alignCenter} onPressedChange={() => editor.chain().focus().setTextAlign('center').run()} title="Align center">
+      <ToolbarToggle
+        pressed={s.alignCenter}
+        onPressedChange={() => editor.chain().focus().setTextAlign('center').run()}
+        title="Align center"
+      >
         <AlignCenter className="h-3.5 w-3.5" />
       </ToolbarToggle>
-      <ToolbarToggle pressed={s.alignRight} onPressedChange={() => editor.chain().focus().setTextAlign('right').run()} title="Align right">
+      <ToolbarToggle
+        pressed={s.alignRight}
+        onPressedChange={() => editor.chain().focus().setTextAlign('right').run()}
+        title="Align right"
+      >
         <AlignRight className="h-3.5 w-3.5" />
       </ToolbarToggle>
 
       <Separator orientation="vertical" className="mx-0.5 h-5" />
 
       {/* Lists & blocks */}
-      <ToolbarToggle pressed={s.isBullet} onPressedChange={() => editor.chain().focus().toggleBulletList().run()} title="Bullet list">
+      <ToolbarToggle
+        pressed={s.isBullet}
+        onPressedChange={() => editor.chain().focus().toggleBulletList().run()}
+        title="Bullet list"
+      >
         <List className="h-3.5 w-3.5" />
       </ToolbarToggle>
-      <ToolbarToggle pressed={s.isOrdered} onPressedChange={() => editor.chain().focus().toggleOrderedList().run()} title="Ordered list">
+      <ToolbarToggle
+        pressed={s.isOrdered}
+        onPressedChange={() => editor.chain().focus().toggleOrderedList().run()}
+        title="Ordered list"
+      >
         <ListOrdered className="h-3.5 w-3.5" />
       </ToolbarToggle>
-      <ToolbarToggle pressed={s.isBlockquote} onPressedChange={() => editor.chain().focus().toggleBlockquote().run()} title="Blockquote">
+      <ToolbarToggle
+        pressed={s.isBlockquote}
+        onPressedChange={() => editor.chain().focus().toggleBlockquote().run()}
+        title="Blockquote"
+      >
         <Quote className="h-3.5 w-3.5" />
       </ToolbarToggle>
-      <ToolbarToggle pressed={s.isCode} onPressedChange={() => editor.chain().focus().toggleCodeBlock().run()} title="Code block">
+      <ToolbarToggle
+        pressed={s.isCode}
+        onPressedChange={() => editor.chain().focus().toggleCodeBlock().run()}
+        title="Code block"
+      >
         <Code className="h-3.5 w-3.5" />
       </ToolbarToggle>
-      <ToolbarButton onClick={() => editor.chain().focus().setHorizontalRule().run()} title="Horizontal rule">
+      <ToolbarButton
+        onClick={() => editor.chain().focus().setHorizontalRule().run()}
+        title="Horizontal rule"
+      >
         <Minus className="h-3.5 w-3.5" />
       </ToolbarButton>
 
@@ -201,36 +336,44 @@ function Toolbar({ editor, onInsertImage }: { editor: Editor; onInsertImage: () 
   );
 }
 
-export function RichTextEditorV2({ content, onChange, onBlur, disabled = false }: RichTextEditorProps) {
+export function RichTextEditorV2({
+  content,
+  onChange,
+  onBlur,
+  disabled = false,
+}: RichTextEditorProps) {
   const onChangeRef = useRef(onChange);
   useEffect(() => {
     onChangeRef.current = onChange;
   });
   const [showImagePicker, setShowImagePicker] = useState(false);
 
-  const extensions = useMemo(() => [
-    StarterKit.configure({
-      heading: { levels: [1, 2, 3] },
-      codeBlock: false,
-      link: false,
-      underline: false,
-    }),
-    Placeholder.configure({ placeholder: 'Nhập mô tả sản phẩm...' }),
-    Underline,
-    Link.configure({ openOnClick: false }),
-    TextAlign.configure({ types: ['heading', 'paragraph'] }),
-    TextStyle,
-    Color,
-    Highlight,
-    Image.configure({ inline: false, allowBase64: false }),
-    Subscript,
-    Superscript,
-    CodeBlock,
-    Table.configure({ resizable: false }),
-    TableRow,
-    TableCell,
-    TableHeader,
-  ], []);
+  const extensions = useMemo(
+    () => [
+      StarterKit.configure({
+        heading: { levels: [1, 2, 3] },
+        codeBlock: false,
+        link: false,
+        underline: false,
+      }),
+      Placeholder.configure({ placeholder: 'Nhập mô tả sản phẩm...' }),
+      Underline,
+      Link.configure({ openOnClick: false }),
+      TextAlign.configure({ types: ['heading', 'paragraph'] }),
+      TextStyle,
+      Color,
+      Highlight,
+      Image.configure({ inline: false, allowBase64: false }),
+      Subscript,
+      Superscript,
+      CodeBlock,
+      Table.configure({ resizable: false }),
+      TableRow,
+      TableCell,
+      TableHeader,
+    ],
+    [],
+  );
 
   const debouncedOnChange = useDebouncedCallback((html: string) => {
     onChangeRef.current(html);
@@ -279,10 +422,12 @@ export function RichTextEditorV2({ content, onChange, onBlur, disabled = false }
 
   return (
     <>
-      <div className={cn(
-        'overflow-hidden rounded-md border bg-background text-sm transition-colors focus-within:ring-1 focus-within:ring-ring',
-        disabled && 'pointer-events-none opacity-60',
-      )}>
+      <div
+        className={cn(
+          'overflow-hidden rounded-md border bg-background text-sm transition-colors focus-within:ring-1 focus-within:ring-ring',
+          disabled && 'pointer-events-none opacity-60',
+        )}
+      >
         <Toolbar editor={editor} onInsertImage={() => setShowImagePicker(true)} />
         <EditorContent editor={editor} />
       </div>

@@ -52,8 +52,8 @@ export function ProductDialogs({
             </AlertDialogMedia>
             <AlertDialogTitle>Xóa sản phẩm?</AlertDialogTitle>
             <AlertDialogDescription>
-              Bạn sắp xóa <strong className="text-foreground">{deleteTarget?.name}</strong>. Sản phẩm
-              sẽ bị ẩn và có thể khôi phục lại sau.
+              Bạn sắp xóa <strong className="text-foreground">{deleteTarget?.name}</strong>. Sản
+              phẩm sẽ bị ẩn và có thể khôi phục lại sau.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

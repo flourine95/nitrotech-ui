@@ -5,7 +5,16 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Ellipsis, Package, Pencil, Plus, Trash2, AlertTriangle, TrendingDown } from 'lucide-react';
+import {
+  ArrowLeft,
+  Ellipsis,
+  Package,
+  Pencil,
+  Plus,
+  Trash2,
+  AlertTriangle,
+  TrendingDown,
+} from 'lucide-react';
 import type { Product, ProductVariant } from '@/lib/api/products';
 import { deleteProduct, updateProduct } from '@/lib/api/products';
 import { Button } from '@/components/ui/button';
@@ -111,7 +120,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
             Sản phẩm
           </Link>
           <span>/</span>
-          <span className="font-medium text-foreground truncate max-w-[200px]">{product.name}</span>
+          <span className="max-w-[200px] truncate font-medium text-foreground">{product.name}</span>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" className="h-9" onClick={handleAddVariant}>
@@ -369,12 +378,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                 <div className="flex flex-col items-center justify-center rounded-2xl border bg-card py-12">
                   <Package className="mb-3 h-10 w-10 text-muted-foreground/30" />
                   <p className="text-sm text-muted-foreground">Chưa có biến thể nào</p>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleAddVariant}
-                    className="mt-3"
-                  >
+                  <Button variant="ghost" size="sm" onClick={handleAddVariant} className="mt-3">
                     <Plus className="h-4 w-4" />
                     Thêm biến thể đầu tiên
                   </Button>
@@ -406,8 +410,8 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
             </AlertDialogMedia>
             <AlertDialogTitle>Xóa sản phẩm?</AlertDialogTitle>
             <AlertDialogDescription>
-              Bạn sắp xóa <strong className="text-foreground">{product.name}</strong>. Sản phẩm sẽ bị
-              ẩn và có thể khôi phục lại sau.
+              Bạn sắp xóa <strong className="text-foreground">{product.name}</strong>. Sản phẩm sẽ
+              bị ẩn và có thể khôi phục lại sau.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -441,10 +445,10 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
 const MOCK_WAREHOUSES = ['Kho Hà Nội', 'Kho TP.HCM', 'Kho Đà Nẵng'];
 
 const MOCK_INVENTORY: Record<string, Record<string, number>> = {
-  'Đen - 128GB':  { 'Kho Hà Nội': 42, 'Kho TP.HCM': 28, 'Kho Đà Nẵng': 5 },
-  'Đen - 256GB':  { 'Kho Hà Nội': 18, 'Kho TP.HCM': 11, 'Kho Đà Nẵng': 2 },
-  'Trắng - 128GB':{ 'Kho Hà Nội': 35, 'Kho TP.HCM': 22, 'Kho Đà Nẵng': 8 },
-  'Trắng - 256GB':{ 'Kho Hà Nội': 9,  'Kho TP.HCM': 4,  'Kho Đà Nẵng': 0 },
+  'Đen - 128GB': { 'Kho Hà Nội': 42, 'Kho TP.HCM': 28, 'Kho Đà Nẵng': 5 },
+  'Đen - 256GB': { 'Kho Hà Nội': 18, 'Kho TP.HCM': 11, 'Kho Đà Nẵng': 2 },
+  'Trắng - 128GB': { 'Kho Hà Nội': 35, 'Kho TP.HCM': 22, 'Kho Đà Nẵng': 8 },
+  'Trắng - 256GB': { 'Kho Hà Nội': 9, 'Kho TP.HCM': 4, 'Kho Đà Nẵng': 0 },
 };
 
 const LOW_THRESHOLD = 10;
@@ -459,8 +463,7 @@ function StockBadge({ qty }: { qty: number }) {
   const level = stockLevel(qty);
   if (level === 'out')
     return <span className="text-xs font-medium text-destructive">Hết hàng</span>;
-  if (level === 'low')
-    return <span className="text-xs font-medium text-amber-600">{qty}</span>;
+  if (level === 'low') return <span className="text-xs font-medium text-amber-600">{qty}</span>;
   return <span className="text-sm tabular-nums">{qty}</span>;
 }
 
@@ -468,9 +471,13 @@ function InventoryTab({ product }: { product: Product }) {
   const variants = product.variants ?? [];
 
   // Use real variant names if available, else fall back to mock keys
-  const rows = variants.length > 0
-    ? variants.map((v) => ({ name: v.name, data: MOCK_INVENTORY[v.name] ?? { 'Kho Hà Nội': 0, 'Kho TP.HCM': 0, 'Kho Đà Nẵng': 0 } }))
-    : Object.entries(MOCK_INVENTORY).map(([name, data]) => ({ name, data }));
+  const rows =
+    variants.length > 0
+      ? variants.map((v) => ({
+          name: v.name,
+          data: MOCK_INVENTORY[v.name] ?? { 'Kho Hà Nội': 0, 'Kho TP.HCM': 0, 'Kho Đà Nẵng': 0 },
+        }))
+      : Object.entries(MOCK_INVENTORY).map(([name, data]) => ({ name, data }));
 
   const totals = MOCK_WAREHOUSES.reduce<Record<string, number>>((acc, wh) => {
     acc[wh] = rows.reduce((s, r) => s + (r.data[wh] ?? 0), 0);
@@ -525,7 +532,7 @@ function InventoryTab({ product }: { product: Product }) {
           </tbody>
           <tfoot>
             <tr className="border-t bg-muted/20">
-              <td className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <td className="px-4 py-3 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                 Tổng kho
               </td>
               {MOCK_WAREHOUSES.map((wh) => (
@@ -560,31 +567,76 @@ interface ActivityItem {
 }
 
 const MOCK_ACTIVITY: ActivityItem[] = [
-  { id: '1', type: 'create',  actor: 'Nguyễn Văn A', message: 'Tạo sản phẩm',           time: '2 giờ trước' },
-  { id: '2', type: 'update',  actor: 'Nguyễn Văn A', message: 'Cập nhật mô tả',          time: '2 giờ trước' },
-  { id: '3', type: 'price',   actor: 'Trần Thị B',   message: 'Thay đổi giá biến thể',   detail: 'Đen - 256GB: 28.990.000đ → 27.490.000đ', time: '5 giờ trước' },
-  { id: '4', type: 'status',  actor: 'Trần Thị B',   message: 'Hiển thị sản phẩm',       time: 'Hôm qua, 14:32' },
-  { id: '5', type: 'stock',   actor: 'Lê Văn C',     message: 'Nhập kho Hà Nội',         detail: '+50 Đen - 128GB', time: 'Hôm qua, 09:15' },
-  { id: '6', type: 'update',  actor: 'Nguyễn Văn A', message: 'Cập nhật ảnh sản phẩm',   time: '3 ngày trước' },
-  { id: '7', type: 'price',   actor: 'Trần Thị B',   message: 'Thay đổi giá biến thể',   detail: 'Trắng - 256GB: 29.990.000đ → 28.990.000đ', time: '5 ngày trước' },
-  { id: '8', type: 'create',  actor: 'Nguyễn Văn A', message: 'Thêm biến thể Trắng - 256GB', time: '1 tuần trước' },
+  { id: '1', type: 'create', actor: 'Nguyễn Văn A', message: 'Tạo sản phẩm', time: '2 giờ trước' },
+  {
+    id: '2',
+    type: 'update',
+    actor: 'Nguyễn Văn A',
+    message: 'Cập nhật mô tả',
+    time: '2 giờ trước',
+  },
+  {
+    id: '3',
+    type: 'price',
+    actor: 'Trần Thị B',
+    message: 'Thay đổi giá biến thể',
+    detail: 'Đen - 256GB: 28.990.000đ → 27.490.000đ',
+    time: '5 giờ trước',
+  },
+  {
+    id: '4',
+    type: 'status',
+    actor: 'Trần Thị B',
+    message: 'Hiển thị sản phẩm',
+    time: 'Hôm qua, 14:32',
+  },
+  {
+    id: '5',
+    type: 'stock',
+    actor: 'Lê Văn C',
+    message: 'Nhập kho Hà Nội',
+    detail: '+50 Đen - 128GB',
+    time: 'Hôm qua, 09:15',
+  },
+  {
+    id: '6',
+    type: 'update',
+    actor: 'Nguyễn Văn A',
+    message: 'Cập nhật ảnh sản phẩm',
+    time: '3 ngày trước',
+  },
+  {
+    id: '7',
+    type: 'price',
+    actor: 'Trần Thị B',
+    message: 'Thay đổi giá biến thể',
+    detail: 'Trắng - 256GB: 29.990.000đ → 28.990.000đ',
+    time: '5 ngày trước',
+  },
+  {
+    id: '8',
+    type: 'create',
+    actor: 'Nguyễn Văn A',
+    message: 'Thêm biến thể Trắng - 256GB',
+    time: '1 tuần trước',
+  },
 ];
 
 const ACTIVITY_ICON: Record<ActivityType, string> = {
   create: '✦',
   update: '✎',
-  price:  '₫',
+  price: '₫',
   status: '◉',
-  stock:  '⊕',
+  stock: '⊕',
   delete: '✕',
 };
 
 const ACTIVITY_COLOR: Record<ActivityType, string> = {
   create: 'bg-green-100 text-green-700',
   update: 'bg-blue-100 text-blue-700',
-  price:  'bg-amber-100 text-amber-700',
+  price: 'bg-amber-100 text-amber-700',
   status: 'bg-purple-100 text-purple-700',
-  stock:  'bg-cyan-100 text-cyan-700',
+  stock: 'bg-cyan-100 text-cyan-700',
   delete: 'bg-destructive/10 text-destructive',
 };
 
@@ -595,12 +647,12 @@ function ActivityTab({ product: _ }: { product: Product }) {
         <div key={item.id} className="flex gap-3">
           {/* Timeline line */}
           <div className="flex flex-col items-center">
-            <span className={`flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${ACTIVITY_COLOR[item.type]}`}>
+            <span
+              className={`flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${ACTIVITY_COLOR[item.type]}`}
+            >
               {ACTIVITY_ICON[item.type]}
             </span>
-            {idx < MOCK_ACTIVITY.length - 1 && (
-              <div className="mt-1 w-px flex-1 bg-border" />
-            )}
+            {idx < MOCK_ACTIVITY.length - 1 && <div className="mt-1 w-px flex-1 bg-border" />}
           </div>
 
           {/* Content */}
@@ -609,9 +661,7 @@ function ActivityTab({ product: _ }: { product: Product }) {
               <span className="text-sm font-medium">{item.actor}</span>
               <span className="text-sm text-muted-foreground">{item.message}</span>
             </div>
-            {item.detail && (
-              <p className="mt-0.5 text-xs text-muted-foreground">{item.detail}</p>
-            )}
+            {item.detail && <p className="mt-0.5 text-xs text-muted-foreground">{item.detail}</p>}
             <p className="mt-1 text-xs text-muted-foreground/60">{item.time}</p>
           </div>
         </div>

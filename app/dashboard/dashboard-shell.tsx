@@ -67,11 +67,7 @@ const NavGroup = memo(function NavGroup({
   );
 });
 
-const ProfileTrigger = memo(function ProfileTrigger({
-  displayName,
-}: {
-  displayName: string;
-}) {
+const ProfileTrigger = memo(function ProfileTrigger({ displayName }: { displayName: string }) {
   return (
     <Button variant="ghost" size="icon" className="size-8">
       <Avatar className="size-8 rounded-md">
@@ -102,10 +98,7 @@ export function DashboardShell({
   const displayName = user?.name ?? 'Admin';
   const displayEmail = user?.email ?? 'admin@nitrotech.vn';
 
-  const profileTrigger = useMemo(
-    () => <ProfileTrigger displayName={displayName} />,
-    [displayName],
-  );
+  const profileTrigger = useMemo(() => <ProfileTrigger displayName={displayName} />, [displayName]);
 
   async function handleLogout() {
     try {

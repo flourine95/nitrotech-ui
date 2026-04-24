@@ -24,7 +24,9 @@ export function KeyValueEditor({
   valuePlaceholder = 'Giá trị',
 }: KeyValueEditorProps) {
   const idRef = useRef(0);
-  function nextId() { return idRef.current++; }
+  function nextId() {
+    return idRef.current++;
+  }
 
   function makeRow(key = '', val = ''): Row {
     return { id: nextId(), key, value: val };

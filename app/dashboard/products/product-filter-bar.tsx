@@ -13,9 +13,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import type { Category } from '@/lib/api/categories';
+import type { Brand } from '@/lib/api/brands';
 import { SORT_OPTIONS, type SortValue } from './utils';
-
-export type FilterStatus = 'all' | 'active' | 'inactive' | 'deleted';
 
 export const STATUS_FILTERS: { value: FilterStatus; label: string }[] = [
   { value: 'all', label: 'Tất cả' },
@@ -24,7 +23,7 @@ export const STATUS_FILTERS: { value: FilterStatus; label: string }[] = [
   { value: 'deleted', label: 'Đã xóa' },
 ];
 
-type Brand = { id: number; name: string };
+export type FilterStatus = 'all' | 'active' | 'inactive' | 'deleted';
 
 interface ProductFilterBarProps {
   searchValue: string;
@@ -59,8 +58,12 @@ export const ProductFilterBar = memo(function ProductFilterBar({
   const [localStatus, setLocalStatus] = useState(filterStatus);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => { setInputVal(searchValue); }, [searchValue]);
-  useEffect(() => { setLocalStatus(filterStatus); }, [filterStatus]);
+  useEffect(() => {
+    setInputVal(searchValue);
+  }, [searchValue]);
+  useEffect(() => {
+    setLocalStatus(filterStatus);
+  }, [filterStatus]);
 
   function handleInputChange(val: string) {
     setInputVal(val);
@@ -155,7 +158,9 @@ export const ProductFilterBar = memo(function ProductFilterBar({
                 <SelectContent position="popper" sideOffset={4}>
                   <SelectItem value="all">Tất cả danh mục</SelectItem>
                   {categories.map((c) => (
-                    <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
+                    <SelectItem key={c.id} value={String(c.id)}>
+                      {c.name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -172,7 +177,9 @@ export const ProductFilterBar = memo(function ProductFilterBar({
                 <SelectContent position="popper" sideOffset={4}>
                   <SelectItem value="all">Tất cả thương hiệu</SelectItem>
                   {brands.map((b) => (
-                    <SelectItem key={b.id} value={String(b.id)}>{b.name}</SelectItem>
+                    <SelectItem key={b.id} value={String(b.id)}>
+                      {b.name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -185,7 +192,9 @@ export const ProductFilterBar = memo(function ProductFilterBar({
                 </SelectTrigger>
                 <SelectContent position="popper" sideOffset={4}>
                   {SORT_OPTIONS.map((o) => (
-                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                    <SelectItem key={o.value} value={o.value}>
+                      {o.label}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>

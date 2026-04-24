@@ -4,7 +4,14 @@ import { useIsFetching } from '@tanstack/react-query';
 import { AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Ellipsis, Package } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  Ellipsis,
+  Package,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
@@ -34,19 +41,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { Product } from '@/lib/api/products';
 import { formatPrice, PAGE_SIZE_OPTIONS, type PageSizeOption } from './utils';
-
-function formatRelativeDate(dateStr: string): string {
-  const date = new Date(dateStr);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-  if (diffDays === 0) return 'Hôm nay';
-  if (diffDays === 1) return 'Hôm qua';
-  if (diffDays < 7) return `${diffDays} ngày trước`;
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)} tuần trước`;
-  return date.toLocaleDateString('vi-VN');
-}
+import { formatRelativeDate } from '@/lib/utils/formatting';
 
 interface ProductTableProps {
   products: Product[];
@@ -146,169 +141,180 @@ export const ProductTable = memo(function ProductTable({
           )}
         </div>
       ) : (
-        <div className={isFetching ? 'pointer-events-none opacity-50 transition-opacity duration-150' : 'transition-opacity duration-150'}>
+        <div
+          className={
+            isFetching
+              ? 'pointer-events-none opacity-50 transition-opacity duration-150'
+              : 'transition-opacity duration-150'
+          }
+        >
           <Table>
-          <TableHeader>
-            <TableRow className="hover:bg-transparent">
-              <TableHead className="w-10 px-4">
-                <Checkbox
-                  checked={someSelected ? 'indeterminate' : allSelected}
-                  onCheckedChange={onToggleSelectAll}
-                  aria-label="Chọn tất cả"
-                />
-              </TableHead>
-              <TableHead>Sản phẩm</TableHead>
-              <TableHead className="text-right">Giá</TableHead>
-              <TableHead className="text-center">Biến thể</TableHead>
-              <TableHead>Ngày tạo</TableHead>
-              <TableHead />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {products.map((p) => (
-              <TableRow key={p.id} data-state={selectedIds.has(p.id) ? 'selected' : undefined}>
-                <TableCell className="px-4">
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="w-10 px-4">
                   <Checkbox
-                    checked={selectedIds.has(p.id)}
-                    onCheckedChange={() => onToggleSelect(p.id)}
-                    aria-label={`Chọn ${p.name}`}
+                    checked={someSelected ? 'indeterminate' : allSelected}
+                    onCheckedChange={onToggleSelectAll}
+                    aria-label="Chọn tất cả"
                   />
-                </TableCell>
+                </TableHead>
+                <TableHead>Sản phẩm</TableHead>
+                <TableHead className="text-right">Giá</TableHead>
+                <TableHead className="text-center">Biến thể</TableHead>
+                <TableHead>Ngày tạo</TableHead>
+                <TableHead />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {products.map((p) => (
+                <TableRow key={p.id} data-state={selectedIds.has(p.id) ? 'selected' : undefined}>
+                  <TableCell className="px-4">
+                    <Checkbox
+                      checked={selectedIds.has(p.id)}
+                      onCheckedChange={() => onToggleSelect(p.id)}
+                      aria-label={`Chọn ${p.name}`}
+                    />
+                  </TableCell>
 
-                {/* Product */}
-                <TableCell>
-                  <div className="flex items-center gap-3">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div className="relative size-10 shrink-0 overflow-hidden rounded-md bg-muted">
-                          {p.thumbnail?.startsWith('http') ? (
+                  {/* Product */}
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="relative size-10 shrink-0 overflow-hidden rounded-md bg-muted">
+                            {p.thumbnail?.startsWith('http') ? (
+                              <Image
+                                src={p.thumbnail}
+                                alt={p.name}
+                                fill
+                                className="object-cover"
+                                sizes="40px"
+                              />
+                            ) : (
+                              <Package className="absolute inset-0 m-auto h-5 w-5 text-muted-foreground" />
+                            )}
+                          </div>
+                        </TooltipTrigger>
+                        {p.thumbnail?.startsWith('http') && (
+                          <TooltipContent side="right" className="p-1.5">
                             <Image
                               src={p.thumbnail}
                               alt={p.name}
-                              fill
-                              className="object-cover"
-                              sizes="40px"
+                              width={160}
+                              height={160}
+                              className="rounded object-contain"
                             />
-                          ) : (
-                            <Package className="absolute inset-0 m-auto h-5 w-5 text-muted-foreground" />
+                          </TooltipContent>
+                        )}
+                      </Tooltip>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span
+                                className={`block max-w-56 truncate text-sm font-medium ${!p.active ? 'text-muted-foreground' : ''}`}
+                              >
+                                {p.name}
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="max-w-xs">
+                              {p.name}
+                            </TooltipContent>
+                          </Tooltip>
+                          {!isDeleted && (
+                            <button
+                              onClick={() => onToggleActive(p)}
+                              disabled={toggleActivePending}
+                              className="shrink-0"
+                              aria-label={p.active ? 'Ẩn sản phẩm' : 'Hiển thị sản phẩm'}
+                            >
+                              <Badge
+                                variant={p.active ? 'default' : 'secondary'}
+                                className={`cursor-pointer text-[11px] transition-opacity hover:opacity-80 ${toggleActivePending ? 'pointer-events-none opacity-50' : ''}`}
+                              >
+                                {p.active ? 'Hiển thị' : 'Ẩn'}
+                              </Badge>
+                            </button>
                           )}
                         </div>
-                      </TooltipTrigger>
-                      {p.thumbnail?.startsWith('http') && (
-                        <TooltipContent side="right" className="p-1.5">
-                          <Image
-                            src={p.thumbnail}
-                            alt={p.name}
-                            width={160}
-                            height={160}
-                            className="rounded object-contain"
-                          />
-                        </TooltipContent>
-                      )}
-                    </Tooltip>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span className={`block max-w-56 truncate text-sm font-medium ${!p.active ? 'text-muted-foreground' : ''}`}>
-                              {p.name}
-                            </span>
-                          </TooltipTrigger>
-                          <TooltipContent side="top" className="max-w-xs">
-                            {p.name}
-                          </TooltipContent>
-                        </Tooltip>
-                        {!isDeleted && (
-                          <button
-                            onClick={() => onToggleActive(p)}
-                            disabled={toggleActivePending}
-                            className="shrink-0"
-                            aria-label={p.active ? 'Ẩn sản phẩm' : 'Hiển thị sản phẩm'}
-                          >
-                            <Badge
-                              variant={p.active ? 'default' : 'secondary'}
-                              className={`cursor-pointer text-[11px] transition-opacity hover:opacity-80 ${toggleActivePending ? 'pointer-events-none opacity-50' : ''}`}
-                            >
-                              {p.active ? 'Hiển thị' : 'Ẩn'}
-                            </Badge>
-                          </button>
+                        {(p.categoryName || p.brandName) && (
+                          <span className="text-xs text-muted-foreground">
+                            {[p.categoryName, p.brandName].filter(Boolean).join(' · ')}
+                          </span>
                         )}
                       </div>
-                      {(p.categoryName || p.brandName) && (
-                        <span className="text-xs text-muted-foreground">
-                          {[p.categoryName, p.brandName].filter(Boolean).join(' · ')}
-                        </span>
-                      )}
                     </div>
-                  </div>
-                </TableCell>
+                  </TableCell>
 
-                {/* Price */}
-                <TableCell className="text-right text-sm text-muted-foreground">
-                  {formatPrice(p.priceMin, p.priceMax)}
-                </TableCell>
+                  {/* Price */}
+                  <TableCell className="text-right text-sm text-muted-foreground">
+                    {formatPrice(p.priceMin, p.priceMax)}
+                  </TableCell>
 
-                {/* Variants */}
-                <TableCell className="text-center">
-                  <Badge variant="secondary" className="font-normal">
-                    {p.variantCount}
-                  </Badge>
-                </TableCell>
+                  {/* Variants */}
+                  <TableCell className="text-center">
+                    <Badge variant="secondary" className="font-normal">
+                      {p.variantCount}
+                    </Badge>
+                  </TableCell>
 
-                {/* Created at */}
-                <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                  {formatRelativeDate(p.createdAt)}
-                </TableCell>
+                  {/* Created at */}
+                  <TableCell className="text-sm whitespace-nowrap text-muted-foreground">
+                    {formatRelativeDate(p.createdAt)}
+                  </TableCell>
 
-                {/* Actions */}
-                <TableCell>
-                  <div className="flex justify-end">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="size-8 rounded-full text-muted-foreground"
-                          aria-label={`Hành động cho ${p.name}`}
-                        >
-                          <Ellipsis className="size-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        {isDeleted ? (
-                          <>
-                            <DropdownMenuItem onClick={() => onRestore(p)}>
-                              Khôi phục
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem variant="destructive" onClick={() => onHardDelete(p)}>
-                              Xóa vĩnh viễn
-                            </DropdownMenuItem>
-                          </>
-                        ) : (
-                          <>
-                            <DropdownMenuItem asChild>
-                              <Link href={`/dashboard/products/${p.id}`}>Xem chi tiết</Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem asChild>
-                              <Link href={`/dashboard/products/${p.id}/edit`}>Chỉnh sửa</Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => onToggleActive(p)}>
-                              {p.active ? 'Ẩn' : 'Hiển thị'}
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem variant="destructive" onClick={() => onDelete(p)}>
-                              Xóa
-                            </DropdownMenuItem>
-                          </>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
+                  {/* Actions */}
+                  <TableCell>
+                    <div className="flex justify-end">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-8 rounded-full text-muted-foreground"
+                            aria-label={`Hành động cho ${p.name}`}
+                          >
+                            <Ellipsis className="size-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {isDeleted ? (
+                            <>
+                              <DropdownMenuItem onClick={() => onRestore(p)}>
+                                Khôi phục
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                variant="destructive"
+                                onClick={() => onHardDelete(p)}
+                              >
+                                Xóa vĩnh viễn
+                              </DropdownMenuItem>
+                            </>
+                          ) : (
+                            <>
+                              <DropdownMenuItem asChild>
+                                <Link href={`/dashboard/products/${p.id}`}>Xem chi tiết</Link>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem asChild>
+                                <Link href={`/dashboard/products/${p.id}/edit`}>Chỉnh sửa</Link>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => onToggleActive(p)}>
+                                {p.active ? 'Ẩn' : 'Hiển thị'}
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem variant="destructive" onClick={() => onDelete(p)}>
+                                Xóa
+                              </DropdownMenuItem>
+                            </>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
           </Table>
         </div>
       )}
@@ -318,7 +324,9 @@ export const ProductTable = memo(function ProductTable({
         <div className="flex items-center justify-between gap-4 border-t px-4 py-3 text-sm text-muted-foreground">
           {/* Left: range + page size */}
           <div className="flex items-center gap-2">
-            <span>{from}–{to} / {totalElements} sản phẩm</span>
+            <span>
+              {from}–{to} / {totalElements} sản phẩm
+            </span>
             <span className="text-border">|</span>
             <div className="flex items-center gap-1.5">
               <span>Mỗi trang</span>

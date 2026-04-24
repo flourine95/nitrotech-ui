@@ -35,8 +35,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { KeyValueEditor } from './key-value-editor';
-import { GalleryEditor } from './gallery-editor';
+import { KeyValueEditor } from '@/components/dashboard/key-value-editor';
+import { GalleryEditor } from '@/components/dashboard/gallery-editor';
 import { VariantsEditor } from './variants-editor';
 
 const RichTextEditor = dynamic(

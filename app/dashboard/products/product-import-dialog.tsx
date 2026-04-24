@@ -159,7 +159,9 @@ export function ProductImportDialog({ open, onClose, onSuccess }: ImportDialogPr
               onClick={() => fileRef.current?.click()}
               className={`flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed py-12 transition-colors ${dragOver ? 'border-primary bg-primary/5' : 'border-border hover:border-ring hover:bg-muted/50'}`}
             >
-              <FileUp className={`h-10 w-10 ${dragOver ? 'text-primary' : 'text-muted-foreground/40'}`} />
+              <FileUp
+                className={`h-10 w-10 ${dragOver ? 'text-primary' : 'text-muted-foreground/40'}`}
+              />
               <div className="text-center">
                 <p className="text-sm font-medium text-foreground">Kéo thả file CSV vào đây</p>
                 <p className="text-xs text-muted-foreground">hoặc nhấn để chọn file</p>
@@ -200,11 +202,19 @@ export function ProductImportDialog({ open, onClose, onSuccess }: ImportDialogPr
               <table className="w-full text-xs">
                 <thead className="sticky top-0 bg-muted/80 backdrop-blur-sm">
                   <tr className="border-b">
-                    <th className="px-3 py-2 text-left font-semibold text-muted-foreground">Dòng</th>
+                    <th className="px-3 py-2 text-left font-semibold text-muted-foreground">
+                      Dòng
+                    </th>
                     <th className="px-3 py-2 text-left font-semibold text-muted-foreground">Tên</th>
-                    <th className="px-3 py-2 text-left font-semibold text-muted-foreground">Slug</th>
-                    <th className="px-3 py-2 text-left font-semibold text-muted-foreground">Cat ID</th>
-                    <th className="px-3 py-2 text-left font-semibold text-muted-foreground">Trạng thái</th>
+                    <th className="px-3 py-2 text-left font-semibold text-muted-foreground">
+                      Slug
+                    </th>
+                    <th className="px-3 py-2 text-left font-semibold text-muted-foreground">
+                      Cat ID
+                    </th>
+                    <th className="px-3 py-2 text-left font-semibold text-muted-foreground">
+                      Trạng thái
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
@@ -247,11 +257,7 @@ export function ProductImportDialog({ open, onClose, onSuccess }: ImportDialogPr
               <Button variant="outline" size="sm" onClick={reset}>
                 <X className="h-3.5 w-3.5" /> Chọn lại
               </Button>
-              <Button
-                size="sm"
-                disabled={validCount === 0 || importing}
-                onClick={handleImport}
-              >
+              <Button size="sm" disabled={validCount === 0 || importing} onClick={handleImport}>
                 <Upload className="h-3.5 w-3.5" />
                 {importing ? `Đang import...` : `Import ${validCount} sản phẩm`}
               </Button>
@@ -264,7 +270,9 @@ export function ProductImportDialog({ open, onClose, onSuccess }: ImportDialogPr
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div className="rounded-lg border border-green-200 bg-green-50 p-4 text-center dark:border-green-900 dark:bg-green-950">
-                <p className="text-2xl font-bold text-green-700 dark:text-green-400">{result.success}</p>
+                <p className="text-2xl font-bold text-green-700 dark:text-green-400">
+                  {result.success}
+                </p>
                 <p className="text-xs text-green-600 dark:text-green-500">Thành công</p>
               </div>
               <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-center">

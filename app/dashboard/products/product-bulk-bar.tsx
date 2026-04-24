@@ -75,7 +75,7 @@ export function ProductBulkBar({
               size="sm"
               disabled={loading}
               onClick={() => setConfirmHardDelete(true)}
-              className="text-destructive hover:text-destructive border-destructive/30 hover:border-destructive/50 hover:bg-destructive/5"
+              className="border-destructive/30 text-destructive hover:border-destructive/50 hover:bg-destructive/5 hover:text-destructive"
             >
               <Trash2 className="h-3.5 w-3.5" />
               Xóa vĩnh viễn
@@ -100,7 +100,7 @@ export function ProductBulkBar({
               size="sm"
               disabled={loading}
               onClick={() => setConfirmDelete(true)}
-              className="text-destructive hover:text-destructive border-destructive/30 hover:border-destructive/50 hover:bg-destructive/5"
+              className="border-destructive/30 text-destructive hover:border-destructive/50 hover:bg-destructive/5 hover:text-destructive"
             >
               <Trash2 className="h-3.5 w-3.5" />
               Xóa

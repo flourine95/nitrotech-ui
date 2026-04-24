@@ -20,9 +20,12 @@ import {
 import type { Category } from '@/lib/api/categories';
 import { getCategories } from '@/lib/api/categories';
 import { getBrands } from '@/lib/api/brands';
+import type { Brand } from '@/lib/api/brands';
 import { ApiException } from '@/lib/client';
 import { Button } from '@/components/ui/button';
 import { useCallback, useMemo, useState, startTransition } from 'react';
+import { useTableSelection } from '@/hooks/use-table-selection';
+import { useDialogState } from '@/hooks/use-dialog-state';
 import {
   downloadCSV,
   PAGE_SIZE,
@@ -54,8 +57,6 @@ const filterParsers = {
 
 const EMPTY_CATEGORIES: Category[] = [];
 const EMPTY_BRANDS: Brand[] = [];
-
-type Brand = { id: number; name: string };
 
 export default function DashboardProductsPage() {
   const queryClient = useQueryClient();
@@ -101,30 +102,54 @@ export default function DashboardProductsPage() {
   );
   const setCurrentPage = useCallback(
     (val: number) => {
-      startTransition(() => { void setFilters({ page: val }); });
+      startTransition(() => {
+        void setFilters({ page: val });
+      });
     },
     [setFilters],
   );
   const setPageSize = useCallback(
     (val: PageSizeOption) => {
-      startTransition(() => { void setFilters({ size: val, page: 0 }); });
+      startTransition(() => {
+        void setFilters({ size: val, page: 0 });
+      });
     },
     [setFilters],
   );
   const setSortBy = useCallback(
     (val: SortValue | null) => {
-      startTransition(() => { void setFilters({ sort: val, page: 0 }); });
+      startTransition(() => {
+        void setFilters({ sort: val, page: 0 });
+      });
     },
     [setFilters],
   );
 
   // Multi-select state
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const products = productsQuery.data?.content ?? [];
+  const {
+    selectedIds,
+    allSelected,
+    someSelected,
+    toggleSelect,
+    toggleSelectAll: _toggleSelectAll,
+    clearSelection,
+    setSelectedIds,
+  } = useTableSelection(products.map((p) => p.id));
+  const toggleSelectAll = useCallback(
+    () => _toggleSelectAll(products.map((p) => p.id)),
+    [_toggleSelectAll, products],
+  );
   const [showImport, setShowImport] = useState(false);
 
-  const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
-  const [restoreTarget, setRestoreTarget] = useState<Product | null>(null);
-  const [hardDeleteTarget, setHardDeleteTarget] = useState<Product | null>(null);
+  const {
+    deleteTarget,
+    setDeleteTarget,
+    restoreTarget,
+    setRestoreTarget,
+    hardDeleteTarget,
+    setHardDeleteTarget,
+  } = useDialogState<Product>();
 
   const isDeleted = filterStatus === 'deleted';
   const activeFilter =
@@ -226,28 +251,6 @@ export default function DashboardProductsPage() {
     },
     onError: () => toast.error('Xóa vĩnh viễn thất bại'),
   });
-
-  // ── Selection helpers ──────────────────────────────────────────────────────
-
-  const toggleSelect = useCallback((id: number) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }, []);
-
-  const toggleSelectAll = useCallback(() => {
-    const currentProducts = productsQuery.data?.content ?? [];
-    setSelectedIds((prev) =>
-      prev.size === currentProducts.length ? new Set() : new Set(currentProducts.map((p) => p.id)),
-    );
-  }, [productsQuery.data]);
-
-  const clearSelection = useCallback(() => {
-    setSelectedIds(new Set());
-  }, []);
 
   const onSearchChange = useCallback(
     (val: string) => {
@@ -372,7 +375,6 @@ export default function DashboardProductsPage() {
     clearSelection();
   }
 
-  const products = productsQuery.data?.content ?? [];
   const totalPages = productsQuery.data?.totalPages ?? 0;
   const totalElements = productsQuery.data?.totalElements ?? 0;
   const loading = productsQuery.isLoading;
@@ -380,14 +382,6 @@ export default function DashboardProductsPage() {
   const categories = categoriesQuery.data ?? EMPTY_CATEGORIES;
   const brands = brandsQuery.data ?? EMPTY_BRANDS;
 
-  const allSelected = useMemo(
-    () => products.length > 0 && products.every((p) => selectedIds.has(p.id)),
-    [products, selectedIds],
-  );
-  const someSelected = useMemo(
-    () => products.some((p) => selectedIds.has(p.id)) && !allSelected,
-    [products, selectedIds, allSelected],
-  );
   const categoryName = useMemo(
     () => categories.find((c) => c.id === filterCategoryId)?.name,
     [categories, filterCategoryId],
@@ -410,7 +404,13 @@ export default function DashboardProductsPage() {
             <Upload className="h-4 w-4" />
             Import
           </Button>
-          <Button variant="outline" size="sm" className="h-9" onClick={handleExportFiltered} disabled={exportLoading}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9"
+            onClick={handleExportFiltered}
+            disabled={exportLoading}
+          >
             <Download className="h-4 w-4" />
             {exportLoading ? 'Đang xuất...' : 'Export'}
           </Button>
