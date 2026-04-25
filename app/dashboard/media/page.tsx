@@ -1,11 +1,24 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import {
+  CheckIcon,
+  ClipboardIcon,
+  FolderIcon,
+  GridIcon,
+  ListIcon,
+  SearchIcon,
+  UploadIcon,
+  XIcon,
+} from 'lucide-react';
 import { type AllowedFolder, type CloudinaryResource } from '@/lib/api/upload';
 import { useMediaAssets } from '@/hooks/use-media-assets';
 import { useCopy } from '@/hooks/use-copy';
 import { useFolders } from '@/hooks/use-folders';
 import { formatBytes } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 import { UploadZone } from './upload-zone';
 import { DetailPanel } from './detail-panel';
 import { AssetGrid } from './asset-grid';
@@ -24,7 +37,6 @@ export default function MediaPage() {
   const [search, setSearch] = useState('');
   const searchRef = useRef<HTMLInputElement>(null);
 
-  // Stable keyboard handler via ref — avoids re-subscribing on every render
   const onKeyRef = useRef<(e: KeyboardEvent) => void>(() => {});
   onKeyRef.current = (e: KeyboardEvent) => {
     if (e.key === '/' && document.activeElement?.tagName !== 'INPUT') {
@@ -41,32 +53,23 @@ export default function MediaPage() {
     const handler = (e: KeyboardEvent) => onKeyRef.current(e);
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, []); // stable — never re-subscribes
+  }, []);
 
-  // Load initial assets
   useEffect(() => {
     load(activeFolder);
   }, []); // eslint-disable-line
 
-  // Reload when folder changes (skip initial — handled above)
   const isFirstRender = useRef(true);
   useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
+    if (isFirstRender.current) { isFirstRender.current = false; return; }
     setSelected(new Set());
     setActiveAsset(null);
     setSearch('');
     load(activeFolder);
   }, [activeFolder]); // eslint-disable-line
 
-  // Memoized derived state
   const filtered = useMemo(
-    () =>
-      !search
-        ? assets
-        : assets.filter((a) => a.display_name.toLowerCase().includes(search.toLowerCase())),
+    () => !search ? assets : assets.filter((a) => a.display_name.toLowerCase().includes(search.toLowerCase())),
     [assets, search],
   );
 
@@ -90,21 +93,18 @@ export default function MediaPage() {
   }
 
   function copySelected() {
-    const urls = filtered
-      .filter((a) => selected.has(a.asset_id))
-      .map((a) => a.secure_url)
-      .join('\n');
+    const urls = filtered.filter((a) => selected.has(a.asset_id)).map((a) => a.secure_url).join('\n');
     navigator.clipboard.writeText(urls);
-    toast.success(`Đã copy ${selected.size} URL`);
+    toast.success(`Đã sao chép ${selected.size} URL`);
   }
 
   return (
     <div className="-m-6 flex h-[calc(100vh-4rem)] flex-col overflow-hidden">
       {/* Top bar */}
-      <div className="flex shrink-0 items-center justify-between gap-4 border-b border-slate-200 bg-white px-6 py-3">
+      <div className="flex shrink-0 items-center justify-between gap-4 border-b bg-card px-6 py-3">
         <div className="flex items-center gap-3">
-          <h1 className="text-base font-bold text-slate-900">Thư viện hình ảnh</h1>
-          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">
+          <h1 className="text-base font-semibold">Thư viện hình ảnh</h1>
+          <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
             {assets.length} ảnh · {formatBytes(totalSize)}
           </span>
         </div>
@@ -112,129 +112,85 @@ export default function MediaPage() {
         <div className="flex items-center gap-2">
           {/* Search */}
           <div className="relative">
-            <svg
-              viewBox="0 0 24 24"
-              className="absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-slate-400"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <circle cx="11" cy="11" r="8" />
-              <path d="m21 21-4.35-4.35" />
-            </svg>
-            <input
+            <SearchIcon className="absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+            <Input
               ref={searchRef}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Tìm ảnh... (/)"
-              className="w-52 rounded-xl border border-slate-200 bg-slate-50 py-1.5 pr-8 pl-8 text-sm text-slate-700 transition-all outline-none placeholder:text-slate-400 focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+              className="h-8 w-52 pr-8 pl-8 text-sm"
+              aria-label="Tìm kiếm ảnh"
             />
             {search && (
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => setSearch('')}
-                className="absolute top-1/2 right-2 -translate-y-1/2 cursor-pointer text-slate-400 hover:text-slate-700"
+                aria-label="Xóa tìm kiếm"
+                className="absolute top-1/2 right-1 size-6 -translate-y-1/2"
               >
-                <svg
-                  viewBox="0 0 24 24"
-                  className="h-3.5 w-3.5"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M18 6L6 18M6 6l12 12" />
-                </svg>
-              </button>
+                <XIcon className="h-3.5 w-3.5" />
+              </Button>
             )}
           </div>
 
           {/* View toggle */}
-          <div className="flex overflow-hidden rounded-xl border border-slate-200">
-            {(['grid', 'list'] as const).map((v) => (
-              <button
-                key={v}
-                onClick={() => setView(v)}
-                className={`cursor-pointer px-2.5 py-1.5 transition-colors ${view === v ? 'bg-slate-900 text-white' : 'bg-white text-slate-500 hover:bg-slate-50'}`}
-              >
-                {v === 'grid' ? (
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="h-4 w-4"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <rect x="3" y="3" width="7" height="7" rx="1" />
-                    <rect x="14" y="3" width="7" height="7" rx="1" />
-                    <rect x="3" y="14" width="7" height="7" rx="1" />
-                    <rect x="14" y="14" width="7" height="7" rx="1" />
-                  </svg>
-                ) : (
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="h-4 w-4"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <line x1="8" y1="6" x2="21" y2="6" />
-                    <line x1="8" y1="12" x2="21" y2="12" />
-                    <line x1="8" y1="18" x2="21" y2="18" />
-                    <line x1="3" y1="6" x2="3.01" y2="6" />
-                    <line x1="3" y1="12" x2="3.01" y2="12" />
-                    <line x1="3" y1="18" x2="3.01" y2="18" />
-                  </svg>
-                )}
-              </button>
-            ))}
+          <div className="flex overflow-hidden rounded-md border">
+            <Button
+              variant={view === 'grid' ? 'secondary' : 'ghost'}
+              size="icon"
+              className="h-8 w-8 rounded-none"
+              onClick={() => setView('grid')}
+              aria-label="Xem dạng lưới"
+              aria-pressed={view === 'grid'}
+            >
+              <GridIcon className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={view === 'list' ? 'secondary' : 'ghost'}
+              size="icon"
+              className="h-8 w-8 rounded-none"
+              onClick={() => setView('list')}
+              aria-label="Xem dạng danh sách"
+              aria-pressed={view === 'list'}
+            >
+              <ListIcon className="h-4 w-4" />
+            </Button>
           </div>
 
           {/* Upload toggle */}
-          <button
+          <Button
+            variant={showUpload ? 'outline' : 'default'}
+            size="sm"
+            className="h-8"
             onClick={() => setShowUpload((v) => !v)}
-            className={`flex cursor-pointer items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-sm font-semibold transition-colors ${showUpload ? 'bg-slate-100 text-slate-700 hover:bg-slate-200' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}
           >
-            <svg
-              viewBox="0 0 24 24"
-              className="h-4 w-4"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-              <polyline points="17 8 12 3 7 8" />
-              <line x1="12" y1="3" x2="12" y2="15" />
-            </svg>
-            {showUpload ? 'Đóng' : 'Upload'}
-          </button>
+            <UploadIcon className="h-4 w-4" />
+            {showUpload ? 'Đóng' : 'Tải lên'}
+          </Button>
         </div>
       </div>
 
       {/* Body */}
       <div className="flex min-h-0 flex-1">
         {/* Folder sidebar */}
-        <nav className="flex w-48 shrink-0 flex-col gap-0.5 overflow-y-auto border-r border-slate-200 bg-white p-2">
-          <p className="mb-1 px-2 pt-1 text-[10px] font-bold tracking-widest text-slate-400 uppercase">
-            Folders
+        <nav className="flex w-48 shrink-0 flex-col gap-0.5 overflow-y-auto border-r bg-card p-2" aria-label="Thư mục">
+          <p className="mb-1 px-2 pt-1 text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
+            Thư mục
           </p>
           {folderList.map((f) => (
             <button
               key={f.path}
               onClick={() => setActiveFolder(f.path)}
-              className={`flex w-full cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2 text-sm transition-colors ${
+              aria-current={activeFolder === f.path ? 'true' : undefined}
+              className={cn(
+                'flex w-full cursor-pointer items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors',
                 activeFolder === f.path
-                  ? 'bg-indigo-50 font-semibold text-indigo-700'
-                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-              }`}
+                  ? 'bg-accent font-medium text-accent-foreground'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+              )}
             >
-              <svg
-                viewBox="0 0 24 24"
-                className={`h-4 w-4 shrink-0 ${activeFolder === f.path ? 'text-indigo-500' : 'text-slate-400'}`}
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" />
-              </svg>
+              <FolderIcon className={cn('h-4 w-4 shrink-0', activeFolder === f.path ? 'text-foreground' : 'text-muted-foreground/60')} aria-hidden="true" />
               <span className="truncate capitalize">{f.name}</span>
             </button>
           ))}
@@ -244,47 +200,23 @@ export default function MediaPage() {
         <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
           {/* Selection bar */}
           {selected.size > 0 && (
-            <div className="flex shrink-0 items-center gap-3 border-b border-indigo-100 bg-indigo-50 px-4 py-2">
-              <span className="text-sm font-semibold text-indigo-700">
+            <div className="flex shrink-0 items-center gap-3 border-b bg-muted/50 px-4 py-2">
+              <span className="text-sm font-medium text-foreground">
                 {selected.size} ảnh đã chọn
               </span>
-              <button
-                onClick={copySelected}
-                className="flex cursor-pointer items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1 text-xs font-semibold text-white transition-colors hover:bg-indigo-700"
-              >
-                {copied ? (
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="h-3 w-3"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="3"
-                  >
-                    <path d="M20 6L9 17l-5-5" />
-                  </svg>
-                ) : (
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="h-3 w-3"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <rect x="9" y="9" width="13" height="13" rx="2" />
-                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-                  </svg>
-                )}
-                Copy {selected.size} URL
-              </button>
+              <Button size="sm" className="h-7 gap-1.5 text-xs" onClick={copySelected}>
+                {copied ? <CheckIcon className="h-3 w-3" /> : <ClipboardIcon className="h-3 w-3" />}
+                Sao chép {selected.size} URL
+              </Button>
               <button
                 onClick={() => setSelected(new Set())}
-                className="cursor-pointer text-xs text-indigo-500 transition-colors hover:text-indigo-700"
+                className="cursor-pointer text-xs text-muted-foreground transition-colors hover:text-foreground"
               >
                 Bỏ chọn
               </button>
               <button
                 onClick={() => setSelected(new Set(filtered.map((a) => a.asset_id)))}
-                className="cursor-pointer text-xs text-indigo-500 transition-colors hover:text-indigo-700"
+                className="cursor-pointer text-xs text-muted-foreground transition-colors hover:text-foreground"
               >
                 Chọn tất cả ({filtered.length})
               </button>
@@ -297,68 +229,42 @@ export default function MediaPage() {
               {showUpload && (
                 <UploadZone
                   folder={activeFolder}
-                  onUploaded={() => {
-                    load(activeFolder);
-                    setShowUpload(false);
-                  }}
+                  onUploaded={() => { load(activeFolder); setShowUpload(false); }}
                 />
               )}
 
               {search && (
-                <p className="text-xs text-slate-500">
-                  {filtered.length} kết quả cho "
-                  <span className="font-semibold text-slate-700">{search}</span>"
+                <p className="text-xs text-muted-foreground">
+                  {filtered.length} kết quả cho &ldquo;<span className="font-medium text-foreground">{search}</span>&rdquo;
                 </p>
               )}
 
               {loading ? (
-                <div
-                  className={
-                    view === 'grid'
-                      ? 'grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6'
-                      : 'space-y-2'
-                  }
-                >
+                <div className={view === 'grid'
+                  ? 'grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6'
+                  : 'space-y-2'
+                }>
                   {Array.from({ length: 12 }).map((_, i) => (
-                    <div
-                      key={i}
-                      className={`animate-pulse rounded-xl bg-slate-100 ${view === 'grid' ? 'aspect-square' : 'h-14'}`}
-                    />
+                    <div key={i} className={cn('animate-pulse rounded-md bg-muted', view === 'grid' ? 'aspect-square' : 'h-14')} />
                   ))}
                 </div>
               ) : view === 'grid' ? (
-                <AssetGrid
-                  assets={filtered}
-                  selected={selected}
-                  active={activeAsset?.asset_id ?? null}
-                  onToggle={toggleSelect}
-                  onSelect={handleSelectAsset}
-                />
+                <AssetGrid assets={filtered} selected={selected} active={activeAsset?.asset_id ?? null} onToggle={toggleSelect} onSelect={handleSelectAsset} />
               ) : (
-                <AssetList
-                  assets={filtered}
-                  selected={selected}
-                  active={activeAsset?.asset_id ?? null}
-                  onToggle={toggleSelect}
-                  onSelect={handleSelectAsset}
-                />
+                <AssetList assets={filtered} selected={selected} active={activeAsset?.asset_id ?? null} onToggle={toggleSelect} onSelect={handleSelectAsset} />
               )}
 
               {nextCursor && !search && (
                 <div className="flex justify-center pt-2">
-                  <button
-                    onClick={() => load(activeFolder, false)}
-                    disabled={loadingMore}
-                    className="cursor-pointer rounded-full border border-slate-200 bg-white px-6 py-2 text-sm text-slate-600 shadow-sm transition-colors hover:bg-slate-50 disabled:opacity-50"
-                  >
+                  <Button variant="outline" size="sm" onClick={() => load(activeFolder, false)} disabled={loadingMore}>
                     {loadingMore ? 'Đang tải...' : 'Tải thêm ảnh'}
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>
 
             {activeAsset && (
-              <div className="shrink-0 border-l border-slate-200 p-3">
+              <div className="shrink-0 border-l p-3">
                 <DetailPanel asset={activeAsset} onClose={() => setActiveAsset(null)} />
               </div>
             )}

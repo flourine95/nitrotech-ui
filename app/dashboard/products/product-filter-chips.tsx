@@ -68,17 +68,3 @@ export function ProductFilterChips({
     </div>
   );
 }
-
-function FilterChip({ label, onRemove }: { label: string; onRemove: () => void }) {
-  return (
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={onRemove}
-      className="h-7 gap-1 px-2 text-xs font-normal"
-    >
-      {label}
-      <X className="h-3 w-3" />
-    </Button>
-  );
-}

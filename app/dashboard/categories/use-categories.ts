@@ -124,8 +124,19 @@ export function useCategories() {
   }, []);
 
   const expandAll = useCallback(() => {
-    setExpandedIds(new Set(flatList.filter((c) => c.parentId !== null).map((c) => c.parentId!)));
-  }, [flatList]);
+    // Expand all nodes that have children
+    const withChildren = new Set<number>();
+    function collect(nodes: TreeNode[]) {
+      for (const n of nodes) {
+        if (n.children.length > 0) {
+          withChildren.add(n.id);
+          collect(n.children);
+        }
+      }
+    }
+    collect(tree);
+    setExpandedIds(withChildren);
+  }, [tree]);
 
   const collapseAll = useCallback(() => setExpandedIds(new Set()), []);
 
@@ -144,7 +155,7 @@ export function useCategories() {
       setFlatList((prev) =>
         prev.map((c) => (c.id === updated.id ? { ...c, active: updated.active } : c)),
       );
-      toast.success(updated.active ? 'Đã hiển thị' : 'Đã ẩn');
+      toast.success(updated.active ? `Đã hiển thị "${updated.name}"` : `Đã ẩn "${updated.name}"`);
     } catch {
       toast.error('Cập nhật thất bại');
     } finally {
@@ -160,7 +171,7 @@ export function useCategories() {
         toast.success('Đã xóa danh mục');
       } catch (e) {
         if (e instanceof ApiException && e.error.code === 'CATEGORY_HAS_CHILDREN')
-          toast.error('Không thể xóa — còn danh mục con đang hoạt động');
+          toast.error('Xóa thất bại — hãy xóa các danh mục con trước');
         else toast.error(e instanceof ApiException ? e.error.message : 'Xóa thất bại');
         throw e;
       }
@@ -185,12 +196,13 @@ export function useCategories() {
   const applyChangeParent = useCallback(
     (id: number, from: number | null, to: number | null) => {
       const next = flatList.map((c) => (c.id === id ? { ...c, parentId: to } : c));
+      const nextMap = new Map(next.map((c) => [c.id, c]));
       const reindex = (pid: number | null) => {
         next
           .filter((c) => c.parentId === pid)
           .sort((a, b) => a.sortOrder - b.sortOrder)
           .forEach((c, i) => {
-            const item = next.find((x) => x.id === c.id);
+            const item = nextMap.get(c.id);
             if (item) item.sortOrder = i;
           });
       };
@@ -220,10 +232,11 @@ export function useCategories() {
           toParentId: parentId,
           targetOrderedIds: reordered.map((c) => c.id),
         });
+        toast.success('Đã sắp xếp lại');
       } catch {
         setFlatList(snapshot.flatList);
         setTree(snapshot.tree);
-        toast.error('Sắp xếp thất bại');
+        toast.error('Sắp xếp thất bại — thử lại sau');
       }
     },
     [flatList, tree, applyReorder],
@@ -247,10 +260,11 @@ export function useCategories() {
           toParentId: parentId,
           targetOrderedIds: reordered.map((c) => c.id),
         });
+        toast.success('Đã sắp xếp lại');
       } catch {
         setFlatList(snapshot.flatList);
         setTree(snapshot.tree);
-        toast.error('Sắp xếp thất bại');
+        toast.error('Sắp xếp thất bại — thử lại sau');
       }
     },
     [flatList, tree, applyReorder],
@@ -285,7 +299,7 @@ export function useCategories() {
       } catch {
         setFlatList(snapshot.flatList);
         setTree(snapshot.tree);
-        toast.error('Đổi danh mục cha thất bại');
+        toast.error('Không thể di chuyển danh mục — thử lại sau');
       }
     },
     [flatList, tree, applyChangeParent],
@@ -316,6 +330,7 @@ export function useCategories() {
 
   return {
     flatList,
+    tree,
     loading,
     search,
     setSearch,

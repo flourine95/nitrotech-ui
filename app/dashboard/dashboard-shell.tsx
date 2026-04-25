@@ -3,8 +3,8 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { BoltIcon, BellIcon, SearchIcon } from 'lucide-react';
-import { memo, useMemo } from 'react';
+import { BoltIcon, BellIcon, SearchIcon, LogOutIcon, UserIcon, SettingsIcon } from 'lucide-react';
+import { memo } from 'react';
 
 import {
   Sidebar,
@@ -27,7 +27,14 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import ProfileDropdown from '@/components/shadcn-studio/blocks/dropdown-profile';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { mainNavItems, catalogNavItems, systemNavItems, type NavItem } from './nav-items';
 
 type User = {
@@ -67,24 +74,6 @@ const NavGroup = memo(function NavGroup({
   );
 });
 
-const ProfileTrigger = memo(function ProfileTrigger({ displayName }: { displayName: string }) {
-  return (
-    <Button variant="ghost" size="icon" className="size-8">
-      <Avatar className="size-8 rounded-md">
-        <AvatarImage src="https://cdn.shadcnstudio.com/ss-assets/avatar/avatar-1.png" />
-        <AvatarFallback>
-          {displayName
-            .split(' ')
-            .map((n) => n[0])
-            .slice(0, 2)
-            .join('')
-            .toUpperCase()}
-        </AvatarFallback>
-      </Avatar>
-    </Button>
-  );
-});
-
 export function DashboardShell({
   children,
   user,
@@ -98,7 +87,12 @@ export function DashboardShell({
   const displayName = user?.name ?? 'Admin';
   const displayEmail = user?.email ?? 'admin@nitrotech.vn';
 
-  const profileTrigger = useMemo(() => <ProfileTrigger displayName={displayName} />, [displayName]);
+  const initials = displayName
+    .split(' ')
+    .map((n) => n[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
 
   async function handleLogout() {
     try {
@@ -201,7 +195,45 @@ export function DashboardShell({
               </Button>
 
               {/* Profile */}
-              <ProfileDropdown trigger={profileTrigger} />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="size-8">
+                    <Avatar className="size-8 rounded-md">
+                      <AvatarImage src="https://cdn.shadcnstudio.com/ss-assets/avatar/avatar-1.png" />
+                      <AvatarFallback>{initials}</AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col gap-1">
+                      <p className="text-sm font-medium">{displayName}</p>
+                      <p className="text-xs text-muted-foreground">{displayEmail}</p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/account/profile">
+                      <UserIcon className="mr-2 size-4" />
+                      Tài khoản
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/dashboard/settings">
+                      <SettingsIcon className="mr-2 size-4" />
+                      Cài đặt
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive"
+                    onClick={handleLogout}
+                  >
+                    <LogOutIcon className="mr-2 size-4" />
+                    Đăng xuất
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </header>

@@ -1,7 +1,7 @@
 'use client';
 import { useDeferredValue, useState, useTransition } from 'react';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
-import { parseAsInteger, parseAsString, parseAsStringEnum, useQueryState } from 'nuqs';
+import { parseAsInteger, parseAsString, useQueryState } from 'nuqs';
 import type { ColumnDef } from '@tanstack/react-table';
 import { flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import {
@@ -10,17 +10,20 @@ import {
   ArrowUpDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  EyeIcon,
+  AlertCircleIcon,
   FilterIcon,
   SearchIcon,
   XIcon,
 } from 'lucide-react';
+import Link from 'next/link';
 import type { DateRange } from 'react-day-picker';
 import { type Order, type OrderStatus } from '@/lib/api/orders';
 import { mockOrdersPage } from '@/lib/mocks/orders';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
   Select,
   SelectContent,
@@ -56,20 +59,23 @@ const statusConfig: Record<
   OrderStatus,
   { label: string; variant: 'default' | 'secondary' | 'outline' | 'destructive' }
 > = {
-  PENDING: { label: 'Chờ xác nhận', variant: 'secondary' },
-  CONFIRMED: { label: 'Đã xác nhận', variant: 'outline' },
-  SHIPPING: { label: 'Đang giao', variant: 'default' },
-  COMPLETED: { label: 'Hoàn thành', variant: 'outline' },
-  CANCELLED: { label: 'Đã hủy', variant: 'destructive' },
+  PENDING:   { label: 'Chờ xác nhận', variant: 'secondary' },
+  CONFIRMED: { label: 'Đã xác nhận',  variant: 'outline' },
+  SHIPPING:  { label: 'Đang giao',    variant: 'default' },
+  COMPLETED: { label: 'Hoàn thành',   variant: 'secondary' },
+  CANCELLED: { label: 'Đã hủy',       variant: 'destructive' },
 };
 
-const ALL_STATUSES: Array<{ value: OrderStatus; label: string }> = [
-  { value: 'PENDING', label: 'Chờ xác nhận' },
+const STATUS_FILTERS: Array<{ value: OrderStatus | 'all'; label: string }> = [
+  { value: 'all',       label: 'Tất cả' },
+  { value: 'PENDING',   label: 'Chờ xác nhận' },
   { value: 'CONFIRMED', label: 'Đã xác nhận' },
-  { value: 'SHIPPING', label: 'Đang giao' },
+  { value: 'SHIPPING',  label: 'Đang giao' },
   { value: 'COMPLETED', label: 'Hoàn thành' },
   { value: 'CANCELLED', label: 'Đã hủy' },
 ];
+
+const ALL_STATUSES = STATUS_FILTERS.filter((f) => f.value !== 'all') as Array<{ value: OrderStatus; label: string }>;
 
 const vnd = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' });
 
@@ -118,23 +124,17 @@ export default function DashboardOrdersPage() {
   const [search, setSearch] = useQueryState('q', parseAsString.withDefault(''));
   const [dateFrom, setDateFrom] = useQueryState('from', parseAsString.withDefault(''));
   const [dateTo, setDateTo] = useQueryState('to', parseAsString.withDefault(''));
-  const [statuses, setStatuses] = useQueryState('st', parseAsString.withDefault(''));
+  const [statusFilter, setStatusFilter] = useQueryState('st', parseAsString.withDefault('all'));
   const [sortBy, setSortBy] = useQueryState('sort', parseAsString.withDefault('createdAt'));
-  const [sortDir, setSortDir] = useQueryState(
-    'dir',
-    parseAsStringEnum<'asc' | 'desc'>(['asc', 'desc']).withDefault('desc'),
-  );
+  const [sortDir, setSortDir] = useQueryState('dir', parseAsString.withDefault('desc') as ReturnType<typeof parseAsString>);
   const [currentPage, setCurrentPage] = useQueryState('page', parseAsInteger.withDefault(0));
   const [pageSize, setPageSize] = useQueryState('size', parseAsInteger.withDefault(10));
 
   // ── Sheet draft state (pending, not yet applied) ──
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [draftStatuses, setDraftStatuses] = useState<OrderStatus[]>([]);
   const [draftRange, setDraftRange] = useState<DateRange | undefined>(undefined);
 
   function openSheet() {
-    // Init draft từ applied state
-    setDraftStatuses(statuses ? (statuses.split(',') as OrderStatus[]) : []);
     setDraftRange(
       dateFrom
         ? { from: parseLocalDate(dateFrom), to: dateTo ? parseLocalDate(dateTo) : undefined }
@@ -144,7 +144,6 @@ export default function DashboardOrdersPage() {
   }
 
   function applySheet() {
-    setStatuses(draftStatuses.length ? draftStatuses.join(',') : '');
     setDateFrom(draftRange?.from ? formatDateKey(draftRange.from) : '');
     setDateTo(draftRange?.to ? formatDateKey(draftRange.to) : '');
     setCurrentPage(0);
@@ -152,21 +151,16 @@ export default function DashboardOrdersPage() {
   }
 
   function resetSheet() {
-    setDraftStatuses([]);
     setDraftRange(undefined);
   }
 
-  function toggleDraftStatus(s: OrderStatus) {
-    setDraftStatuses((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]));
-  }
-
   // Applied filters derived
-  const appliedStatuses = statuses ? (statuses.split(',') as OrderStatus[]) : [];
+  const appliedStatuses = statusFilter !== 'all' ? [statusFilter as OrderStatus] : [];
   const appliedRange: DateRange | undefined = dateFrom
     ? { from: parseLocalDate(dateFrom), to: dateTo ? parseLocalDate(dateTo) : undefined }
     : undefined;
 
-  const activeFilterCount = (appliedStatuses.length > 0 ? 1 : 0) + (dateFrom ? 1 : 0);
+  const activeFilterCount = (dateFrom ? 1 : 0);
 
   const [isPending, startTransition] = useTransition();
   const deferredSearch = useDeferredValue(search);
@@ -174,10 +168,7 @@ export default function DashboardOrdersPage() {
   function handleSort(field: string) {
     startTransition(() => {
       if (sortBy === field) void setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
-      else {
-        void setSortBy(field);
-        void setSortDir('desc');
-      }
+      else { void setSortBy(field); void setSortDir('desc'); }
       void setCurrentPage(0);
     });
   }
@@ -185,7 +176,7 @@ export default function DashboardOrdersPage() {
   function clearAllFilters() {
     startTransition(() => {
       void setSearch('');
-      void setStatuses('');
+      void setStatusFilter('all');
       void setDateFrom('');
       void setDateTo('');
       void setSortBy('createdAt');
@@ -196,17 +187,7 @@ export default function DashboardOrdersPage() {
 
   // ── Queries ──
   const ordersQuery = useQuery({
-    queryKey: [
-      'orders',
-      deferredSearch,
-      statuses,
-      dateFrom,
-      dateTo,
-      sortBy,
-      sortDir,
-      currentPage,
-      pageSize,
-    ],
+    queryKey: ['orders', deferredSearch, statusFilter, dateFrom, dateTo, sortBy, sortDir, currentPage, pageSize],
     queryFn: () =>
       Promise.resolve(
         mockOrdersPage({
@@ -215,7 +196,7 @@ export default function DashboardOrdersPage() {
           dateFrom: dateFrom || undefined,
           dateTo: dateTo || undefined,
           sortBy,
-          sortDir,
+          sortDir: sortDir as 'asc' | 'desc',
           page: currentPage,
           size: pageSize,
         }),
@@ -246,26 +227,16 @@ export default function DashboardOrdersPage() {
     {
       accessorKey: 'code',
       header: () => (
-        <SortHeader
-          label="Mã đơn"
-          field="code"
-          sortBy={sortBy}
-          sortDir={sortDir}
-          onSort={handleSort}
-        />
+        <SortHeader label="Mã đơn" field="code" sortBy={sortBy} sortDir={sortDir as 'asc' | 'desc'} onSort={handleSort} />
       ),
-      cell: ({ row }) => <span className="font-mono font-semibold">{row.original.code}</span>,
+      cell: ({ row }) => (
+        <span className="font-mono font-semibold">{row.original.code}</span>
+      ),
     },
     {
       accessorKey: 'customerName',
       header: () => (
-        <SortHeader
-          label="Khách hàng"
-          field="customerName"
-          sortBy={sortBy}
-          sortDir={sortDir}
-          onSort={handleSort}
-        />
+        <SortHeader label="Khách hàng" field="customerName" sortBy={sortBy} sortDir={sortDir as 'asc' | 'desc'} onSort={handleSort} />
       ),
       cell: ({ row }) => (
         <div className="flex flex-col">
@@ -277,19 +248,13 @@ export default function DashboardOrdersPage() {
     {
       accessorKey: 'itemCount',
       header: 'Sản phẩm',
-      cell: ({ row }) => <span className="text-muted-foreground">{row.original.itemCount} sp</span>,
+      cell: ({ row }) => <span className="text-muted-foreground">{row.original.itemCount} sản phẩm</span>,
     },
     {
       accessorKey: 'totalAmount',
       header: () => (
         <div className="flex justify-end">
-          <SortHeader
-            label="Tổng tiền"
-            field="totalAmount"
-            sortBy={sortBy}
-            sortDir={sortDir}
-            onSort={handleSort}
-          />
+          <SortHeader label="Tổng tiền" field="totalAmount" sortBy={sortBy} sortDir={sortDir as 'asc' | 'desc'} onSort={handleSort} />
         </div>
       ),
       meta: { className: 'text-right' },
@@ -300,16 +265,10 @@ export default function DashboardOrdersPage() {
     {
       accessorKey: 'createdAt',
       header: () => (
-        <SortHeader
-          label="Ngày đặt"
-          field="createdAt"
-          sortBy={sortBy}
-          sortDir={sortDir}
-          onSort={handleSort}
-        />
+        <SortHeader label="Ngày đặt" field="createdAt" sortBy={sortBy} sortDir={sortDir as 'asc' | 'desc'} onSort={handleSort} />
       ),
       cell: ({ row }) => (
-        <span className="text-muted-foreground">
+        <span className="whitespace-nowrap text-muted-foreground">
           {new Date(row.original.createdAt).toLocaleDateString('vi-VN')}
         </span>
       ),
@@ -321,16 +280,6 @@ export default function DashboardOrdersPage() {
         const cfg = statusConfig[row.original.status];
         return <Badge variant={cfg.variant}>{cfg.label}</Badge>;
       },
-    },
-    {
-      id: 'actions',
-      header: () => <span className="sr-only">Actions</span>,
-      cell: ({ row }) => (
-        <Button variant="ghost" size="icon-sm" aria-label={`Xem đơn ${row.original.code}`}>
-          <EyeIcon />
-        </Button>
-      ),
-      size: 48,
     },
   ];
 
@@ -350,352 +299,233 @@ export default function DashboardOrdersPage() {
 
   // ── Render ──
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-4">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold">Đơn hàng</h1>
-        <p className="text-sm text-muted-foreground">{totalElements} đơn hàng</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Đơn hàng</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{totalElements} đơn hàng</p>
+        </div>
       </div>
 
-      {/* Summary cards — click để quick filter 1 status */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-        <button
-          onClick={clearAllFilters}
-          className={cn(
-            'flex items-center gap-3 rounded-lg border bg-card p-4 text-left transition-colors hover:bg-accent',
-            !statuses && !dateFrom && 'ring-2 ring-ring',
-          )}
-        >
-          <Badge
-            variant="secondary"
-            className="size-9 justify-center text-base font-bold tabular-nums"
-          >
-            {summaryQuery.data ? Object.values(summaryQuery.data).reduce((a, b) => a + b, 0) : 0}
-          </Badge>
-          <span className="text-sm">Tất cả</span>
-        </button>
-        {ALL_STATUSES.map((s) => {
-          const isActive =
-            appliedStatuses.length === 1 && appliedStatuses[0] === s.value && !dateFrom;
-          return (
-            <button
-              key={s.value}
-              onClick={() => {
-                setStatuses(s.value);
-                setDateFrom('');
-                setDateTo('');
-                setCurrentPage(0);
-              }}
-              className={cn(
-                'flex items-center gap-3 rounded-lg border bg-card p-4 text-left transition-colors hover:bg-accent',
-                isActive && 'ring-2 ring-ring',
-              )}
-            >
-              <Badge
-                variant={statusConfig[s.value].variant}
-                className="size-9 justify-center text-base font-bold tabular-nums"
-              >
-                {summaryQuery.data?.[s.value] ?? 0}
-              </Badge>
-              <span className="text-sm">{s.label}</span>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Toolbar: search + filter button + active tags */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        {/* Search */}
+      {/* Toolbar: search + status toggle + date filter */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         <div className="relative flex-1">
-          <SearchIcon className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground/60" />
+          <SearchIcon className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="search"
             placeholder="Tìm mã đơn, tên, email khách hàng..."
             value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setCurrentPage(0);
-            }}
-            className="pl-9"
+            onChange={(e) => { setSearch(e.target.value); setCurrentPage(0); }}
+            className="h-9 pl-9"
           />
+          {search && (
+            <Button variant="ghost" size="icon" aria-label="Xóa tìm kiếm"
+              onClick={() => { setSearch(''); setCurrentPage(0); }}
+              className="absolute top-1/2 right-1 size-7 -translate-y-1/2"
+            >
+              <XIcon />
+            </Button>
+          )}
         </div>
 
-        {/* Filter button */}
-        <Button variant="outline" onClick={openSheet} className="relative shrink-0">
+        {/* Status toggle — inline như products */}
+        <div className="flex h-9 items-center rounded-md border bg-muted/40 p-0.5">
+          <ToggleGroup
+            type="single"
+            value={statusFilter}
+            onValueChange={(v) => { if (v) { setStatusFilter(v); setCurrentPage(0); } }}
+            className="gap-0"
+          >
+            {STATUS_FILTERS.map((f) => (
+              <ToggleGroupItem
+                key={f.value}
+                value={f.value}
+                className="h-8 rounded px-3 text-sm data-[state=on]:bg-background data-[state=on]:font-medium data-[state=on]:shadow-sm"
+              >
+                {f.label}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+        </div>
+
+        {/* Date filter button */}
+        <Button variant="outline" onClick={openSheet} className="relative h-9 shrink-0">
           <FilterIcon className="size-4" />
-          Bộ lọc
+          Ngày đặt
           {activeFilterCount > 0 && (
             <Badge className="absolute -top-1.5 -right-1.5 size-4 justify-center rounded-full p-0 text-[10px]">
               {activeFilterCount}
             </Badge>
           )}
         </Button>
-
-        {/* Active filter tags */}
-        {(appliedStatuses.length > 0 || appliedRange) && (
-          <div className="flex flex-wrap gap-1.5">
-            {appliedStatuses.map((s) => (
-              <Badge key={s} variant="secondary" className="gap-1 pr-1">
-                {statusConfig[s].label}
-                <button
-                  onClick={() => {
-                    setStatuses(appliedStatuses.filter((x) => x !== s).join(','));
-                    setCurrentPage(0);
-                  }}
-                  className="ml-0.5 hover:text-foreground"
-                  aria-label={`Xóa filter ${statusConfig[s].label}`}
-                >
-                  <XIcon className="size-3" />
-                </button>
-              </Badge>
-            ))}
-            {appliedRange?.from && (
-              <Badge variant="secondary" className="gap-1 pr-1">
-                {appliedRange.to
-                  ? `${appliedRange.from.toLocaleDateString('vi-VN')} – ${appliedRange.to.toLocaleDateString('vi-VN')}`
-                  : appliedRange.from.toLocaleDateString('vi-VN')}
-                <button
-                  onClick={() => {
-                    setDateFrom('');
-                    setDateTo('');
-                    setCurrentPage(0);
-                  }}
-                  className="ml-0.5 hover:text-foreground"
-                  aria-label="Xóa filter ngày"
-                >
-                  <XIcon className="size-3" />
-                </button>
-              </Badge>
-            )}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 px-2 text-xs"
-              onClick={clearAllFilters}
-            >
-              Xóa tất cả
-            </Button>
-          </div>
-        )}
       </div>
+
+      {/* Active date filter chip */}
+      {appliedRange?.from && (
+        <div className="flex items-center gap-1.5">
+          <Badge variant="secondary" className="gap-1 pr-1">
+            {appliedRange.to
+              ? `${appliedRange.from.toLocaleDateString('vi-VN')} – ${appliedRange.to.toLocaleDateString('vi-VN')}`
+              : appliedRange.from.toLocaleDateString('vi-VN')}
+            <button
+              onClick={() => { setDateFrom(''); setDateTo(''); setCurrentPage(0); }}
+              className="ml-0.5 hover:text-foreground"
+              aria-label="Xóa filter ngày"
+            >
+              <XIcon className="size-3" />
+            </button>
+          </Badge>
+          <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={clearAllFilters}>
+            Xóa tất cả
+          </Button>
+        </div>
+      )}
 
       {/* Table */}
-      <div
-        className={cn(
-          'rounded-lg border bg-card transition-opacity duration-150',
-          (ordersQuery.isFetching && !ordersQuery.isLoading) || isPending
-            ? 'opacity-60'
-            : 'opacity-100',
-        )}
-      >
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((hg) => (
-              <TableRow key={hg.id}>
-                {hg.headers.map((header) => (
-                  <TableHead
-                    key={header.id}
-                    className={(header.column.columnDef.meta as { className?: string })?.className}
-                  >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(header.column.columnDef.header, header.getContext())}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {ordersQuery.isLoading ? (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-32 text-center text-muted-foreground"
-                >
-                  Đang tải...
-                </TableCell>
-              </TableRow>
-            ) : table.getRowModel().rows.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id}>
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell
-                      key={cell.id}
-                      className={(cell.column.columnDef.meta as { className?: string })?.className}
-                    >
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
+      <div className={cn(
+        'rounded-md border bg-card transition-opacity duration-150',
+        (ordersQuery.isFetching && !ordersQuery.isLoading) || isPending ? 'opacity-60' : 'opacity-100',
+      )}>
+        {ordersQuery.isError ? (
+          <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+            <AlertCircleIcon className="mb-3 h-10 w-10 text-destructive/40" />
+            <p className="text-sm font-medium text-foreground">Không thể tải dữ liệu</p>
+            <p className="mt-1 text-xs">Kiểm tra kết nối và thử lại</p>
+            <Button variant="outline" size="sm" className="mt-3" onClick={() => ordersQuery.refetch()}>
+              Thử lại
+            </Button>
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((hg) => (
+                <TableRow key={hg.id} className="hover:bg-transparent">
+                  {hg.headers.map((header) => (
+                    <TableHead key={header.id} className={(header.column.columnDef.meta as { className?: string })?.className}>
+                      {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                    </TableHead>
                   ))}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-32 text-center text-muted-foreground"
-                >
-                  Không tìm thấy đơn hàng nào
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {ordersQuery.isLoading ? (
+                Array.from({ length: pageSize }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                    <TableCell>
+                      <div className="flex flex-col gap-1.5">
+                        <Skeleton className="h-3.5 w-32" />
+                        <Skeleton className="h-3 w-40" />
+                      </div>
+                    </TableCell>
+                    <TableCell><Skeleton className="h-3.5 w-16" /></TableCell>
+                    <TableCell className="text-right"><Skeleton className="ml-auto h-3.5 w-24" /></TableCell>
+                    <TableCell><Skeleton className="h-3.5 w-20" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-20 rounded-full" /></TableCell>
+                  </TableRow>
+                ))
+              ) : table.getRowModel().rows.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    className="cursor-pointer"
+                    onClick={() => window.location.href = `/dashboard/orders/${row.original.id}`}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id} className={(cell.column.columnDef.meta as { className?: string })?.className}>
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={columns.length} className="h-32 text-center text-muted-foreground">
+                    Không tìm thấy đơn hàng nào
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        )}
 
         {/* Pagination footer */}
-        <div className="flex flex-col gap-3 border-t px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <p className="text-sm whitespace-nowrap text-muted-foreground">
-              {totalElements > 0
-                ? `${currentPage * pageSize + 1}–${Math.min((currentPage + 1) * pageSize, totalElements)} / ${totalElements}`
-                : '0 kết quả'}
-            </p>
-            <Separator orientation="vertical" className="h-4" />
-            <div className="flex items-center gap-2">
-              <span className="text-sm whitespace-nowrap text-muted-foreground">Hiển thị</span>
-              <Select
-                value={String(pageSize)}
-                onValueChange={(v) => {
-                  setPageSize(Number(v));
-                  setCurrentPage(0);
-                }}
-              >
-                <SelectTrigger className="h-8 w-16">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {PAGE_SIZES.map((s) => (
-                    <SelectItem key={s} value={String(s)}>
-                      {s}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+        {!ordersQuery.isError && (
+          <div className="flex flex-col gap-3 border-t px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <p className="text-sm whitespace-nowrap text-muted-foreground">
+                {totalElements > 0
+                  ? `${currentPage * pageSize + 1}–${Math.min((currentPage + 1) * pageSize, totalElements)} / ${totalElements}`
+                  : '0 kết quả'}
+              </p>
+              <Separator orientation="vertical" className="h-4" />
+              <div className="flex items-center gap-2">
+                <span className="text-sm whitespace-nowrap text-muted-foreground">Mỗi trang</span>
+                <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setCurrentPage(0); }}>
+                  <SelectTrigger className="h-8 w-16"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {PAGE_SIZES.map((s) => (
+                      <SelectItem key={s} value={String(s)}>{s}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-          </div>
 
-          {totalPages > 1 && (
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() =>
-                      startTransition(() => {
-                        void setCurrentPage(Math.max(0, currentPage - 1));
-                      })
-                    }
-                    disabled={currentPage === 0}
-                  >
-                    <ChevronLeftIcon /> Trước
-                  </Button>
-                </PaginationItem>
-                {showLeftEllipsis && (
+            {totalPages > 1 && (
+              <Pagination>
+                <PaginationContent>
                   <PaginationItem>
-                    <PaginationEllipsis />
-                  </PaginationItem>
-                )}
-                {pages.map((page) => (
-                  <PaginationItem key={page}>
-                    <Button
-                      size="icon"
-                      variant={page === currentPage + 1 ? 'default' : 'outline'}
-                      onClick={() =>
-                        startTransition(() => {
-                          void setCurrentPage(page - 1);
-                        })
-                      }
+                    <Button variant="ghost" size="sm"
+                      onClick={() => startTransition(() => { void setCurrentPage(Math.max(0, currentPage - 1)); })}
+                      disabled={currentPage === 0}
                     >
-                      {page}
+                      <ChevronLeftIcon /> Trước
                     </Button>
                   </PaginationItem>
-                ))}
-                {showRightEllipsis && (
+                  {showLeftEllipsis && <PaginationItem><PaginationEllipsis /></PaginationItem>}
+                  {pages.map((page) => (
+                    <PaginationItem key={page}>
+                      <Button size="icon" variant={page === currentPage + 1 ? 'default' : 'outline'}
+                        onClick={() => startTransition(() => { void setCurrentPage(page - 1); })}
+                      >
+                        {page}
+                      </Button>
+                    </PaginationItem>
+                  ))}
+                  {showRightEllipsis && <PaginationItem><PaginationEllipsis /></PaginationItem>}
                   <PaginationItem>
-                    <PaginationEllipsis />
+                    <Button variant="ghost" size="sm"
+                      onClick={() => startTransition(() => { void setCurrentPage(Math.min(totalPages - 1, currentPage + 1)); })}
+                      disabled={currentPage >= totalPages - 1}
+                    >
+                      Sau <ChevronRightIcon />
+                    </Button>
                   </PaginationItem>
-                )}
-                <PaginationItem>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() =>
-                      startTransition(() => {
-                        void setCurrentPage(Math.min(totalPages - 1, currentPage + 1));
-                      })
-                    }
-                    disabled={currentPage >= totalPages - 1}
-                  >
-                    Sau <ChevronRightIcon />
-                  </Button>
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-          )}
-        </div>
+                </PaginationContent>
+              </Pagination>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Filter Sheet */}
+      {/* Date filter Sheet */}
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent className="flex flex-col gap-0 p-0 sm:max-w-sm">
           <SheetHeader className="border-b px-6 py-4">
-            <SheetTitle>Bộ lọc</SheetTitle>
+            <SheetTitle>Lọc theo ngày</SheetTitle>
           </SheetHeader>
-
           <div className="flex-1 space-y-6 overflow-y-auto px-6 py-5">
-            {/* Trạng thái — multi-select */}
-            <div className="space-y-3">
-              <p className="text-sm font-medium">Trạng thái</p>
-              <div className="flex flex-wrap gap-2">
-                {ALL_STATUSES.map((s) => {
-                  const active = draftStatuses.includes(s.value);
-                  return (
-                    <button
-                      key={s.value}
-                      onClick={() => toggleDraftStatus(s.value)}
-                      className={cn(
-                        'rounded-full border px-3 py-1 text-sm transition-colors',
-                        active
-                          ? 'border-foreground bg-foreground text-background'
-                          : 'bg-background text-foreground hover:bg-accent',
-                      )}
-                    >
-                      {s.label}
-                    </button>
-                  );
-                })}
-              </div>
-              {draftStatuses.length > 0 && (
-                <button
-                  onClick={() => setDraftStatuses([])}
-                  className="text-xs text-muted-foreground hover:text-foreground"
-                >
-                  Bỏ chọn tất cả
-                </button>
-              )}
-            </div>
-
-            <Separator />
-
-            {/* Khoảng ngày */}
             <div className="space-y-3">
               <p className="text-sm font-medium">Khoảng ngày đặt</p>
               <DateRangePicker value={draftRange} onChange={setDraftRange} className="w-full" />
             </div>
           </div>
-
           <SheetFooter className="flex-row gap-2 border-t px-6 py-4">
-            <Button variant="outline" className="flex-1" onClick={resetSheet}>
-              Đặt lại
-            </Button>
-            <Button className="flex-1" onClick={applySheet}>
-              Áp dụng
-              {(draftStatuses.length > 0 || draftRange) && (
-                <Badge variant="secondary" className="ml-1">
-                  {(draftStatuses.length > 0 ? 1 : 0) + (draftRange ? 1 : 0)}
-                </Badge>
-              )}
-            </Button>
+            <Button variant="outline" className="flex-1" onClick={resetSheet}>Đặt lại</Button>
+            <Button className="flex-1" onClick={applySheet}>Áp dụng</Button>
           </SheetFooter>
         </SheetContent>
       </Sheet>
