@@ -232,6 +232,7 @@ export function useCategories() {
           toParentId: parentId,
           targetOrderedIds: reordered.map((c) => c.id),
         });
+        toast.success('Đã sắp xếp lại');
       } catch {
         setFlatList(snapshot.flatList);
         setTree(snapshot.tree);
@@ -259,6 +260,7 @@ export function useCategories() {
           toParentId: parentId,
           targetOrderedIds: reordered.map((c) => c.id),
         });
+        toast.success('Đã sắp xếp lại');
       } catch {
         setFlatList(snapshot.flatList);
         setTree(snapshot.tree);

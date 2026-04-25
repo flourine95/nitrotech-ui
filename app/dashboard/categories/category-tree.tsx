@@ -174,57 +174,54 @@ const NodeRow = memo(function NodeRow({
                 Di chuyển xuống
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              {/* Reparent — Radix Popover nested inside dropdown item */}
-              <Popover open={reparentOpen} onOpenChange={setReparentOpen}>
-                <PopoverTrigger asChild>
-                  <DropdownMenuItem
-                    className="gap-2"
-                    onSelect={(e) => {
-                      e.preventDefault(); // keep dropdown open while popover opens
-                      setReparentOpen(true);
-                    }}
-                  >
-                    <CornerDownRight className="h-3.5 w-3.5" />
-                    Di chuyển vào danh mục khác
-                  </DropdownMenuItem>
-                </PopoverTrigger>
-                <PopoverContent side="left" align="start" className="w-56 p-0">
-                  <Command>
-                    <CommandInput placeholder="Tìm danh mục..." />
-                    <CommandList>
-                      <CommandEmpty>Không tìm thấy danh mục nào.</CommandEmpty>
-                      <CommandGroup>
-                        <CommandItem
-                          value="__root__"
-                          onSelect={() => { onChangeParent(null); setReparentOpen(false); }}
-                          className="gap-2"
-                          disabled={node.parentId === null}
-                        >
-                          <Check className={cn('h-3.5 w-3.5 shrink-0', node.parentId === null ? 'opacity-100' : 'opacity-0')} aria-hidden="true" />
-                          <Folder className="h-3.5 w-3.5 shrink-0 text-primary/60" aria-hidden="true" />
-                          Danh mục gốc
-                        </CommandItem>
-                        {parentOptions.map((opt) => (
-                          <CommandItem
-                            key={opt.id}
-                            value={opt.name}
-                            onSelect={() => { onChangeParent(opt.id as number); setReparentOpen(false); }}
-                            className="gap-2"
-                            disabled={opt.isCurrent}
-                            style={{ paddingLeft: `${8 + opt.depth * 12}px` }}
-                          >
-                            <Check className={cn('h-3.5 w-3.5 shrink-0', opt.isCurrent ? 'opacity-100' : 'opacity-0')} aria-hidden="true" />
-                            {opt.depth > 0 && <CornerDownRight className="h-3 w-3 shrink-0 text-muted-foreground/40" aria-hidden="true" />}
-                            <span className="truncate">{opt.name}</span>
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
+              <DropdownMenuItem
+                className="gap-2"
+                onSelect={() => setReparentOpen(true)}
+              >
+                <CornerDownRight className="h-3.5 w-3.5" />
+                Di chuyển vào danh mục khác
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+
+          {/* Reparent popover — outside DropdownMenu to avoid unmount on close */}
+          <Popover open={reparentOpen} onOpenChange={setReparentOpen}>
+            <PopoverTrigger className="sr-only" aria-hidden="true" tabIndex={-1} />
+            <PopoverContent side="left" align="start" className="w-56 p-0">
+              <Command>
+                <CommandInput placeholder="Tìm danh mục..." />
+                <CommandList>
+                  <CommandEmpty>Không tìm thấy danh mục nào.</CommandEmpty>
+                  <CommandGroup>
+                    <CommandItem
+                      value="__root__"
+                      onSelect={() => { onChangeParent(null); setReparentOpen(false); }}
+                      className="gap-2"
+                      disabled={node.parentId === null}
+                    >
+                      <Check className={cn('h-3.5 w-3.5 shrink-0', node.parentId === null ? 'opacity-100' : 'opacity-0')} aria-hidden="true" />
+                      <Folder className="h-3.5 w-3.5 shrink-0 text-primary/60" aria-hidden="true" />
+                      Danh mục gốc
+                    </CommandItem>
+                    {parentOptions.map((opt) => (
+                      <CommandItem
+                        key={opt.id}
+                        value={opt.name}
+                        onSelect={() => { onChangeParent(opt.id as number); setReparentOpen(false); }}
+                        className="gap-2"
+                        disabled={opt.isCurrent}
+                        style={{ paddingLeft: `${8 + opt.depth * 12}px` }}
+                      >
+                        <Check className={cn('h-3.5 w-3.5 shrink-0', opt.isCurrent ? 'opacity-100' : 'opacity-0')} aria-hidden="true" />
+                        {opt.depth > 0 && <CornerDownRight className="h-3 w-3 shrink-0 text-muted-foreground/40" aria-hidden="true" />}
+                        <span className="truncate">{opt.name}</span>
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
 
           {/* Always-visible: toggle active */}
           <Tooltip>
@@ -236,10 +233,11 @@ const NodeRow = memo(function NodeRow({
                 aria-checked={node.active}
                 aria-label={node.active ? 'Đang hiển thị' : 'Đang ẩn'}
                 className={cn(
-                  'relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200',
+                  'relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-all duration-200',
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-                  'disabled:cursor-wait disabled:opacity-60',
-                  node.active ? 'bg-emerald-500' : 'bg-muted-foreground/30',
+                  'disabled:pointer-events-none',
+                  toggling ? 'opacity-50' : '',
+                  node.active ? 'bg-primary' : 'bg-muted-foreground/30',
                 )}
               >
                 <span

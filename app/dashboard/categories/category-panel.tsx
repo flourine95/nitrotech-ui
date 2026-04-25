@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import {
@@ -136,10 +137,10 @@ export function CategoryPanel({
           <div className="flex-1 space-y-5 px-6 py-5">
             {/* Tên */}
             <div>
-              <Label htmlFor="cat-name" className="mb-1.5 block text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              <Label htmlFor="cat-name" className="mb-1.5">
                 Tên danh mục <span className="text-destructive" aria-hidden="true">*</span>
               </Label>
-              <input
+              <Input
                 id="cat-name"
                 {...register('name')}
                 placeholder="VD: Điện tử, Thời trang..."
@@ -147,12 +148,7 @@ export function CategoryPanel({
                 aria-required="true"
                 aria-invalid={!!errors.name}
                 aria-describedby={errors.name ? 'cat-name-error' : undefined}
-                className={cn(
-                  'w-full rounded-xl border px-3.5 py-2.5 text-sm transition-colors outline-none focus:ring-2',
-                  errors.name
-                    ? 'border-destructive/50 bg-destructive/5 focus:ring-destructive/20'
-                    : 'border-border bg-muted/50 focus:border-ring focus:bg-background focus:ring-ring/20',
-                )}
+                className={errors.name ? 'border-destructive/50 bg-destructive/5 focus-visible:ring-destructive/20' : ''}
               />
               {errors.name && (
                 <p id="cat-name-error" role="alert" className="mt-1 text-xs text-destructive">
@@ -163,14 +159,14 @@ export function CategoryPanel({
 
             {/* Slug */}
             <div>
-              <Label htmlFor="cat-slug" className="mb-1.5 block text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              <Label htmlFor="cat-slug" className="mb-1.5">
                 Đường dẫn (slug) <span className="text-destructive" aria-hidden="true">*</span>
               </Label>
               <div className="relative">
-                <span className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-xs text-muted-foreground/70 select-none" aria-hidden="true">
+                <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-xs text-muted-foreground/70 select-none" aria-hidden="true">
                   /
                 </span>
-                <input
+                <Input
                   id="cat-slug"
                   {...register('slug')}
                   placeholder="dien-tu"
@@ -179,10 +175,8 @@ export function CategoryPanel({
                   aria-invalid={!!errors.slug}
                   aria-describedby={errors.slug ? 'cat-slug-error' : 'cat-slug-hint'}
                   className={cn(
-                    'w-full rounded-xl border py-2.5 pr-3.5 pl-6 font-mono text-sm transition-colors outline-none focus:ring-2',
-                    errors.slug
-                      ? 'border-destructive/50 bg-destructive/5 focus:ring-destructive/20'
-                      : 'border-border bg-muted/50 focus:border-ring focus:bg-background focus:ring-ring/20',
+                    'pl-6 font-mono',
+                    errors.slug ? 'border-destructive/50 bg-destructive/5 focus-visible:ring-destructive/20' : '',
                   )}
                 />
               </div>
@@ -201,7 +195,7 @@ export function CategoryPanel({
 
             {/* Danh mục cha */}
             <div>
-              <Label htmlFor="cat-parent" className="mb-1.5 block text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              <Label htmlFor="cat-parent" className="mb-1.5">
                 Danh mục cha
               </Label>
               <Popover open={parentOpen} onOpenChange={setParentOpen}>
@@ -261,7 +255,7 @@ export function CategoryPanel({
 
             {/* Mô tả */}
             <div>
-              <Label htmlFor="cat-desc" className="mb-1.5 block text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              <Label htmlFor="cat-desc" className="mb-1.5">
                 Mô tả
               </Label>
               <textarea
@@ -269,17 +263,17 @@ export function CategoryPanel({
                 {...register('description')}
                 rows={3}
                 placeholder="VD: Bao gồm laptop, máy tính bảng và phụ kiện..."
-                className="w-full resize-none rounded-xl border border-border bg-muted/50 px-3.5 py-2.5 text-sm transition-colors outline-none focus:border-ring focus:bg-background focus:ring-2 focus:ring-ring/20"
+                className="w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm transition-colors outline-none placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring"
               />
             </div>
 
             {/* Toggle active */}
-            <div className="flex items-center justify-between rounded-xl border border-border bg-muted/50 px-4 py-3">
+            <div className="flex items-center justify-between rounded-md border px-4 py-3">
               <div>
                 <Label htmlFor="cat-active" className="text-sm font-medium">
                   Hiển thị trên cửa hàng
                 </Label>
-                <p className="text-xs text-muted-foreground/70">
+                <p className="text-xs text-muted-foreground">
                   Bật để khách hàng thấy danh mục này khi mua hàng
                 </p>
               </div>

@@ -4,8 +4,10 @@ import { toast } from 'sonner';
 import { Folder, Plus, RotateCcw, Search, Trash2, X } from 'lucide-react';
 import type { Category } from '@/lib/api/categories';
 import { ApiException } from '@/lib/client';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { CategoryTree } from './category-tree';
 import { CategoryPanel } from './category-panel';
@@ -24,8 +26,8 @@ import {
 
 const STATUS_FILTERS: { value: FilterStatus; label: string }[] = [
   { value: 'all', label: 'Tất cả' },
-  { value: 'active', label: 'Đang hiển thị' },
-  { value: 'inactive', label: 'Đang ẩn' },
+  { value: 'active', label: 'Hiển thị' },
+  { value: 'inactive', label: 'Ẩn' },
   { value: 'deleted', label: 'Đã xóa' },
 ];
 
@@ -174,25 +176,35 @@ export default function DashboardCategoriesPage() {
             </ToggleGroup>
           </div>
 
-          {/* Expand/collapse — only when not in deleted view */}
-          {filterStatus !== 'deleted' && (
-            <>
-              <Button variant="outline" size="sm" className="h-9" onClick={expandAll}>
-                Mở tất cả
-              </Button>
-              <Button variant="outline" size="sm" className="h-9" onClick={collapseAll}>
-                Đóng tất cả
-              </Button>
-            </>
-          )}
+          {/* Expand/collapse — hidden in deleted view to avoid layout shift */}
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn('h-9', filterStatus === 'deleted' && 'invisible')}
+            onClick={expandAll}
+          >
+            Mở tất cả
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn('h-9', filterStatus === 'deleted' && 'invisible')}
+            onClick={collapseAll}
+          >
+            Đóng tất cả
+          </Button>
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-border bg-card">
+      <div className="overflow-hidden rounded-md border bg-card">
         {loading ? (
-          <div className="space-y-2 p-4">
+          <div className="divide-y">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-12 animate-pulse rounded-lg bg-muted" />
+              <div key={i} className="flex items-center gap-3 px-4 py-3">
+                <Skeleton className="h-4 w-4 rounded" />
+                <Skeleton className="h-4 w-48" />
+                <Skeleton className="ml-auto h-3.5 w-16" />
+              </div>
             ))}
           </div>
         ) : filterStatus === 'deleted' ? (
@@ -203,12 +215,14 @@ export default function DashboardCategoriesPage() {
                 {search ? `Không tìm thấy "${search}"` : 'Không có danh mục nào trong thùng rác'}
               </p>
               {search && (
-                <button
+                <Button
+                  variant="link"
+                  size="sm"
                   onClick={() => setSearch('')}
-                  className="mt-2 cursor-pointer text-xs text-primary hover:underline"
+                  className="mt-1 h-auto p-0 text-xs"
                 >
                   Xóa tìm kiếm
-                </button>
+                </Button>
               )}
             </div>
           ) : (
@@ -228,22 +242,26 @@ export default function DashboardCategoriesPage() {
                     </span>
                   )}
                   <div className="flex shrink-0 items-center gap-1">
-                    <button
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => setRestoreTarget(cat)}
                       aria-label={`Khôi phục ${cat.name}`}
-                      className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700"
+                      className="h-8 gap-1.5 text-xs"
                     >
                       <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
                       Khôi phục
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => setHardDeleteTarget(cat)}
                       aria-label={`Xóa vĩnh viễn ${cat.name}`}
-                      className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700"
+                      className="h-8 gap-1.5 text-xs text-destructive hover:text-destructive"
                     >
                       <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                       Xóa vĩnh viễn
-                    </button>
+                    </Button>
                   </div>
                 </div>
               ))}
@@ -256,12 +274,14 @@ export default function DashboardCategoriesPage() {
               {search ? `Không tìm thấy "${search}"` : 'Chưa có danh mục nào'}
             </p>
             {search ? (
-              <button
+              <Button
+                variant="link"
+                size="sm"
                 onClick={() => setSearch('')}
-                className="mt-2 cursor-pointer text-xs text-primary hover:underline"
+                className="mt-1 h-auto p-0 text-xs"
               >
                 Xóa tìm kiếm
-              </button>
+              </Button>
             ) : (
               <p className="mt-1 text-xs">Nhấn "Thêm danh mục" để bắt đầu.</p>
             )}
@@ -287,13 +307,6 @@ export default function DashboardCategoriesPage() {
         {!loading && filterStatus !== 'deleted' && search && matchedIds && (
           <div className="border-t border-border px-4 py-2.5 text-xs text-muted-foreground/70">
             {matchedIds.size} kết quả cho &ldquo;{search}&rdquo;
-          </div>
-        )}
-        {!loading && filterStatus === 'deleted' && visibleDeleted.length > 0 && (
-          <div className="border-t border-border px-4 py-2.5 text-xs text-muted-foreground/70">
-            {search
-              ? `${visibleDeleted.length} kết quả cho "${search}"`
-              : `${deletedCount} danh mục đã xóa`}
           </div>
         )}
       </div>
@@ -337,7 +350,7 @@ export default function DashboardCategoriesPage() {
               onClick={() => deleteTarget && confirmDelete(deleteTarget)}
               disabled={deleting}
             >
-              {deleting ? 'Đang xóa...' : 'Chuyển vào thùng rác'}
+              {deleting ? 'Đang xóa...' : 'Xóa'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
