@@ -70,7 +70,7 @@ export function useBrands() {
     try {
       const updated = await updateBrand(brand.id, { active: !brand.active });
       setBrands((prev) => prev.map((b) => (b.id === updated.id ? updated : b)));
-      toast.success(updated.active ? 'Đã hiển thị' : 'Đã ẩn');
+      toast.success(updated.active ? `Đã hiển thị "${updated.name}"` : `Đã ẩn "${updated.name}"`);
     } catch {
       toast.error('Cập nhật thất bại');
     }
