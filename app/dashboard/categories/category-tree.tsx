@@ -1,5 +1,5 @@
 'use client';
-import { memo, useState } from 'react';
+import { memo, useMemo, useState } from 'react';
 import {
   Folder,
   FolderOpen,
@@ -100,8 +100,11 @@ const NodeRow = memo(function NodeRow({
   const hasChildren = node.children.length > 0;
   const [reparentOpen, setReparentOpen] = useState(false);
 
-  const descendantIds = getDescendantIds(node);
-  const parentOptions = collectParentOptions(tree, node.id, descendantIds, node.parentId);
+  const descendantIds = useMemo(() => getDescendantIds(node), [node]);
+  const parentOptions = useMemo(
+    () => collectParentOptions(tree, node.id, descendantIds, node.parentId),
+    [tree, node.id, node.parentId, descendantIds],
+  );
 
   return (
     <div className="group relative">
@@ -155,7 +158,7 @@ const NodeRow = memo(function NodeRow({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
-                className="cursor-pointer rounded-lg p-1.5 text-muted-foreground/40 opacity-0 transition-all group-hover:opacity-100 hover:bg-muted hover:text-foreground focus-visible:opacity-100"
+                className="cursor-pointer rounded-lg p-1.5 text-muted-foreground/30 transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 aria-label="Thêm thao tác"
               >
                 <MoreHorizontal className="h-4 w-4" />
@@ -182,14 +185,14 @@ const NodeRow = memo(function NodeRow({
                     }}
                   >
                     <CornerDownRight className="h-3.5 w-3.5" />
-                    Chuyển danh mục cha
+                    Di chuyển vào danh mục khác
                   </DropdownMenuItem>
                 </PopoverTrigger>
                 <PopoverContent side="left" align="start" className="w-56 p-0">
                   <Command>
                     <CommandInput placeholder="Tìm danh mục..." />
                     <CommandList>
-                      <CommandEmpty>Không tìm thấy.</CommandEmpty>
+                      <CommandEmpty>Không tìm thấy danh mục nào.</CommandEmpty>
                       <CommandGroup>
                         <CommandItem
                           value="__root__"

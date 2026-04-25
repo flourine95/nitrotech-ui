@@ -155,7 +155,7 @@ export function useCategories() {
       setFlatList((prev) =>
         prev.map((c) => (c.id === updated.id ? { ...c, active: updated.active } : c)),
       );
-      toast.success(updated.active ? 'Đã hiển thị' : 'Đã ẩn');
+      toast.success(updated.active ? `Đã hiển thị "${updated.name}"` : `Đã ẩn "${updated.name}"`);
     } catch {
       toast.error('Cập nhật thất bại');
     } finally {
@@ -171,7 +171,7 @@ export function useCategories() {
         toast.success('Đã xóa danh mục');
       } catch (e) {
         if (e instanceof ApiException && e.error.code === 'CATEGORY_HAS_CHILDREN')
-          toast.error('Không thể xóa — còn danh mục con đang hoạt động');
+          toast.error('Xóa thất bại — hãy xóa các danh mục con trước');
         else toast.error(e instanceof ApiException ? e.error.message : 'Xóa thất bại');
         throw e;
       }
@@ -235,7 +235,7 @@ export function useCategories() {
       } catch {
         setFlatList(snapshot.flatList);
         setTree(snapshot.tree);
-        toast.error('Sắp xếp thất bại');
+        toast.error('Sắp xếp thất bại — thử lại sau');
       }
     },
     [flatList, tree, applyReorder],
@@ -262,7 +262,7 @@ export function useCategories() {
       } catch {
         setFlatList(snapshot.flatList);
         setTree(snapshot.tree);
-        toast.error('Sắp xếp thất bại');
+        toast.error('Sắp xếp thất bại — thử lại sau');
       }
     },
     [flatList, tree, applyReorder],
@@ -297,7 +297,7 @@ export function useCategories() {
       } catch {
         setFlatList(snapshot.flatList);
         setTree(snapshot.tree);
-        toast.error('Đổi danh mục cha thất bại');
+        toast.error('Không thể di chuyển danh mục — thử lại sau');
       }
     },
     [flatList, tree, applyChangeParent],

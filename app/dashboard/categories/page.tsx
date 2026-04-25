@@ -24,8 +24,8 @@ import {
 
 const STATUS_FILTERS: { value: FilterStatus; label: string }[] = [
   { value: 'all', label: 'Tất cả' },
-  { value: 'active', label: 'Hoạt động' },
-  { value: 'inactive', label: 'Ẩn' },
+  { value: 'active', label: 'Đang hiển thị' },
+  { value: 'inactive', label: 'Đang ẩn' },
   { value: 'deleted', label: 'Đã xóa' },
 ];
 
@@ -110,7 +110,7 @@ export default function DashboardCategoriesPage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Danh mục</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Quản lý cây danh mục sản phẩm</p>
+          <p className="mt-1 text-sm text-muted-foreground">Quản lý danh mục sản phẩm</p>
         </div>
         <Button size="sm" className="h-9 shrink-0" onClick={() => setPanel({ open: true, category: null })}>
           <Plus className="h-4 w-4" />
@@ -135,7 +135,7 @@ export default function DashboardCategoriesPage() {
           <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="text"
-            placeholder="Tìm tên, slug..."
+            placeholder="Tìm theo tên danh mục..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="h-9 pr-8 pl-9"
@@ -200,14 +200,14 @@ export default function DashboardCategoriesPage() {
             <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
               <Trash2 className="mb-3 h-10 w-10 text-muted-foreground/40" />
               <p className="text-sm font-medium">
-                {search ? `Không tìm thấy "${search}"` : 'Không có danh mục nào đã xóa'}
+                {search ? `Không tìm thấy "${search}"` : 'Không có danh mục nào trong thùng rác'}
               </p>
               {search && (
                 <button
                   onClick={() => setSearch('')}
                   className="mt-2 cursor-pointer text-xs text-primary hover:underline"
                 >
-                  Xóa bộ lọc
+                  Xóa tìm kiếm
                 </button>
               )}
             </div>
@@ -230,16 +230,18 @@ export default function DashboardCategoriesPage() {
                   <div className="flex shrink-0 items-center gap-1">
                     <button
                       onClick={() => setRestoreTarget(cat)}
+                      aria-label={`Khôi phục ${cat.name}`}
                       className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700"
                     >
-                      <RotateCcw className="h-3.5 w-3.5" />
+                      <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
                       Khôi phục
                     </button>
                     <button
                       onClick={() => setHardDeleteTarget(cat)}
+                      aria-label={`Xóa vĩnh viễn ${cat.name}`}
                       className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700"
                     >
-                      <Trash2 className="h-3.5 w-3.5" />
+                      <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                       Xóa vĩnh viễn
                     </button>
                   </div>
@@ -253,13 +255,15 @@ export default function DashboardCategoriesPage() {
             <p className="text-sm font-medium">
               {search ? `Không tìm thấy "${search}"` : 'Chưa có danh mục nào'}
             </p>
-            {search && (
+            {search ? (
               <button
                 onClick={() => setSearch('')}
                 className="mt-2 cursor-pointer text-xs text-primary hover:underline"
               >
-                Xóa bộ lọc
+                Xóa tìm kiếm
               </button>
+            ) : (
+              <p className="mt-1 text-xs">Nhấn "Thêm danh mục" để bắt đầu.</p>
             )}
           </div>
         ) : (
@@ -312,17 +316,17 @@ export default function DashboardCategoriesPage() {
             <AlertDialogMedia className="bg-rose-100 text-rose-600">
               <Trash2 className="h-5 w-5" />
             </AlertDialogMedia>
-            <AlertDialogTitle>Xóa danh mục?</AlertDialogTitle>
+            <AlertDialogTitle>Xóa "{deleteTarget?.name}"?</AlertDialogTitle>
             <AlertDialogDescription>
-              Bạn sắp xóa <strong className="text-foreground">{deleteTarget?.name}</strong>.
-              {(deleteTarget?.children?.length ?? 0) > 0 && (
+              {(deleteTarget?.children?.length ?? 0) > 0 ? (
                 <>
-                  {' '}
-                  Danh mục này còn {deleteTarget!.children.length} danh mục con, hãy xóa chúng
-                  trước.
+                  Danh mục này có {deleteTarget!.children.length} danh mục con. Hãy xóa hoặc di chuyển chúng trước khi xóa danh mục cha.
                 </>
-              )}{' '}
-              Danh mục sẽ bị ẩn và có thể khôi phục lại sau.
+              ) : (
+                <>
+                  Danh mục sẽ được chuyển vào thùng rác. Bạn có thể khôi phục lại sau.
+                </>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -333,7 +337,7 @@ export default function DashboardCategoriesPage() {
               onClick={() => deleteTarget && confirmDelete(deleteTarget)}
               disabled={deleting}
             >
-              {deleting ? 'Đang xóa...' : 'Xóa'}
+              {deleting ? 'Đang xóa...' : 'Chuyển vào thùng rác'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -345,10 +349,9 @@ export default function DashboardCategoriesPage() {
             <AlertDialogMedia className="bg-emerald-100 text-emerald-600">
               <RotateCcw className="h-5 w-5" />
             </AlertDialogMedia>
-            <AlertDialogTitle>Khôi phục danh mục?</AlertDialogTitle>
+            <AlertDialogTitle>Khôi phục "{restoreTarget?.name}"?</AlertDialogTitle>
             <AlertDialogDescription>
-              Khôi phục <strong className="text-foreground">{restoreTarget?.name}</strong> về trạng
-              thái hoạt động.
+              Danh mục sẽ hiển thị trở lại trên cửa hàng.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -369,10 +372,9 @@ export default function DashboardCategoriesPage() {
             <AlertDialogMedia className="bg-rose-100 text-rose-600">
               <Trash2 className="h-5 w-5" />
             </AlertDialogMedia>
-            <AlertDialogTitle>Xóa vĩnh viễn?</AlertDialogTitle>
+            <AlertDialogTitle>Xóa vĩnh viễn "{hardDeleteTarget?.name}"?</AlertDialogTitle>
             <AlertDialogDescription>
-              <strong className="text-foreground">{hardDeleteTarget?.name}</strong> sẽ bị xóa hoàn
-              toàn và không thể khôi phục.
+              Thao tác này không thể hoàn tác. Danh mục sẽ bị xóa hoàn toàn khỏi hệ thống.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -92,7 +92,7 @@ export function CategoryPanel({
         if (e.error.code === 'CATEGORY_SLUG_EXISTS')
           setError('slug', { message: 'Slug đã tồn tại' });
         else if (e.error.code === 'CATEGORY_CIRCULAR_REF')
-          setError('parentId', { message: 'Tham chiếu vòng tròn' });
+          setError('parentId', { message: 'Không thể chọn danh mục con làm danh mục cha' });
         else if (e.error.errors)
           Object.entries(e.error.errors).forEach(([f, m]) =>
             setError(f as keyof CategoryFormData, { message: m }),
@@ -164,7 +164,7 @@ export function CategoryPanel({
             {/* Slug */}
             <div>
               <Label htmlFor="cat-slug" className="mb-1.5 block text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                Slug <span className="text-destructive" aria-hidden="true">*</span>
+                Đường dẫn (slug) <span className="text-destructive" aria-hidden="true">*</span>
               </Label>
               <div className="relative">
                 <span className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-xs text-muted-foreground/70 select-none" aria-hidden="true">
@@ -177,7 +177,7 @@ export function CategoryPanel({
                   onFocus={() => { slugTouched.current = true; }}
                   aria-required="true"
                   aria-invalid={!!errors.slug}
-                  aria-describedby={errors.slug ? 'cat-slug-error' : undefined}
+                  aria-describedby={errors.slug ? 'cat-slug-error' : 'cat-slug-hint'}
                   className={cn(
                     'w-full rounded-xl border py-2.5 pr-3.5 pl-6 font-mono text-sm transition-colors outline-none focus:ring-2',
                     errors.slug
@@ -186,9 +186,15 @@ export function CategoryPanel({
                   )}
                 />
               </div>
-              {errors.slug && (
+              {errors.slug ? (
                 <p id="cat-slug-error" role="alert" className="mt-1 text-xs text-destructive">
-                  {errors.slug.message}
+                  {errors.slug.message === 'Slug đã tồn tại'
+                    ? 'Đường dẫn này đã được dùng, hãy chọn tên khác.'
+                    : errors.slug.message}
+                </p>
+              ) : (
+                <p id="cat-slug-hint" className="mt-1 text-xs text-muted-foreground/60">
+                  Tự động tạo từ tên. Dùng để tạo URL cho danh mục.
                 </p>
               )}
             </div>
@@ -262,7 +268,7 @@ export function CategoryPanel({
                 id="cat-desc"
                 {...register('description')}
                 rows={3}
-                placeholder="Mô tả ngắn..."
+                placeholder="VD: Bao gồm laptop, máy tính bảng và phụ kiện..."
                 className="w-full resize-none rounded-xl border border-border bg-muted/50 px-3.5 py-2.5 text-sm transition-colors outline-none focus:border-ring focus:bg-background focus:ring-2 focus:ring-ring/20"
               />
             </div>
@@ -274,7 +280,7 @@ export function CategoryPanel({
                   Hiển thị trên cửa hàng
                 </Label>
                 <p className="text-xs text-muted-foreground/70">
-                  Khách hàng có thể thấy danh mục này
+                  Bật để khách hàng thấy danh mục này khi mua hàng
                 </p>
               </div>
               <Switch

@@ -27,7 +27,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="vi" suppressHydrationWarning className={beVietnamPro.variable}>
-      <body className="bg-[#F8FAFC] font-sans text-[#0F172A] antialiased">
+      <body suppressHydrationWarning className="bg-[#F8FAFC] font-sans text-[#0F172A] antialiased">
         <ProgressBar />
         <Providers>
           <TooltipProvider>
