@@ -27,18 +27,6 @@ function getDescendantIds(node: TreeNode): Set<number> {
   return ids;
 }
 
-function buildDisplayTree(categories: Category[]): TreeNode[] {
-  const map = new Map<number, TreeNode>();
-  const roots: TreeNode[] = [];
-  for (const c of categories) map.set(c.id, { ...c, children: [] });
-  for (const c of categories) {
-    const node = map.get(c.id)!;
-    if (c.parentId == null) roots.push(node);
-    else map.get(c.parentId)?.children.push(node);
-  }
-  return roots;
-}
-
 function calcPopoverPos(anchor: HTMLElement): { top: number; left: number; width: number } {
   const rect = anchor.getBoundingClientRect();
   const w = 224;
@@ -49,13 +37,13 @@ function calcPopoverPos(anchor: HTMLElement): { top: number; left: number; width
 
 function ParentPopover({
   node,
-  allCategories,
+  tree,
   pos,
   onSelect,
   onClose,
 }: {
   node: TreeNode;
-  allCategories: Category[];
+  tree: TreeNode[];
   pos: { top: number; left: number; width: number };
   onSelect: (newParentId: number | null) => void;
   onClose: () => void;
@@ -88,16 +76,16 @@ function ParentPopover({
       }
     }
   }
-  collectOptions(buildDisplayTree(allCategories), 1);
+  collectOptions(tree, 1);
 
   return createPortal(
     <div
       ref={popoverRef}
       style={{ position: 'fixed', top: pos.top, left: pos.left, width: pos.width, zIndex: 9999 }}
-      className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg"
+      className="overflow-hidden rounded-xl border border-border bg-card shadow-lg"
     >
-      <div className="border-b border-slate-100 px-3 py-2">
-        <p className="text-[11px] font-semibold tracking-wide text-slate-400 uppercase">
+      <div className="border-b border-border px-3 py-2">
+        <p className="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
           Chuyển vào
         </p>
       </div>
@@ -112,12 +100,12 @@ function ParentPopover({
                 onClose();
               }}
               disabled={isCurrent}
-              className={`flex w-full cursor-pointer items-center gap-2 py-2 pr-3 text-left text-sm transition-colors ${isCurrent ? 'cursor-default bg-primary/5 font-medium text-primary' : 'text-slate-700 hover:bg-slate-50'}`}
+              className={`flex w-full cursor-pointer items-center gap-2 py-2 pr-3 text-left text-sm transition-colors ${isCurrent ? 'cursor-default bg-primary/5 font-medium text-primary' : 'text-foreground hover:bg-muted/50'}`}
               style={{ paddingLeft: `${12 + opt.depth * 16}px` }}
             >
-              {opt.depth > 0 && <CornerDownRight className="h-3 w-3 shrink-0 text-slate-300" />}
+              {opt.depth > 0 && <CornerDownRight className="h-3 w-3 shrink-0 text-muted-foreground/40" />}
               <Folder
-                className={`h-3.5 w-3.5 shrink-0 ${opt.depth === 0 ? 'text-primary/60' : 'text-slate-300'}`}
+                className={`h-3.5 w-3.5 shrink-0 ${opt.depth === 0 ? 'text-primary/60' : 'text-muted-foreground/40'}`}
               />
               <span className="truncate">{opt.name}</span>
               {isCurrent && (
@@ -141,7 +129,7 @@ interface NodeRowProps {
   toggling: boolean;
   canMoveUp: boolean;
   canMoveDown: boolean;
-  allCategories: Category[];
+  tree: TreeNode[];
   onToggleExpand: () => void;
   onEdit: () => void;
   onDelete: () => void;
@@ -158,7 +146,7 @@ const NodeRow = memo(function NodeRow({
   toggling,
   canMoveUp,
   canMoveDown,
-  allCategories,
+  tree,
   onToggleExpand,
   onEdit,
   onDelete,
@@ -184,20 +172,21 @@ const NodeRow = memo(function NodeRow({
   return (
     <div className="group relative">
       <div
-        className="flex items-center gap-2 rounded-xl px-3 py-2 transition-colors hover:bg-slate-50"
+        className="flex items-center gap-2 rounded-xl px-3 py-2 transition-colors hover:bg-muted/50"
         style={{ paddingLeft: `${12 + depth * 24}px` }}
       >
         <button
           onClick={onToggleExpand}
           aria-label={expanded ? 'Thu gọn' : 'Mở rộng'}
-          className={`flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-200 hover:text-slate-700 ${!hasChildren ? 'invisible' : ''}`}
+          aria-expanded={hasChildren ? expanded : undefined}
+          className={`flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted-foreground/60 transition-colors hover:bg-muted hover:text-foreground ${!hasChildren ? 'invisible' : ''}`}
         >
           <ChevronRight
             className={`h-3.5 w-3.5 transition-transform duration-200 ${expanded ? 'rotate-90' : ''}`}
           />
         </button>
 
-        <span className={`shrink-0 ${depth === 0 ? 'text-primary' : 'text-slate-400'}`}>
+        <span className={`shrink-0 ${depth === 0 ? 'text-primary' : 'text-muted-foreground/50'}`}>
           {expanded && hasChildren ? (
             <FolderOpen className="h-4 w-4" />
           ) : (
@@ -208,27 +197,27 @@ const NodeRow = memo(function NodeRow({
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
             <span
-              className={`truncate text-sm leading-tight font-medium ${node.active ? 'text-slate-800' : 'text-slate-400 line-through'}`}
+              className={`truncate text-sm leading-tight font-medium ${node.active ? 'text-foreground' : 'text-muted-foreground/50 line-through'}`}
             >
               {node.name}
             </span>
             {hasChildren && (
-              <span className="shrink-0 rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-500">
+              <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
                 {node.children.length}
               </span>
             )}
           </div>
-          <p className="font-mono text-[11px] text-slate-400">{node.slug}</p>
+          <p className="font-mono text-[11px] text-muted-foreground/60">{node.slug}</p>
         </div>
 
         <div className="flex shrink-0 items-center gap-1">
-          <div className="flex items-center rounded-lg border border-slate-200 bg-white">
+          <div className="flex items-center rounded-lg border border-border bg-card">
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
                   onClick={onMoveUp}
                   disabled={!canMoveUp}
-                  className="cursor-pointer rounded-l-lg px-1.5 py-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-25"
+                  className="cursor-pointer rounded-l-lg px-1.5 py-1 text-muted-foreground/60 transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-25"
                 >
                   <ChevronUp className="h-3.5 w-3.5" />
                 </button>
@@ -237,13 +226,13 @@ const NodeRow = memo(function NodeRow({
                 <p>Di chuyển lên</p>
               </TooltipContent>
             </Tooltip>
-            <div className="h-4 w-px bg-slate-200" />
+            <div className="h-4 w-px bg-border" />
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
                   onClick={onMoveDown}
                   disabled={!canMoveDown}
-                  className="cursor-pointer rounded-r-lg px-1.5 py-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-25"
+                  className="cursor-pointer rounded-r-lg px-1.5 py-1 text-muted-foreground/60 transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-25"
                 >
                   <ChevronDown className="h-3.5 w-3.5" />
                 </button>
@@ -260,7 +249,7 @@ const NodeRow = memo(function NodeRow({
                 <button
                   ref={anchorRef}
                   onClick={handleTogglePopover}
-                  className={`cursor-pointer rounded-lg border px-2 py-1 text-xs font-medium transition-colors ${popoverPos ? 'border-primary/30 bg-primary/5 text-primary' : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-700'}`}
+                  className={`cursor-pointer rounded-lg border px-2 py-1 text-xs font-medium transition-colors ${popoverPos ? 'border-primary/30 bg-primary/5 text-primary' : 'border-border bg-card text-muted-foreground/60 hover:border-border hover:bg-muted hover:text-foreground'}`}
                 >
                   <CornerDownRight className="h-3.5 w-3.5" />
                 </button>
@@ -272,7 +261,7 @@ const NodeRow = memo(function NodeRow({
             {popoverPos && (
               <ParentPopover
                 node={node}
-                allCategories={allCategories}
+                tree={tree}
                 pos={popoverPos}
                 onSelect={onChangeParent}
                 onClose={() => setPopoverPos(null)}
@@ -280,14 +269,14 @@ const NodeRow = memo(function NodeRow({
             )}
           </div>
 
-          <div className="h-4 w-px bg-slate-200" />
+          <div className="h-4 w-px bg-border" />
 
           <Tooltip>
             <TooltipTrigger asChild>
               <button
                 onClick={onToggleActive}
                 disabled={toggling}
-                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus:outline-none disabled:cursor-wait disabled:opacity-60 ${node.active ? 'bg-emerald-500' : 'bg-slate-300'}`}
+                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus:outline-none disabled:cursor-wait disabled:opacity-60 ${node.active ? 'bg-emerald-500' : 'bg-muted-foreground/30'}`}
               >
                 <span
                   className={`inline-flex h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${node.active ? 'translate-x-4' : 'translate-x-0.5'}`}
@@ -303,7 +292,7 @@ const NodeRow = memo(function NodeRow({
             <TooltipTrigger asChild>
               <button
                 onClick={onEdit}
-                className="cursor-pointer rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-amber-50 hover:text-amber-600"
+                className="cursor-pointer rounded-lg p-1.5 text-muted-foreground/60 transition-colors hover:bg-amber-50 hover:text-amber-600"
               >
                 <Pencil className="h-3.5 w-3.5" />
               </button>
@@ -317,7 +306,7 @@ const NodeRow = memo(function NodeRow({
             <TooltipTrigger asChild>
               <button
                 onClick={onDelete}
-                className="cursor-pointer rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600"
+                className="cursor-pointer rounded-lg p-1.5 text-muted-foreground/60 transition-colors hover:bg-rose-50 hover:text-rose-600"
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
@@ -336,7 +325,7 @@ export interface CategoryTreeProps {
   nodes: TreeNode[];
   depth: number;
   expandedIds: Set<number>;
-  allCategories: Category[];
+  tree: TreeNode[];
   onToggleExpand: (id: number) => void;
   onEdit: (c: Category) => void;
   onDelete: (c: Category) => void;
@@ -351,7 +340,7 @@ export const CategoryTree = memo(function CategoryTree({
   nodes,
   depth,
   expandedIds,
-  allCategories,
+  tree,
   onToggleExpand,
   onEdit,
   onDelete,
@@ -372,7 +361,7 @@ export const CategoryTree = memo(function CategoryTree({
             toggling={togglingId === node.id}
             canMoveUp={index > 0}
             canMoveDown={index < nodes.length - 1}
-            allCategories={allCategories}
+            tree={tree}
             onToggleExpand={() => onToggleExpand(node.id)}
             onEdit={() => onEdit(node)}
             onDelete={() => onDelete(node)}
@@ -382,12 +371,12 @@ export const CategoryTree = memo(function CategoryTree({
             onChangeParent={(newParentId) => onChangeParent(node.id, newParentId)}
           />
           {node.children.length > 0 && expandedIds.has(node.id) && (
-            <div className="ml-7.25 border-l border-slate-100">
+            <div className="ml-7.25 border-l border-border">
               <CategoryTree
                 nodes={node.children}
                 depth={depth + 1}
                 expandedIds={expandedIds}
-                allCategories={allCategories}
+                tree={tree}
                 onToggleExpand={onToggleExpand}
                 onEdit={onEdit}
                 onDelete={onDelete}

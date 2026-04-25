@@ -4,6 +4,9 @@ import { toast } from 'sonner';
 import { Building2, Pencil, Plus, RotateCcw, Search, Trash2, X } from 'lucide-react';
 import type { Brand } from '@/lib/api/brands';
 import { ApiException } from '@/lib/client';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { BrandPanel } from './brand-panel';
 import { useBrands, type FilterStatus } from './use-brands';
 import {
@@ -18,6 +21,13 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+
+const STATUS_FILTERS: { value: FilterStatus; label: string }[] = [
+  { value: 'all', label: 'Tất cả' },
+  { value: 'active', label: 'Hiển thị' },
+  { value: 'inactive', label: 'Ẩn' },
+  { value: 'deleted', label: 'Đã xóa' },
+];
 
 export default function DashboardBrandsPage() {
   const [panel, setPanel] = useState<{ open: boolean; brand: Brand | null }>({
@@ -83,20 +93,17 @@ export default function DashboardBrandsPage() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-4">
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-foreground">Thương hiệu</h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">Quản lý thương hiệu sản phẩm</p>
+          <h1 className="text-2xl font-semibold tracking-tight">Thương hiệu</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Quản lý thương hiệu sản phẩm</p>
         </div>
-        <button
-          onClick={() => setPanel({ open: true, brand: null })}
-          className="flex shrink-0 cursor-pointer items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
-        >
+        <Button size="sm" className="h-9 shrink-0" onClick={() => setPanel({ open: true, brand: null })}>
           <Plus className="h-4 w-4" />
           Thêm thương hiệu
-        </button>
+        </Button>
       </div>
 
       {/* KPI cards */}
@@ -117,56 +124,47 @@ export default function DashboardBrandsPage() {
       </div>
 
       {/* Search + filters */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+      <div className="flex items-center gap-2">
         <div className="relative flex-1">
-          <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground/70" />
-          <input
+          <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
             type="text"
             placeholder="Tìm tên, slug..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-xl border border-border bg-card py-2.5 pr-4 pl-9 text-sm text-foreground/80 outline-none placeholder:text-muted-foreground/70 focus:border-ring focus:ring-2 focus:ring-ring/20"
+            className="h-9 pr-8 pl-9"
           />
           {search && (
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Xóa tìm kiếm"
               onClick={() => setSearch('')}
-              aria-label="Xóa"
-              className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-muted-foreground/70 hover:text-muted-foreground"
+              className="absolute top-1/2 right-1 size-7 -translate-y-1/2"
             >
-              <X className="h-3.5 w-3.5" />
-            </button>
+              <X />
+            </Button>
           )}
         </div>
-        <div className="flex gap-2">
-          {(
-            [
-              { value: 'all', label: 'Tất cả', count: total },
-              { value: 'active', label: 'Hiển thị', count: activeCount },
-              { value: 'inactive', label: 'Ẩn', count: inactiveCount },
-              { value: 'deleted', label: 'Đã xóa', count: deletedCount },
-            ] as { value: FilterStatus; label: string; count: number }[]
-          ).map((f) => (
-            <button
-              key={f.value}
-              onClick={() => setFilterStatus(f.value)}
-              className={`cursor-pointer rounded-xl border px-3 py-2 text-xs font-medium transition-colors ${
-                filterStatus === f.value
-                  ? f.value === 'deleted'
-                    ? 'border-rose-600 bg-rose-600 text-white'
-                    : 'border-slate-900 bg-slate-900 text-white'
-                  : 'border-border bg-card text-muted-foreground hover:bg-muted/50'
-              }`}
-            >
-              {f.label}
-              {f.count > 0 && (
-                <span
-                  className={`ml-1 ${filterStatus === f.value ? 'opacity-75' : 'text-muted-foreground/70'}`}
-                >
-                  ({f.count})
-                </span>
-              )}
-            </button>
-          ))}
+
+        {/* Status toggle */}
+        <div className="flex h-9 items-center rounded-md border bg-muted/40 p-0.5">
+          <ToggleGroup
+            type="single"
+            value={filterStatus}
+            onValueChange={(v) => v && setFilterStatus(v as FilterStatus)}
+            className="gap-0"
+          >
+            {STATUS_FILTERS.map((f) => (
+              <ToggleGroupItem
+                key={f.value}
+                value={f.value}
+                className="h-8 rounded px-3 text-sm data-[state=on]:bg-background data-[state=on]:font-medium data-[state=on]:shadow-sm"
+              >
+                {f.label}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
         </div>
       </div>
 

@@ -126,22 +126,6 @@ export default function DashboardProductsPage() {
   );
 
   // Multi-select state
-  const products = productsQuery.data?.content ?? [];
-  const {
-    selectedIds,
-    allSelected,
-    someSelected,
-    toggleSelect,
-    toggleSelectAll: _toggleSelectAll,
-    clearSelection,
-    setSelectedIds,
-  } = useTableSelection(products.map((p) => p.id));
-  const toggleSelectAll = useCallback(
-    () => _toggleSelectAll(products.map((p) => p.id)),
-    [_toggleSelectAll, products],
-  );
-  const [showImport, setShowImport] = useState(false);
-
   const {
     deleteTarget,
     setDeleteTarget,
@@ -181,6 +165,22 @@ export default function DashboardProductsPage() {
       }),
     placeholderData: (prev) => prev,
   });
+
+  const products = productsQuery.data?.content ?? [];
+  const {
+    selectedIds,
+    allSelected,
+    someSelected,
+    toggleSelect,
+    toggleSelectAll: _toggleSelectAll,
+    clearSelection,
+    setSelectedIds,
+  } = useTableSelection(products.map((p) => p.id));
+  const toggleSelectAll = useCallback(
+    () => _toggleSelectAll(products.map((p) => p.id)),
+    [_toggleSelectAll, products],
+  );
+  const [showImport, setShowImport] = useState(false);
 
   const categoriesQuery = useQuery({
     queryKey: ['categories-flat'],

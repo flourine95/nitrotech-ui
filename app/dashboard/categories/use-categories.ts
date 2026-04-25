@@ -124,8 +124,19 @@ export function useCategories() {
   }, []);
 
   const expandAll = useCallback(() => {
-    setExpandedIds(new Set(flatList.filter((c) => c.parentId !== null).map((c) => c.parentId!)));
-  }, [flatList]);
+    // Expand all nodes that have children
+    const withChildren = new Set<number>();
+    function collect(nodes: TreeNode[]) {
+      for (const n of nodes) {
+        if (n.children.length > 0) {
+          withChildren.add(n.id);
+          collect(n.children);
+        }
+      }
+    }
+    collect(tree);
+    setExpandedIds(withChildren);
+  }, [tree]);
 
   const collapseAll = useCallback(() => setExpandedIds(new Set()), []);
 
@@ -316,6 +327,7 @@ export function useCategories() {
 
   return {
     flatList,
+    tree,
     loading,
     search,
     setSearch,

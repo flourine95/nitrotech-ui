@@ -4,6 +4,9 @@ import { toast } from 'sonner';
 import { Folder, Plus, RotateCcw, Search, Trash2, X } from 'lucide-react';
 import type { Category } from '@/lib/api/categories';
 import { ApiException } from '@/lib/client';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { CategoryTree } from './category-tree';
 import { CategoryPanel } from './category-panel';
 import { useCategories, type FilterStatus } from './use-categories';
@@ -19,6 +22,13 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
+const STATUS_FILTERS: { value: FilterStatus; label: string }[] = [
+  { value: 'all', label: 'Tất cả' },
+  { value: 'active', label: 'Hoạt động' },
+  { value: 'inactive', label: 'Ẩn' },
+  { value: 'deleted', label: 'Đã xóa' },
+];
+
 export default function DashboardCategoriesPage() {
   const [panel, setPanel] = useState<{ open: boolean; category: Category | null }>({
     open: false,
@@ -33,6 +43,7 @@ export default function DashboardCategoriesPage() {
 
   const {
     flatList,
+    tree,
     loading,
     search,
     setSearch,
@@ -94,21 +105,20 @@ export default function DashboardCategoriesPage() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-4">
+      {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-foreground">Danh mục</h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">Quản lý cây danh mục sản phẩm</p>
+          <h1 className="text-2xl font-semibold tracking-tight">Danh mục</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Quản lý cây danh mục sản phẩm</p>
         </div>
-        <button
-          onClick={() => setPanel({ open: true, category: null })}
-          className="flex shrink-0 cursor-pointer items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
-        >
+        <Button size="sm" className="h-9 shrink-0" onClick={() => setPanel({ open: true, category: null })}>
           <Plus className="h-4 w-4" />
           Thêm danh mục
-        </button>
+        </Button>
       </div>
 
+      {/* KPI cards */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {(
           [
@@ -125,89 +135,61 @@ export default function DashboardCategoriesPage() {
         ))}
       </div>
 
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+      {/* Search + filters */}
+      <div className="flex items-center gap-2">
         <div className="relative flex-1">
-          <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground/70" />
-          <input
+          <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
             type="text"
             placeholder="Tìm tên, slug..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-xl border border-border bg-card py-2.5 pr-4 pl-9 text-sm text-foreground/80 outline-none placeholder:text-muted-foreground/70 focus:border-ring focus:ring-2 focus:ring-ring/20"
+            className="h-9 pr-8 pl-9"
           />
           {search && (
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Xóa tìm kiếm"
               onClick={() => setSearch('')}
-              aria-label="Xóa"
-              className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-muted-foreground/70 hover:text-muted-foreground"
+              className="absolute top-1/2 right-1 size-7 -translate-y-1/2"
             >
-              <X className="h-3.5 w-3.5" />
-            </button>
+              <X />
+            </Button>
           )}
         </div>
-        <div className="flex gap-2">
-          {(
-            [
-              { value: 'all', label: 'Tất cả', count: total },
-              { value: 'active', label: 'Hoạt động', count: activeCount },
-              { value: 'inactive', label: 'Ẩn', count: total - activeCount },
-              { value: 'deleted', label: 'Đã xóa', count: deletedCount },
-            ] as { value: FilterStatus; label: string; count: number }[]
-          ).map((f) => (
-            <button
-              key={f.value}
-              onClick={() => setFilterStatus(f.value)}
-              className={`cursor-pointer rounded-xl border px-3 py-2 text-xs font-medium transition-colors ${
-                filterStatus === f.value
-                  ? f.value === 'deleted'
-                    ? 'border-rose-600 bg-rose-600 text-white'
-                    : 'border-slate-900 bg-slate-900 text-white'
-                  : 'border-border bg-card text-muted-foreground hover:bg-muted/50'
-              }`}
-            >
-              {f.label}
-              {f.count > 0 && (
-                <span
-                  className={`ml-1 ${filterStatus === f.value ? 'opacity-75' : 'text-muted-foreground/70'}`}
-                >
-                  ({f.count})
-                </span>
-              )}
-            </button>
-          ))}
-          {filterStatus !== 'deleted' && (
-            <>
-              <button
-                onClick={expandAll}
-                className="cursor-pointer rounded-xl border border-border bg-card px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/50"
+
+        {/* Status toggle */}
+        <div className="flex h-9 items-center rounded-md border bg-muted/40 p-0.5">
+          <ToggleGroup
+            type="single"
+            value={filterStatus}
+            onValueChange={(v) => v && setFilterStatus(v as FilterStatus)}
+            className="gap-0"
+          >
+            {STATUS_FILTERS.map((f) => (
+              <ToggleGroupItem
+                key={f.value}
+                value={f.value}
+                className="h-8 rounded px-3 text-sm data-[state=on]:bg-background data-[state=on]:font-medium data-[state=on]:shadow-sm"
               >
-                Mở tất cả
-              </button>
-              <button
-                onClick={collapseAll}
-                className="cursor-pointer rounded-xl border border-border bg-card px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/50"
-              >
-                Đóng tất cả
-              </button>
-            </>
-          )}
-          {filterStatus === 'deleted' && (
-            <>
-              <button
-                disabled
-                className="invisible rounded-xl border border-border bg-card px-3 py-2 text-xs font-medium text-muted-foreground"
-              >
-                Mở tất cả
-              </button>
-              <button
-                disabled
-                className="invisible rounded-xl border border-border bg-card px-3 py-2 text-xs font-medium text-muted-foreground"
-              >
-                Đóng tất cả
-              </button>
-            </>
-          )}
+                {f.label}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
         </div>
+
+        {/* Expand/collapse — only when not in deleted view */}
+        {filterStatus !== 'deleted' && (
+          <>
+            <Button variant="outline" size="sm" className="h-9" onClick={expandAll}>
+              Mở tất cả
+            </Button>
+            <Button variant="outline" size="sm" className="h-9" onClick={collapseAll}>
+              Đóng tất cả
+            </Button>
+          </>
+        )}
       </div>
 
       <div className="overflow-hidden rounded-xl border border-border bg-card">
@@ -290,7 +272,7 @@ export default function DashboardCategoriesPage() {
               nodes={visibleTree}
               depth={0}
               expandedIds={expandedIds}
-              allCategories={flatList}
+              tree={tree}
               onToggleExpand={toggleExpand}
               onEdit={(c) => setPanel({ open: true, category: c })}
               onDelete={setDeleteTarget}
