@@ -118,22 +118,16 @@ export default function DashboardCategoriesPage() {
         </Button>
       </div>
 
-      {/* KPI cards */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {(
-          [
-            { label: 'Tổng', value: total, color: 'text-foreground' },
-            { label: 'Hoạt động', value: activeCount, color: 'text-emerald-600' },
-            { label: 'Danh mục gốc', value: rootCount, color: 'text-primary' },
-            { label: 'Danh mục con', value: subCount, color: 'text-violet-600' },
-          ] as const
-        ).map((s) => (
-          <div key={s.label} className="rounded-xl border border-border bg-card px-4 py-3">
-            <div className={`text-2xl font-bold tabular-nums ${s.color}`}>{s.value}</div>
-            <div className="text-xs text-muted-foreground">{s.label}</div>
-          </div>
-        ))}
-      </div>
+      {/* Stats summary — 1 line */}
+      <p className="text-sm text-muted-foreground">
+        <span className="font-medium text-foreground">{total}</span> danh mục
+        {' · '}
+        <span className="font-medium text-emerald-600">{activeCount}</span> hoạt động
+        {' · '}
+        <span className="font-medium text-primary">{rootCount}</span> gốc
+        {' · '}
+        <span className="font-medium text-foreground/70">{subCount}</span> con
+      </p>
 
       {/* Search + filters */}
       <div className="flex items-center gap-2">

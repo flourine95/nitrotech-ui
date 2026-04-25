@@ -1,13 +1,24 @@
 'use client';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { Folder, FolderOpen, X } from 'lucide-react';
+import { Check, ChevronsUpDown, FolderOpen, X } from 'lucide-react';
 import { createCategory, updateCategory, type Category } from '@/lib/api/categories';
 import { ApiException } from '@/lib/client';
 import { categorySchema, type CategoryFormData } from '@/lib/schemas/categories';
 import { slugify } from '@/lib/utils';
+import { cn } from '@/lib/utils';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
 
 export function CategoryPanel({
   category,
@@ -22,6 +33,7 @@ export function CategoryPanel({
 }) {
   const isEdit = !!category;
   const slugTouched = useRef(isEdit);
+  const [parentOpen, setParentOpen] = useState(false);
 
   const {
     register,
@@ -159,27 +171,58 @@ export function CategoryPanel({
               <label className="mb-1.5 block text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                 Danh mục cha
               </label>
-              <select
-                value={parentId ?? ''}
-                onChange={(e) =>
-                  setValue('parentId', e.target.value ? Number(e.target.value) : null)
-                }
-                className="w-full cursor-pointer rounded-xl border border-border bg-muted/50 px-3.5 py-2.5 text-sm transition-colors outline-none focus:border-ring focus:bg-background focus:ring-2 focus:ring-ring/20"
-              >
-                <option value="">— Danh mục gốc —</option>
-                {parentOptions.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-              {selectedParent && (
-                <p className="mt-1.5 flex items-center gap-1 text-xs text-muted-foreground/70">
-                  <Folder className="h-3 w-3" />
-                  Nằm trong:{' '}
-                  <span className="font-medium text-muted-foreground">{selectedParent.name}</span>
-                </p>
-              )}
+              <Popover open={parentOpen} onOpenChange={setParentOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={parentOpen}
+                    className="w-full justify-between font-normal"
+                  >
+                    <span className="truncate">
+                      {parentId
+                        ? (parentOptions.find((c) => c.id === parentId)?.name ?? 'Không tìm thấy')
+                        : '— Danh mục gốc —'}
+                    </span>
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Tìm danh mục..." />
+                    <CommandList>
+                      <CommandEmpty>Không tìm thấy danh mục.</CommandEmpty>
+                      <CommandGroup>
+                        <CommandItem
+                          value="__root__"
+                          onSelect={() => {
+                            setValue('parentId', null);
+                            setParentOpen(false);
+                          }}
+                          className="gap-2"
+                        >
+                          <Check className={cn('h-4 w-4', parentId === null ? 'opacity-100' : 'opacity-0')} />
+                          — Danh mục gốc —
+                        </CommandItem>
+                        {parentOptions.map((c) => (
+                          <CommandItem
+                            key={c.id}
+                            value={c.name}
+                            onSelect={() => {
+                              setValue('parentId', c.id);
+                              setParentOpen(false);
+                            }}
+                            className="gap-2"
+                          >
+                            <Check className={cn('h-4 w-4', parentId === c.id ? 'opacity-100' : 'opacity-0')} />
+                            {c.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
               {errors.parentId && (
                 <p className="mt-1 text-xs text-rose-500">{errors.parentId.message}</p>
               )}

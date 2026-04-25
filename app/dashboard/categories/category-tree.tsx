@@ -10,10 +10,18 @@ import {
   ChevronUp,
   ChevronDown,
   CornerDownRight,
+  MoreHorizontal,
 } from 'lucide-react';
 import type { Category } from '@/lib/api/categories';
 import type { TreeNode } from '@/lib/types/categories';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 function getDescendantIds(node: TreeNode): Set<number> {
   const ids = new Set<number>();
@@ -175,6 +183,7 @@ const NodeRow = memo(function NodeRow({
         className="flex items-center gap-2 rounded-xl px-3 py-2 transition-colors hover:bg-muted/50"
         style={{ paddingLeft: `${12 + depth * 24}px` }}
       >
+        {/* Expand toggle */}
         <button
           onClick={onToggleExpand}
           aria-label={expanded ? 'Thu gọn' : 'Mở rộng'}
@@ -186,6 +195,7 @@ const NodeRow = memo(function NodeRow({
           />
         </button>
 
+        {/* Folder icon */}
         <span className={`shrink-0 ${depth === 0 ? 'text-primary' : 'text-muted-foreground/50'}`}>
           {expanded && hasChildren ? (
             <FolderOpen className="h-4 w-4" />
@@ -194,6 +204,7 @@ const NodeRow = memo(function NodeRow({
           )}
         </span>
 
+        {/* Name + slug */}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
             <span
@@ -210,67 +221,48 @@ const NodeRow = memo(function NodeRow({
           <p className="font-mono text-[11px] text-muted-foreground/60">{node.slug}</p>
         </div>
 
+        {/* Actions */}
         <div className="flex shrink-0 items-center gap-1">
-          <div className="flex items-center rounded-lg border border-border bg-card">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={onMoveUp}
-                  disabled={!canMoveUp}
-                  className="cursor-pointer rounded-l-lg px-1.5 py-1 text-muted-foreground/60 transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-25"
-                >
-                  <ChevronUp className="h-3.5 w-3.5" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="top">
-                <p>Di chuyển lên</p>
-              </TooltipContent>
-            </Tooltip>
-            <div className="h-4 w-px bg-border" />
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={onMoveDown}
-                  disabled={!canMoveDown}
-                  className="cursor-pointer rounded-r-lg px-1.5 py-1 text-muted-foreground/60 transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-25"
-                >
-                  <ChevronDown className="h-3.5 w-3.5" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="top">
-                <p>Di chuyển xuống</p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
+          {/* More actions — Up / Down / Reparent */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className="cursor-pointer rounded-lg p-1.5 text-muted-foreground/40 opacity-0 transition-all group-hover:opacity-100 hover:bg-muted hover:text-foreground focus-visible:opacity-100"
+                aria-label="Thêm thao tác"
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem
+                onClick={onMoveUp}
+                disabled={!canMoveUp}
+                className="gap-2"
+              >
+                <ChevronUp className="h-3.5 w-3.5" />
+                Di chuyển lên
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={onMoveDown}
+                disabled={!canMoveDown}
+                className="gap-2"
+              >
+                <ChevronDown className="h-3.5 w-3.5" />
+                Di chuyển xuống
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                ref={anchorRef as React.Ref<HTMLDivElement>}
+                onClick={handleTogglePopover}
+                className="gap-2"
+              >
+                <CornerDownRight className="h-3.5 w-3.5" />
+                Chuyển danh mục cha
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
-          <div className="relative">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  ref={anchorRef}
-                  onClick={handleTogglePopover}
-                  className={`cursor-pointer rounded-lg border px-2 py-1 text-xs font-medium transition-colors ${popoverPos ? 'border-primary/30 bg-primary/5 text-primary' : 'border-border bg-card text-muted-foreground/60 hover:border-border hover:bg-muted hover:text-foreground'}`}
-                >
-                  <CornerDownRight className="h-3.5 w-3.5" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="top">
-                <p>Chuyển danh mục cha</p>
-              </TooltipContent>
-            </Tooltip>
-            {popoverPos && (
-              <ParentPopover
-                node={node}
-                tree={tree}
-                pos={popoverPos}
-                onSelect={onChangeParent}
-                onClose={() => setPopoverPos(null)}
-              />
-            )}
-          </div>
-
-          <div className="h-4 w-px bg-border" />
-
+          {/* Always-visible: toggle active */}
           <Tooltip>
             <TooltipTrigger asChild>
               <button
@@ -288,6 +280,7 @@ const NodeRow = memo(function NodeRow({
             </TooltipContent>
           </Tooltip>
 
+          {/* Always-visible: edit */}
           <Tooltip>
             <TooltipTrigger asChild>
               <button
@@ -302,6 +295,7 @@ const NodeRow = memo(function NodeRow({
             </TooltipContent>
           </Tooltip>
 
+          {/* Always-visible: delete */}
           <Tooltip>
             <TooltipTrigger asChild>
               <button
@@ -317,6 +311,17 @@ const NodeRow = memo(function NodeRow({
           </Tooltip>
         </div>
       </div>
+
+      {/* Parent popover — rendered via portal, triggered from dropdown */}
+      {popoverPos && (
+        <ParentPopover
+          node={node}
+          tree={tree}
+          pos={popoverPos}
+          onSelect={onChangeParent}
+          onClose={() => setPopoverPos(null)}
+        />
+      )}
     </div>
   );
 });
