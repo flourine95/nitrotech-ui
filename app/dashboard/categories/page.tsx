@@ -130,7 +130,7 @@ export default function DashboardCategoriesPage() {
       </p>
 
       {/* Search + filters */}
-      <div className="flex items-center gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         <div className="relative flex-1">
           <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -153,37 +153,39 @@ export default function DashboardCategoriesPage() {
           )}
         </div>
 
-        {/* Status toggle */}
-        <div className="flex h-9 items-center rounded-md border bg-muted/40 p-0.5">
-          <ToggleGroup
-            type="single"
-            value={filterStatus}
-            onValueChange={(v) => v && setFilterStatus(v as FilterStatus)}
-            className="gap-0"
-          >
-            {STATUS_FILTERS.map((f) => (
-              <ToggleGroupItem
-                key={f.value}
-                value={f.value}
-                className="h-8 rounded px-3 text-sm data-[state=on]:bg-background data-[state=on]:font-medium data-[state=on]:shadow-sm"
-              >
-                {f.label}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
-        </div>
+        <div className="flex items-center gap-2">
+          {/* Status toggle */}
+          <div className="flex h-9 items-center rounded-md border bg-muted/40 p-0.5">
+            <ToggleGroup
+              type="single"
+              value={filterStatus}
+              onValueChange={(v) => v && setFilterStatus(v as FilterStatus)}
+              className="gap-0"
+            >
+              {STATUS_FILTERS.map((f) => (
+                <ToggleGroupItem
+                  key={f.value}
+                  value={f.value}
+                  className="h-8 rounded px-3 text-sm data-[state=on]:bg-background data-[state=on]:font-medium data-[state=on]:shadow-sm"
+                >
+                  {f.label}
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
+          </div>
 
-        {/* Expand/collapse — only when not in deleted view */}
-        {filterStatus !== 'deleted' && (
-          <>
-            <Button variant="outline" size="sm" className="h-9" onClick={expandAll}>
-              Mở tất cả
-            </Button>
-            <Button variant="outline" size="sm" className="h-9" onClick={collapseAll}>
-              Đóng tất cả
-            </Button>
-          </>
-        )}
+          {/* Expand/collapse — only when not in deleted view */}
+          {filterStatus !== 'deleted' && (
+            <>
+              <Button variant="outline" size="sm" className="h-9" onClick={expandAll}>
+                Mở tất cả
+              </Button>
+              <Button variant="outline" size="sm" className="h-9" onClick={collapseAll}>
+                Đóng tất cả
+              </Button>
+            </>
+          )}
+        </div>
       </div>
 
       <div className="overflow-hidden rounded-xl border border-border bg-card">
@@ -278,11 +280,9 @@ export default function DashboardCategoriesPage() {
             />
           </div>
         )}
-        {!loading && filterStatus !== 'deleted' && visibleTree.length > 0 && (
+        {!loading && filterStatus !== 'deleted' && search && matchedIds && (
           <div className="border-t border-border px-4 py-2.5 text-xs text-muted-foreground/70">
-            {search
-              ? `${matchedIds?.size ?? 0} kết quả cho "${search}"`
-              : `${total} danh mục · ${rootCount} gốc · ${subCount} con`}
+            {matchedIds.size} kết quả cho &ldquo;{search}&rdquo;
           </div>
         )}
         {!loading && filterStatus === 'deleted' && visibleDeleted.length > 0 && (

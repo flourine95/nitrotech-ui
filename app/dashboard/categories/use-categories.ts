@@ -196,12 +196,13 @@ export function useCategories() {
   const applyChangeParent = useCallback(
     (id: number, from: number | null, to: number | null) => {
       const next = flatList.map((c) => (c.id === id ? { ...c, parentId: to } : c));
+      const nextMap = new Map(next.map((c) => [c.id, c]));
       const reindex = (pid: number | null) => {
         next
           .filter((c) => c.parentId === pid)
           .sort((a, b) => a.sortOrder - b.sortOrder)
           .forEach((c, i) => {
-            const item = next.find((x) => x.id === c.id);
+            const item = nextMap.get(c.id);
             if (item) item.sortOrder = i;
           });
       };

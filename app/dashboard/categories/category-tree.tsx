@@ -1,6 +1,5 @@
 'use client';
-import { memo, useRef, useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
+import { memo, useState } from 'react';
 import {
   Folder,
   FolderOpen,
@@ -11,6 +10,7 @@ import {
   ChevronDown,
   CornerDownRight,
   MoreHorizontal,
+  Check,
 } from 'lucide-react';
 import type { Category } from '@/lib/api/categories';
 import type { TreeNode } from '@/lib/types/categories';
@@ -22,112 +22,46 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import { cn } from '@/lib/utils';
 
 function getDescendantIds(node: TreeNode): Set<number> {
   const ids = new Set<number>();
   function collect(n: TreeNode) {
-    n.children.forEach((c) => {
-      ids.add(c.id);
-      collect(c);
-    });
+    n.children.forEach((c) => { ids.add(c.id); collect(c); });
   }
   collect(node);
   return ids;
 }
 
-function calcPopoverPos(anchor: HTMLElement): { top: number; left: number; width: number } {
-  const rect = anchor.getBoundingClientRect();
-  const w = 224;
-  const left = rect.right - w < 8 ? rect.left : rect.right - w;
-  const top = window.innerHeight - rect.bottom < 220 ? rect.top - 220 : rect.bottom + 4;
-  return { top, left, width: w };
-}
-
-function ParentPopover({
-  node,
-  tree,
-  pos,
-  onSelect,
-  onClose,
-}: {
-  node: TreeNode;
-  tree: TreeNode[];
-  pos: { top: number; left: number; width: number };
-  onSelect: (newParentId: number | null) => void;
-  onClose: () => void;
-}) {
-  const popoverRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function onMouseDown(e: MouseEvent) {
-      if (popoverRef.current?.contains(e.target as Node)) return;
-      onClose();
-    }
-    document.addEventListener('mousedown', onMouseDown);
-    document.addEventListener('scroll', onClose, true);
-    return () => {
-      document.removeEventListener('mousedown', onMouseDown);
-      document.removeEventListener('scroll', onClose, true);
-    };
-  }, [onClose]);
-
-  const descendantIds = getDescendantIds(node);
-  const options: Array<{ id: number | null; name: string; depth: number }> = [
-    { id: null, name: 'Danh mục gốc', depth: 0 },
-  ];
-
-  function collectOptions(nodes: TreeNode[], depth: number) {
-    for (const n of nodes) {
-      if (n.id !== node.id && !descendantIds.has(n.id)) {
-        options.push({ id: n.id, name: n.name, depth });
-        if (n.children.length) collectOptions(n.children, depth + 1);
-      }
+function collectParentOptions(
+  nodes: TreeNode[],
+  excludeId: number,
+  excludeDescendants: Set<number>,
+  currentParentId: number | null | undefined,
+  depth = 0,
+): Array<{ id: number | null; name: string; depth: number; isCurrent: boolean }> {
+  const result: Array<{ id: number | null; name: string; depth: number; isCurrent: boolean }> = [];
+  for (const n of nodes) {
+    if (n.id === excludeId || excludeDescendants.has(n.id)) continue;
+    result.push({ id: n.id, name: n.name, depth, isCurrent: n.id === currentParentId });
+    if (n.children.length) {
+      result.push(...collectParentOptions(n.children, excludeId, excludeDescendants, currentParentId, depth + 1));
     }
   }
-  collectOptions(tree, 1);
-
-  return createPortal(
-    <div
-      ref={popoverRef}
-      style={{ position: 'fixed', top: pos.top, left: pos.left, width: pos.width, zIndex: 9999 }}
-      className="overflow-hidden rounded-xl border border-border bg-card shadow-lg"
-    >
-      <div className="border-b border-border px-3 py-2">
-        <p className="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
-          Chuyển vào
-        </p>
-      </div>
-      <div className="max-h-52 overflow-y-auto py-1">
-        {options.map((opt) => {
-          const isCurrent = opt.id === node.parentId;
-          return (
-            <button
-              key={opt.id ?? 'root'}
-              onClick={() => {
-                onSelect(opt.id);
-                onClose();
-              }}
-              disabled={isCurrent}
-              className={`flex w-full cursor-pointer items-center gap-2 py-2 pr-3 text-left text-sm transition-colors ${isCurrent ? 'cursor-default bg-primary/5 font-medium text-primary' : 'text-foreground hover:bg-muted/50'}`}
-              style={{ paddingLeft: `${12 + opt.depth * 16}px` }}
-            >
-              {opt.depth > 0 && <CornerDownRight className="h-3 w-3 shrink-0 text-muted-foreground/40" />}
-              <Folder
-                className={`h-3.5 w-3.5 shrink-0 ${opt.depth === 0 ? 'text-primary/60' : 'text-muted-foreground/40'}`}
-              />
-              <span className="truncate">{opt.name}</span>
-              {isCurrent && (
-                <span className="ml-auto shrink-0 rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
-                  hiện tại
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </div>
-    </div>,
-    document.body,
-  );
+  return result;
 }
 
 interface NodeRowProps {
@@ -164,18 +98,10 @@ const NodeRow = memo(function NodeRow({
   onChangeParent,
 }: NodeRowProps) {
   const hasChildren = node.children.length > 0;
-  const [popoverPos, setPopoverPos] = useState<{ top: number; left: number; width: number } | null>(
-    null,
-  );
-  const anchorRef = useRef<HTMLButtonElement>(null);
+  const [reparentOpen, setReparentOpen] = useState(false);
 
-  function handleTogglePopover() {
-    if (popoverPos) {
-      setPopoverPos(null);
-    } else if (anchorRef.current) {
-      setPopoverPos(calcPopoverPos(anchorRef.current));
-    }
-  }
+  const descendantIds = getDescendantIds(node);
+  const parentOptions = collectParentOptions(tree, node.id, descendantIds, node.parentId);
 
   return (
     <div className="group relative">
@@ -188,27 +114,29 @@ const NodeRow = memo(function NodeRow({
           onClick={onToggleExpand}
           aria-label={expanded ? 'Thu gọn' : 'Mở rộng'}
           aria-expanded={hasChildren ? expanded : undefined}
-          className={`flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted-foreground/60 transition-colors hover:bg-muted hover:text-foreground ${!hasChildren ? 'invisible' : ''}`}
+          className={cn(
+            'flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted-foreground/60 transition-colors hover:bg-muted hover:text-foreground',
+            !hasChildren && 'invisible',
+          )}
         >
           <ChevronRight
-            className={`h-3.5 w-3.5 transition-transform duration-200 ${expanded ? 'rotate-90' : ''}`}
+            className={cn('h-3.5 w-3.5 transition-transform duration-200', expanded && 'rotate-90')}
           />
         </button>
 
         {/* Folder icon */}
-        <span className={`shrink-0 ${depth === 0 ? 'text-primary' : 'text-muted-foreground/50'}`}>
-          {expanded && hasChildren ? (
-            <FolderOpen className="h-4 w-4" />
-          ) : (
-            <Folder className="h-4 w-4" />
-          )}
+        <span className={cn('shrink-0', depth === 0 ? 'text-primary' : 'text-muted-foreground/50')} aria-hidden="true">
+          {expanded && hasChildren ? <FolderOpen className="h-4 w-4" /> : <Folder className="h-4 w-4" />}
         </span>
 
         {/* Name + slug */}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
             <span
-              className={`truncate text-sm leading-tight font-medium ${node.active ? 'text-foreground' : 'text-muted-foreground/50 line-through'}`}
+              className={cn(
+                'truncate text-sm leading-tight font-medium',
+                node.active ? 'text-foreground' : 'text-muted-foreground/50 line-through',
+              )}
             >
               {node.name}
             </span>
@@ -234,31 +162,64 @@ const NodeRow = memo(function NodeRow({
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem
-                onClick={onMoveUp}
-                disabled={!canMoveUp}
-                className="gap-2"
-              >
+              <DropdownMenuItem onClick={onMoveUp} disabled={!canMoveUp} className="gap-2">
                 <ChevronUp className="h-3.5 w-3.5" />
                 Di chuyển lên
               </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={onMoveDown}
-                disabled={!canMoveDown}
-                className="gap-2"
-              >
+              <DropdownMenuItem onClick={onMoveDown} disabled={!canMoveDown} className="gap-2">
                 <ChevronDown className="h-3.5 w-3.5" />
                 Di chuyển xuống
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem
-                ref={anchorRef as React.Ref<HTMLDivElement>}
-                onClick={handleTogglePopover}
-                className="gap-2"
-              >
-                <CornerDownRight className="h-3.5 w-3.5" />
-                Chuyển danh mục cha
-              </DropdownMenuItem>
+              {/* Reparent — Radix Popover nested inside dropdown item */}
+              <Popover open={reparentOpen} onOpenChange={setReparentOpen}>
+                <PopoverTrigger asChild>
+                  <DropdownMenuItem
+                    className="gap-2"
+                    onSelect={(e) => {
+                      e.preventDefault(); // keep dropdown open while popover opens
+                      setReparentOpen(true);
+                    }}
+                  >
+                    <CornerDownRight className="h-3.5 w-3.5" />
+                    Chuyển danh mục cha
+                  </DropdownMenuItem>
+                </PopoverTrigger>
+                <PopoverContent side="left" align="start" className="w-56 p-0">
+                  <Command>
+                    <CommandInput placeholder="Tìm danh mục..." />
+                    <CommandList>
+                      <CommandEmpty>Không tìm thấy.</CommandEmpty>
+                      <CommandGroup>
+                        <CommandItem
+                          value="__root__"
+                          onSelect={() => { onChangeParent(null); setReparentOpen(false); }}
+                          className="gap-2"
+                          disabled={node.parentId === null}
+                        >
+                          <Check className={cn('h-3.5 w-3.5 shrink-0', node.parentId === null ? 'opacity-100' : 'opacity-0')} aria-hidden="true" />
+                          <Folder className="h-3.5 w-3.5 shrink-0 text-primary/60" aria-hidden="true" />
+                          Danh mục gốc
+                        </CommandItem>
+                        {parentOptions.map((opt) => (
+                          <CommandItem
+                            key={opt.id}
+                            value={opt.name}
+                            onSelect={() => { onChangeParent(opt.id as number); setReparentOpen(false); }}
+                            className="gap-2"
+                            disabled={opt.isCurrent}
+                            style={{ paddingLeft: `${8 + opt.depth * 12}px` }}
+                          >
+                            <Check className={cn('h-3.5 w-3.5 shrink-0', opt.isCurrent ? 'opacity-100' : 'opacity-0')} aria-hidden="true" />
+                            {opt.depth > 0 && <CornerDownRight className="h-3 w-3 shrink-0 text-muted-foreground/40" aria-hidden="true" />}
+                            <span className="truncate">{opt.name}</span>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </DropdownMenuContent>
           </DropdownMenu>
 
@@ -268,10 +229,21 @@ const NodeRow = memo(function NodeRow({
               <button
                 onClick={onToggleActive}
                 disabled={toggling}
-                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus:outline-none disabled:cursor-wait disabled:opacity-60 ${node.active ? 'bg-emerald-500' : 'bg-muted-foreground/30'}`}
+                role="switch"
+                aria-checked={node.active}
+                aria-label={node.active ? 'Đang hiển thị' : 'Đang ẩn'}
+                className={cn(
+                  'relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                  'disabled:cursor-wait disabled:opacity-60',
+                  node.active ? 'bg-emerald-500' : 'bg-muted-foreground/30',
+                )}
               >
                 <span
-                  className={`inline-flex h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${node.active ? 'translate-x-4' : 'translate-x-0.5'}`}
+                  className={cn(
+                    'inline-flex h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200',
+                    node.active ? 'translate-x-4' : 'translate-x-0.5',
+                  )}
                 />
               </button>
             </TooltipTrigger>
@@ -285,14 +257,13 @@ const NodeRow = memo(function NodeRow({
             <TooltipTrigger asChild>
               <button
                 onClick={onEdit}
-                className="cursor-pointer rounded-lg p-1.5 text-muted-foreground/60 transition-colors hover:bg-amber-50 hover:text-amber-600"
+                aria-label={`Chỉnh sửa ${node.name}`}
+                className="cursor-pointer rounded-lg p-1.5 text-muted-foreground/60 transition-colors hover:bg-amber-500/10 hover:text-amber-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <Pencil className="h-3.5 w-3.5" />
               </button>
             </TooltipTrigger>
-            <TooltipContent side="top">
-              <p>Chỉnh sửa</p>
-            </TooltipContent>
+            <TooltipContent side="top"><p>Chỉnh sửa</p></TooltipContent>
           </Tooltip>
 
           {/* Always-visible: delete */}
@@ -300,28 +271,16 @@ const NodeRow = memo(function NodeRow({
             <TooltipTrigger asChild>
               <button
                 onClick={onDelete}
-                className="cursor-pointer rounded-lg p-1.5 text-muted-foreground/60 transition-colors hover:bg-rose-50 hover:text-rose-600"
+                aria-label={`Xóa ${node.name}`}
+                className="cursor-pointer rounded-lg p-1.5 text-muted-foreground/60 transition-colors hover:bg-destructive/10 hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
             </TooltipTrigger>
-            <TooltipContent side="top">
-              <p>Xóa</p>
-            </TooltipContent>
+            <TooltipContent side="top"><p>Xóa</p></TooltipContent>
           </Tooltip>
         </div>
       </div>
-
-      {/* Parent popover — rendered via portal, triggered from dropdown */}
-      {popoverPos && (
-        <ParentPopover
-          node={node}
-          tree={tree}
-          pos={popoverPos}
-          onSelect={onChangeParent}
-          onClose={() => setPopoverPos(null)}
-        />
-      )}
     </div>
   );
 });
