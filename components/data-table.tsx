@@ -123,7 +123,7 @@ function PaginationFooter({
             <SelectTrigger className="h-8 w-16">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent side="top">
+            <SelectContent position="popper" side="top" sideOffset={4}>
               {pageSizeOptions.map((s) => (
                 <SelectItem key={s} value={String(s)}>
                   {s}

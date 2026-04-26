@@ -61,6 +61,7 @@ export default function DashboardUIPage() {
   const [sortRules, setSortRules] = useState<SortRule[]>([{ field: 'createdAt', direction: 'desc' }]);
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(PAGE_SIZE);
 
   const [hiddenCols, setHiddenCols] = useState<Set<string>>(new Set());
 
@@ -109,8 +110,8 @@ export default function DashboardUIPage() {
   }, [search, selectedCategories, selectedStatuses, dateRange, sortRules]);
 
   const totalElements = filtered.length;
-  const totalPages = Math.ceil(totalElements / PAGE_SIZE);
-  const pageData = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  const totalPages = Math.ceil(totalElements / pageSize);
+  const pageData = filtered.slice(page * pageSize, (page + 1) * pageSize);
 
   const { selectedIds, allSelected, someSelected, toggleSelect, toggleSelectAll, clearSelection } =
     useTableSelection(pageData.map((p) => p.id));
@@ -311,10 +312,10 @@ export default function DashboardUIPage() {
         currentPage={page}
         totalPages={totalPages}
         totalElements={totalElements}
-        pageSize={PAGE_SIZE}
+        pageSize={pageSize}
         pageSizeOptions={[10, 20, 50]}
         onPageChange={(p) => { setPage(p); clearSelection(); }}
-        onPageSizeChange={() => {}}
+        onPageSizeChange={(s) => { setPageSize(s); setPage(0); clearSelection(); }}
         rowLabel="sản phẩm"
         emptyIcon={<Package className="h-10 w-10 text-muted-foreground/30" />}
         emptyTitle={search ? `Không tìm thấy "${search}"` : 'Chưa có sản phẩm nào'}
