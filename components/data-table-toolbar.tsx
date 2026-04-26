@@ -302,7 +302,7 @@ function SortButton({
             {rules.map((rule, i) => {
               const usedFields = new Set(rules.filter((_, j) => j !== i).map((r) => r.field));
               return (
-                <div key={i} className="flex items-center gap-1.5">
+                <div key={rule.field} className="flex items-center gap-1.5">
                   <div className="flex flex-col">
                     <button
                       type="button"

@@ -1,11 +1,12 @@
 'use client';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Eye, EyeOff, Package, Pencil, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DataTable, type DataTableColumn } from '@/components/data-table';
 import type { DateRange } from 'react-day-picker';
-import { DataTableToolbar,
+import {
+  DataTableToolbar,
   type FilterChip,
   type SortOption,
   type SortRule,
@@ -36,6 +37,13 @@ const ALL_PRODUCTS: MockProduct[] = Array.from({ length: 47 }, (_, i) => ({
   createdAt: new Date(Date.now() - i * 86_400_000).toISOString(),
 }));
 
+// Hoist static counts — ALL_PRODUCTS is constant, no need to recompute per render
+const CATEGORY_COUNTS = Object.fromEntries(
+  CATEGORIES.map((c) => [c, ALL_PRODUCTS.filter((p) => p.category === c).length]),
+);
+const ACTIVE_COUNT = ALL_PRODUCTS.filter((p) => p.active).length;
+const INACTIVE_COUNT = ALL_PRODUCTS.filter((p) => !p.active).length;
+
 const SORT_OPTIONS: SortOption[] = [
   { value: 'createdAt', label: 'Ngày tạo' },
   { value: 'price', label: 'Giá' },
@@ -62,17 +70,16 @@ export default function DashboardUIPage() {
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(PAGE_SIZE);
-
   const [hiddenCols, setHiddenCols] = useState<Set<string>>(new Set());
 
-  function toggleColumn(key: string, visible: boolean) {
+  const toggleColumn = useCallback((key: string, visible: boolean) => {
     setHiddenCols((prev) => {
       const next = new Set(prev);
       if (visible) next.delete(key);
       else next.add(key);
       return next;
     });
-  }
+  }, []);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
@@ -96,11 +103,14 @@ export default function DashboardUIPage() {
 
     result = [...result].sort((a, b) => {
       for (const rule of sortRules) {
-        let av: number, bv: number;
-        if (rule.field === 'price') { av = a.price; bv = b.price; }
-        else if (rule.field === 'name') { av = a.name.localeCompare(b.name); bv = 0; }
-        else { av = new Date(a.createdAt).getTime(); bv = new Date(b.createdAt).getTime(); }
-        const diff = rule.field === 'name' ? av : (av - bv);
+        let diff: number;
+        if (rule.field === 'name') {
+          diff = a.name.localeCompare(b.name, 'vi');
+        } else if (rule.field === 'price') {
+          diff = a.price - b.price;
+        } else {
+          diff = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        }
         if (diff !== 0) return rule.direction === 'asc' ? diff : -diff;
       }
       return 0;
@@ -116,15 +126,26 @@ export default function DashboardUIPage() {
   const { selectedIds, allSelected, someSelected, toggleSelect, toggleSelectAll, clearSelection } =
     useTableSelection(pageData.map((p) => p.id));
 
-  const filters: FilterChip[] = [
+  const handleSearchChange = useCallback((val: string) => { setSearch(val); setPage(0); }, []);
+  const handleSortChange = useCallback((rules: SortRule[]) => { setSortRules(rules); setPage(0); }, []);
+  const handlePageChange = useCallback((p: number) => { setPage(p); clearSelection(); }, [clearSelection]);
+  const handlePageSizeChange = useCallback((s: number) => { setPageSize(s); setPage(0); clearSelection(); }, [clearSelection]);
+
+  const handleResetFilters = useCallback(() => {
+    setSearch('');
+    setSelectedCategories([]);
+    setSelectedStatuses([]);
+    setDateRange(undefined);
+    setSortRules([]);
+    setPage(0);
+    clearSelection();
+  }, [clearSelection]);
+
+  const filters: FilterChip[] = useMemo(() => [
     {
       key: 'category',
       label: 'Danh mục',
-      options: CATEGORIES.map((c) => ({
-        value: c,
-        label: c,
-        count: ALL_PRODUCTS.filter((p) => p.category === c).length,
-      })),
+      options: CATEGORIES.map((c) => ({ value: c, label: c, count: CATEGORY_COUNTS[c] })),
       selected: selectedCategories,
       onChange: (v) => { setSelectedCategories(v); setPage(0); clearSelection(); },
     },
@@ -132,28 +153,29 @@ export default function DashboardUIPage() {
       key: 'status',
       label: 'Trạng thái',
       options: [
-        { value: 'active', label: 'Hiển thị', count: ALL_PRODUCTS.filter((p) => p.active).length },
-        { value: 'inactive', label: 'Ẩn', count: ALL_PRODUCTS.filter((p) => !p.active).length },
+        { value: 'active', label: 'Hiển thị', count: ACTIVE_COUNT },
+        { value: 'inactive', label: 'Ẩn', count: INACTIVE_COUNT },
       ],
       selected: selectedStatuses,
       onChange: (v) => { setSelectedStatuses(v); setPage(0); clearSelection(); },
     },
-  ];
+  ], [selectedCategories, selectedStatuses, clearSelection]);
 
-  const columnVisibility: ColumnVisibilityItem[] = Object.entries(COLUMN_LABELS).map(
-    ([key, label]) => ({ key, label, visible: !hiddenCols.has(key) }),
+  const columnVisibility: ColumnVisibilityItem[] = useMemo(
+    () => Object.entries(COLUMN_LABELS).map(([key, label]) => ({ key, label, visible: !hiddenCols.has(key) })),
+    [hiddenCols],
   );
 
-  const dateFilters: DateRangeFilter[] = [
+  const dateFilters: DateRangeFilter[] = useMemo(() => [
     {
       key: 'createdAt',
       label: 'Ngày tạo',
       value: dateRange,
       onChange: (v) => { setDateRange(v); setPage(0); clearSelection(); },
     },
-  ];
+  ], [dateRange, clearSelection]);
 
-  const columns: DataTableColumn<MockProduct>[] = [
+  const columns: DataTableColumn<MockProduct>[] = useMemo(() => [
     {
       key: 'name',
       header: 'Sản phẩm',
@@ -194,35 +216,39 @@ export default function DashboardUIPage() {
     },
     {
       key: 'actions',
-      header: '',
+      header: <span className="sr-only">Hành động</span>,
       className: 'text-right',
       hidden: hiddenCols.has('actions'),
       cell: (row) => (
         <div className="flex items-center justify-end gap-1">
           <Button
-            variant="ghost" size="icon"
+            variant="ghost"
+            size="icon"
             className="size-8 text-muted-foreground hover:bg-amber-500/10 hover:text-amber-600"
             onClick={() => toast.info(`Sửa: ${row.name}`)}
+            aria-label={`Sửa ${row.name}`}
           >
-            <Pencil className="h-4 w-4" />
+            <Pencil />
           </Button>
           <Button
-            variant="ghost" size="icon"
+            variant="ghost"
+            size="icon"
             className="size-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
             onClick={() => toast.error(`Xóa: ${row.name}`)}
+            aria-label={`Xóa ${row.name}`}
           >
-            <Trash2 className="h-4 w-4" />
+            <Trash2 />
           </Button>
         </div>
       ),
     },
-  ];
+  ], [hiddenCols]);
 
-  const bulkActions: BulkAction[] = [
+  const bulkActions: BulkAction[] = useMemo(() => [
     {
       key: 'show',
       label: 'Hiển thị',
-      icon: <Eye className="h-3.5 w-3.5" />,
+      icon: <Eye />,
       onClick: async () => {
         await new Promise((r) => setTimeout(r, 600));
         toast.success(`Đã hiển thị ${selectedIds.size} sản phẩm`);
@@ -232,7 +258,7 @@ export default function DashboardUIPage() {
     {
       key: 'hide',
       label: 'Ẩn',
-      icon: <EyeOff className="h-3.5 w-3.5" />,
+      icon: <EyeOff />,
       onClick: async () => {
         await new Promise((r) => setTimeout(r, 600));
         toast.success(`Đã ẩn ${selectedIds.size} sản phẩm`);
@@ -242,12 +268,12 @@ export default function DashboardUIPage() {
     {
       key: 'delete',
       label: 'Xóa',
-      icon: <Trash2 className="h-3.5 w-3.5" />,
+      icon: <Trash2 />,
       destructive: true,
       confirm: {
         title: `Xóa ${selectedIds.size} sản phẩm?`,
         description: 'Các sản phẩm sẽ được chuyển vào thùng rác.',
-        icon: <Trash2 className="h-5 w-5" />,
+        icon: <Trash2 />,
       },
       onClick: async () => {
         await new Promise((r) => setTimeout(r, 600));
@@ -255,7 +281,10 @@ export default function DashboardUIPage() {
         clearSelection();
       },
     },
-  ];
+  ], [selectedIds.size, clearSelection]);
+
+  const handleToggleSelect = useCallback((id: string | number) => toggleSelect(id as number), [toggleSelect]);
+  const handleToggleSelectAll = useCallback(() => toggleSelectAll(pageData.map((p) => p.id)), [toggleSelectAll, pageData]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -269,7 +298,13 @@ export default function DashboardUIPage() {
       <div className="flex items-center gap-2">
         <span className="text-sm text-muted-foreground">Scenario:</span>
         {(['normal', 'loading', 'error', 'empty'] as const).map((s) => (
-          <Button key={s} size="sm" variant={scenario === s ? 'default' : 'outline'} className="h-8" onClick={() => setScenario(s)}>
+          <Button
+            key={s}
+            size="sm"
+            variant={scenario === s ? 'default' : 'outline'}
+            className="h-8"
+            onClick={() => setScenario(s)}
+          >
             {s}
           </Button>
         ))}
@@ -277,24 +312,16 @@ export default function DashboardUIPage() {
 
       <DataTableToolbar
         searchValue={search}
-        onSearchChange={(val) => { setSearch(val); setPage(0); }}
+        onSearchChange={handleSearchChange}
         searchPlaceholder="Tìm tên, danh mục..."
         filters={filters}
         sortOptions={SORT_OPTIONS}
         sortRules={sortRules}
-        onSortChange={(rules) => { setSortRules(rules); setPage(0); }}
+        onSortChange={handleSortChange}
         columns={columnVisibility}
         onColumnVisibilityChange={toggleColumn}
         dateFilters={dateFilters}
-        onResetFilters={() => {
-          setSearch('');
-          setSelectedCategories([]);
-          setSelectedStatuses([]);
-          setDateRange(undefined);
-          setSortRules([]);
-          setPage(0);
-          clearSelection();
-        }}
+        onResetFilters={handleResetFilters}
       />
 
       <DataTable
@@ -307,28 +334,32 @@ export default function DashboardUIPage() {
         selectedIds={selectedIds as Set<string | number>}
         allSelected={allSelected}
         someSelected={someSelected}
-        onToggleSelect={(id) => toggleSelect(id as number)}
-        onToggleSelectAll={() => toggleSelectAll(pageData.map((p) => p.id))}
+        onToggleSelect={handleToggleSelect}
+        onToggleSelectAll={handleToggleSelectAll}
         currentPage={page}
         totalPages={totalPages}
         totalElements={totalElements}
         pageSize={pageSize}
         pageSizeOptions={[10, 20, 50]}
-        onPageChange={(p) => { setPage(p); clearSelection(); }}
-        onPageSizeChange={(s) => { setPageSize(s); setPage(0); clearSelection(); }}
+        onPageChange={handlePageChange}
+        onPageSizeChange={handlePageSizeChange}
         rowLabel="sản phẩm"
-        emptyIcon={<Package className="h-10 w-10 text-muted-foreground/30" />}
+        emptyIcon={<Package className="size-10 text-muted-foreground/30" />}
         emptyTitle={search ? `Không tìm thấy "${search}"` : 'Chưa có sản phẩm nào'}
         emptyDescription={
           search ? (
-            <button className="text-primary underline-offset-4 hover:underline" onClick={() => setSearch('')}>
+            <Button variant="link" size="sm" className="h-auto p-0 text-xs" onClick={() => setSearch('')}>
               Xóa tìm kiếm
-            </button>
+            </Button>
           ) : undefined
         }
       />
 
-      <BulkActionBar selectedCount={selectedIds.size} actions={bulkActions} onClearSelection={clearSelection} />
+      <BulkActionBar
+        selectedCount={selectedIds.size}
+        actions={bulkActions}
+        onClearSelection={clearSelection}
+      />
     </div>
   );
 }

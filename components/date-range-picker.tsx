@@ -33,50 +33,29 @@ interface InlineDropdownProps {
 
 export function InlineDropdown({ options, value, onChange, width = 'w-28' }: InlineDropdownProps) {
   const [open, setOpen] = useState(false);
-  const [rect, setRect] = useState<DOMRect | null>(null);
-  const btnRef = useRef<HTMLButtonElement>(null);
   const ref = useRef<HTMLDivElement>(null);
   const selected = options.find((o) => String(o.value) === String(value));
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (
-        ref.current && !ref.current.contains(e.target as Node) &&
-        btnRef.current && !btnRef.current.contains(e.target as Node)
-      ) setOpen(false);
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     }
     if (open) document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
   }, [open]);
 
-  function handleOpen() {
-    if (btnRef.current) setRect(btnRef.current.getBoundingClientRect());
-    setOpen((v) => !v);
-  }
-
   return (
-    <div className={cn('relative', width)}>
+    <div ref={ref} className={cn('relative', width)}>
       <button
-        ref={btnRef}
         type="button"
-        onClick={handleOpen}
+        onClick={() => setOpen((v) => !v)}
         className="flex h-7 w-full items-center justify-between gap-1 rounded-md border bg-background px-2 text-xs font-medium hover:bg-accent"
       >
         <span className="truncate">{selected?.label}</span>
         <ChevronDown className="size-3 shrink-0 text-muted-foreground" />
       </button>
-      {open && rect && (
-        <div
-          ref={ref}
-          style={{
-            position: 'fixed',
-            top: rect.bottom + 4,
-            left: rect.left,
-            width: rect.width,
-            zIndex: 9999,
-          }}
-          className="max-h-52 overflow-auto rounded-md border bg-popover shadow-md"
-        >
+      {open && (
+        <div className="absolute top-full left-0 z-200 mt-1 max-h-52 w-full overflow-auto rounded-md border bg-popover shadow-md">
           {options.map((opt) => (
             <button
               key={opt.value}
@@ -231,7 +210,7 @@ export function DateRangePicker({
         </div>
       </PopoverTrigger>
 
-      <PopoverContent align={align} className="w-auto p-0">
+      <PopoverContent align={align} className="w-auto overflow-visible p-0">
         <div className="flex flex-wrap gap-1 border-b p-2">
           {PRESETS.map((p) => (
             <button

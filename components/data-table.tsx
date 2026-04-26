@@ -67,9 +67,10 @@ export interface DataTableProps<T> {
 }
 
 function SkeletonRows({ cols, rows }: { cols: number; rows: number }) {
+  const cappedRows = Math.min(rows, 10);
   return (
     <div className="divide-y">
-      {Array.from({ length: rows }).map((_, i) => (
+      {Array.from({ length: cappedRows }).map((_, i) => (
         <div key={i} className="flex items-center gap-3 px-4 py-3">
           {Array.from({ length: cols }).map((_, j) => (
             <Skeleton key={j} className={cn('h-4', j === 0 ? 'w-4' : j === 1 ? 'w-40' : 'w-20')} />
@@ -144,7 +145,7 @@ function PaginationFooter({
             disabled={currentPage === 0}
             aria-label="Trang đầu"
           >
-            <ChevronsLeft className="h-4 w-4" />
+            <ChevronsLeft />
           </Button>
           <Button
             variant="outline" size="icon" className="size-8"
@@ -152,7 +153,7 @@ function PaginationFooter({
             disabled={currentPage === 0}
             aria-label="Trang trước"
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft />
           </Button>
           <Button
             variant="outline" size="icon" className="size-8"
@@ -160,7 +161,7 @@ function PaginationFooter({
             disabled={currentPage >= totalPages - 1}
             aria-label="Trang sau"
           >
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight />
           </Button>
           <Button
             variant="outline" size="icon" className="hidden size-8 lg:flex"
@@ -168,7 +169,7 @@ function PaginationFooter({
             disabled={currentPage >= totalPages - 1}
             aria-label="Trang cuối"
           >
-            <ChevronsRight className="h-4 w-4" />
+            <ChevronsRight />
           </Button>
         </div>
       </div>

@@ -65,8 +65,7 @@ export function BulkActionBar({
         role="toolbar"
         aria-label="Bulk actions"
         aria-orientation="horizontal"
-        className="fixed z-50 flex flex-row items-center gap-2 rounded-lg border bg-card px-2 py-1.5 shadow-lg outline-none animate-in fade-in-0 zoom-in-95 duration-200 [animation-timing-function:cubic-bezier(0.16,1,0.3,1)] motion-reduce:animate-none"
-        style={{ bottom: 16, left: '50%', translate: '-50%' }}
+        className="fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 flex-row items-center gap-2 rounded-lg border bg-card px-2 py-1.5 shadow-lg outline-none animate-in fade-in-0 zoom-in-95 duration-200 [animation-timing-function:cubic-bezier(0.16,1,0.3,1)] motion-reduce:animate-none"
       >
         <div className="flex items-center gap-1 rounded-sm border px-2 py-1 text-sm font-medium tabular-nums">
           <span>{selectedCount}</span>
@@ -92,7 +91,7 @@ export function BulkActionBar({
                 size="sm"
                 disabled={loading}
                 onClick={() => handleClick(action)}
-                className="h-8 gap-1.5 bg-destructive text-white hover:bg-destructive/90"
+                className="h-8 gap-1.5 bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >
                 {action.icon}
                 {action.label}
@@ -147,7 +146,7 @@ export function BulkActionBar({
                 variant={pendingConfirm.destructive ? 'destructive' : 'default'}
                 className={
                   pendingConfirm.destructive
-                    ? 'bg-destructive text-white hover:bg-destructive/90'
+                    ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90'
                     : undefined
                 }
                 disabled={loading}
