@@ -9,6 +9,7 @@ import {
   FolderIcon,
   ImageIcon,
   SettingsIcon,
+  FlaskConicalIcon,
 } from 'lucide-react';
 
 export type NavItem = {
@@ -35,4 +36,9 @@ export const catalogNavItems: NavItem[] = [
 
 export const systemNavItems: NavItem[] = [
   { label: 'Cài đặt', href: '/dashboard/settings', icon: SettingsIcon },
+];
+
+/** Dev-only: UI component sandbox */
+export const devNavItems: NavItem[] = [
+  { label: 'UI Sandbox', href: '/dashboard/ui', icon: FlaskConicalIcon },
 ];
