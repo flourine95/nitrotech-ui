@@ -1,8 +1,15 @@
 'use client';
 import { useCallback, useMemo, useState } from 'react';
-import { Eye, EyeOff, Package, Pencil, Trash2 } from 'lucide-react';
+import { Eye, EyeOff, MoreHorizontal, Package, Pencil, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { DataTable, type DataTableColumn } from '@/components/data-table';
 import type { DateRange } from 'react-day-picker';
 import {
@@ -217,29 +224,33 @@ export default function DashboardUIPage() {
     {
       key: 'actions',
       header: <span className="sr-only">Hành động</span>,
-      className: 'text-right',
+      className: 'text-right w-10',
       hidden: hiddenCols.has('actions'),
       cell: (row) => (
-        <div className="flex items-center justify-end gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-8 text-muted-foreground hover:bg-amber-500/10 hover:text-amber-600"
-            onClick={() => toast.info(`Sửa: ${row.name}`)}
-            aria-label={`Sửa ${row.name}`}
-          >
-            <Pencil />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-            onClick={() => toast.error(`Xóa: ${row.name}`)}
-            aria-label={`Xóa ${row.name}`}
-          >
-            <Trash2 />
-          </Button>
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8 text-muted-foreground"
+              aria-label={`Hành động cho ${row.name}`}
+            >
+              <MoreHorizontal />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => toast.info(`Sửa: ${row.name}`)}>
+              Chỉnh sửa
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              variant="destructive"
+              onClick={() => toast.error(`Xóa: ${row.name}`)}
+            >
+              Xóa
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       ),
     },
   ], [hiddenCols]);
