@@ -76,6 +76,7 @@ interface DataTableToolbarProps {
   sortOptions?: SortOption[];
   sortRules?: SortRule[];
   onSortChange?: (rules: SortRule[]) => void;
+  maxSortRules?: number;
   columns?: ColumnVisibilityItem[];
   onColumnVisibilityChange?: (key: string, visible: boolean) => void;
   onResetFilters?: () => void;
@@ -240,10 +241,12 @@ function SortButton({
   options,
   rules,
   onChange,
+  maxRules = Infinity,
 }: {
   options: SortOption[];
   rules: SortRule[];
   onChange: (rules: SortRule[]) => void;
+  maxRules?: number;
 }) {
   const hasRules = rules.length > 0;
 
@@ -302,7 +305,7 @@ function SortButton({
             {rules.map((rule, i) => {
               const usedFields = new Set(rules.filter((_, j) => j !== i).map((r) => r.field));
               return (
-                <div key={rule.field} className="flex items-center gap-1.5">
+                <div key={i} className="flex items-center gap-1.5">
                   <div className="flex flex-col">
                     <button
                       type="button"
@@ -374,7 +377,7 @@ function SortButton({
             size="sm"
             className="h-8 gap-1.5 rounded"
             onClick={addRule}
-            disabled={rules.length >= options.length}
+            disabled={rules.length >= options.length || rules.length >= maxRules}
           >
             <Plus className="size-4" />
             Thêm tiêu chí
@@ -462,6 +465,7 @@ export const DataTableToolbar = memo(function DataTableToolbar({
   sortOptions,
   sortRules = [],
   onSortChange,
+  maxSortRules,
   columns,
   onColumnVisibilityChange,
   onResetFilters,
@@ -502,7 +506,7 @@ export const DataTableToolbar = memo(function DataTableToolbar({
             placeholder={searchPlaceholder}
             value={inputVal}
             onChange={(e) => handleChange(e.target.value)}
-            className="h-8 w-40 pr-8 pl-8 text-sm lg:w-56"
+            className="h-8 w-48 pr-8 pl-8 text-sm lg:w-64"
           />
           {inputVal && (
             <button
@@ -544,7 +548,7 @@ export const DataTableToolbar = memo(function DataTableToolbar({
 
       <div className="flex shrink-0 items-center gap-2">
         {sortOptions && sortOptions.length > 0 && onSortChange && (
-          <SortButton options={sortOptions} rules={sortRules} onChange={onSortChange} />
+          <SortButton options={sortOptions} rules={sortRules} onChange={onSortChange} maxRules={maxSortRules} />
         )}
         {columns && columns.length > 0 && onColumnVisibilityChange && (
           <ViewButton columns={columns} onChange={onColumnVisibilityChange} />
