@@ -131,7 +131,7 @@ export default async function AccountLayout({ children }: { children: React.Reac
 
   return (
     <>
-      <SiteHeader cartCount={3} />
+      <SiteHeader />
       <div className="min-h-screen bg-slate-50">
         {/* Breadcrumb */}
         <div className="border-b border-slate-100 bg-white">

@@ -52,7 +52,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
   return (
     <>
-      <SiteHeader cartCount={3} />
+      <SiteHeader />
       <main className="min-h-screen bg-[#F8FAFC]">
         {/* Breadcrumb */}
         <div className="border-b border-slate-100 bg-white">

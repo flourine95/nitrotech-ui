@@ -1,9 +1,10 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useCartStore } from '@/store/cart.store';
 
 const navLinks = [
   { label: 'Laptop', href: '/products?cat=laptop' },
@@ -45,19 +46,26 @@ const announcements = [
 ];
 
 export function SiteHeader({
-  cartCount = 0,
   initialUser,
 }: {
-  cartCount?: number;
+  cartCount?: number; // Deprecated: now using cart store
   initialUser?: { name?: string | null; email?: string | null; image?: string | null } | null;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const user = initialUser;
   const isLoggedIn = !!user;
   const userName = user?.name ?? 'Tài khoản';
   const [mobileOpen, setMobileOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
-  const router = useRouter();
+
+  // Get cart count from store
+  const { totalItems, fetchCart } = useCartStore();
+
+  // Fetch cart on mount
+  useEffect(() => {
+    void fetchCart();
+  }, [fetchCart]);
 
   async function handleLogout() {
     try {
@@ -161,7 +169,7 @@ export function SiteHeader({
               <Link
                 href="/cart"
                 className="relative cursor-pointer rounded-full p-2 text-slate-500 transition-colors duration-200 hover:bg-slate-100 hover:text-slate-900"
-                aria-label={`Giỏ hàng (${cartCount} sản phẩm)`}
+                aria-label={`Giỏ hàng (${totalItems} sản phẩm)`}
               >
                 <svg
                   viewBox="0 0 24 24"
@@ -175,14 +183,14 @@ export function SiteHeader({
                   <line x1="3" y1="6" x2="21" y2="6" />
                   <path d="M16 10a4 4 0 01-8 0" />
                 </svg>
-                {cartCount > 0 && (
+                {totalItems > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white">
-                    {cartCount}
+                    {totalItems}
                   </span>
                 )}
               </Link>
             </TooltipTrigger>
-            <TooltipContent side="bottom">Giỏ hàng ({cartCount})</TooltipContent>
+            <TooltipContent side="bottom">Giỏ hàng ({totalItems})</TooltipContent>
           </Tooltip>
           {/* Login / Account */}
           {isLoggedIn ? (

@@ -1,59 +1,101 @@
 'use client';
-import { useState } from 'react';
 
-const initialAddresses = [
-  {
-    id: 1,
-    name: 'Nguyễn Văn A',
-    phone: '0901 234 567',
-    address: '123 Nguyễn Huệ, Phường Bến Nghé',
-    district: 'Quận 1',
-    city: 'TP. Hồ Chí Minh',
-    isDefault: true,
-  },
-  {
-    id: 2,
-    name: 'Nguyễn Văn A',
-    phone: '0901 234 567',
-    address: '456 Lê Lợi, Phường Phạm Ngũ Lão',
-    district: 'Quận 1',
-    city: 'TP. Hồ Chí Minh',
-    isDefault: false,
-  },
-];
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Plus, Pencil, Trash2, X } from 'lucide-react';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+  getAddresses,
+  createAddress,
+  updateAddress,
+  deleteAddress,
+  setDefaultAddress,
+} from '@/lib/api/addresses';
+import type { Address } from '@/lib/types/address';
+import AddressFormDialog from './address-form-dialog';
 
 export default function AddressesPage() {
-  const [addresses, setAddresses] = useState(initialAddresses);
+  const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
+  const [editingAddress, setEditingAddress] = useState<Address | null>(null);
 
-  function setDefault(id: number) {
-    setAddresses((prev) => prev.map((a) => ({ ...a, isDefault: a.id === id })));
-  }
+  // Fetch addresses
+  const { data: addresses = [], isLoading } = useQuery({
+    queryKey: ['addresses'],
+    queryFn: getAddresses,
+  });
 
-  function remove(id: number) {
-    setAddresses((prev) => prev.filter((a) => a.id !== id));
+  // Set default mutation
+  const setDefaultMutation = useMutation({
+    mutationFn: setDefaultAddress,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['addresses'] });
+      toast.success('Đã đặt làm địa chỉ mặc định');
+    },
+    onError: (error: unknown) => {
+      const err = error as { error?: { code?: string; message?: string } };
+      toast.error(err?.error?.message || 'Cập nhật thất bại');
+    },
+  });
+
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: deleteAddress,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['addresses'] });
+      toast.success('Đã xóa địa chỉ');
+    },
+    onError: (error: unknown) => {
+      const err = error as { error?: { code?: string; message?: string } };
+      const code = err?.error?.code;
+
+      switch (code) {
+        case 'ADDRESS_NOT_FOUND':
+          toast.error('Địa chỉ không tồn tại');
+          break;
+        case 'CANNOT_DELETE_DEFAULT_ADDRESS':
+          toast.error('Không thể xóa địa chỉ mặc định. Vui lòng đặt địa chỉ khác làm mặc định trước.');
+          break;
+        default:
+          toast.error(err?.error?.message || 'Xóa địa chỉ thất bại');
+      }
+    },
+  });
+
+  const handleEdit = (address: Address) => {
+    setEditingAddress(address);
+    setShowForm(true);
+  };
+
+  const handleDelete = (id: number) => {
+    if (confirm('Bạn có chắc muốn xóa địa chỉ này?')) {
+      deleteMutation.mutate(id);
+    }
+  };
+
+  const handleSetDefault = (id: number) => {
+    setDefaultMutation.mutate(id);
+  };
+
+  const handleCloseForm = () => {
+    setShowForm(false);
+    setEditingAddress(null);
+  };
+
+  if (isLoading) {
+    return <AddressesSkeleton />;
   }
 
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-slate-900">Địa chỉ giao hàng</h1>
-        <button
-          onClick={() => setShowForm(true)}
-          className="flex cursor-pointer items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:bg-slate-700"
-        >
-          <svg
-            viewBox="0 0 24 24"
-            className="h-4 w-4"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            aria-hidden="true"
-          >
-            <path d="M12 5v14M5 12h14" />
-          </svg>
+        <Button onClick={() => setShowForm(true)}>
+          <Plus />
           Thêm địa chỉ
-        </button>
+        </Button>
       </div>
 
       {/* Address list */}
@@ -76,38 +118,38 @@ export default function AddressesPage() {
                   )}
                 </div>
                 <p className="text-sm leading-relaxed text-slate-600">
-                  {addr.address}, {addr.district}, {addr.city}
+                  {addr.address}, {addr.ward}, {addr.district}, {addr.city}
                 </p>
               </div>
               {/* Actions */}
               <div className="flex shrink-0 items-center gap-2">
-                <button className="cursor-pointer rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors duration-200 hover:bg-slate-100">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleEdit(addr)}
+                  disabled={deleteMutation.isPending || setDefaultMutation.isPending}
+                >
+                  <Pencil />
                   Sửa
-                </button>
+                </Button>
                 {!addr.isDefault && (
-                  <button
-                    onClick={() => remove(addr.id)}
-                    className="cursor-pointer rounded-full p-1.5 text-slate-400 transition-colors duration-200 hover:bg-rose-50 hover:text-rose-500"
-                    aria-label="Xóa địa chỉ"
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleDelete(addr.id)}
+                    disabled={deleteMutation.isPending || setDefaultMutation.isPending}
+                    className="text-slate-400 hover:bg-rose-50 hover:text-rose-500"
                   >
-                    <svg
-                      viewBox="0 0 24 24"
-                      className="h-4 w-4"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      aria-hidden="true"
-                    >
-                      <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" />
-                    </svg>
-                  </button>
+                    <Trash2 />
+                  </Button>
                 )}
               </div>
             </div>
             {!addr.isDefault && (
               <button
-                onClick={() => setDefault(addr.id)}
-                className="mt-4 cursor-pointer text-xs font-medium text-blue-600 transition-colors duration-150 hover:text-blue-700"
+                onClick={() => handleSetDefault(addr.id)}
+                disabled={setDefaultMutation.isPending}
+                className="mt-4 cursor-pointer text-xs font-medium text-blue-600 transition-colors duration-150 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Đặt làm địa chỉ mặc định
               </button>
@@ -130,148 +172,42 @@ export default function AddressesPage() {
                 <circle cx="12" cy="10" r="3" />
               </svg>
             </div>
-            <p className="text-sm text-slate-500">Chưa có địa chỉ nào</p>
+            <p className="mb-4 text-sm text-slate-500">Chưa có địa chỉ nào</p>
+            <Button onClick={() => setShowForm(true)}>
+              <Plus />
+              Thêm địa chỉ đầu tiên
+            </Button>
           </div>
         )}
       </div>
 
-      {/* Add form modal */}
+      {/* Add/Edit form dialog */}
       {showForm && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Thêm địa chỉ mới"
-        >
-          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
-            <div className="mb-5 flex items-center justify-between">
-              <h2 className="font-bold text-slate-900">Thêm địa chỉ mới</h2>
-              <button
-                onClick={() => setShowForm(false)}
-                className="cursor-pointer rounded-full p-2 text-slate-400 transition-colors duration-200 hover:bg-slate-100"
-                aria-label="Đóng"
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  className="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  aria-hidden="true"
-                >
-                  <path d="M18 6L6 18M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <form
-              className="space-y-4"
-              onSubmit={(e) => {
-                e.preventDefault();
-                setShowForm(false);
-              }}
-            >
-              <div>
-                <label
-                  htmlFor="addr-name"
-                  className="mb-1.5 block text-sm font-medium text-slate-700"
-                >
-                  Họ và tên
-                </label>
-                <input
-                  id="addr-name"
-                  type="text"
-                  placeholder="Nguyễn Văn A"
-                  required
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm transition-all duration-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 focus:outline-none"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="addr-phone"
-                  className="mb-1.5 block text-sm font-medium text-slate-700"
-                >
-                  Số điện thoại
-                </label>
-                <input
-                  id="addr-phone"
-                  type="tel"
-                  placeholder="0901 234 567"
-                  required
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm transition-all duration-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 focus:outline-none"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="addr-street"
-                  className="mb-1.5 block text-sm font-medium text-slate-700"
-                >
-                  Địa chỉ
-                </label>
-                <input
-                  id="addr-street"
-                  type="text"
-                  placeholder="Số nhà, tên đường, phường/xã"
-                  required
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm transition-all duration-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 focus:outline-none"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label
-                    htmlFor="addr-district"
-                    className="mb-1.5 block text-sm font-medium text-slate-700"
-                  >
-                    Quận/Huyện
-                  </label>
-                  <input
-                    id="addr-district"
-                    type="text"
-                    placeholder="Quận 1"
-                    required
-                    className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm transition-all duration-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="addr-city"
-                    className="mb-1.5 block text-sm font-medium text-slate-700"
-                  >
-                    Tỉnh/Thành phố
-                  </label>
-                  <select
-                    id="addr-city"
-                    className="w-full cursor-pointer rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm transition-all duration-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 focus:outline-none"
-                  >
-                    <option>TP. Hồ Chí Minh</option>
-                    <option>Hà Nội</option>
-                    <option>Đà Nẵng</option>
-                    <option>Cần Thơ</option>
-                  </select>
-                </div>
-              </div>
-              <label className="flex cursor-pointer items-center gap-2">
-                <input type="checkbox" className="h-4 w-4 rounded accent-slate-900" />
-                <span className="text-sm text-slate-600">Đặt làm địa chỉ mặc định</span>
-              </label>
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowForm(false)}
-                  className="flex-1 cursor-pointer rounded-full border border-slate-200 py-3 text-sm font-semibold text-slate-700 transition-colors duration-200 hover:bg-slate-100"
-                >
-                  Hủy
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 cursor-pointer rounded-full bg-slate-900 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-slate-700"
-                >
-                  Lưu địa chỉ
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <AddressFormDialog
+          address={editingAddress}
+          onClose={handleCloseForm}
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ['addresses'] });
+            handleCloseForm();
+          }}
+        />
       )}
+    </div>
+  );
+}
+
+function AddressesSkeleton() {
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-10 w-32" />
+      </div>
+      <div className="space-y-4">
+        {[1, 2].map((i) => (
+          <Skeleton key={i} className="h-32 w-full rounded-3xl" />
+        ))}
+      </div>
     </div>
   );
 }

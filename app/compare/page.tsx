@@ -176,7 +176,7 @@ export default function ComparePage() {
 
   return (
     <>
-      <SiteHeader cartCount={3} />
+      <SiteHeader />
       <main className="min-h-screen bg-[#F8FAFC] pb-24">
         {/* Breadcrumb */}
         <div className="border-b border-slate-100 bg-white">

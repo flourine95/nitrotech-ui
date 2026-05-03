@@ -1,7 +1,10 @@
 'use client';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
+import { useCartStore } from '@/store/cart.store';
 
 interface ProductActionsProps {
   slug: string;
@@ -24,9 +27,62 @@ export function ProductActions({
   stockCount,
   warranty,
 }: ProductActionsProps) {
+  const router = useRouter();
+  const { addItem, isLoading } = useCartStore();
   const [qty, setQty] = useState(1);
   const [activeVariant, setActiveVariant] = useState(0);
   const [activeColor, setActiveColor] = useState(0);
+
+  // TODO: Replace with real variantId from API
+  // For now, generate a mock variantId based on slug and variant index
+  const getVariantId = () => {
+    // This is a temporary solution until backend is ready
+    // In production, this should come from the product API
+    const baseId = slug.split('-').reduce((acc, part) => acc + part.charCodeAt(0), 0);
+    return baseId + activeVariant + activeColor;
+  };
+
+  const handleAddToCart = async () => {
+    try {
+      const variantId = getVariantId();
+      await addItem(variantId, qty);
+      toast.success('Đã thêm vào giỏ hàng', {
+        description: `${qty} × sản phẩm`,
+        action: {
+          label: 'Xem giỏ hàng',
+          onClick: () => router.push('/cart'),
+        },
+      });
+    } catch (error) {
+      const err = error as { error?: { code?: string; message?: string } };
+      const code = err?.error?.code;
+
+      switch (code) {
+        case 'VARIANT_NOT_FOUND':
+          toast.error('Sản phẩm không tồn tại');
+          break;
+        case 'INSUFFICIENT_STOCK':
+          toast.error('Không đủ hàng trong kho');
+          break;
+        case 'VARIANT_INACTIVE':
+          toast.error('Sản phẩm không còn bán');
+          break;
+        default:
+          toast.error(err?.error?.message || 'Thêm vào giỏ hàng thất bại');
+      }
+    }
+  };
+
+  const handleBuyNow = async () => {
+    try {
+      const variantId = getVariantId();
+      await addItem(variantId, qty);
+      router.push('/checkout');
+    } catch (error) {
+      const err = error as { error?: { code?: string; message?: string } };
+      toast.error(err?.error?.message || 'Có lỗi xảy ra');
+    }
+  };
 
   return (
     <>
@@ -107,23 +163,27 @@ export function ProductActions({
 
       {/* CTAs */}
       <div className="mb-6 flex gap-3">
-        <Link
-          href="/cart"
-          onClick={() =>
-            toast.success('Đã thêm vào giỏ hàng', {
-              description: `${qty} × sản phẩm`,
-            })
-          }
-          className="flex-1 cursor-pointer rounded-full bg-slate-900 py-3.5 text-center text-sm font-semibold text-white transition-colors duration-200 hover:bg-slate-700"
+        <button
+          onClick={handleAddToCart}
+          disabled={isLoading}
+          className="flex flex-1 items-center justify-center gap-2 rounded-full bg-slate-900 py-3.5 text-center text-sm font-semibold text-white transition-colors duration-200 hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          Thêm vào giỏ
-        </Link>
-        <Link
-          href="/checkout"
-          className="flex-1 cursor-pointer rounded-full bg-blue-600 py-3.5 text-center text-sm font-semibold text-white transition-colors duration-200 hover:bg-blue-500"
+          {isLoading ? (
+            <>
+              <Loader2 className="size-4 animate-spin" />
+              Đang thêm...
+            </>
+          ) : (
+            'Thêm vào giỏ'
+          )}
+        </button>
+        <button
+          onClick={handleBuyNow}
+          disabled={isLoading}
+          className="flex flex-1 items-center justify-center rounded-full bg-blue-600 py-3.5 text-center text-sm font-semibold text-white transition-colors duration-200 hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Mua ngay
-        </Link>
+        </button>
         <Link
           href={`/compare?add=${slug}`}
           className="cursor-pointer rounded-full border border-slate-200 p-3.5 text-slate-400 transition-colors duration-200 hover:border-blue-200 hover:text-blue-500"

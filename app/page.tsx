@@ -187,7 +187,7 @@ function StarRating({ rating, count }: { rating: number; count: number }) {
 export default function HomePage() {
   return (
     <>
-      <SiteHeader cartCount={3} />
+      <SiteHeader />
       <main>
         {/* ── Hero ── */}
         <section className="relative overflow-hidden bg-white">
