@@ -81,10 +81,10 @@ export async function updateCategory(
   body: Partial<{
     name: string;
     slug: string;
-    description: string;
+    description: string | null;
     parentId: number | null;
     active: boolean;
-    image: string;
+    image: string | null;
   }>,
 ) {
   const res = await apiFetch<{ data: Category; message: string }>(`/api/categories/${id}`, {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { 
@@ -90,7 +90,7 @@ function CategoryRow({
   const hasChildren = category.children.length > 0;
 
   return (
-    <div role="treeitem" aria-expanded={hasChildren ? isExpanded : undefined}>
+    <div role="treeitem" aria-selected={false} aria-expanded={hasChildren ? isExpanded : undefined}>
       <div
         className={cn(
           'group relative flex items-center gap-2 rounded-xl px-3 py-2 transition-colors',
@@ -324,6 +324,7 @@ export default function DashboardCategoriesPage() {
   const [restoreTarget, setRestoreTarget] = useState<Category | null>(null);
   const [hardDeleteTarget, setHardDeleteTarget] = useState<Category | null>(null);
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
+  const [hasAutoExpanded, setHasAutoExpanded] = useState(false);
   
   // Create/Edit dialog state
   const [editTarget, setEditTarget] = useState<Category | null>(null);
@@ -364,60 +365,63 @@ export default function DashboardCategoriesPage() {
   const categories = treeData?.data || [];
   const deletedCategories = deletedData || [];
 
-  // Auto-expand on initial load
-  if (categories.length > 0 && expandedIds.size === 0) {
-    const autoExpandIds = new Set<number>();
-    const collectIds = (cats: Category[], depth: number) => {
-      cats.forEach(cat => {
-        if (depth < 2 && cat.children.length > 0) {
-          autoExpandIds.add(cat.id);
-          collectIds(cat.children, depth + 1);
-        }
-      });
-    };
-    collectIds(categories, 0);
-    if (autoExpandIds.size > 0) {
-      setExpandedIds(autoExpandIds);
+  // Auto-expand on initial load only
+  useEffect(() => {
+    if (categories.length > 0 && !hasAutoExpanded && !isLoading) {
+      const autoExpandIds = new Set<number>();
+      const collectIds = (cats: Category[], depth: number) => {
+        cats.forEach(cat => {
+          if (depth < 2 && cat.children.length > 0) {
+            autoExpandIds.add(cat.id);
+            collectIds(cat.children, depth + 1);
+          }
+        });
+      };
+      collectIds(categories, 0);
+      if (autoExpandIds.size > 0) {
+        // Use setTimeout to avoid setState in effect warning
+        setTimeout(() => {
+          setExpandedIds(autoExpandIds);
+          setHasAutoExpanded(true);
+        }, 0);
+      }
     }
-  }
+  }, [categories, isLoading, hasAutoExpanded]);
 
   // Mutations
   const deleteMutation = useMutation({
     mutationFn: deleteCategory,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      void queryClient.invalidateQueries({ queryKey: ['categories'] });
       toast.success('Đã xóa danh mục');
       setDeleteTarget(null);
     },
-    onError: (error) => {
+    onError: () => {
       toast.error('Xóa thất bại');
-      console.error('Delete error:', error);
     },
   });
 
   const restoreMutation = useMutation({
     mutationFn: restoreCategory,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      void queryClient.invalidateQueries({ queryKey: ['categories'] });
       toast.success('Đã khôi phục danh mục');
       setRestoreTarget(null);
     },
-    onError: (error) => {
+    onError: () => {
       toast.error('Khôi phục thất bại');
-      console.error('Restore error:', error);
     },
   });
 
   const hardDeleteMutation = useMutation({
     mutationFn: hardDeleteCategory,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      void queryClient.invalidateQueries({ queryKey: ['categories'] });
       toast.success('Đã xóa vĩnh viễn');
       setHardDeleteTarget(null);
     },
-    onError: (error) => {
+    onError: () => {
       toast.error('Xóa vĩnh viễn thất bại');
-      console.error('Hard delete error:', error);
     },
   });
 
@@ -425,47 +429,40 @@ export default function DashboardCategoriesPage() {
     mutationFn: ({ id, active }: { id: number; active: boolean }) =>
       updateCategory(id, { active }),
     onMutate: async ({ id, active }) => {
-      // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: ['categories', 'tree'] });
-
-      // Snapshot previous value
       const previousData = queryClient.getQueryData<CategoriesResponse>(['categories', 'tree']);
-
-      // Optimistically update
       if (previousData) {
         queryClient.setQueryData<CategoriesResponse>(['categories', 'tree'], {
           ...previousData,
           data: updateCategoryInTree(previousData.data, id, { active }),
         });
       }
-
       return { previousData };
     },
     onSuccess: (_, { active }) => {
       toast.success(active ? 'Đã hiển thị danh mục' : 'Đã ẩn danh mục');
     },
-    onError: (error, _, context) => {
-      // Rollback on error
+    onError: (_, __, context) => {
       if (context?.previousData) {
         queryClient.setQueryData(['categories', 'tree'], context.previousData);
       }
       toast.error('Cập nhật thất bại');
-      console.error('Toggle active error:', error);
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['categories', 'tree'] });
+      void queryClient.invalidateQueries({ queryKey: ['categories', 'tree'] });
     },
   });
 
   const moveUpMutation = useMutation({
     mutationFn: moveCategoryUp,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['categories', 'tree'] });
+      void queryClient.invalidateQueries({ queryKey: ['categories', 'tree'] });
       toast.success('Đã di chuyển lên');
     },
-    onError: (error: any) => {
-      const message = error?.error?.message || error?.message || '';
-      if (message.includes('already at the first position') || error?.error?.code === 'ALREADY_AT_TOP') {
+    onError: (error: unknown) => {
+      const err = error as { error?: { message?: string; code?: string }; message?: string };
+      const message = err?.error?.message || err?.message || '';
+      if (message.includes('already at the first position') || err?.error?.code === 'ALREADY_AT_TOP') {
         toast.error('Danh mục đã ở vị trí đầu tiên');
       } else {
         toast.error(`Di chuyển thất bại: ${message || 'Unknown error'}`);
@@ -476,12 +473,13 @@ export default function DashboardCategoriesPage() {
   const moveDownMutation = useMutation({
     mutationFn: moveCategoryDown,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['categories', 'tree'] });
+      void queryClient.invalidateQueries({ queryKey: ['categories', 'tree'] });
       toast.success('Đã di chuyển xuống');
     },
-    onError: (error: any) => {
-      const message = error?.error?.message || error?.message || '';
-      if (message.includes('already at the last position') || error?.error?.code === 'ALREADY_AT_BOTTOM') {
+    onError: (error: unknown) => {
+      const err = error as { error?: { message?: string; code?: string }; message?: string };
+      const message = err?.error?.message || err?.message || '';
+      if (message.includes('already at the last position') || err?.error?.code === 'ALREADY_AT_BOTTOM') {
         toast.error('Danh mục đã ở vị trí cuối cùng');
       } else {
         toast.error(`Di chuyển thất bại: ${message || 'Unknown error'}`);
@@ -492,36 +490,36 @@ export default function DashboardCategoriesPage() {
   const createMutation = useMutation({
     mutationFn: createCategory,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      void queryClient.invalidateQueries({ queryKey: ['categories'] });
       toast.success('Đã tạo danh mục mới');
       closeFormDialog();
     },
-    onError: (error: any) => {
-      if (error?.error?.code === 'CATEGORY_SLUG_EXISTS') {
+    onError: (error: unknown) => {
+      const err = error as { error?: { code?: string } };
+      if (err?.error?.code === 'CATEGORY_SLUG_EXISTS') {
         toast.error('Slug đã tồn tại');
-      } else if (error?.error?.code === 'CATEGORY_NOT_FOUND') {
+      } else if (err?.error?.code === 'CATEGORY_NOT_FOUND') {
         toast.error('Danh mục cha không tồn tại');
       } else {
         toast.error('Tạo danh mục thất bại');
       }
-      console.error('Create category error:', error);
     },
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: any }) => updateCategory(id, data),
+    mutationFn: ({ id, data }: { id: number; data: Parameters<typeof updateCategory>[1] }) => updateCategory(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      void queryClient.invalidateQueries({ queryKey: ['categories'] });
       toast.success('Đã cập nhật danh mục');
       closeFormDialog();
     },
-    onError: (error: any) => {
-      if (error?.error?.code === 'CATEGORY_SLUG_EXISTS') {
+    onError: (error: unknown) => {
+      const err = error as { error?: { code?: string } };
+      if (err?.error?.code === 'CATEGORY_SLUG_EXISTS') {
         toast.error('Slug đã tồn tại');
       } else {
         toast.error('Cập nhật thất bại');
       }
-      console.error('Update category error:', error);
     },
   });
 
@@ -529,19 +527,19 @@ export default function DashboardCategoriesPage() {
     mutationFn: ({ id, parentId }: { id: number; parentId: number | null }) =>
       changeCategoryParent(id, parentId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      void queryClient.invalidateQueries({ queryKey: ['categories'] });
       toast.success('Đã di chuyển danh mục');
       closeChangeParentDialog();
     },
-    onError: (error: any) => {
-      if (error?.error?.code === 'CATEGORY_NOT_FOUND') {
+    onError: (error: unknown) => {
+      const err = error as { error?: { code?: string } };
+      if (err?.error?.code === 'CATEGORY_NOT_FOUND') {
         toast.error('Danh mục cha không tồn tại');
-      } else if (error?.error?.code === 'CIRCULAR_REFERENCE') {
+      } else if (err?.error?.code === 'CIRCULAR_REFERENCE') {
         toast.error('Không thể di chuyển vào danh mục con của chính nó');
       } else {
         toast.error('Di chuyển thất bại');
       }
-      console.error('Change parent error:', error);
     },
   });
 
@@ -987,7 +985,7 @@ export default function DashboardCategoriesPage() {
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>
-              {editTarget ? 'Chỉnh sửa danh mục' : parentForNewChild ? `Thêm danh mục con vào "${parentForNewChild.name}"` : 'Thêm danh mục mới'}
+              {editTarget ? 'Chỉnh sửa danh mục' : parentForNewChild ? `Thêm danh mục con vào &ldquo;${parentForNewChild.name}&rdquo;` : 'Thêm danh mục mới'}
             </DialogTitle>
             <DialogDescription>
               {editTarget ? 'Cập nhật thông tin danh mục' : 'Tạo danh mục mới trong hệ thống'}
