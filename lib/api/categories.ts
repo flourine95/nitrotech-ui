@@ -1,4 +1,3 @@
-import type { Page } from '@/lib/types/pagination';
 import { apiFetch } from '@/lib/client';
 
 export interface Category {
@@ -12,46 +11,55 @@ export interface Category {
   active: boolean;
   sortOrder: number;
   children: Category[];
+  childrenCount: number;
+  productCount: number;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface MovePayload {
-  movedId: number;
-  fromParentId: number | null;
-  toParentId: number | null;
-  targetOrderedIds: number[];
-  sourceOrderedIds?: number[];
+export interface CategoryFacets {
+  active: number;
+  inactive: number;
+  deleted: number;
+  root: number;
+  withChildren: number;
+}
+
+export interface CategoriesResponse {
+  data: Category[];
+  facets?: CategoryFacets;
 }
 
 export interface CategoriesQuery {
-  search?: string;
-  active?: boolean;
   deleted?: boolean;
-  parentId?: number;
-  tree?: boolean;
-  page?: number;
-  size?: number;
-  sort?: string;
 }
 
+// GET /api/categories - Lấy tree hoặc deleted list
 export async function getCategories(
   params?: CategoriesQuery,
-): Promise<Page<Category> | Category[]> {
+): Promise<CategoriesResponse | Category[]> {
   const q = new URLSearchParams();
-  if (params?.search?.trim()) q.set('search', params.search.trim());
-  if (params?.active !== undefined) q.set('active', String(params.active));
   if (params?.deleted !== undefined) q.set('deleted', String(params.deleted));
-  if (params?.parentId !== undefined) q.set('parentId', String(params.parentId));
-  if (params?.tree) q.set('tree', 'true');
-  if (params?.page !== undefined) q.set('page', String(params.page));
-  if (params?.size !== undefined) q.set('size', String(params.size));
-  if (params?.sort) q.set('sort', params.sort);
   const qs = q.toString() ? `?${q}` : '';
-  const res = await apiFetch<{ data: Page<Category> | Category[] }>(`/api/categories${qs}`);
+  
+  if (params?.deleted) {
+    // Deleted list - chỉ trả về array
+    const res = await apiFetch<{ data: Category[] }>(`/api/categories${qs}`);
+    return res.data;
+  } else {
+    // Tree + facets
+    const res = await apiFetch<CategoriesResponse>(`/api/categories${qs}`);
+    return res;
+  }
+}
+
+// GET /api/categories/:id - Lấy chi tiết 1 category
+export async function getCategory(id: number) {
+  const res = await apiFetch<{ data: Category }>(`/api/categories/${id}`);
   return res.data;
 }
 
+// POST /api/categories - Tạo category mới
 export async function createCategory(body: {
   name: string;
   slug: string;
@@ -67,6 +75,7 @@ export async function createCategory(body: {
   return res.data;
 }
 
+// PUT /api/categories/:id - Cập nhật category
 export async function updateCategory(
   id: number,
   body: Partial<{
@@ -78,34 +87,143 @@ export async function updateCategory(
     image: string;
   }>,
 ) {
-  const res = await apiFetch<{ data: Category }>(`/api/categories/${id}`, {
+  const res = await apiFetch<{ data: Category; message: string }>(`/api/categories/${id}`, {
     method: 'PUT',
     body: JSON.stringify(body),
   });
   return res.data;
 }
 
-export async function getCategory(id: number) {
-  const res = await apiFetch<{ data: Category }>(`/api/categories/${id}`);
+// PATCH /api/categories/:id/toggle - Toggle active
+export async function toggleCategory(id: number) {
+  const res = await apiFetch<{ data: { id: number; active: boolean }; message: string }>(
+    `/api/categories/${id}/toggle`,
+    { method: 'PATCH' }
+  );
   return res.data;
 }
 
+// PATCH /api/categories/:id/move-up - Di chuyển lên
+export async function moveCategoryUp(id: number) {
+  const res = await apiFetch<{ data: { updated: Array<{ id: number; sortOrder: number }> }; message: string }>(
+    `/api/categories/${id}/move-up`,
+    { method: 'PATCH' }
+  );
+  return res.data;
+}
+
+// PATCH /api/categories/:id/move-down - Di chuyển xuống
+export async function moveCategoryDown(id: number) {
+  const res = await apiFetch<{ data: { updated: Array<{ id: number; sortOrder: number }> }; message: string }>(
+    `/api/categories/${id}/move-down`,
+    { method: 'PATCH' }
+  );
+  return res.data;
+}
+
+// PATCH /api/categories/:id/change-parent - Đổi parent
+export async function changeCategoryParent(id: number, newParentId: number | null) {
+  const res = await apiFetch<{ data: Category; message: string }>(
+    `/api/categories/${id}/change-parent`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify({ newParentId }),
+    }
+  );
+  return res.data;
+}
+
+// DELETE /api/categories/:id - Soft delete
 export async function deleteCategory(id: number) {
   return apiFetch<{ message: string }>(`/api/categories/${id}`, { method: 'DELETE' });
 }
 
+// PATCH /api/categories/:id/restore - Khôi phục
 export async function restoreCategory(id: number) {
   return apiFetch<{ message: string }>(`/api/categories/${id}/restore`, { method: 'PATCH' });
 }
 
+// DELETE /api/categories/:id/permanent - Xóa vĩnh viễn
 export async function hardDeleteCategory(id: number) {
   return apiFetch<{ message: string }>(`/api/categories/${id}/permanent`, { method: 'DELETE' });
 }
 
-export async function moveCategories(payload: MovePayload) {
-  const res = await apiFetch<{ data: { updated: Category[] } }>('/api/categories/move', {
+// PATCH /api/categories/bulk/activate - Bulk activate
+export async function bulkActivateCategories(ids: number[]) {
+  const res = await apiFetch<{
+    data: {
+      succeeded: number;
+      failed: number;
+      failedIds: number[];
+      failedReasons: Record<string, string>;
+    };
+  }>('/api/categories/bulk/activate', {
     method: 'PATCH',
-    body: JSON.stringify(payload),
+    body: JSON.stringify({ ids }),
   });
-  return res.data.updated;
+  return res.data;
+}
+
+// PATCH /api/categories/bulk/deactivate - Bulk deactivate
+export async function bulkDeactivateCategories(ids: number[]) {
+  const res = await apiFetch<{
+    data: {
+      succeeded: number;
+      failed: number;
+      failedIds: number[];
+      failedReasons: Record<string, string>;
+    };
+  }>('/api/categories/bulk/deactivate', {
+    method: 'PATCH',
+    body: JSON.stringify({ ids }),
+  });
+  return res.data;
+}
+
+// DELETE /api/categories/bulk - Bulk soft delete
+export async function bulkDeleteCategories(ids: number[]) {
+  const res = await apiFetch<{
+    data: {
+      succeeded: number;
+      failed: number;
+      failedIds: number[];
+      failedReasons: Record<string, string>;
+    };
+  }>('/api/categories/bulk', {
+    method: 'DELETE',
+    body: JSON.stringify({ ids }),
+  });
+  return res.data;
+}
+
+// PATCH /api/categories/bulk/restore - Bulk restore
+export async function bulkRestoreCategories(ids: number[]) {
+  const res = await apiFetch<{
+    data: {
+      succeeded: number;
+      failed: number;
+      failedIds: number[];
+      failedReasons: Record<string, string>;
+    };
+  }>('/api/categories/bulk/restore', {
+    method: 'PATCH',
+    body: JSON.stringify({ ids }),
+  });
+  return res.data;
+}
+
+// DELETE /api/categories/bulk/permanent - Bulk hard delete
+export async function bulkHardDeleteCategories(ids: number[]) {
+  const res = await apiFetch<{
+    data: {
+      succeeded: number;
+      failed: number;
+      failedIds: number[];
+      failedReasons: Record<string, string>;
+    };
+  }>('/api/categories/bulk/permanent', {
+    method: 'DELETE',
+    body: JSON.stringify({ ids }),
+  });
+  return res.data;
 }
