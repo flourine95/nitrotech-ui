@@ -1,7 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryState, parseAsBoolean } from 'nuqs';
 import { toast } from 'sonner';
 import {
   ChevronDown,
@@ -345,12 +346,17 @@ function CategoryTreeNode({
 
 export default function DashboardCategoriesPage() {
   const queryClient = useQueryClient();
-  const [showDeleted, setShowDeleted] = useState(false);
+  
+  // URL state management with nuqs
+  const [showDeleted, setShowDeleted] = useQueryState(
+    'deleted',
+    parseAsBoolean.withDefault(false)
+  );
+  
   const [deleteTarget, setDeleteTarget] = useState<Category | null>(null);
   const [restoreTarget, setRestoreTarget] = useState<Category | null>(null);
   const [hardDeleteTarget, setHardDeleteTarget] = useState<Category | null>(null);
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
-  const [hasAutoExpanded, setHasAutoExpanded] = useState(false);
 
   // Create/Edit dialog state
   const [editTarget, setEditTarget] = useState<Category | null>(null);
@@ -420,29 +426,6 @@ export default function DashboardCategoriesPage() {
     () => (changeParentTarget ? getFlatCategoryList(categories, changeParentTarget.id) : []),
     [categories, changeParentTarget],
   );
-
-  // Auto-expand on initial load only
-  useEffect(() => {
-    if (categories.length > 0 && !hasAutoExpanded && !isLoading) {
-      const autoExpandIds = new Set<number>();
-      const collectIds = (cats: Category[], depth: number) => {
-        cats.forEach((cat) => {
-          if (depth < 2 && cat.children.length > 0) {
-            autoExpandIds.add(cat.id);
-            collectIds(cat.children, depth + 1);
-          }
-        });
-      };
-      collectIds(categories, 0);
-      if (autoExpandIds.size > 0) {
-        // Use setTimeout to avoid setState in effect warning
-        setTimeout(() => {
-          setExpandedIds(autoExpandIds);
-          setHasAutoExpanded(true);
-        }, 0);
-      }
-    }
-  }, [categories, isLoading, hasAutoExpanded]);
 
   // Mutations
   const deleteMutation = useMutation({
