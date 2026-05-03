@@ -1,20 +1,20 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { 
-  ChevronRight, 
-  Folder, 
-  FolderOpen, 
-  MoreHorizontal, 
-  Pencil, 
-  Plus, 
-  Trash2,
-  ChevronUp,
+import {
   ChevronDown,
+  ChevronRight,
+  ChevronUp,
   CornerDownRight,
+  Folder,
+  FolderOpen,
+  MoreHorizontal,
+  Pencil,
+  Plus,
   RotateCcw,
+  Trash2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -54,19 +54,40 @@ import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import {
-  getCategories,
-  deleteCategory,
-  restoreCategory,
-  hardDeleteCategory,
-  updateCategory,
-  moveCategoryUp,
-  moveCategoryDown,
-  createCategory,
-  changeCategoryParent,
-  type Category,
   type CategoriesResponse,
+  type Category,
+  createCategory,
+  deleteCategory,
+  getCategories,
+  hardDeleteCategory,
+  moveCategory,
+  moveCategoryDown,
+  moveCategoryUp,
+  restoreCategory,
+  toggleCategory,
+  updateCategory,
 } from '@/lib/api/categories';
 import { Label } from '@/components/ui/label';
+
+// Helper function hoisted outside component to enable proper memoization
+function getFlatCategoryList(
+  cats: Category[],
+  exclude?: number,
+): Array<{ id: number; name: string; depth: number }> {
+  const result: Array<{ id: number; name: string; depth: number }> = [];
+  const traverse = (items: Category[], depth: number) => {
+    items.forEach((cat) => {
+      if (cat.id !== exclude) {
+        result.push({ id: cat.id, name: cat.name, depth });
+        if (cat.children.length > 0) {
+          traverse(cat.children, depth + 1);
+        }
+      }
+    });
+  };
+  traverse(cats, 0);
+  return result;
+}
 
 interface CategoryRowProps {
   category: Category;
@@ -84,10 +105,10 @@ interface CategoryRowProps {
   onMoveDown?: (category: Category) => void;
 }
 
-function CategoryRow({ 
-  category, 
-  depth, 
-  isExpanded, 
+function CategoryRow({
+  category,
+  depth,
+  isExpanded,
   onToggleExpand,
   canMoveUp,
   canMoveDown,
@@ -107,7 +128,7 @@ function CategoryRow({
         className={cn(
           'group relative flex items-center gap-2 rounded-xl px-3 py-2 transition-colors',
           'hover:bg-muted/50',
-          'focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-1'
+          'focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-1',
         )}
         style={{ paddingLeft: `${12 + depth * 24}px` }}
       >
@@ -116,36 +137,37 @@ function CategoryRow({
           variant="ghost"
           size="icon"
           onClick={onToggleExpand}
-          aria-label={hasChildren ? (isExpanded ? `Thu gọn ${category.name}` : `Mở rộng ${category.name}`) : undefined}
+          aria-label={
+            hasChildren
+              ? isExpanded
+                ? `Thu gọn ${category.name}`
+                : `Mở rộng ${category.name}`
+              : undefined
+          }
           className={cn(
             'size-6 shrink-0 text-muted-foreground/60 hover:bg-muted hover:text-foreground',
-            !hasChildren && 'invisible'
+            !hasChildren && 'invisible',
           )}
         >
           <ChevronRight
-            className={cn(
-              'transition-transform duration-200',
-              isExpanded && 'rotate-90'
-            )}
+            className={cn('transition-transform duration-200', isExpanded && 'rotate-90')}
           />
         </Button>
 
         {/* Folder icon */}
         <span className={cn('shrink-0', depth === 0 ? 'text-primary' : 'text-muted-foreground/50')}>
-          {isExpanded && hasChildren ? (
-            <FolderOpen />
-          ) : (
-            <Folder />
-          )}
+          {isExpanded && hasChildren ? <FolderOpen /> : <Folder />}
         </span>
 
         {/* Category info */}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
-            <span className={cn(
-              'truncate text-sm font-medium leading-tight',
-              category.active ? 'text-foreground' : 'text-muted-foreground'
-            )}>
+            <span
+              className={cn(
+                'truncate text-sm leading-tight font-medium',
+                category.active ? 'text-foreground' : 'text-muted-foreground',
+              )}
+            >
               {category.name}
             </span>
             {hasChildren && (
@@ -183,13 +205,17 @@ function CategoryRow({
           </Button>
 
           {/* Divider - hidden on mobile */}
-          <div className="hidden h-4 w-px bg-border mx-1 sm:block" />
+          <div className="mx-1 hidden h-4 w-px bg-border sm:block" />
 
           {/* Toggle active switch */}
           <Switch
             checked={category.active}
             onCheckedChange={() => onToggleActive?.(category)}
-            aria-label={category.active ? `${category.name} đang hiển thị - nhấn để ẩn` : `${category.name} đang ẩn - nhấn để hiển thị`}
+            aria-label={
+              category.active
+                ? `${category.name} đang hiển thị - nhấn để ẩn`
+                : `${category.name} đang ẩn - nhấn để hiển thị`
+            }
           />
 
           {/* Edit button */}
@@ -243,8 +269,8 @@ function CategoryRow({
   );
 }
 
-function CategoryTreeNode({ 
-  category, 
+function CategoryTreeNode({
+  category,
   depth,
   canMoveUp,
   canMoveDown,
@@ -257,8 +283,8 @@ function CategoryTreeNode({
   onToggleActive,
   onMoveUp,
   onMoveDown,
-}: { 
-  category: Category; 
+}: {
+  category: Category;
   depth: number;
   canMoveUp: boolean;
   canMoveDown: boolean;
@@ -294,9 +320,9 @@ function CategoryTreeNode({
       {isExpanded && category.children.length > 0 && (
         <div className="relative ml-7.25 border-l border-border" role="group">
           {category.children.map((child, index) => (
-            <CategoryTreeNode 
-              key={child.id} 
-              category={child} 
+            <CategoryTreeNode
+              key={child.id}
+              category={child}
               depth={depth + 1}
               canMoveUp={index > 0}
               canMoveDown={index < category.children.length - 1}
@@ -325,7 +351,7 @@ export default function DashboardCategoriesPage() {
   const [hardDeleteTarget, setHardDeleteTarget] = useState<Category | null>(null);
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
   const [hasAutoExpanded, setHasAutoExpanded] = useState(false);
-  
+
   // Create/Edit dialog state
   const [editTarget, setEditTarget] = useState<Category | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -338,7 +364,7 @@ export default function DashboardCategoriesPage() {
     parentId: null as number | null,
     active: true,
   });
-  
+
   // Change parent dialog state
   const [changeParentTarget, setChangeParentTarget] = useState<Category | null>(null);
   const [newParentId, setNewParentId] = useState<string>('');
@@ -365,12 +391,42 @@ export default function DashboardCategoriesPage() {
   const categories = useMemo(() => treeData?.data || [], [treeData?.data]);
   const deletedCategories = deletedData || [];
 
+  // Use backend facets instead of calculating on frontend
+  const stats = useMemo(() => {
+    const facets = treeData?.facets;
+    if (facets) {
+      return {
+        total: (facets.active || 0) + (facets.inactive || 0),
+        active: facets.active || 0,
+        root: facets.root || 0,
+        sub: (facets.active || 0) + (facets.inactive || 0) - (facets.root || 0),
+        deleted: facets.deleted || 0,
+      };
+    }
+    // Fallback if facets not available
+    return {
+      total: 0,
+      active: 0,
+      root: 0,
+      sub: 0,
+      deleted: deletedCategories.length,
+    };
+  }, [treeData?.facets, deletedCategories.length]);
+
+  // Memoize flat category list for Select dropdowns
+  const flatCategoryList = useMemo(() => getFlatCategoryList(categories), [categories]);
+
+  const flatCategoryListExcludingTarget = useMemo(
+    () => (changeParentTarget ? getFlatCategoryList(categories, changeParentTarget.id) : []),
+    [categories, changeParentTarget],
+  );
+
   // Auto-expand on initial load only
   useEffect(() => {
     if (categories.length > 0 && !hasAutoExpanded && !isLoading) {
       const autoExpandIds = new Set<number>();
       const collectIds = (cats: Category[], depth: number) => {
-        cats.forEach(cat => {
+        cats.forEach((cat) => {
           if (depth < 2 && cat.children.length > 0) {
             autoExpandIds.add(cat.id);
             collectIds(cat.children, depth + 1);
@@ -426,30 +482,42 @@ export default function DashboardCategoriesPage() {
   });
 
   const toggleActiveMutation = useMutation({
-    mutationFn: ({ id, active }: { id: number; active: boolean }) =>
-      updateCategory(id, { active }),
-    onMutate: async ({ id, active }) => {
+    mutationFn: (id: number) => toggleCategory(id),
+    onMutate: async (id) => {
       await queryClient.cancelQueries({ queryKey: ['categories', 'tree'] });
       const previousData = queryClient.getQueryData<CategoriesResponse>(['categories', 'tree']);
+
+      // Optimistic update: toggle active state
       if (previousData) {
+        const toggleInTree = (tree: Category[]): Category[] => {
+          return tree.map((cat) => {
+            if (cat.id === id) {
+              return { ...cat, active: !cat.active };
+            }
+            if (cat.children.length > 0) {
+              return { ...cat, children: toggleInTree(cat.children) };
+            }
+            return cat;
+          });
+        };
+
         queryClient.setQueryData<CategoriesResponse>(['categories', 'tree'], {
           ...previousData,
-          data: updateCategoryInTree(previousData.data, id, { active }),
+          data: toggleInTree(previousData.data),
         });
       }
       return { previousData };
     },
-    onSuccess: (_, { active }) => {
-      toast.success(active ? 'Đã hiển thị danh mục' : 'Đã ẩn danh mục');
+    onSuccess: () => {
+      // Refetch to get updated facets from backend
+      void queryClient.invalidateQueries({ queryKey: ['categories', 'tree'] });
+      toast.success('Đã cập nhật trạng thái');
     },
     onError: (_, __, context) => {
       if (context?.previousData) {
         queryClient.setQueryData(['categories', 'tree'], context.previousData);
       }
       toast.error('Cập nhật thất bại');
-    },
-    onSettled: () => {
-      void queryClient.invalidateQueries({ queryKey: ['categories', 'tree'] });
     },
   });
 
@@ -462,7 +530,7 @@ export default function DashboardCategoriesPage() {
     onError: (error: unknown) => {
       const err = error as { error?: { message?: string; code?: string }; message?: string };
       const message = err?.error?.message || err?.message || '';
-      if (message.includes('already at the first position') || err?.error?.code === 'ALREADY_AT_TOP') {
+      if (err?.error?.code === 'ALREADY_FIRST') {
         toast.error('Danh mục đã ở vị trí đầu tiên');
       } else {
         toast.error(`Di chuyển thất bại: ${message || 'Unknown error'}`);
@@ -479,7 +547,7 @@ export default function DashboardCategoriesPage() {
     onError: (error: unknown) => {
       const err = error as { error?: { message?: string; code?: string }; message?: string };
       const message = err?.error?.message || err?.message || '';
-      if (message.includes('already at the last position') || err?.error?.code === 'ALREADY_AT_BOTTOM') {
+      if (err?.error?.code === 'ALREADY_LAST') {
         toast.error('Danh mục đã ở vị trí cuối cùng');
       } else {
         toast.error(`Di chuyển thất bại: ${message || 'Unknown error'}`);
@@ -507,7 +575,8 @@ export default function DashboardCategoriesPage() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Parameters<typeof updateCategory>[1] }) => updateCategory(id, data),
+    mutationFn: ({ id, data }: { id: number; data: Parameters<typeof updateCategory>[1] }) =>
+      updateCategory(id, data),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['categories'] });
       toast.success('Đã cập nhật danh mục');
@@ -524,8 +593,8 @@ export default function DashboardCategoriesPage() {
   });
 
   const changeParentMutation = useMutation({
-    mutationFn: ({ id, parentId }: { id: number; parentId: number | null }) =>
-      changeCategoryParent(id, parentId),
+    mutationFn: ({ id, newParentId }: { id: number; newParentId: number | null }) =>
+      moveCategory(id, { newParentId }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['categories'] });
       toast.success('Đã di chuyển danh mục');
@@ -543,20 +612,33 @@ export default function DashboardCategoriesPage() {
     },
   });
 
-  function updateCategoryInTree(tree: Category[], id: number, updates: Partial<Category>): Category[] {
-    return tree.map(cat => {
-      if (cat.id === id) {
-        return { ...cat, ...updates };
-      }
-      if (cat.children.length > 0) {
-        return { ...cat, children: updateCategoryInTree(cat.children, id, updates) };
-      }
-      return cat;
-    });
-  }
+  const handleToggleActive = useCallback(
+    (cat: Category) => {
+      toggleActiveMutation.mutate(cat.id);
+    },
+    [toggleActiveMutation],
+  );
+
+  const handleMoveUp = useCallback(
+    (cat: Category) => {
+      moveUpMutation.mutate(cat.id);
+    },
+    [moveUpMutation],
+  );
+
+  const handleMoveDown = useCallback(
+    (cat: Category) => {
+      moveDownMutation.mutate(cat.id);
+    },
+    [moveDownMutation],
+  );
+
+  const handleDelete = useCallback((cat: Category) => {
+    setDeleteTarget(cat);
+  }, []);
 
   function toggleExpand(id: number) {
-    setExpandedIds(prev => {
+    setExpandedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) {
         next.delete(id);
@@ -570,7 +652,7 @@ export default function DashboardCategoriesPage() {
   function expandAll() {
     const allIds = new Set<number>();
     const collectIds = (cats: Category[]) => {
-      cats.forEach(cat => {
+      cats.forEach((cat) => {
         if (cat.children.length > 0) {
           allIds.add(cat.id);
           collectIds(cat.children);
@@ -669,41 +751,8 @@ export default function DashboardCategoriesPage() {
   function handleChangeParent() {
     if (!changeParentTarget) return;
     const parentId = newParentId === 'null' ? null : parseInt(newParentId);
-    changeParentMutation.mutate({ id: changeParentTarget.id, parentId });
+    changeParentMutation.mutate({ id: changeParentTarget.id, newParentId: parentId });
   }
-
-  function getFlatCategoryList(cats: Category[], exclude?: number): Array<{ id: number; name: string; depth: number }> {
-    const result: Array<{ id: number; name: string; depth: number }> = [];
-    const traverse = (items: Category[], depth: number) => {
-      items.forEach(cat => {
-        if (cat.id !== exclude) {
-          result.push({ id: cat.id, name: cat.name, depth });
-          if (cat.children.length > 0) {
-            traverse(cat.children, depth + 1);
-          }
-        }
-      });
-    };
-    traverse(cats, 0);
-    return result;
-  }
-
-  const stats = {
-    total: categories.reduce((sum, cat) => {
-      const countTree = (c: Category): number => 1 + c.children.reduce((s, child) => s + countTree(child), 0);
-      return sum + countTree(cat);
-    }, 0),
-    active: categories.reduce((sum, cat) => {
-      const countActive = (c: Category): number => (c.active ? 1 : 0) + c.children.reduce((s, child) => s + countActive(child), 0);
-      return sum + countActive(cat);
-    }, 0),
-    root: categories.length,
-    sub: categories.reduce((sum, cat) => {
-      const countChildren = (c: Category): number => c.children.length + c.children.reduce((s, child) => s + countChildren(child), 0);
-      return sum + countChildren(cat);
-    }, 0),
-    deleted: deletedCategories.length,
-  };
 
   if (isLoading) {
     return (
@@ -741,17 +790,17 @@ export default function DashboardCategoriesPage() {
           </p>
         </div>
         {showDeleted ? (
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             className="h-9 w-full shrink-0 sm:w-auto"
             onClick={() => setShowDeleted(false)}
           >
             Quay lại danh mục
           </Button>
         ) : (
-          <Button 
-            size="sm" 
+          <Button
+            size="sm"
             className="h-9 w-full shrink-0 sm:w-auto"
             onClick={() => openCreateDialog()}
           >
@@ -780,32 +829,22 @@ export default function DashboardCategoriesPage() {
             </>
           )}
         </p>
-        
+
         <div className="flex items-center gap-2">
           {!showDeleted && (
             <>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="h-8 text-xs"
-                onClick={expandAll}
-              >
+              <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={expandAll}>
                 Mở tất cả
               </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="h-8 text-xs"
-                onClick={collapseAll}
-              >
+              <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={collapseAll}>
                 Đóng tất cả
               </Button>
-              <div className="hidden h-4 w-px bg-border mx-1 sm:block" />
+              <div className="mx-1 hidden h-4 w-px bg-border sm:block" />
             </>
           )}
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             className="h-8 text-xs"
             onClick={() => setShowDeleted(!showDeleted)}
           >
@@ -832,7 +871,10 @@ export default function DashboardCategoriesPage() {
               </div>
             ) : (
               deletedCategories.map((cat) => (
-                <div key={cat.id} className="flex flex-col gap-3 px-4 py-3 hover:bg-muted/50 sm:flex-row sm:items-center sm:gap-3">
+                <div
+                  key={cat.id}
+                  className="flex flex-col gap-3 px-4 py-3 hover:bg-muted/50 sm:flex-row sm:items-center sm:gap-3"
+                >
                   <Folder className="shrink-0 text-muted-foreground/40" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-muted-foreground line-through">
@@ -875,9 +917,7 @@ export default function DashboardCategoriesPage() {
             {categories.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <Folder className="mb-3 size-10 text-muted-foreground/40" />
-                <p className="text-sm font-medium text-muted-foreground">
-                  Chưa có danh mục nào
-                </p>
+                <p className="text-sm font-medium text-muted-foreground">Chưa có danh mục nào</p>
                 <p className="mt-1 text-xs text-muted-foreground/70">
                   {'Nhấn "Thêm danh mục" để bắt đầu.'}
                 </p>
@@ -885,21 +925,21 @@ export default function DashboardCategoriesPage() {
             ) : (
               <div className="flex flex-col gap-0">
                 {categories.map((category, index) => (
-                  <CategoryTreeNode 
-                    key={category.id} 
-                    category={category} 
+                  <CategoryTreeNode
+                    key={category.id}
+                    category={category}
                     depth={0}
                     canMoveUp={index > 0}
                     canMoveDown={index < categories.length - 1}
-                    onDelete={(cat) => setDeleteTarget(cat)}
+                    onDelete={handleDelete}
                     onEdit={openEditDialog}
                     onChangeParent={openChangeParentDialog}
                     onAddChild={openCreateDialog}
                     expandedIds={expandedIds}
                     onToggleExpand={toggleExpand}
-                    onToggleActive={(cat) => toggleActiveMutation.mutate({ id: cat.id, active: !cat.active })}
-                    onMoveUp={(cat) => moveUpMutation.mutate(cat.id)}
-                    onMoveDown={(cat) => moveDownMutation.mutate(cat.id)}
+                    onToggleActive={handleToggleActive}
+                    onMoveUp={handleMoveUp}
+                    onMoveDown={handleMoveDown}
                   />
                 ))}
               </div>
@@ -914,19 +954,25 @@ export default function DashboardCategoriesPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Xác nhận xóa danh mục</AlertDialogTitle>
             <AlertDialogDescription>
-              Bạn có chắc chắn muốn xóa danh mục <span className="font-semibold text-foreground">{deleteTarget?.name}</span>?
+              Bạn có chắc chắn muốn xóa danh mục{' '}
+              <span className="font-semibold text-foreground">{deleteTarget?.name}</span>?
               {deleteTarget && deleteTarget.childrenCount > 0 && (
                 <>
-                  {' '}Danh mục này có <span className="font-semibold text-foreground">{deleteTarget.childrenCount} danh mục con</span>.
+                  {' '}
+                  Danh mục này có{' '}
+                  <span className="font-semibold text-foreground">
+                    {deleteTarget.childrenCount} danh mục con
+                  </span>
+                  .
                 </>
-              )}
-              {' '}Bạn có thể khôi phục danh mục này từ thùng rác sau khi xóa.
+              )}{' '}
+              Bạn có thể khôi phục danh mục này từ thùng rác sau khi xóa.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Hủy</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="text-destructive-foreground bg-destructive hover:bg-destructive/90"
               onClick={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
               disabled={deleteMutation.isPending}
             >
@@ -942,7 +988,8 @@ export default function DashboardCategoriesPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Khôi phục danh mục</AlertDialogTitle>
             <AlertDialogDescription>
-              Bạn có chắc chắn muốn khôi phục danh mục <span className="font-semibold text-foreground">{restoreTarget?.name}</span>?
+              Bạn có chắc chắn muốn khôi phục danh mục{' '}
+              <span className="font-semibold text-foreground">{restoreTarget?.name}</span>?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -958,19 +1005,23 @@ export default function DashboardCategoriesPage() {
       </AlertDialog>
 
       {/* Hard delete confirmation dialog */}
-      <AlertDialog open={!!hardDeleteTarget} onOpenChange={(open) => !open && setHardDeleteTarget(null)}>
+      <AlertDialog
+        open={!!hardDeleteTarget}
+        onOpenChange={(open) => !open && setHardDeleteTarget(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Xóa vĩnh viễn danh mục</AlertDialogTitle>
             <AlertDialogDescription>
-              Bạn có chắc chắn muốn xóa vĩnh viễn danh mục <span className="font-semibold text-foreground">{hardDeleteTarget?.name}</span>?
-              {' '}Thao tác này không thể hoàn tác.
+              Bạn có chắc chắn muốn xóa vĩnh viễn danh mục{' '}
+              <span className="font-semibold text-foreground">{hardDeleteTarget?.name}</span>? Thao
+              tác này không thể hoàn tác.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Hủy</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="text-destructive-foreground bg-destructive hover:bg-destructive/90"
               onClick={() => hardDeleteTarget && hardDeleteMutation.mutate(hardDeleteTarget.id)}
               disabled={hardDeleteMutation.isPending}
             >
@@ -985,7 +1036,11 @@ export default function DashboardCategoriesPage() {
         <DialogContent className="sm:max-w-125">
           <DialogHeader>
             <DialogTitle>
-              {editTarget ? 'Chỉnh sửa danh mục' : parentForNewChild ? `Thêm danh mục con vào "${parentForNewChild.name}"` : 'Thêm danh mục mới'}
+              {editTarget
+                ? 'Chỉnh sửa danh mục'
+                : parentForNewChild
+                  ? `Thêm danh mục con vào "${parentForNewChild.name}"`
+                  : 'Thêm danh mục mới'}
             </DialogTitle>
             <DialogDescription>
               {editTarget ? 'Cập nhật thông tin danh mục' : 'Tạo danh mục mới trong hệ thống'}
@@ -997,7 +1052,7 @@ export default function DashboardCategoriesPage() {
               <Input
                 id="name"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
                 placeholder="Ví dụ: Áo thun"
               />
             </div>
@@ -1006,7 +1061,7 @@ export default function DashboardCategoriesPage() {
               <Input
                 id="slug"
                 value={formData.slug}
-                onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                onChange={(e) => setFormData((prev) => ({ ...prev, slug: e.target.value }))}
                 placeholder="Ví dụ: ao-thun"
               />
             </div>
@@ -1015,7 +1070,7 @@ export default function DashboardCategoriesPage() {
               <Textarea
                 id="description"
                 value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
                 placeholder="Mô tả ngắn về danh mục"
                 rows={3}
               />
@@ -1025,7 +1080,7 @@ export default function DashboardCategoriesPage() {
               <Input
                 id="image"
                 value={formData.image}
-                onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                onChange={(e) => setFormData((prev) => ({ ...prev, image: e.target.value }))}
                 placeholder="https://example.com/image.jpg"
               />
             </div>
@@ -1034,17 +1089,24 @@ export default function DashboardCategoriesPage() {
                 <Label htmlFor="parentId">Danh mục cha</Label>
                 <Select
                   value={formData.parentId?.toString() || 'null'}
-                  onValueChange={(value) => setFormData({ ...formData, parentId: value === 'null' ? null : parseInt(value) })}
+                  onValueChange={(value) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      parentId: value === 'null' ? null : parseInt(value),
+                    }))
+                  }
                 >
                   <SelectTrigger id="parentId">
                     <SelectValue placeholder="Chọn danh mục cha" />
                   </SelectTrigger>
                   <SelectContent position="popper" className="max-h-75">
                     <SelectItem value="null">Không có (danh mục gốc)</SelectItem>
-                    {getFlatCategoryList(categories).map((cat) => (
+                    {flatCategoryList.map((cat) => (
                       <SelectItem key={cat.id} value={cat.id.toString()}>
                         <span className="flex items-center gap-1">
-                          {cat.depth > 0 && <span className="text-muted-foreground">{'└─ '.repeat(cat.depth)}</span>}
+                          {cat.depth > 0 && (
+                            <span className="text-muted-foreground">{'└─ '.repeat(cat.depth)}</span>
+                          )}
                           {cat.name}
                         </span>
                       </SelectItem>
@@ -1058,28 +1120,43 @@ export default function DashboardCategoriesPage() {
               <Switch
                 id="active"
                 checked={formData.active}
-                onCheckedChange={(checked) => setFormData({ ...formData, active: checked })}
+                onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, active: checked }))}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={closeFormDialog} disabled={createMutation.isPending || updateMutation.isPending}>
+            <Button
+              variant="outline"
+              onClick={closeFormDialog}
+              disabled={createMutation.isPending || updateMutation.isPending}
+            >
               Hủy
             </Button>
-            <Button onClick={handleSaveCategory} disabled={createMutation.isPending || updateMutation.isPending}>
-              {createMutation.isPending || updateMutation.isPending ? 'Đang lưu...' : editTarget ? 'Cập nhật' : 'Tạo mới'}
+            <Button
+              onClick={handleSaveCategory}
+              disabled={createMutation.isPending || updateMutation.isPending}
+            >
+              {createMutation.isPending || updateMutation.isPending
+                ? 'Đang lưu...'
+                : editTarget
+                  ? 'Cập nhật'
+                  : 'Tạo mới'}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Change parent dialog */}
-      <Dialog open={!!changeParentTarget} onOpenChange={(open) => !open && closeChangeParentDialog()}>
+      <Dialog
+        open={!!changeParentTarget}
+        onOpenChange={(open) => !open && closeChangeParentDialog()}
+      >
         <DialogContent className="sm:max-w-106.25">
           <DialogHeader>
             <DialogTitle>Di chuyển danh mục</DialogTitle>
             <DialogDescription>
-              Chọn danh mục cha mới cho <span className="font-semibold text-foreground">{changeParentTarget?.name}</span>
+              Chọn danh mục cha mới cho{' '}
+              <span className="font-semibold text-foreground">{changeParentTarget?.name}</span>
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -1091,10 +1168,12 @@ export default function DashboardCategoriesPage() {
                 </SelectTrigger>
                 <SelectContent position="popper" className="max-h-75">
                   <SelectItem value="null">Không có (danh mục gốc)</SelectItem>
-                  {getFlatCategoryList(categories, changeParentTarget?.id).map((cat) => (
+                  {flatCategoryListExcludingTarget.map((cat) => (
                     <SelectItem key={cat.id} value={cat.id.toString()}>
                       <span className="flex items-center gap-1">
-                        {cat.depth > 0 && <span className="text-muted-foreground">{'└─ '.repeat(cat.depth)}</span>}
+                        {cat.depth > 0 && (
+                          <span className="text-muted-foreground">{'└─ '.repeat(cat.depth)}</span>
+                        )}
                         {cat.name}
                       </span>
                     </SelectItem>
@@ -1104,7 +1183,11 @@ export default function DashboardCategoriesPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={closeChangeParentDialog} disabled={changeParentMutation.isPending}>
+            <Button
+              variant="outline"
+              onClick={closeChangeParentDialog}
+              disabled={changeParentMutation.isPending}
+            >
               Hủy
             </Button>
             <Button onClick={handleChangeParent} disabled={changeParentMutation.isPending}>

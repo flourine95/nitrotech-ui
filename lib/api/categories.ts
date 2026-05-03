@@ -48,8 +48,7 @@ export async function getCategories(
     return res.data;
   } else {
     // Tree + facets
-    const res = await apiFetch<CategoriesResponse>(`/api/categories${qs}`);
-    return res;
+    return await apiFetch<CategoriesResponse>(`/api/categories${qs}`);
   }
 }
 
@@ -121,13 +120,20 @@ export async function moveCategoryDown(id: number) {
   return res.data;
 }
 
-// PATCH /api/categories/:id/change-parent - Đổi parent
-export async function changeCategoryParent(id: number, newParentId: number | null) {
+// PATCH /api/categories/:id/move - Flexible move (change parent, reorder, or both)
+// Supports drag & drop: change parent and/or reorder in one operation
+export async function moveCategory(
+  id: number,
+  body: {
+    newParentId?: number | null; // null: move to root, undefined: keep current parent
+    afterId?: number | null; // null: place first, undefined: place last
+  }
+) {
   const res = await apiFetch<{ data: Category; message: string }>(
-    `/api/categories/${id}/change-parent`,
+    `/api/categories/${id}/move`,
     {
       method: 'PATCH',
-      body: JSON.stringify({ newParentId }),
+      body: JSON.stringify(body),
     }
   );
   return res.data;
@@ -146,84 +152,4 @@ export async function restoreCategory(id: number) {
 // DELETE /api/categories/:id/permanent - Xóa vĩnh viễn
 export async function hardDeleteCategory(id: number) {
   return apiFetch<{ message: string }>(`/api/categories/${id}/permanent`, { method: 'DELETE' });
-}
-
-// PATCH /api/categories/bulk/activate - Bulk activate
-export async function bulkActivateCategories(ids: number[]) {
-  const res = await apiFetch<{
-    data: {
-      succeeded: number;
-      failed: number;
-      failedIds: number[];
-      failedReasons: Record<string, string>;
-    };
-  }>('/api/categories/bulk/activate', {
-    method: 'PATCH',
-    body: JSON.stringify({ ids }),
-  });
-  return res.data;
-}
-
-// PATCH /api/categories/bulk/deactivate - Bulk deactivate
-export async function bulkDeactivateCategories(ids: number[]) {
-  const res = await apiFetch<{
-    data: {
-      succeeded: number;
-      failed: number;
-      failedIds: number[];
-      failedReasons: Record<string, string>;
-    };
-  }>('/api/categories/bulk/deactivate', {
-    method: 'PATCH',
-    body: JSON.stringify({ ids }),
-  });
-  return res.data;
-}
-
-// DELETE /api/categories/bulk - Bulk soft delete
-export async function bulkDeleteCategories(ids: number[]) {
-  const res = await apiFetch<{
-    data: {
-      succeeded: number;
-      failed: number;
-      failedIds: number[];
-      failedReasons: Record<string, string>;
-    };
-  }>('/api/categories/bulk', {
-    method: 'DELETE',
-    body: JSON.stringify({ ids }),
-  });
-  return res.data;
-}
-
-// PATCH /api/categories/bulk/restore - Bulk restore
-export async function bulkRestoreCategories(ids: number[]) {
-  const res = await apiFetch<{
-    data: {
-      succeeded: number;
-      failed: number;
-      failedIds: number[];
-      failedReasons: Record<string, string>;
-    };
-  }>('/api/categories/bulk/restore', {
-    method: 'PATCH',
-    body: JSON.stringify({ ids }),
-  });
-  return res.data;
-}
-
-// DELETE /api/categories/bulk/permanent - Bulk hard delete
-export async function bulkHardDeleteCategories(ids: number[]) {
-  const res = await apiFetch<{
-    data: {
-      succeeded: number;
-      failed: number;
-      failedIds: number[];
-      failedReasons: Record<string, string>;
-    };
-  }>('/api/categories/bulk/permanent', {
-    method: 'DELETE',
-    body: JSON.stringify({ ids }),
-  });
-  return res.data;
 }
