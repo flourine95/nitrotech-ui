@@ -3,6 +3,8 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useQueryState, parseAsBoolean } from 'nuqs';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import {
   ChevronDown,
@@ -68,6 +70,7 @@ import {
   toggleCategory,
   updateCategory,
 } from '@/lib/api/categories';
+import { categorySchema, type CategoryFormData } from '@/lib/schemas/categories';
 import { Label } from '@/components/ui/label';
 
 // Helper function hoisted outside component to enable proper memoization
@@ -362,13 +365,17 @@ export default function DashboardCategoriesPage() {
   const [editTarget, setEditTarget] = useState<Category | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [parentForNewChild, setParentForNewChild] = useState<Category | null>(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    slug: '',
-    description: '',
-    image: '',
-    parentId: null as number | null,
-    active: true,
+
+  // React Hook Form
+  const form = useForm<CategoryFormData>({
+    resolver: zodResolver(categorySchema),
+    defaultValues: {
+      name: '',
+      slug: '',
+      description: '',
+      parentId: null,
+      active: true,
+    },
   });
 
   // Change parent dialog state
@@ -435,8 +442,23 @@ export default function DashboardCategoriesPage() {
       toast.success('Đã xóa danh mục');
       setDeleteTarget(null);
     },
-    onError: () => {
-      toast.error('Xóa thất bại');
+    onError: (error: unknown) => {
+      const err = error as { error?: { code?: string; message?: string } };
+      const code = err?.error?.code;
+      
+      switch (code) {
+        case 'CATEGORY_NOT_FOUND':
+          toast.error('Danh mục không tồn tại');
+          break;
+        case 'CATEGORY_HAS_CHILDREN':
+          toast.error('Không thể xóa danh mục có danh mục con. Vui lòng xóa hoặc di chuyển danh mục con trước.');
+          break;
+        case 'CATEGORY_HAS_PRODUCTS':
+          toast.error('Không thể xóa danh mục đang có sản phẩm');
+          break;
+        default:
+          toast.error(err?.error?.message || 'Xóa danh mục thất bại');
+      }
     },
   });
 
@@ -447,8 +469,17 @@ export default function DashboardCategoriesPage() {
       toast.success('Đã khôi phục danh mục');
       setRestoreTarget(null);
     },
-    onError: () => {
-      toast.error('Khôi phục thất bại');
+    onError: (error: unknown) => {
+      const err = error as { error?: { code?: string; message?: string } };
+      const code = err?.error?.code;
+      
+      switch (code) {
+        case 'CATEGORY_SLUG_CONFLICT':
+          toast.error('Không thể khôi phục: slug đã được sử dụng bởi danh mục khác');
+          break;
+        default:
+          toast.error(err?.error?.message || 'Khôi phục thất bại');
+      }
     },
   });
 
@@ -459,8 +490,20 @@ export default function DashboardCategoriesPage() {
       toast.success('Đã xóa vĩnh viễn');
       setHardDeleteTarget(null);
     },
-    onError: () => {
-      toast.error('Xóa vĩnh viễn thất bại');
+    onError: (error: unknown) => {
+      const err = error as { error?: { code?: string; message?: string } };
+      const code = err?.error?.code;
+      
+      switch (code) {
+        case 'CATEGORY_HAS_CHILDREN':
+          toast.error('Không thể xóa vĩnh viễn danh mục có danh mục con');
+          break;
+        case 'CATEGORY_HAS_PRODUCTS':
+          toast.error('Không thể xóa vĩnh viễn danh mục đang có sản phẩm');
+          break;
+        default:
+          toast.error(err?.error?.message || 'Xóa vĩnh viễn thất bại');
+      }
     },
   });
 
@@ -546,13 +589,19 @@ export default function DashboardCategoriesPage() {
       closeFormDialog();
     },
     onError: (error: unknown) => {
-      const err = error as { error?: { code?: string } };
-      if (err?.error?.code === 'CATEGORY_SLUG_EXISTS') {
-        toast.error('Slug đã tồn tại');
-      } else if (err?.error?.code === 'CATEGORY_NOT_FOUND') {
-        toast.error('Danh mục cha không tồn tại');
-      } else {
-        toast.error('Tạo danh mục thất bại');
+      const err = error as { error?: { code?: string; message?: string } };
+      const code = err?.error?.code;
+      
+      switch (code) {
+        case 'CATEGORY_SLUG_EXISTS':
+          form.setError('slug', { message: 'Slug này đã được sử dụng' });
+          toast.error('Slug đã tồn tại, vui lòng chọn slug khác');
+          break;
+        case 'CATEGORY_NOT_FOUND':
+          toast.error('Danh mục cha không tồn tại');
+          break;
+        default:
+          toast.error(err?.error?.message || 'Tạo danh mục thất bại');
       }
     },
   });
@@ -566,11 +615,22 @@ export default function DashboardCategoriesPage() {
       closeFormDialog();
     },
     onError: (error: unknown) => {
-      const err = error as { error?: { code?: string } };
-      if (err?.error?.code === 'CATEGORY_SLUG_EXISTS') {
-        toast.error('Slug đã tồn tại');
-      } else {
-        toast.error('Cập nhật thất bại');
+      const err = error as { error?: { code?: string; message?: string } };
+      const code = err?.error?.code;
+      
+      switch (code) {
+        case 'CATEGORY_SLUG_EXISTS':
+          form.setError('slug', { message: 'Slug này đã được sử dụng' });
+          toast.error('Slug đã tồn tại, vui lòng chọn slug khác');
+          break;
+        case 'CATEGORY_NOT_FOUND':
+          toast.error('Danh mục không tồn tại');
+          break;
+        case 'CATEGORY_CIRCULAR_REF':
+          toast.error('Không thể tạo tham chiếu vòng (danh mục không thể là cha của chính nó)');
+          break;
+        default:
+          toast.error(err?.error?.message || 'Cập nhật danh mục thất bại');
       }
     },
   });
@@ -584,13 +644,21 @@ export default function DashboardCategoriesPage() {
       closeChangeParentDialog();
     },
     onError: (error: unknown) => {
-      const err = error as { error?: { code?: string } };
-      if (err?.error?.code === 'CATEGORY_NOT_FOUND') {
-        toast.error('Danh mục cha không tồn tại');
-      } else if (err?.error?.code === 'CIRCULAR_REFERENCE') {
-        toast.error('Không thể di chuyển vào danh mục con của chính nó');
-      } else {
-        toast.error('Di chuyển thất bại');
+      const err = error as { error?: { code?: string; message?: string } };
+      const code = err?.error?.code;
+      
+      switch (code) {
+        case 'CATEGORY_NOT_FOUND':
+          toast.error('Danh mục hoặc danh mục cha không tồn tại');
+          break;
+        case 'CATEGORY_CIRCULAR_REF':
+          toast.error('Không thể di chuyển danh mục vào danh mục con của chính nó');
+          break;
+        case 'INVALID_AFTER_ID':
+          toast.error('Vị trí đích không hợp lệ');
+          break;
+        default:
+          toast.error(err?.error?.message || 'Di chuyển thất bại');
       }
     },
   });
@@ -651,11 +719,10 @@ export default function DashboardCategoriesPage() {
   }
 
   function openCreateDialog(parentCategory?: Category) {
-    setFormData({
+    form.reset({
       name: '',
       slug: '',
       description: '',
-      image: '',
       parentId: parentCategory?.id || null,
       active: true,
     });
@@ -665,11 +732,10 @@ export default function DashboardCategoriesPage() {
   }
 
   function openEditDialog(category: Category) {
-    setFormData({
+    form.reset({
       name: category.name,
       slug: category.slug,
       description: category.description || '',
-      image: category.image || '',
       parentId: category.parentId,
       active: category.active,
     });
@@ -682,41 +748,27 @@ export default function DashboardCategoriesPage() {
     setShowCreateDialog(false);
     setEditTarget(null);
     setParentForNewChild(null);
-    setFormData({
-      name: '',
-      slug: '',
-      description: '',
-      image: '',
-      parentId: null,
-      active: true,
-    });
+    form.reset();
   }
 
-  function handleSaveCategory() {
-    if (!formData.name.trim() || !formData.slug.trim()) {
-      toast.error('Tên và slug là bắt buộc');
-      return;
-    }
-
+  function handleSaveCategory(data: CategoryFormData) {
     if (editTarget) {
       updateMutation.mutate({
         id: editTarget.id,
         data: {
-          name: formData.name,
-          slug: formData.slug,
-          description: formData.description || undefined,
-          image: formData.image || undefined,
-          active: formData.active,
+          name: data.name,
+          slug: data.slug,
+          description: data.description || undefined,
+          active: data.active,
         },
       });
     } else {
       createMutation.mutate({
-        name: formData.name,
-        slug: formData.slug,
-        description: formData.description || undefined,
-        image: formData.image || undefined,
-        parentId: formData.parentId,
-        active: formData.active,
+        name: data.name,
+        slug: data.slug,
+        description: data.description || undefined,
+        parentId: data.parentId,
+        active: data.active,
       });
     }
   }
@@ -1029,54 +1081,52 @@ export default function DashboardCategoriesPage() {
               {editTarget ? 'Cập nhật thông tin danh mục' : 'Tạo danh mục mới trong hệ thống'}
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
+          <form onSubmit={form.handleSubmit(handleSaveCategory)} className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="name">Tên danh mục *</Label>
               <Input
                 id="name"
-                value={formData.name}
-                onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
                 placeholder="Ví dụ: Áo thun"
+                {...form.register('name')}
               />
+              {form.formState.errors.name && (
+                <p className="text-sm text-destructive">{form.formState.errors.name.message}</p>
+              )}
             </div>
+
             <div className="grid gap-2">
               <Label htmlFor="slug">Slug *</Label>
               <Input
                 id="slug"
-                value={formData.slug}
-                onChange={(e) => setFormData((prev) => ({ ...prev, slug: e.target.value }))}
                 placeholder="Ví dụ: ao-thun"
+                {...form.register('slug')}
               />
+              <p className="text-xs text-muted-foreground">Chỉ chữ thường, số và gạch ngang</p>
+              {form.formState.errors.slug && (
+                <p className="text-sm text-destructive">{form.formState.errors.slug.message}</p>
+              )}
             </div>
+
             <div className="grid gap-2">
               <Label htmlFor="description">Mô tả</Label>
               <Textarea
                 id="description"
-                value={formData.description}
-                onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
                 placeholder="Mô tả ngắn về danh mục"
                 rows={3}
+                {...form.register('description')}
               />
+              {form.formState.errors.description && (
+                <p className="text-sm text-destructive">{form.formState.errors.description.message}</p>
+              )}
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="image">URL hình ảnh</Label>
-              <Input
-                id="image"
-                value={formData.image}
-                onChange={(e) => setFormData((prev) => ({ ...prev, image: e.target.value }))}
-                placeholder="https://example.com/image.jpg"
-              />
-            </div>
+
             {!editTarget && !parentForNewChild && (
               <div className="grid gap-2">
                 <Label htmlFor="parentId">Danh mục cha</Label>
                 <Select
-                  value={formData.parentId?.toString() || 'null'}
+                  value={form.watch('parentId')?.toString() || 'null'}
                   onValueChange={(value) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      parentId: value === 'null' ? null : parseInt(value),
-                    }))
+                    form.setValue('parentId', value === 'null' ? null : parseInt(value))
                   }
                 >
                   <SelectTrigger id="parentId">
@@ -1088,7 +1138,9 @@ export default function DashboardCategoriesPage() {
                       <SelectItem key={cat.id} value={cat.id.toString()}>
                         <span className="flex items-center gap-1">
                           {cat.depth > 0 && (
-                            <span className="text-muted-foreground">{'└─ '.repeat(cat.depth)}</span>
+                            <span className="text-muted-foreground">
+                              {'└─ '.repeat(cat.depth)}
+                            </span>
                           )}
                           {cat.name}
                         </span>
@@ -1098,34 +1150,37 @@ export default function DashboardCategoriesPage() {
                 </Select>
               </div>
             )}
+
             <div className="flex items-center justify-between">
               <Label htmlFor="active">Hiển thị</Label>
               <Switch
                 id="active"
-                checked={formData.active}
-                onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, active: checked }))}
+                checked={form.watch('active')}
+                onCheckedChange={(checked) => form.setValue('active', checked)}
               />
             </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={closeFormDialog}
-              disabled={createMutation.isPending || updateMutation.isPending}
-            >
-              Hủy
-            </Button>
-            <Button
-              onClick={handleSaveCategory}
-              disabled={createMutation.isPending || updateMutation.isPending}
-            >
-              {createMutation.isPending || updateMutation.isPending
-                ? 'Đang lưu...'
-                : editTarget
-                  ? 'Cập nhật'
-                  : 'Tạo mới'}
-            </Button>
-          </DialogFooter>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={closeFormDialog}
+                disabled={createMutation.isPending || updateMutation.isPending}
+              >
+                Hủy
+              </Button>
+              <Button
+                type="submit"
+                disabled={createMutation.isPending || updateMutation.isPending}
+              >
+                {createMutation.isPending || updateMutation.isPending
+                  ? 'Đang lưu...'
+                  : editTarget
+                    ? 'Cập nhật'
+                    : 'Tạo mới'}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
 
