@@ -3,10 +3,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import {
   type Category,
+  type CategoriesResponse,
   deleteCategory,
   getCategories,
   hardDeleteCategory,
-  moveCategories,
+  moveCategoryUp,
+  moveCategoryDown,
+  changeCategoryParent,
   restoreCategory,
   updateCategory,
 } from '@/lib/api/categories';
@@ -44,15 +47,14 @@ export function useCategories() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [active, deleted] = await Promise.all([
-        getCategories({ tree: true }) as Promise<TreeNode[]>,
-        getCategories({ deleted: true }) as Promise<Page<Category>>,
+      const [treeResponse, deleted] = await Promise.all([
+        getCategories() as Promise<CategoriesResponse>,
+        getCategories({ deleted: true }) as Promise<Category[]>,
       ]);
-      setTree(active);
-      setFlatList(flattenTree(active));
-      setDeletedList(
-        Array.isArray(deleted) ? deleted : ((deleted as Page<Category>).content ?? []),
-      );
+      const treeData = treeResponse.data || [];
+      setTree(treeData as TreeNode[]);
+      setFlatList(flattenTree(treeData as TreeNode[]));
+      setDeletedList(Array.isArray(deleted) ? deleted : []);
     } catch {
       toast.error('Không thể tải danh sách danh mục');
     } finally {
@@ -90,15 +92,15 @@ export function useCategories() {
 
   const visibleTree = useMemo(() => {
     if (filterStatus === 'deleted') return [];
-    function filter(nodes: TreeNode[]): TreeNode[] {
+    function filterTree(nodes: TreeNode[]): TreeNode[] {
       if (!matchedIds) return nodes;
       return nodes.reduce<TreeNode[]>((acc, node) => {
-        const children = filter(node.children);
+        const children = filterTree(node.children);
         if (matchedIds.has(node.id) || children.length > 0) acc.push({ ...node, children });
         return acc;
       }, []);
     }
-    return filter(tree).filter((n) =>
+    return filterTree(tree).filter((n) =>
       filterStatus === 'all' ? true : filterStatus === 'active' ? n.active : !n.active,
     );
   }, [tree, matchedIds, filterStatus]);
@@ -226,17 +228,17 @@ export function useCategories() {
       const snapshot = { flatList, tree };
       applyReorder(parentId, reordered);
       try {
-        await moveCategories({
-          movedId: id,
-          fromParentId: parentId,
-          toParentId: parentId,
-          targetOrderedIds: reordered.map((c) => c.id),
-        });
-        toast.success('Đã sắp xếp lại');
-      } catch {
+        await moveCategoryUp(id);
+        toast.success('Đã di chuyển lên');
+      } catch (error: any) {
         setFlatList(snapshot.flatList);
         setTree(snapshot.tree);
-        toast.error('Sắp xếp thất bại — thử lại sau');
+        const message = error?.error?.message || error?.message || '';
+        if (message.includes('already at the first position')) {
+          toast.error('Danh mục đã ở vị trí đầu tiên');
+        } else {
+          toast.error('Di chuyển thất bại');
+        }
       }
     },
     [flatList, tree, applyReorder],
@@ -254,17 +256,17 @@ export function useCategories() {
       const snapshot = { flatList, tree };
       applyReorder(parentId, reordered);
       try {
-        await moveCategories({
-          movedId: id,
-          fromParentId: parentId,
-          toParentId: parentId,
-          targetOrderedIds: reordered.map((c) => c.id),
-        });
-        toast.success('Đã sắp xếp lại');
-      } catch {
+        await moveCategoryDown(id);
+        toast.success('Đã di chuyển xuống');
+      } catch (error: any) {
         setFlatList(snapshot.flatList);
         setTree(snapshot.tree);
-        toast.error('Sắp xếp thất bại — thử lại sau');
+        const message = error?.error?.message || error?.message || '';
+        if (message.includes('already at the last position')) {
+          toast.error('Danh mục đã ở vị trí cuối cùng');
+        } else {
+          toast.error('Di chuyển thất bại');
+        }
       }
     },
     [flatList, tree, applyReorder],
@@ -277,32 +279,21 @@ export function useCategories() {
       const fromParentId = node.parentId;
       const snapshot = { flatList, tree };
       applyChangeParent(id, fromParentId, newParentId);
-      const destSiblings = [
-        ...flatList
-          .filter((c) => c.parentId === newParentId)
-          .sort((a, b) => a.sortOrder - b.sortOrder)
-          .map((c) => c.id),
-        id,
-      ];
       try {
-        await moveCategories({
-          movedId: id,
-          fromParentId,
-          toParentId: newParentId,
-          targetOrderedIds: destSiblings,
-          sourceOrderedIds: flatList
-            .filter((c) => c.parentId === fromParentId && c.id !== id)
-            .sort((a, b) => a.sortOrder - b.sortOrder)
-            .map((c) => c.id),
-        });
+        await changeCategoryParent(id, newParentId);
+        await load(); // Reload to get correct sortOrder from backend
         toast.success('Đã đổi danh mục cha');
-      } catch {
+      } catch (error: any) {
         setFlatList(snapshot.flatList);
         setTree(snapshot.tree);
-        toast.error('Không thể di chuyển danh mục — thử lại sau');
+        if (error?.error?.code === 'CIRCULAR_REFERENCE') {
+          toast.error('Không thể di chuyển vào danh mục con của chính nó');
+        } else {
+          toast.error('Không thể di chuyển danh mục');
+        }
       }
     },
-    [flatList, tree, applyChangeParent],
+    [flatList, tree, applyChangeParent, load],
   );
 
   const handleRestore = useCallback(

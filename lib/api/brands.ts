@@ -18,7 +18,7 @@ export interface BrandsQuery {
   deleted?: boolean;
   page?: number;
   size?: number;
-  sort?: string;
+  sort?: string | string[];
 }
 
 export async function getBrands(query?: BrandsQuery): Promise<Page<Brand>> {
@@ -28,8 +28,15 @@ export async function getBrands(query?: BrandsQuery): Promise<Page<Brand>> {
   if (query?.deleted !== undefined) q.set('deleted', String(query.deleted));
   if (query?.page !== undefined) q.set('page', String(query.page));
   if (query?.size !== undefined) q.set('size', String(query.size));
-  if (query?.sort) q.set('sort', query.sort);
-  const qs = q.toString() ? `?${q}` : '';
+
+  let qs = q.toString() ? `?${q}` : '';
+
+  if (query?.sort) {
+    const sorts = Array.isArray(query.sort) ? query.sort : [query.sort];
+    const sortStr = sorts.map((s) => `sort=${s}`).join('&');
+    qs = qs ? `${qs}&${sortStr}` : `?${sortStr}`;
+  }
+
   const res = await apiFetch<{ data: Page<Brand> }>(`/api/brands${qs}`);
   return res.data;
 }

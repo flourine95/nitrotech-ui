@@ -35,7 +35,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { mainNavItems, catalogNavItems, systemNavItems, type NavItem } from './nav-items';
+import { mainNavItems, catalogNavItems, systemNavItems, devNavItems, type NavItem } from './nav-items';
 
 type User = {
   name?: string | null;
@@ -146,6 +146,15 @@ export function DashboardShell({
               <NavGroup items={systemNavItems} pathname={pathname} />
             </SidebarGroupContent>
           </SidebarGroup>
+
+          {process.env.NODE_ENV === 'development' && (
+            <SidebarGroup>
+              <SidebarGroupLabel>Dev</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <NavGroup items={devNavItems} pathname={pathname} />
+              </SidebarGroupContent>
+            </SidebarGroup>
+          )}
         </SidebarContent>
 
         <SidebarRail />
