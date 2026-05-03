@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { 
@@ -49,12 +49,24 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
-import { getCategories, deleteCategory, restoreCategory, hardDeleteCategory, updateCategory, moveCategoryUp, moveCategoryDown, createCategory, changeCategoryParent, type Category, type CategoriesResponse } from '@/lib/api/categories';
+import {
+  getCategories,
+  deleteCategory,
+  restoreCategory,
+  hardDeleteCategory,
+  updateCategory,
+  moveCategoryUp,
+  moveCategoryDown,
+  createCategory,
+  changeCategoryParent,
+  type Category,
+  type CategoriesResponse,
+} from '@/lib/api/categories';
+import { Label } from '@/components/ui/label';
 
 interface CategoryRowProps {
   category: Category;
@@ -100,29 +112,30 @@ function CategoryRow({
         style={{ paddingLeft: `${12 + depth * 24}px` }}
       >
         {/* Expand/collapse button */}
-        <button
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={onToggleExpand}
           aria-label={hasChildren ? (isExpanded ? `Thu gọn ${category.name}` : `Mở rộng ${category.name}`) : undefined}
           className={cn(
-            'flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-muted-foreground/60 transition-colors hover:bg-muted hover:text-foreground',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+            'size-6 shrink-0 text-muted-foreground/60 hover:bg-muted hover:text-foreground',
             !hasChildren && 'invisible'
           )}
         >
           <ChevronRight
             className={cn(
-              'h-3.5 w-3.5 transition-transform duration-200',
+              'transition-transform duration-200',
               isExpanded && 'rotate-90'
             )}
           />
-        </button>
+        </Button>
 
         {/* Folder icon */}
         <span className={cn('shrink-0', depth === 0 ? 'text-primary' : 'text-muted-foreground/50')}>
           {isExpanded && hasChildren ? (
-            <FolderOpen className="h-4 w-4" />
+            <FolderOpen />
           ) : (
-            <Folder className="h-4 w-4" />
+            <Folder />
           )}
         </span>
 
@@ -151,46 +164,33 @@ function CategoryRow({
             variant="ghost"
             size="icon"
             aria-label={`Di chuyển ${category.name} lên`}
-            className="h-7 w-7 text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+            className="size-7 text-muted-foreground hover:text-foreground"
             disabled={!canMoveUp}
             onClick={() => onMoveUp?.(category)}
           >
-            <ChevronUp className="h-3.5 w-3.5" />
+            <ChevronUp />
           </Button>
 
           <Button
             variant="ghost"
             size="icon"
             aria-label={`Di chuyển ${category.name} xuống`}
-            className="h-7 w-7 text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+            className="size-7 text-muted-foreground hover:text-foreground"
             disabled={!canMoveDown}
             onClick={() => onMoveDown?.(category)}
           >
-            <ChevronDown className="h-3.5 w-3.5" />
+            <ChevronDown />
           </Button>
 
           {/* Divider - hidden on mobile */}
           <div className="hidden h-4 w-px bg-border mx-1 sm:block" />
 
           {/* Toggle active switch */}
-          <button
-            role="switch"
-            aria-checked={category.active}
+          <Switch
+            checked={category.active}
+            onCheckedChange={() => onToggleActive?.(category)}
             aria-label={category.active ? `${category.name} đang hiển thị - nhấn để ẩn` : `${category.name} đang ẩn - nhấn để hiển thị`}
-            onClick={() => onToggleActive?.(category)}
-            className={cn(
-              'relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-all duration-200',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-              category.active ? 'bg-primary' : 'bg-muted-foreground/30'
-            )}
-          >
-            <span
-              className={cn(
-                'inline-flex h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200',
-                category.active ? 'translate-x-4' : 'translate-x-0.5'
-              )}
-            />
-          </button>
+          />
 
           {/* Edit button */}
           <Button
@@ -198,9 +198,9 @@ function CategoryRow({
             size="icon"
             aria-label={`Chỉnh sửa ${category.name}`}
             onClick={() => onEdit(category)}
-            className="h-8 w-8 text-muted-foreground hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-950 dark:hover:text-blue-400 focus-visible:ring-2 focus-visible:ring-ring"
+            className="size-8 text-muted-foreground"
           >
-            <Pencil className="h-3.5 w-3.5" />
+            <Pencil />
           </Button>
 
           {/* Delete button */}
@@ -209,9 +209,9 @@ function CategoryRow({
             size="icon"
             aria-label={`Xóa ${category.name}`}
             onClick={() => onDelete(category)}
-            className="h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive focus-visible:ring-2 focus-visible:ring-ring"
+            className="size-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
           >
-            <Trash2 className="h-3.5 w-3.5" />
+            <Trash2 />
           </Button>
 
           {/* More actions dropdown - hidden on mobile, shown in ... menu */}
@@ -220,19 +220,19 @@ function CategoryRow({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                className="size-8 text-muted-foreground hover:text-foreground"
                 aria-label={`Thêm thao tác cho ${category.name}`}
               >
-                <MoreHorizontal className="h-4 w-4" />
+                <MoreHorizontal />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem onClick={() => onChangeParent(category)}>
-                <CornerDownRight className="mr-2 h-3.5 w-3.5" />
+                <CornerDownRight data-icon="inline-start" />
                 Di chuyển vào danh mục khác
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onAddChild(category)}>
-                <Plus className="mr-2 h-3.5 w-3.5" />
+                <Plus data-icon="inline-start" />
                 Thêm danh mục con
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -362,7 +362,7 @@ export default function DashboardCategoriesPage() {
     staleTime: 30000,
   });
 
-  const categories = treeData?.data || [];
+  const categories = useMemo(() => treeData?.data || [], [treeData?.data]);
   const deletedCategories = deletedData || [];
 
   // Auto-expand on initial load only
@@ -755,7 +755,7 @@ export default function DashboardCategoriesPage() {
             className="h-9 w-full shrink-0 sm:w-auto"
             onClick={() => openCreateDialog()}
           >
-            <Plus className="h-4 w-4" />
+            <Plus data-icon="inline-start" />
             Thêm danh mục
           </Button>
         )}
@@ -772,7 +772,7 @@ export default function DashboardCategoriesPage() {
             <>
               <span className="font-medium text-foreground">{stats.total}</span> danh mục
               {' · '}
-              <span className="font-medium text-emerald-600">{stats.active}</span> hoạt động
+              <span className="font-medium text-foreground">{stats.active}</span> hoạt động
               {' · '}
               <span className="font-medium text-primary">{stats.root}</span> gốc
               {' · '}
@@ -809,7 +809,7 @@ export default function DashboardCategoriesPage() {
             className="h-8 text-xs"
             onClick={() => setShowDeleted(!showDeleted)}
           >
-            <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+            <Trash2 data-icon="inline-start" />
             {showDeleted ? 'Ẩn thùng rác' : `Xem thùng rác (${stats.deleted})`}
           </Button>
         </div>
@@ -822,7 +822,7 @@ export default function DashboardCategoriesPage() {
             {/* Empty state for trash */}
             {deletedCategories.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
-                <Trash2 className="mb-3 h-10 w-10 text-muted-foreground/40" />
+                <Trash2 className="mb-3 size-10 text-muted-foreground/40" />
                 <p className="text-sm font-medium text-muted-foreground">
                   Không có danh mục đã xóa
                 </p>
@@ -833,7 +833,7 @@ export default function DashboardCategoriesPage() {
             ) : (
               deletedCategories.map((cat) => (
                 <div key={cat.id} className="flex flex-col gap-3 px-4 py-3 hover:bg-muted/50 sm:flex-row sm:items-center sm:gap-3">
-                  <Folder className="h-4 w-4 shrink-0 text-muted-foreground/40" />
+                  <Folder className="shrink-0 text-muted-foreground/40" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-muted-foreground line-through">
                       {cat.name}
@@ -850,18 +850,18 @@ export default function DashboardCategoriesPage() {
                       variant="outline"
                       size="sm"
                       onClick={() => setRestoreTarget(cat)}
-                      className="h-8 flex-1 gap-1.5 text-xs sm:flex-none"
+                      className="h-8 flex-1 text-xs sm:flex-none"
                     >
-                      <RotateCcw className="h-3.5 w-3.5" />
+                      <RotateCcw data-icon="inline-start" />
                       Khôi phục
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => setHardDeleteTarget(cat)}
-                      className="h-8 flex-1 gap-1.5 text-xs text-destructive hover:text-destructive sm:flex-none"
+                      className="h-8 flex-1 text-xs text-destructive hover:text-destructive sm:flex-none"
                     >
-                      <Trash2 className="h-3.5 w-3.5" />
+                      <Trash2 data-icon="inline-start" />
                       <span className="hidden sm:inline">Xóa vĩnh viễn</span>
                       <span className="sm:hidden">Xóa</span>
                     </Button>
@@ -874,16 +874,16 @@ export default function DashboardCategoriesPage() {
           <div className="p-2" role="tree" aria-label="Cây danh mục">
             {categories.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
-                <Folder className="mb-3 h-10 w-10 text-muted-foreground/40" />
+                <Folder className="mb-3 size-10 text-muted-foreground/40" />
                 <p className="text-sm font-medium text-muted-foreground">
                   Chưa có danh mục nào
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground/70">
-                  Nhấn "Thêm danh mục" để bắt đầu.
+                  {'Nhấn "Thêm danh mục" để bắt đầu.'}
                 </p>
               </div>
             ) : (
-              <div className="space-y-0">
+              <div className="flex flex-col gap-0">
                 {categories.map((category, index) => (
                   <CategoryTreeNode 
                     key={category.id} 
@@ -982,10 +982,10 @@ export default function DashboardCategoriesPage() {
 
       {/* Create/Edit category dialog */}
       <Dialog open={showCreateDialog} onOpenChange={(open) => !open && closeFormDialog()}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-125">
           <DialogHeader>
             <DialogTitle>
-              {editTarget ? 'Chỉnh sửa danh mục' : parentForNewChild ? `Thêm danh mục con vào &ldquo;${parentForNewChild.name}&rdquo;` : 'Thêm danh mục mới'}
+              {editTarget ? 'Chỉnh sửa danh mục' : parentForNewChild ? `Thêm danh mục con vào "${parentForNewChild.name}"` : 'Thêm danh mục mới'}
             </DialogTitle>
             <DialogDescription>
               {editTarget ? 'Cập nhật thông tin danh mục' : 'Tạo danh mục mới trong hệ thống'}
@@ -1039,7 +1039,7 @@ export default function DashboardCategoriesPage() {
                   <SelectTrigger id="parentId">
                     <SelectValue placeholder="Chọn danh mục cha" />
                   </SelectTrigger>
-                  <SelectContent position="popper" className="max-h-[300px]">
+                  <SelectContent position="popper" className="max-h-75">
                     <SelectItem value="null">Không có (danh mục gốc)</SelectItem>
                     {getFlatCategoryList(categories).map((cat) => (
                       <SelectItem key={cat.id} value={cat.id.toString()}>
@@ -1075,7 +1075,7 @@ export default function DashboardCategoriesPage() {
 
       {/* Change parent dialog */}
       <Dialog open={!!changeParentTarget} onOpenChange={(open) => !open && closeChangeParentDialog()}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-106.25">
           <DialogHeader>
             <DialogTitle>Di chuyển danh mục</DialogTitle>
             <DialogDescription>
@@ -1089,7 +1089,7 @@ export default function DashboardCategoriesPage() {
                 <SelectTrigger id="newParent">
                   <SelectValue placeholder="Chọn danh mục cha" />
                 </SelectTrigger>
-                <SelectContent position="popper" className="max-h-[300px]">
+                <SelectContent position="popper" className="max-h-75">
                   <SelectItem value="null">Không có (danh mục gốc)</SelectItem>
                   {getFlatCategoryList(categories, changeParentTarget?.id).map((cat) => (
                     <SelectItem key={cat.id} value={cat.id.toString()}>
