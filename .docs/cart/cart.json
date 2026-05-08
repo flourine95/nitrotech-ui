@@ -1,0 +1,239 @@
+{
+  "get-cart": {
+    "endpoint": "GET /api/cart",
+    "description": "Get current user's cart with all items",
+    "authentication": "Required",
+    "request": {
+      "params": {}
+    },
+    "responses": {
+      "200_ok": {
+        "status": 200,
+        "body": {
+          "data": {
+            "id": 1,
+            "userId": 123,
+            "items": [
+              {
+                "id": 1,
+                "variantId": 456,
+                "quantity": 2,
+                "variant": {
+                  "id": 456,
+                  "sku": "LAPTOP-001-16GB-512GB",
+                  "name": "16GB RAM / 512GB SSD",
+                  "price": 25990000,
+                  "attributes": {
+                    "ram": "16GB",
+                    "storage": "512GB"
+                  },
+                  "product": {
+                    "id": 789,
+                    "name": "Dell XPS 15",
+                    "slug": "dell-xps-15",
+                    "thumbnail": "https://example.com/dell-xps-15.jpg"
+                  }
+                },
+                "createdAt": "2026-05-03T10:00:00Z",
+                "updatedAt": "2026-05-03T10:00:00Z"
+              }
+            ],
+            "summary": {
+              "totalItems": 2,
+              "subtotal": 51980000,
+              "discount": 0,
+              "shipping": 0,
+              "total": 51980000
+            },
+            "createdAt": "2026-05-03T10:00:00Z",
+            "updatedAt": "2026-05-03T10:00:00Z"
+          }
+        }
+      },
+      "404_cart_not_found": {
+        "status": 404,
+        "body": {
+          "status": 404,
+          "code": "CART_NOT_FOUND",
+          "message": "Cart not found for this user"
+        }
+      }
+    },
+    "notes": [
+      "Cart is automatically created when user adds first item",
+      "Returns empty items array if cart exists but has no items",
+      "Includes full product and variant details for each item"
+    ]
+  },
+  "add-to-cart": {
+    "endpoint": "POST /api/cart",
+    "description": "Add item to cart or update quantity if already exists",
+    "authentication": "Required",
+    "request": {
+      "body": {
+        "variantId": "number (required) - Product variant ID",
+        "quantity": "number (required) - Quantity to add (min: 1)"
+      }
+    },
+    "responses": {
+      "200_added": {
+        "status": 200,
+        "body": {
+          "data": {
+            "id": 1,
+            "cartId": 1,
+            "variantId": 456,
+            "quantity": 2,
+            "variant": {
+              "id": 456,
+              "sku": "LAPTOP-001-16GB-512GB",
+              "name": "16GB RAM / 512GB SSD",
+              "price": 25990000,
+              "product": {
+                "id": 789,
+                "name": "Dell XPS 15",
+                "slug": "dell-xps-15",
+                "thumbnail": "https://example.com/dell-xps-15.jpg"
+              }
+            },
+            "createdAt": "2026-05-03T10:00:00Z",
+            "updatedAt": "2026-05-03T10:00:00Z"
+          },
+          "message": "Added to cart successfully"
+        }
+      },
+      "404_variant_not_found": {
+        "status": 404,
+        "body": {
+          "status": 404,
+          "code": "VARIANT_NOT_FOUND",
+          "message": "Product variant not found"
+        }
+      },
+      "409_out_of_stock": {
+        "status": 409,
+        "body": {
+          "status": 409,
+          "code": "VARIANT_OUT_OF_STOCK",
+          "message": "Product is out of stock"
+        }
+      },
+      "409_insufficient_stock": {
+        "status": 409,
+        "body": {
+          "status": 409,
+          "code": "INSUFFICIENT_STOCK",
+          "message": "Only 5 items available in stock",
+          "data": {
+            "available": 5,
+            "requested": 10
+          }
+        }
+      }
+    },
+    "notes": [
+      "If item already in cart, quantity is added to existing quantity",
+      "Stock is checked before adding",
+      "Cart is created automatically if doesn't exist"
+    ]
+  },
+  "update-cart-item": {
+    "endpoint": "PUT /api/cart/{itemId}",
+    "description": "Update cart item quantity",
+    "authentication": "Required",
+    "request": {
+      "path": {
+        "itemId": "number - Cart item ID"
+      },
+      "body": {
+        "quantity": "number (required) - New quantity (min: 1)"
+      }
+    },
+    "responses": {
+      "200_updated": {
+        "status": 200,
+        "body": {
+          "data": {
+            "id": 1,
+            "cartId": 1,
+            "variantId": 456,
+            "quantity": 3,
+            "variant": {
+              "id": 456,
+              "sku": "LAPTOP-001-16GB-512GB",
+              "name": "16GB RAM / 512GB SSD",
+              "price": 25990000
+            },
+            "updatedAt": "2026-05-03T10:05:00Z"
+          },
+          "message": "Cart updated successfully"
+        }
+      },
+      "404_item_not_found": {
+        "status": 404,
+        "body": {
+          "status": 404,
+          "code": "CART_ITEM_NOT_FOUND",
+          "message": "Cart item not found"
+        }
+      },
+      "409_insufficient_stock": {
+        "status": 409,
+        "body": {
+          "status": 409,
+          "code": "INSUFFICIENT_STOCK",
+          "message": "Only 5 items available in stock"
+        }
+      }
+    },
+    "notes": [
+      "Quantity must be at least 1",
+      "To remove item, use DELETE endpoint instead",
+      "Stock is checked before updating"
+    ]
+  },
+  "remove-cart-item": {
+    "endpoint": "DELETE /api/cart/{itemId}",
+    "description": "Remove item from cart",
+    "authentication": "Required",
+    "request": {
+      "path": {
+        "itemId": "number - Cart item ID"
+      }
+    },
+    "responses": {
+      "200_removed": {
+        "status": 200,
+        "body": {
+          "message": "Item removed from cart"
+        }
+      },
+      "404_item_not_found": {
+        "status": 404,
+        "body": {
+          "status": 404,
+          "code": "CART_ITEM_NOT_FOUND",
+          "message": "Cart item not found"
+        }
+      }
+    }
+  },
+  "clear-cart": {
+    "endpoint": "DELETE /api/cart",
+    "description": "Clear all items from cart",
+    "authentication": "Required",
+    "request": {},
+    "responses": {
+      "200_cleared": {
+        "status": 200,
+        "body": {
+          "message": "Cart cleared successfully"
+        }
+      }
+    },
+    "notes": [
+      "Removes all items but keeps the cart entity",
+      "Used after successful order creation"
+    ]
+  }
+}

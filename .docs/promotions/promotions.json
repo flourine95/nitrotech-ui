@@ -1,0 +1,115 @@
+{
+  "validate-promotion": {
+    "endpoint": "POST /api/promotions/validate",
+    "description": "Validate promotion code and calculate discount",
+    "authentication": "Required",
+    "request": {
+      "body": {
+        "code": "string (required) - Promotion code",
+        "orderAmount": "number (required) - Order subtotal"
+      }
+    },
+    "responses": {
+      "200_valid": {
+        "status": 200,
+        "body": {
+          "data": {
+            "code": "SUMMER2026",
+            "description": "Summer Sale - 10% off",
+            "discountType": "percentage",
+            "discountValue": 10,
+            "discountAmount": 100000,
+            "minOrderAmount": 500000,
+            "finalAmount": 900000
+          },
+          "message": "Promotion code is valid"
+        }
+      },
+      "404_not_found": {
+        "status": 404,
+        "body": {
+          "status": 404,
+          "code": "PROMOTION_NOT_FOUND",
+          "message": "Promotion code not found or expired"
+        }
+      },
+      "409_not_applicable": {
+        "status": 409,
+        "body": {
+          "status": 409,
+          "code": "PROMOTION_MIN_AMOUNT_NOT_MET",
+          "message": "Order amount must be at least 500,000 VND",
+          "data": {
+            "minAmount": 500000,
+            "currentAmount": 300000
+          }
+        }
+      },
+      "409_usage_limit_reached": {
+        "status": 409,
+        "body": {
+          "status": 409,
+          "code": "PROMOTION_USAGE_LIMIT_REACHED",
+          "message": "You have already used this promotion code"
+        }
+      },
+      "409_expired": {
+        "status": 409,
+        "body": {
+          "status": 409,
+          "code": "PROMOTION_EXPIRED",
+          "message": "Promotion code has expired"
+        }
+      }
+    },
+    "notes": [
+      "Discount is calculated based on discountType:",
+      "- percentage: orderAmount * (discountValue / 100)",
+      "- fixed: discountValue",
+      "Usage limit per user is checked",
+      "Total usage limit is checked",
+      "Start/end dates are validated"
+    ]
+  },
+  "get-active-promotions": {
+    "endpoint": "GET /api/promotions",
+    "description": "Get list of active promotions",
+    "authentication": "Optional",
+    "request": {
+      "params": {
+        "page": "number (optional) - Default: 1",
+        "limit": "number (optional) - Default: 10"
+      }
+    },
+    "responses": {
+      "200_ok": {
+        "status": 200,
+        "body": {
+          "data": [
+            {
+              "id": 1,
+              "code": "SUMMER2026",
+              "description": "Summer Sale - 10% off on all products",
+              "discountType": "percentage",
+              "discountValue": 10,
+              "minOrderAmount": 500000,
+              "startAt": "2026-05-01T00:00:00Z",
+              "endAt": "2026-05-31T23:59:59Z"
+            }
+          ],
+          "pagination": {
+            "page": 1,
+            "limit": 10,
+            "total": 5,
+            "totalPages": 1
+          }
+        }
+      }
+    },
+    "notes": [
+      "Only returns active promotions (active=true)",
+      "Only returns promotions within start/end date range",
+      "Sorted by createdAt DESC"
+    ]
+  }
+}

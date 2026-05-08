@@ -1,0 +1,306 @@
+{
+  "create-order": {
+    "endpoint": "POST /api/orders",
+    "description": "Create new order from cart items",
+    "authentication": "Required",
+    "request": {
+      "body": {
+        "shippingAddress": {
+          "name": "string (required) - Recipient name",
+          "phone": "string (required) - Phone number",
+          "address": "string (required) - Street address",
+          "ward": "string (required) - Ward/Commune",
+          "district": "string (required) - District",
+          "city": "string (required) - City/Province",
+          "country": "string (optional) - Default: Vietnam"
+        },
+        "paymentMethod": "string (required) - cod | vnpay | momo",
+        "promotionCode": "string (optional) - Promotion code",
+        "note": "string (optional) - Customer note",
+        "saveAddress": "boolean (optional) - Save address for future use"
+      }
+    },
+    "responses": {
+      "201_created": {
+        "status": 201,
+        "body": {
+          "data": {
+            "id": 1001,
+            "orderNumber": "ORD-20260503-1001",
+            "userId": 123,
+            "status": "pending",
+            "paymentMethod": "cod",
+            "shippingAddress": {
+              "name": "Nguyễn Văn A",
+              "phone": "0123456789",
+              "address": "123 Đường ABC",
+              "ward": "Phường 1",
+              "district": "Quận 1",
+              "city": "TP. Hồ Chí Minh",
+              "country": "Vietnam"
+            },
+            "items": [
+              {
+                "id": 1,
+                "variantId": 456,
+                "quantity": 2,
+                "price": 25990000,
+                "variant": {
+                  "sku": "LAPTOP-001-16GB-512GB",
+                  "name": "16GB RAM / 512GB SSD",
+                  "product": {
+                    "name": "Dell XPS 15",
+                    "thumbnail": "https://example.com/dell-xps-15.jpg"
+                  }
+                }
+              }
+            ],
+            "totalAmount": 51980000,
+            "discountAmount": 0,
+            "shippingFee": 30000,
+            "finalAmount": 52010000,
+            "promotionCode": null,
+            "note": null,
+            "createdAt": "2026-05-03T10:00:00Z",
+            "updatedAt": "2026-05-03T10:00:00Z"
+          },
+          "message": "Order created successfully"
+        }
+      },
+      "400_empty_cart": {
+        "status": 400,
+        "body": {
+          "status": 400,
+          "code": "CART_EMPTY",
+          "message": "Cart is empty"
+        }
+      },
+      "404_promotion_not_found": {
+        "status": 404,
+        "body": {
+          "status": 404,
+          "code": "PROMOTION_NOT_FOUND",
+          "message": "Promotion code not found or expired"
+        }
+      },
+      "409_promotion_not_applicable": {
+        "status": 409,
+        "body": {
+          "status": 409,
+          "code": "PROMOTION_NOT_APPLICABLE",
+          "message": "Order amount does not meet minimum requirement",
+          "data": {
+            "minAmount": 1000000,
+            "currentAmount": 500000
+          }
+        }
+      },
+      "409_out_of_stock": {
+        "status": 409,
+        "body": {
+          "status": 409,
+          "code": "VARIANT_OUT_OF_STOCK",
+          "message": "Some items are out of stock",
+          "data": {
+            "outOfStockItems": [
+              {
+                "variantId": 456,
+                "productName": "Dell XPS 15",
+                "variantName": "16GB RAM / 512GB SSD"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "notes": [
+      "Cart is cleared after successful order creation",
+      "Stock is reserved when order is created",
+      "Promotion code is validated before applying",
+      "Shipping fee is calculated based on address",
+      "If saveAddress=true, address is saved to user's addresses"
+    ]
+  },
+  "get-orders": {
+    "endpoint": "GET /api/orders",
+    "description": "Get user's orders with pagination",
+    "authentication": "Required",
+    "request": {
+      "params": {
+        "page": "number (optional) - Page number (default: 1)",
+        "limit": "number (optional) - Items per page (default: 10)",
+        "status": "string (optional) - Filter by status"
+      }
+    },
+    "responses": {
+      "200_ok": {
+        "status": 200,
+        "body": {
+          "data": [
+            {
+              "id": 1001,
+              "orderNumber": "ORD-20260503-1001",
+              "status": "pending",
+              "paymentMethod": "cod",
+              "totalAmount": 51980000,
+              "discountAmount": 0,
+              "shippingFee": 30000,
+              "finalAmount": 52010000,
+              "itemCount": 2,
+              "createdAt": "2026-05-03T10:00:00Z"
+            }
+          ],
+          "pagination": {
+            "page": 1,
+            "limit": 10,
+            "total": 25,
+            "totalPages": 3
+          }
+        }
+      }
+    },
+    "notes": [
+      "Orders are sorted by createdAt DESC (newest first)",
+      "Status filter: pending, confirmed, processing, shipped, delivered, cancelled"
+    ]
+  },
+  "get-order": {
+    "endpoint": "GET /api/orders/{id}",
+    "description": "Get order details",
+    "authentication": "Required",
+    "request": {
+      "path": {
+        "id": "number - Order ID"
+      }
+    },
+    "responses": {
+      "200_ok": {
+        "status": 200,
+        "body": {
+          "data": {
+            "id": 1001,
+            "orderNumber": "ORD-20260503-1001",
+            "userId": 123,
+            "status": "pending",
+            "paymentMethod": "cod",
+            "shippingAddress": {
+              "name": "Nguyễn Văn A",
+              "phone": "0123456789",
+              "address": "123 Đường ABC",
+              "ward": "Phường 1",
+              "district": "Quận 1",
+              "city": "TP. Hồ Chí Minh",
+              "country": "Vietnam"
+            },
+            "items": [
+              {
+                "id": 1,
+                "variantId": 456,
+                "quantity": 2,
+                "price": 25990000,
+                "variant": {
+                  "id": 456,
+                  "sku": "LAPTOP-001-16GB-512GB",
+                  "name": "16GB RAM / 512GB SSD",
+                  "attributes": {
+                    "ram": "16GB",
+                    "storage": "512GB"
+                  },
+                  "product": {
+                    "id": 789,
+                    "name": "Dell XPS 15",
+                    "slug": "dell-xps-15",
+                    "thumbnail": "https://example.com/dell-xps-15.jpg"
+                  }
+                }
+              }
+            ],
+            "totalAmount": 51980000,
+            "discountAmount": 0,
+            "shippingFee": 30000,
+            "finalAmount": 52010000,
+            "promotionCode": null,
+            "note": null,
+            "statusHistory": [
+              {
+                "status": "pending",
+                "timestamp": "2026-05-03T10:00:00Z",
+                "note": "Order placed"
+              }
+            ],
+            "createdAt": "2026-05-03T10:00:00Z",
+            "updatedAt": "2026-05-03T10:00:00Z"
+          }
+        }
+      },
+      "404_not_found": {
+        "status": 404,
+        "body": {
+          "status": 404,
+          "code": "ORDER_NOT_FOUND",
+          "message": "Order not found"
+        }
+      },
+      "403_forbidden": {
+        "status": 403,
+        "body": {
+          "status": 403,
+          "code": "ORDER_ACCESS_DENIED",
+          "message": "You don't have permission to view this order"
+        }
+      }
+    },
+    "notes": [
+      "User can only view their own orders",
+      "Includes full item details with product info",
+      "Status history shows order progression"
+    ]
+  },
+  "cancel-order": {
+    "endpoint": "PATCH /api/orders/{id}/cancel",
+    "description": "Cancel order (only if status is pending or confirmed)",
+    "authentication": "Required",
+    "request": {
+      "path": {
+        "id": "number - Order ID"
+      },
+      "body": {
+        "reason": "string (optional) - Cancellation reason"
+      }
+    },
+    "responses": {
+      "200_cancelled": {
+        "status": 200,
+        "body": {
+          "data": {
+            "id": 1001,
+            "status": "cancelled",
+            "updatedAt": "2026-05-03T11:00:00Z"
+          },
+          "message": "Order cancelled successfully"
+        }
+      },
+      "404_not_found": {
+        "status": 404,
+        "body": {
+          "status": 404,
+          "code": "ORDER_NOT_FOUND",
+          "message": "Order not found"
+        }
+      },
+      "409_cannot_cancel": {
+        "status": 409,
+        "body": {
+          "status": 409,
+          "code": "ORDER_CANNOT_CANCEL",
+          "message": "Order cannot be cancelled (already shipped or delivered)"
+        }
+      }
+    },
+    "notes": [
+      "Can only cancel if status is pending or confirmed",
+      "Stock is released back when order is cancelled",
+      "Refund is processed if payment was made"
+    ]
+  }
+}
