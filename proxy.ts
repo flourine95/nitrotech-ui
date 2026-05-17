@@ -8,7 +8,6 @@ export function proxy(request: NextRequest) {
 
   if (!isProtected) return NextResponse.next();
 
-  // Spring Session dùng cookie tên "SESSION"
   if (!request.cookies.has('SESSION')) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('from', pathname);

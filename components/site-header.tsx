@@ -62,10 +62,12 @@ export function SiteHeader({
   // Get cart count from store
   const { totalItems, fetchCart } = useCartStore();
 
-  // Fetch cart on mount
+  // Fetch cart on mount - only if user is logged in
   useEffect(() => {
-    void fetchCart();
-  }, [fetchCart]);
+    if (isLoggedIn) {
+      void fetchCart();
+    }
+  }, [isLoggedIn, fetchCart]);
 
   async function handleLogout() {
     try {
