@@ -5,9 +5,13 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
+import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { resetPasswordSchema, type ResetPasswordInput } from '@/lib/schemas/auth';
 import { resetPassword } from '@/lib/api/auth';
 import { ApiException } from '@/lib/client';
+import { Field, FieldLabel, FieldDescription } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 function ResetPasswordForm() {
   const router = useRouter();
@@ -61,68 +65,59 @@ function ResetPasswordForm() {
       </div>
 
       <form className="space-y-4" onSubmit={handleSubmit(onSubmit)} noValidate>
-        <div>
-          <label htmlFor="newPassword" className="mb-1.5 block text-sm font-medium text-slate-700">
-            Mật khẩu mới
-          </label>
+        <Field data-invalid={!!errors.newPassword}>
+          <FieldLabel htmlFor="newPassword">Mật khẩu mới</FieldLabel>
           <div className="relative">
-            <input
+            <Input
               id="newPassword"
               type={showPass ? 'text' : 'password'}
               placeholder="Tối thiểu 6 ký tự"
               {...register('newPassword')}
-              className={`w-full rounded-full border px-4 py-3 pr-12 text-sm placeholder-slate-400 transition-all duration-200 focus:ring-2 focus:outline-none ${errors.newPassword ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-100' : 'border-slate-200 focus:border-blue-400 focus:ring-blue-100'}`}
+              aria-invalid={!!errors.newPassword}
+              className="h-auto rounded-full px-4 py-3 pr-12"
             />
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon"
               onClick={() => setShowPass(!showPass)}
-              className="absolute top-1/2 right-4 -translate-y-1/2 cursor-pointer text-slate-400 hover:text-slate-700"
-              aria-label={showPass ? 'Ẩn' : 'Hiện'}
+              className="absolute top-0 right-0 h-full px-3 hover:bg-transparent"
+              aria-label={showPass ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
             >
-              <svg
-                viewBox="0 0 24 24"
-                className="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                aria-hidden="true"
-              >
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                <circle cx="12" cy="12" r="3" />
-              </svg>
-            </button>
+              {showPass ? (
+                <EyeOff className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+              ) : (
+                <Eye className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+              )}
+            </Button>
           </div>
           {errors.newPassword && (
-            <p className="mt-1.5 text-xs text-rose-500">{errors.newPassword.message}</p>
+            <FieldDescription>{errors.newPassword.message}</FieldDescription>
           )}
-        </div>
+        </Field>
 
-        <div>
-          <label
-            htmlFor="confirmPassword"
-            className="mb-1.5 block text-sm font-medium text-slate-700"
-          >
-            Xác nhận mật khẩu
-          </label>
-          <input
+        <Field data-invalid={!!errors.confirmPassword}>
+          <FieldLabel htmlFor="confirmPassword">Xác nhận mật khẩu</FieldLabel>
+          <Input
             id="confirmPassword"
             type="password"
             placeholder="Nhập lại mật khẩu"
             {...register('confirmPassword')}
-            className={`w-full rounded-full border px-4 py-3 text-sm placeholder-slate-400 transition-all duration-200 focus:ring-2 focus:outline-none ${errors.confirmPassword ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-100' : 'border-slate-200 focus:border-blue-400 focus:ring-blue-100'}`}
+            aria-invalid={!!errors.confirmPassword}
+            className="h-auto rounded-full px-4 py-3"
           />
           {errors.confirmPassword && (
-            <p className="mt-1.5 text-xs text-rose-500">{errors.confirmPassword.message}</p>
+            <FieldDescription>{errors.confirmPassword.message}</FieldDescription>
           )}
-        </div>
+        </Field>
 
-        <button
+        <Button
           type="submit"
           disabled={isSubmitting}
-          className="w-full cursor-pointer rounded-full bg-slate-900 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+          className="h-auto w-full rounded-full py-3 font-semibold"
         >
           {isSubmitting ? 'Đang lưu...' : 'Đặt lại mật khẩu'}
-        </button>
+        </Button>
       </form>
     </>
   );
@@ -140,16 +135,7 @@ export default function ResetPasswordPage() {
             href="/login"
             className="flex cursor-pointer items-center justify-center gap-1.5 text-sm text-slate-500 transition-colors duration-150 hover:text-slate-900"
           >
-            <svg
-              viewBox="0 0 24 24"
-              className="h-3.5 w-3.5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              aria-hidden="true"
-            >
-              <path d="M19 12H5M12 5l-7 7 7 7" />
-            </svg>
+            <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
             Quay lại đăng nhập
           </Link>
         </div>

@@ -1,13 +1,17 @@
 'use client';
-import { useState, Suspense } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
+import { Eye, EyeOff } from 'lucide-react';
 import { loginSchema, type LoginInput } from '@/lib/schemas/auth';
+import { Field, FieldLabel, FieldDescription } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
-function LoginForm() {
+export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [showPass, setShowPass] = useState(false);
@@ -50,7 +54,7 @@ function LoginForm() {
 
   return (
     <div className="w-full max-w-md">
-      <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+      <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-lg transition-shadow duration-300 hover:shadow-xl">
         <div className="mb-8 text-center">
           <h1 className="mb-1 text-2xl font-bold text-slate-900">Đăng nhập</h1>
           <p className="text-sm text-slate-500">Chào mừng bạn quay lại NitroTech</p>
@@ -58,9 +62,10 @@ function LoginForm() {
 
         {/* Social login */}
         <div className="mb-6 grid grid-cols-2 gap-3">
-          <button
+          <Button
             type="button"
-            className="flex cursor-pointer items-center justify-center gap-2 rounded-full border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-700 transition-colors duration-200 hover:bg-slate-50"
+            variant="outline"
+            className="h-auto rounded-full py-2.5 transition-all duration-200 hover:scale-[1.02] hover:border-slate-300 hover:bg-slate-50 hover:shadow-sm active:scale-[0.98]"
           >
             <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
               <path
@@ -81,20 +86,21 @@ function LoginForm() {
               />
             </svg>
             Google
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            className="flex cursor-pointer items-center justify-center gap-2 rounded-full border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-700 transition-colors duration-200 hover:bg-slate-50"
+            variant="outline"
+            className="h-auto rounded-full py-2.5 transition-all duration-200 hover:scale-[1.02] hover:border-slate-300 hover:bg-slate-50 hover:shadow-sm active:scale-[0.98]"
           >
             <svg
               viewBox="0 0 24 24"
-              className="h-4 w-4 fill-current text-[#1877F2]"
+              className="h-4 w-4 fill-current text-[#0866FF]"
               aria-hidden="true"
             >
               <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
             </svg>
             Facebook
-          </button>
+          </Button>
         </div>
 
         <div className="mb-6 flex items-center gap-3">
@@ -104,112 +110,77 @@ function LoginForm() {
         </div>
 
         <form className="space-y-4" onSubmit={handleSubmit(onSubmit)} noValidate>
-          <div>
-            <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-slate-700">
-              Email
-            </label>
-            <input
+          <Field data-invalid={!!errors.email}>
+            <FieldLabel htmlFor="email">Email</FieldLabel>
+            <Input
               id="email"
               type="email"
               placeholder="email@example.com"
               autoComplete="email"
               {...register('email')}
-              className={`w-full rounded-full border px-4 py-3 text-sm text-slate-900 placeholder-slate-400 transition-all duration-200 focus:ring-2 focus:outline-none ${
-                errors.email
-                  ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-100'
-                  : 'border-slate-200 focus:border-blue-400 focus:ring-blue-100'
-              }`}
+              aria-invalid={!!errors.email}
+              className="h-auto rounded-full px-4 py-3 transition-all duration-200"
             />
-            {errors.email && <p className="mt-1.5 text-xs text-rose-500">{errors.email.message}</p>}
-          </div>
+            {errors.email && <FieldDescription>{errors.email.message}</FieldDescription>}
+          </Field>
 
-          <div>
-            <div className="mb-1.5 flex items-center justify-between">
-              <label htmlFor="password" className="text-sm font-medium text-slate-700">
-                Mật khẩu
-              </label>
+          <Field data-invalid={!!errors.password}>
+            <div className="flex items-center justify-between">
+              <FieldLabel htmlFor="password">Mật khẩu</FieldLabel>
               <Link
                 href="/forgot-password"
-                className="cursor-pointer text-xs text-blue-600 transition-colors duration-150 hover:text-blue-700"
+                className="cursor-pointer text-xs text-blue-600 transition-colors duration-150 hover:text-blue-700 hover:underline"
               >
                 Quên mật khẩu?
               </Link>
             </div>
             <div className="relative">
-              <input
+              <Input
                 id="password"
                 type={showPass ? 'text' : 'password'}
                 placeholder="••••••••"
                 autoComplete="current-password"
                 {...register('password')}
-                className={`w-full rounded-full border px-4 py-3 pr-12 text-sm text-slate-900 placeholder-slate-400 transition-all duration-200 focus:ring-2 focus:outline-none ${
-                  errors.password
-                    ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-100'
-                    : 'border-slate-200 focus:border-blue-400 focus:ring-blue-100'
-                }`}
+                aria-invalid={!!errors.password}
+                className="h-auto rounded-full px-4 py-3 pr-12 transition-all duration-200"
               />
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
                 onClick={() => setShowPass(!showPass)}
-                className="absolute top-1/2 right-4 -translate-y-1/2 cursor-pointer text-slate-400 transition-colors duration-150 hover:text-slate-700"
+                className="absolute top-0 right-0 h-full px-3 hover:bg-transparent"
                 aria-label={showPass ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
               >
-                <svg
-                  viewBox="0 0 24 24"
-                  className="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  aria-hidden="true"
-                >
-                  {showPass ? (
-                    <>
-                      <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" />
-                      <line x1="1" y1="1" x2="23" y2="23" />
-                    </>
-                  ) : (
-                    <>
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                      <circle cx="12" cy="12" r="3" />
-                    </>
-                  )}
-                </svg>
-              </button>
+                {showPass ? (
+                  <EyeOff className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                ) : (
+                  <Eye className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                )}
+              </Button>
             </div>
-            {errors.password && (
-              <p className="mt-1.5 text-xs text-rose-500">{errors.password.message}</p>
-            )}
-          </div>
+            {errors.password && <FieldDescription>{errors.password.message}</FieldDescription>}
+          </Field>
 
-          <button
+          <Button
             type="submit"
             disabled={isSubmitting}
-            className="w-full cursor-pointer rounded-full bg-slate-900 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="h-auto w-full rounded-full py-3 font-semibold transition-all duration-200 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
           >
             {isSubmitting ? 'Đang đăng nhập...' : 'Đăng nhập'}
-          </button>
+          </Button>
         </form>
 
         <p className="mt-6 text-center text-sm text-slate-500">
           Chưa có tài khoản?{' '}
           <Link
             href="/register"
-            className="cursor-pointer font-medium text-blue-600 transition-colors duration-150 hover:text-blue-700"
+            className="cursor-pointer font-medium text-blue-600 transition-colors duration-150 hover:text-blue-700 hover:underline"
           >
             Đăng ký ngay
           </Link>
         </p>
       </div>
     </div>
-  );
-}
-
-export default function LoginPage() {
-  return (
-    <Suspense
-      fallback={<div className="h-96 w-full max-w-md animate-pulse rounded-3xl bg-slate-100" />}
-    >
-      <LoginForm />
-    </Suspense>
   );
 }

@@ -17,7 +17,7 @@ const beVietnamPro = Be_Vietnam_Pro({
 
 export const metadata: Metadata = {
   title: {
-    default: 'NitroTech — Linh kiện điện tử, Laptop & Máy tính',
+    default: 'NitroTech - Linh kiện điện tử, Laptop & Máy tính',
     template: '%s | NitroTech',
   },
   description:

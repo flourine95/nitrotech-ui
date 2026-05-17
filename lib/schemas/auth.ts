@@ -13,7 +13,7 @@ export const registerSchema = z
     confirmPassword: z.string(),
   })
   .refine((d) => d.password === d.confirmPassword, {
-    message: 'Mật khẩu xác nhận không khớp',
+    error: 'Mật khẩu xác nhận không khớp',
     path: ['confirmPassword'],
   });
 
@@ -27,7 +27,7 @@ export const resetPasswordSchema = z
     confirmPassword: z.string(),
   })
   .refine((d) => d.newPassword === d.confirmPassword, {
-    message: 'Mật khẩu xác nhận không khớp',
+    error: 'Mật khẩu xác nhận không khớp',
     path: ['confirmPassword'],
   });
 
@@ -38,7 +38,7 @@ export const changePasswordSchema = z
     confirmPassword: z.string(),
   })
   .refine((d) => d.newPassword === d.confirmPassword, {
-    message: 'Mật khẩu xác nhận không khớp',
+    error: 'Mật khẩu xác nhận không khớp',
     path: ['confirmPassword'],
   });
 
