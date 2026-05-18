@@ -119,7 +119,7 @@ const brands = ['Apple', 'ASUS', 'Dell', 'Samsung', 'Intel', 'Corsair', 'LG', 'M
 
 export default function ProductsPage() {
   return (
-    <>      <main className="min-h-screen bg-[#F8FAFC]">
+       <main className="min-h-screen bg-[#F8FAFC]">
         {/* Breadcrumb */}
         <div className="border-b border-slate-100 bg-white">
           <div className="mx-auto flex max-w-7xl items-center gap-2 px-6 py-3 text-sm text-slate-400">
