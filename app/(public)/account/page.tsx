@@ -35,7 +35,7 @@ const statusMap: Record<string, { label: string; color: string }> = {
   cancelled: { label: 'Đã hủy', color: 'bg-slate-100 text-slate-500' },
 };
 
-export default function AccountPage() {
+export default async function AccountPage() {
   return (
     <div className="space-y-6">
       {/* Welcome */}

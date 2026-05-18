@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { ReactNode } from 'react';
+import { LogoIcon } from '@/components/icons';
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
@@ -24,13 +25,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
         {/* Logo */}
         <div className="mb-8 flex justify-center">
           <Link href="/" className="group flex items-center gap-2.5 transition-transform hover:scale-105">
-            <svg
-              viewBox="0 0 24 24"
-              className="h-8 w-8 fill-current text-slate-900 transition-colors group-hover:text-blue-600"
-              aria-hidden="true"
-            >
-              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-            </svg>
+            <LogoIcon className="h-8 w-8 text-slate-900 transition-colors group-hover:text-blue-600" />
             <span className="text-2xl font-bold text-slate-900">
               Nitro<span className="text-blue-600">Tech</span>
             </span>

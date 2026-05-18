@@ -1,10 +1,11 @@
 import { cookies } from 'next/headers';
+import { cache } from 'react';
 import { backendFetch } from './server';
 import type { User } from '@/lib/api/auth';
 
 export type AuthUser = Pick<User, 'id' | 'name' | 'email' | 'phone' | 'avatar'>;
 
-export async function getSession(): Promise<AuthUser | null> {
+export const getSession = cache(async (): Promise<AuthUser | null> => {
   const cookieStore = await cookies();
   const cookieHeader = cookieStore.toString();
 
@@ -17,4 +18,4 @@ export async function getSession(): Promise<AuthUser | null> {
   } catch {
     return null;
   }
-}
+});

@@ -1,10 +1,10 @@
 'use client';
-import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
-import { updateProfile, getMe, type User } from '@/lib/api/auth';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { updateProfile, getMe } from '@/lib/api/auth';
 import { ApiException } from '@/lib/client';
 
 const profileSchema = z.object({
@@ -14,37 +14,42 @@ const profileSchema = z.object({
 type ProfileInput = z.infer<typeof profileSchema>;
 
 export default function ProfilePage() {
-  const [user, setUser] = useState<User | null>(null);
+  const queryClient = useQueryClient();
+
+  // Get user from TanStack Query
+  const { data: user } = useQuery({
+    queryKey: ['user'],
+    queryFn: getMe,
+  });
 
   const {
     register,
     handleSubmit,
-    reset,
     formState: { errors, isSubmitting, isDirty },
-  } = useForm<ProfileInput>({ resolver: zodResolver(profileSchema) });
+  } = useForm<ProfileInput>({
+    resolver: zodResolver(profileSchema),
+    values: user ? { name: user.name, phone: user.phone ?? '' } : undefined,
+  });
 
-  useEffect(() => {
-    getMe()
-      .then((u) => {
-        setUser(u);
-        reset({ name: u.name, phone: u.phone ?? '' });
-      })
-      .catch(() => {});
-  }, [reset]);
-
-  async function onSubmit(data: ProfileInput) {
-    try {
-      const updated = await updateProfile({ name: data.name, phone: data.phone || undefined });
-      setUser(updated);
+  // Update profile mutation
+  const updateMutation = useMutation({
+    mutationFn: (data: ProfileInput) =>
+      updateProfile({ name: data.name, phone: data.phone || undefined }),
+    onSuccess: (updated) => {
+      queryClient.setQueryData(['user'], updated);
       toast.success('Đã cập nhật thông tin');
-      reset(data);
-    } catch (e) {
+    },
+    onError: (e) => {
       if (e instanceof ApiException && e.error.errors) {
         toast.error(Object.values(e.error.errors)[0]);
       } else {
         toast.error('Cập nhật thất bại');
       }
-    }
+    },
+  });
+
+  async function onSubmit(data: ProfileInput) {
+    updateMutation.mutate(data);
   }
 
   const initials =

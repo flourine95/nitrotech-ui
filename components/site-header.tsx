@@ -3,6 +3,9 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { useQuery } from '@tanstack/react-query';
+import { getMe } from '@/lib/api/auth';
+import { LogoIcon } from '@/components/icons';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useCartStore } from '@/store/cart.store';
 
@@ -45,24 +48,25 @@ const announcements = [
   },
 ];
 
-export function SiteHeader({
-  initialUser,
-}: {
-  cartCount?: number; // Deprecated: now using cart store
-  initialUser?: { name?: string | null; email?: string | null; image?: string | null } | null;
-}) {
+export function SiteHeader() {
   const pathname = usePathname();
   const router = useRouter();
-  const user = initialUser;
-  const isLoggedIn = !!user;
-  const userName = user?.name ?? 'Tài khoản';
   const [mobileOpen, setMobileOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
 
-  // Get cart count from store
+  // Get user from TanStack Query
+  const { data: user } = useQuery({
+    queryKey: ['user'],
+    queryFn: getMe,
+    retry: false,
+    staleTime: 5 * 60 * 1000, // Cache 5 phút
+  });
+
+  const isLoggedIn = !!user;
+  const userName = user?.name ?? 'Tài khoản';
+
   const { totalItems, fetchCart } = useCartStore();
 
-  // Fetch cart on mount - only if user is logged in
   useEffect(() => {
     if (isLoggedIn) {
       void fetchCart();
@@ -118,9 +122,7 @@ export function SiteHeader({
         {/* Logo */}
         <Link href="/" className="flex cursor-pointer items-center gap-2.5">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-slate-900">
-            <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current text-white" aria-hidden="true">
-              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-            </svg>
+            <LogoIcon className="h-4 w-4 text-white" />
           </div>
           <span className="text-lg font-bold text-slate-900">
             Nitro<span className="text-blue-600">Tech</span>
@@ -236,7 +238,7 @@ export function SiteHeader({
                       <div className="truncate text-sm font-semibold text-slate-900">
                         {userName}
                       </div>
-                      <div className="truncate text-xs text-slate-400">email@example.com</div>
+                      <div className="truncate text-xs text-slate-400">{user?.email ?? 'email@example.com'}</div>
                     </div>
                     <div className="py-1.5">
                       {[
