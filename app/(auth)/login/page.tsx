@@ -7,9 +7,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { Eye, EyeOff } from 'lucide-react';
 import { loginSchema, type LoginInput } from '@/lib/schemas/auth';
-import { Field, FieldLabel, FieldDescription } from '@/components/ui/field';
+import { FieldGroup, Field, FieldLabel, FieldDescription } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import { Spinner } from '@/components/ui/spinner';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -54,7 +56,7 @@ export default function LoginPage() {
 
   return (
     <div className="w-full max-w-md">
-      <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-lg transition-shadow duration-300 hover:shadow-xl">
+      <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-lg transition-shadow hover:shadow-xl">
         <div className="mb-8 text-center">
           <h1 className="mb-1 text-2xl font-bold text-slate-900">Đăng nhập</h1>
           <p className="text-sm text-slate-500">Chào mừng bạn quay lại NitroTech</p>
@@ -65,9 +67,9 @@ export default function LoginPage() {
           <Button
             type="button"
             variant="outline"
-            className="h-auto rounded-full py-2.5 transition-all duration-200 hover:scale-[1.02] hover:border-slate-300 hover:bg-slate-50 hover:shadow-sm active:scale-[0.98]"
+            className="h-auto rounded-full py-2.5"
           >
-            <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
+            <svg viewBox="0 0 24 24" className="size-4" aria-hidden="true">
               <path
                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                 fill="#4285F4"
@@ -90,11 +92,11 @@ export default function LoginPage() {
           <Button
             type="button"
             variant="outline"
-            className="h-auto rounded-full py-2.5 transition-all duration-200 hover:scale-[1.02] hover:border-slate-300 hover:bg-slate-50 hover:shadow-sm active:scale-[0.98]"
+            className="h-auto rounded-full py-2.5"
           >
             <svg
               viewBox="0 0 24 24"
-              className="h-4 w-4 fill-current text-[#0866FF]"
+              className="size-4 fill-current text-[#0866FF]"
               aria-hidden="true"
             >
               <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
@@ -104,78 +106,81 @@ export default function LoginPage() {
         </div>
 
         <div className="mb-6 flex items-center gap-3">
-          <div className="h-px flex-1 bg-slate-200" />
-          <span className="text-xs text-slate-400">hoặc đăng nhập bằng email</span>
-          <div className="h-px flex-1 bg-slate-200" />
+          <Separator className="flex-1" />
+          <span className="text-xs text-muted-foreground">hoặc đăng nhập bằng email</span>
+          <Separator className="flex-1" />
         </div>
 
-        <form className="space-y-4" onSubmit={handleSubmit(onSubmit)} noValidate>
-          <Field data-invalid={!!errors.email}>
-            <FieldLabel htmlFor="email">Email</FieldLabel>
-            <Input
-              id="email"
-              type="email"
-              placeholder="email@example.com"
-              autoComplete="email"
-              {...register('email')}
-              aria-invalid={!!errors.email}
-              className="h-auto rounded-full px-4 py-3 transition-all duration-200"
-            />
-            {errors.email && <FieldDescription>{errors.email.message}</FieldDescription>}
-          </Field>
-
-          <Field data-invalid={!!errors.password}>
-            <div className="flex items-center justify-between">
-              <FieldLabel htmlFor="password">Mật khẩu</FieldLabel>
-              <Link
-                href="/forgot-password"
-                className="cursor-pointer text-xs text-blue-600 transition-colors duration-150 hover:text-blue-700 hover:underline"
-              >
-                Quên mật khẩu?
-              </Link>
-            </div>
-            <div className="relative">
+        <form onSubmit={handleSubmit(onSubmit)} noValidate>
+          <FieldGroup>
+            <Field data-invalid={!!errors.email}>
+              <FieldLabel htmlFor="email">Email</FieldLabel>
               <Input
-                id="password"
-                type={showPass ? 'text' : 'password'}
-                placeholder="••••••••"
-                autoComplete="current-password"
-                {...register('password')}
-                aria-invalid={!!errors.password}
-                className="h-auto rounded-full px-4 py-3 pr-12 transition-all duration-200"
+                id="email"
+                type="email"
+                placeholder="email@example.com"
+                autoComplete="email"
+                {...register('email')}
+                aria-invalid={!!errors.email}
+                className="h-auto rounded-full px-4 py-3"
               />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowPass(!showPass)}
-                className="absolute top-0 right-0 h-full px-3 hover:bg-transparent"
-                aria-label={showPass ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-              >
-                {showPass ? (
-                  <EyeOff className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                ) : (
-                  <Eye className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                )}
-              </Button>
-            </div>
-            {errors.password && <FieldDescription>{errors.password.message}</FieldDescription>}
-          </Field>
+              {errors.email && <FieldDescription>{errors.email.message}</FieldDescription>}
+            </Field>
 
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-            className="h-auto w-full rounded-full py-3 font-semibold transition-all duration-200 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
-          >
-            {isSubmitting ? 'Đang đăng nhập...' : 'Đăng nhập'}
-          </Button>
+            <Field data-invalid={!!errors.password}>
+              <div className="flex items-center justify-between">
+                <FieldLabel htmlFor="password">Mật khẩu</FieldLabel>
+                <Link
+                  href="/forgot-password"
+                  className="text-xs text-primary hover:underline"
+                >
+                  Quên mật khẩu?
+                </Link>
+              </div>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPass ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  autoComplete="current-password"
+                  {...register('password')}
+                  aria-invalid={!!errors.password}
+                  className="h-auto rounded-full px-4 py-3 pr-12"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowPass(!showPass)}
+                  className="absolute top-0 right-0 h-full px-3 hover:bg-transparent"
+                  aria-label={showPass ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                >
+                  {showPass ? (
+                    <EyeOff data-icon="inline-start" aria-hidden="true" />
+                  ) : (
+                    <Eye data-icon="inline-start" aria-hidden="true" />
+                  )}
+                </Button>
+              </div>
+              {errors.password && <FieldDescription>{errors.password.message}</FieldDescription>}
+            </Field>
+
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="h-auto w-full rounded-full py-3 font-semibold"
+            >
+              {isSubmitting && <Spinner data-icon="inline-start" />}
+              {isSubmitting ? 'Đang đăng nhập...' : 'Đăng nhập'}
+            </Button>
+          </FieldGroup>
         </form>
 
-        <p className="mt-6 text-center text-sm text-slate-500">
+        <p className="mt-6 text-center text-sm text-muted-foreground">
           Chưa có tài khoản?{' '}
           <Link
             href="/register"
-            className="cursor-pointer font-medium text-blue-600 transition-colors duration-150 hover:text-blue-700 hover:underline"
+            className="font-medium text-primary hover:underline"
           >
             Đăng ký ngay
           </Link>

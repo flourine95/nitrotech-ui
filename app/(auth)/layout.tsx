@@ -3,7 +3,7 @@ import { ReactNode } from 'react';
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-slate-50 via-white to-slate-100">
+    <div className="public-theme relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-slate-50 via-white to-slate-100">
       {/* Animated gradient orbs - subtle and natural */}
       <div className="absolute inset-0">
         <div className="absolute left-[10%] top-[20%] h-[500px] w-[500px] animate-pulse rounded-full bg-blue-400/15 blur-3xl" />

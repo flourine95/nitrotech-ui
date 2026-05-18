@@ -6,10 +6,10 @@ export default async function PublicLayout({ children }: { children: React.React
   const user = await getSession();
 
   return (
-    <>
+    <div className="public-theme">
       <SiteHeader initialUser={user} />
       {children}
       <SiteFooter />
-    </>
+    </div>
   );
 }

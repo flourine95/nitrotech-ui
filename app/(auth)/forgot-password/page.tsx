@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { Mail, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { forgotPasswordSchema, type ForgotPasswordInput } from '@/lib/schemas/auth';
 import { forgotPassword } from '@/lib/api/auth';
-import { Field, FieldLabel, FieldDescription } from '@/components/ui/field';
+import { FieldGroup, Field, FieldLabel, FieldDescription } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
@@ -37,51 +37,53 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="w-full max-w-md">
-      <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+      <div className="rounded-3xl border bg-card p-8 shadow-lg">
         {!sent ? (
           <>
             <div className="mb-8 text-center">
-              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50">
-                <Mail className="h-7 w-7 text-blue-600" aria-hidden="true" />
+              <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-blue-50">
+                <Mail className="size-7 text-blue-600" aria-hidden="true" />
               </div>
-              <h1 className="mb-1 text-2xl font-bold text-slate-900">Quên mật khẩu?</h1>
-              <p className="text-sm text-slate-500">Nhập email để nhận link đặt lại mật khẩu</p>
+              <h1 className="mb-1 text-2xl font-bold">Quên mật khẩu?</h1>
+              <p className="text-sm text-muted-foreground">Nhập email để nhận link đặt lại mật khẩu</p>
             </div>
 
-            <form className="space-y-4" onSubmit={handleSubmit(onSubmit)} noValidate>
-              <Field data-invalid={!!errors.email}>
-                <FieldLabel htmlFor="email">Email</FieldLabel>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="email@example.com"
-                  {...register('email')}
-                  aria-invalid={!!errors.email}
-                  className="h-auto rounded-full px-4 py-3"
-                />
-                {errors.email && <FieldDescription>{errors.email.message}</FieldDescription>}
-              </Field>
+            <form onSubmit={handleSubmit(onSubmit)} noValidate>
+              <FieldGroup>
+                <Field data-invalid={!!errors.email}>
+                  <FieldLabel htmlFor="email">Email</FieldLabel>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="email@example.com"
+                    {...register('email')}
+                    aria-invalid={!!errors.email}
+                    className="h-auto rounded-full px-4 py-3"
+                  />
+                  {errors.email && <FieldDescription>{errors.email.message}</FieldDescription>}
+                </Field>
 
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                className="h-auto w-full rounded-full py-3 font-semibold"
-              >
-                {isSubmitting ? 'Đang gửi...' : 'Gửi link đặt lại'}
-              </Button>
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="h-auto w-full rounded-full py-3 font-semibold"
+                >
+                  {isSubmitting ? 'Đang gửi...' : 'Gửi link đặt lại'}
+                </Button>
+              </FieldGroup>
             </form>
           </>
         ) : (
           <div className="py-4 text-center">
-            <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-              <CheckCircle2 className="h-8 w-8 text-green-600" aria-hidden="true" />
+            <div className="mx-auto mb-5 flex size-16 items-center justify-center rounded-full bg-green-100">
+              <CheckCircle2 className="size-8 text-green-600" aria-hidden="true" />
             </div>
-            <h2 className="mb-2 text-xl font-bold text-slate-900">Đã gửi email!</h2>
-            <p className="mb-1 text-sm leading-relaxed text-slate-500">
-              Nếu <span className="font-medium text-slate-700">{submittedEmail}</span> tồn tại trong
+            <h2 className="mb-2 text-xl font-bold">Đã gửi email!</h2>
+            <p className="mb-1 text-sm leading-relaxed text-muted-foreground">
+              Nếu <span className="font-medium text-foreground">{submittedEmail}</span> tồn tại trong
               hệ thống, bạn sẽ nhận được link đặt lại mật khẩu.
             </p>
-            <p className="mb-6 text-sm text-slate-400">Link có hiệu lực trong 30 phút.</p>
+            <p className="mb-6 text-sm text-muted-foreground">Link có hiệu lực trong 30 phút.</p>
             <Button
               type="button"
               onClick={() => setSent(false)}
@@ -96,9 +98,9 @@ export default function ForgotPasswordPage() {
         <div className="mt-6 text-center">
           <Link
             href="/login"
-            className="flex cursor-pointer items-center justify-center gap-1.5 text-sm text-slate-500 transition-colors duration-150 hover:text-slate-900"
+            className="flex items-center justify-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
           >
-            <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
+            <ArrowLeft className="size-3.5" aria-hidden="true" />
             Quay lại đăng nhập
           </Link>
         </div>

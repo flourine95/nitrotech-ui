@@ -6,5 +6,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const user = await getSession();
   if (!user) redirect('/login?from=/dashboard');
 
-  return <DashboardShell user={user}>{children}</DashboardShell>;
+  return (
+    <div className="dashboard-theme">
+      <DashboardShell user={user}>{children}</DashboardShell>
+    </div>
+  );
 }
