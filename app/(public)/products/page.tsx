@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { ProductCard } from '@/components/product-card';
 
 export const metadata: Metadata = { title: 'Sản phẩm' };
@@ -119,31 +118,8 @@ const brands = ['Apple', 'ASUS', 'Dell', 'Samsung', 'Intel', 'Corsair', 'LG', 'M
 
 export default function ProductsPage() {
   return (
-       <main className="min-h-screen bg-[#F8FAFC]">
-        {/* Breadcrumb */}
-        <div className="border-b border-slate-100 bg-white">
-          <div className="mx-auto flex max-w-7xl items-center gap-2 px-6 py-3 text-sm text-slate-400">
-            <Link
-              href="/"
-              className="cursor-pointer transition-colors duration-150 hover:text-slate-700"
-            >
-              Trang chủ
-            </Link>
-            <svg
-              viewBox="0 0 24 24"
-              className="h-3.5 w-3.5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              aria-hidden="true"
-            >
-              <path d="M9 18l6-6-6-6" />
-            </svg>
-            <span className="font-medium text-slate-700">Sản phẩm</span>
-          </div>
-        </div>
-
-        <div className="mx-auto max-w-7xl px-6 py-8">
+    <main className="min-h-screen bg-[#F8FAFC]">
+      <div className="mx-auto max-w-7xl px-6 py-8">
           <div className="flex gap-8">
             {/* ── Sidebar filter ── */}
             <aside className="hidden w-60 shrink-0 lg:block" aria-label="Bộ lọc sản phẩm">

@@ -2,11 +2,11 @@ import { SiteHeader } from '@/components/site-header';
 import { SiteFooter } from '@/components/site-footer';
 import { getSession } from '@/lib/auth';
 import { dehydrate, HydrationBoundary, QueryClient } from '@tanstack/react-query';
+import { ReactNode } from 'react';
 
-export default async function PublicLayout({ children }: { children: React.ReactNode }) {
+export default async function PublicLayout({ children }: { children: ReactNode }) {
   const user = await getSession();
 
-  // Prefill TanStack Query cache
   const queryClient = new QueryClient();
   if (user) {
     queryClient.setQueryData(['user'], user);

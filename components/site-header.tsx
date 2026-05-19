@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
 import { getMe } from '@/lib/api/auth';
-import { LogoIcon } from '@/components/icons';
+import { BrandLogo } from '@/components/icons';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useCartStore } from '@/store/cart.store';
 
@@ -120,14 +120,7 @@ export function SiteHeader() {
       {/* Main nav */}
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
         {/* Logo */}
-        <Link href="/" className="flex cursor-pointer items-center gap-2.5">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-slate-900">
-            <LogoIcon className="h-4 w-4 text-white" />
-          </div>
-          <span className="text-lg font-bold text-slate-900">
-            Nitro<span className="text-blue-600">Tech</span>
-          </span>
-        </Link>
+        <BrandLogo />
 
         {/* Desktop nav */}
         <div className="hidden items-center gap-1 md:flex">

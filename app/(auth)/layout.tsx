@@ -1,6 +1,5 @@
-import Link from 'next/link';
 import { ReactNode } from 'react';
-import { LogoIcon } from '@/components/icons';
+import { BrandLogo } from '@/components/icons';
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
@@ -24,12 +23,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
       <div className="relative z-10 w-full max-w-md animate-in fade-in slide-in-from-bottom-4 px-6 duration-700">
         {/* Logo */}
         <div className="mb-8 flex justify-center">
-          <Link href="/" className="group flex items-center gap-2.5 transition-transform hover:scale-105">
-            <LogoIcon className="h-8 w-8 text-slate-900 transition-colors group-hover:text-blue-600" />
-            <span className="text-2xl font-bold text-slate-900">
-              Nitro<span className="text-blue-600">Tech</span>
-            </span>
-          </Link>
+          <BrandLogo size="lg" />
         </div>
 
         {/* Main content */}

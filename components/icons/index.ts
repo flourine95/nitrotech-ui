@@ -3,4 +3,5 @@ export { YouTubeIcon } from './brand/youtube';
 export { TikTokIcon } from './brand/tiktok';
 export { GoogleIcon } from './brand/google';
 
-export { LogoIcon } from './logo';
+export { LightningIcon } from './lightning';
+export { BrandLogo } from './brand-logo';

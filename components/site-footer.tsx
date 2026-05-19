@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { FacebookIcon, YouTubeIcon, TikTokIcon, LogoIcon } from '@/components/icons';
+import { FacebookIcon, YouTubeIcon, TikTokIcon, BrandLogo } from '@/components/icons';
 
 const footerLinks = {
   'Sản phẩm': [
@@ -51,14 +51,7 @@ export function SiteFooter() {
         <div className="mb-12 grid grid-cols-2 gap-8 sm:grid-cols-4 lg:grid-cols-5">
           {/* Brand */}
           <div className="col-span-2 sm:col-span-4 lg:col-span-2">
-            <Link href="/" className="mb-4 flex w-fit cursor-pointer items-center gap-2.5">
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-900">
-                <LogoIcon className="h-4 w-4 text-white" />
-              </div>
-              <span className="text-lg font-bold text-slate-900">
-                Nitro<span className="text-blue-600">Tech</span>
-              </span>
-            </Link>
+            <BrandLogo interactive={false} className="mb-4" />
             <p className="mb-5 max-w-xs text-sm leading-relaxed text-slate-500">
               Hệ thống bán lẻ linh kiện điện tử, laptop và máy tính hàng đầu Việt Nam. Chính hãng —
               Giá tốt — Giao nhanh.
