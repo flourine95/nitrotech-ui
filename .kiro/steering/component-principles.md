@@ -1,34 +1,23 @@
+---
+inclusion: always
+---
+
 # Common Component Principles (CCP)
 
-8 design criteria for Common Components in React, inspired by OOP principles.
-
-## Origin
-
-Building common components shares similar philosophy with OOP:
-
-| OOP Concept | React Equivalent |
-|-------------|------------------|
-| Class | Component |
-| Method | Props / Callbacks |
-| Interface | Prop Types / API |
-| Inheritance | Composition |
-
-React enforces Composition over Inheritance from the start.
-
----
+8 design criteria for building reusable React components, inspired by OOP principles.
 
 ## The 8 Principles
 
-| # | Principle | OOP Origin |
-|---|-----------|------------|
-| 1 | Encapsulation | Direct |
-| 2 | Single Responsibility | Direct (SOLID) |
-| 3 | Stable Interface | Direct |
-| 4 | Composability | Variant |
-| 5 | Extensibility | Direct (Open/Closed) |
-| 6 | Predictability | Indirect (pure function) |
-| 7 | Testability | Indirect |
-| 8 | Accessibility | Extended |
+| # | Principle | Key Question | Violation Sign |
+|---|-----------|--------------|----------------|
+| 1 | Encapsulation | Does outside need to know inside? | Must pass internal state props |
+| 2 | Single Responsibility | Does it do one thing? | Component name contains "And" |
+| 3 | Stable Interface | Are props clear and typed? | Props named `data`, `config`, `options` |
+| 4 | Composability | Can it fit anywhere? | Hardcodes layout, fetches data |
+| 5 | Extensibility | Can extend without modifying? | Must fork to add icon/style |
+| 6 | Predictability | Same input → same output? | Calls API internally |
+| 7 | Testability | Can test independently? | Must mock store/API/providers |
+| 8 | Accessibility | Works with keyboard/screen reader? | Uses `<div onClick>` |
 
 ---
 
@@ -566,21 +555,37 @@ const Modal = ({ open, onOpenChange, title, description, children }: ModalProps)
 
 ## How to Use CCP
 
-### When designing new component
+### When Designing New Component
 
-Before writing code, ask:
-- Does this component do one thing?
-- Are props clear enough to use without reading source?
-- Is internal state exposed?
-- Can it be extended without modifying source?
-- Can all UI states be controlled via props?
-- Can it fit into different contexts?
-- Does it work with keyboard and screen reader?
+**Before writing code, ask**:
+1. Does this component do one thing? (Single Responsibility)
+2. Are props clear enough to use without reading source? (Stable Interface)
+3. Is internal state exposed? (Encapsulation)
+4. Can it be extended without modifying source? (Extensibility)
+5. Can all UI states be controlled via props? (Testability)
+6. Can it fit into different contexts? (Composability)
+7. Same props → same output? (Predictability)
+8. Does it work with keyboard and screen reader? (Accessibility)
 
-### When reviewing PR
+### When Reviewing PR
 
-Ask which principle is violated, not "is this code correct".
+Ask **which principle is violated**, not "is this code correct".
 
-### When refactoring
+### When Refactoring
 
-Use as diagnostic tool — identify which principle is "sick" and refactor from there.
+Use as **diagnostic tool** — identify which principle is "sick" and refactor from there.
+
+---
+
+## Quick Diagnostic
+
+| Symptom | Violated Principle | Fix |
+|---------|-------------------|-----|
+| Must read source to use | Encapsulation | Hide internal state |
+| Component does too much | Single Responsibility | Split into smaller components |
+| Props unclear | Stable Interface | Add types, better names |
+| Can't reuse elsewhere | Composability | Remove hardcoded context |
+| Must fork to customize | Extensibility | Add props for customization |
+| Different output with same props | Predictability | Move side effects outside |
+| Hard to test | Testability | Control state via props |
+| Doesn't work with keyboard | Accessibility | Add semantic HTML, ARIA |

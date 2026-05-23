@@ -1,4 +1,8 @@
-# Project Structure
+---
+inclusion: always
+---
+
+# Project Structure & Conventions
 
 ## Tech Stack
 
@@ -19,262 +23,237 @@
 | Backend | Spring Boot (REST API) |
 | Auth | Session-based (HTTP-only cookies) |
 
----
+## Architecture Overview
 
-## Folder Structure
+**Backend**: Spring Boot REST API with session-based auth (HTTP-only cookies)  
+**Frontend**: Next.js 16 App Router with TypeScript strict mode  
+**API Layer**: Single universal proxy at `app/api/[...path]/route.ts` forwards all requests to backend  
+**Auth Boundary**: `proxy.ts` handles session validation
 
-```
-nitrotech-ui/
-├── proxy.ts                    # Next.js 16 auth boundary
-│
-├── app/                        # Next.js App Router
-│   ├── (auth)/                 # Auth routes
-│   ├── (public)/               # Public routes
-│   ├── dashboard/              # Protected admin
-│   └── api/
-│       └── [...path]/route.ts  # Universal API proxy (BFF)
-│
-├── components/                 # Shared UI (used by 2+ routes)
-│   ├── ui/                     # shadcn/ui primitives (ALL installed)
-│   └── icons/
-│       └── brand/              # Brand icons
-│
-├── lib/
-│   ├── api/
-│   │   ├── client.ts           # apiFetch() - client-side
-│   │   ├── server.ts           # backendFetch() - server-side
-│   │   └── *.ts                # Domain API wrappers
-│   ├── auth/
-│   │   ├── session.ts          # getSession()
-│   │   └── routes.ts           # PUBLIC_PATHS, PROTECTED
-│   ├── utils/
-│   └── utils.ts                # cn, slugify, etc.
-│
-├── hooks/                      # Custom hooks (2+ routes)
-├── stores/                     # Zustand stores (kebab-case)
-├── schemas/                    # Zod validation
-├── types/                      # Shared types
-├── providers/                  # React providers
-└── public/                     # Static assets
-```
+## Directory Structure & Rules
 
----
+### app/ - Routes & Co-located Files
 
-## Core Directories
+**Structure**: `app/(auth)/`, `app/(public)/`, `app/dashboard/`, `app/api/[...path]/`
 
-### app/ - Next.js App Router
+**Co-location principle**: Keep files in route folder until used by 2+ routes
 
-Route segments, layouts, pages, and route-specific components/hooks/utils.
-
-Key principles:
-- Co-locate first: If only used by one route, keep it in that route folder
-- Move to components/ only when reused across 2+ routes
-- Use route groups (auth), (public) for shared layouts
-
-Example:
-```
+```typescript
+// ✓ GOOD - Co-located
 app/dashboard/products/
-  page.tsx              # Route entry
-  product-form.tsx      # Component only used here
-  use-products.ts       # Hook only used here
-  utils.ts              # Helpers only used here
+  page.tsx              // Route entry
+  product-form.tsx      // Only used here
+  use-products.ts       // Only used here
+  utils.ts              // Only used here
+
+// ✗ BAD - Premature abstraction
+components/product-form.tsx  // Only used in one route
 ```
 
-### app/api/ - API Routes (BFF)
+**Route files**: `page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx` (default exports only)
 
-Single universal proxy: app/api/[...path]/route.ts
+### app/api/[...path]/ - Universal API Proxy
 
-Purpose:
-- Forward ALL client requests to Spring Boot backend
-- Handle cookie forwarding
-- Hide backend URLs from client
+**Single route handler** forwards ALL client requests to Spring Boot backend
 
-DO NOT:
-- Create separate route handlers for each endpoint
-- Put business logic in route handlers
+**Responsibilities**: Cookie forwarding, error handling, response transformation  
+**DO NOT**: Create separate handlers per endpoint, add business logic
 
-### components/ - Shared UI
+### components/ - Shared UI (2+ Routes)
 
-Components used by 2+ routes.
+**Structure**: `components/ui/` (shadcn/ui), `components/icons/`, `components/icons/brand/`
 
-Structure:
-- ui/ - shadcn/ui primitives (ALL components installed)
-- icons/ - Custom icons
-- icons/brand/ - Brand icons
+**Icon usage**:
+- UI icons → `lucide-react`
+- Brand icons → `components/icons/brand/`
+- Custom icons → `components/icons/`
+- Never inline SVG
 
-Icon usage:
-- UI icons (arrows, menus) → lucide-react
-- Brand icons (Facebook, Google) → components/icons/brand/
-- Custom icons (logo) → components/icons/
-- Never use inline SVG
+**shadcn/ui patterns** (ALL components installed):
+- Use `gap-*` not `space-x-*` or `space-y-*`
+- Use `size-*` when width === height (e.g., `size-10` not `w-10 h-10`)
+- Use `truncate` not `overflow-hidden text-ellipsis whitespace-nowrap`
+- Use semantic tokens (`bg-background`, `text-muted-foreground`) not raw colors
+- Icons in buttons use `data-icon` attribute (no sizing classes)
+- Forms use `FieldGroup` + `Field` (auto-spacing)
+- Always include `AvatarFallback` with `Avatar`
+- Dialog/Sheet/Drawer require `Title` (use `className="sr-only"` if hidden)
 
-shadcn/ui key patterns:
-- Use `gap-*` instead of `space-x-*` or `space-y-*` for spacing
-- Use `size-*` when width and height are equal (e.g., `size-10` not `w-10 h-10`)
-- Use `truncate` shorthand instead of `overflow-hidden text-ellipsis whitespace-nowrap`
-- Use semantic color tokens (`bg-background`, `text-muted-foreground`) instead of raw colors
-- Icons in buttons use `data-icon` attribute (no sizing classes needed on icons)
-- Forms use `FieldGroup` component to wrap multiple `Field` components (handles spacing automatically)
-- Always include `AvatarFallback` with `Avatar` (displays when image fails to load)
-- Dialog/Sheet/Drawer always need a Title component (use `className="sr-only"` if visually hidden)
+**Always use shadcn/ui components**:
+```typescript
+// ✓ GOOD
+<Button>, <Input>, <Dialog>, <Select>, <Separator>
 
-Always use shadcn/ui components instead of raw HTML:
-- Button not <button>
-- Input not <input>
-- Dialog not custom modals
-- Select not <select>
-- Separator not <hr>
-- Separator not <hr>
+// ✗ BAD
+<button>, <input>, <div className="modal">, <select>, <hr>
+```
 
-### lib/api/ - API Layer
+### lib/api/ - HTTP Layer
 
-HTTP fetch utilities and API wrappers.
+**Files**:
+- `client.ts` - `apiFetch()` for client-side (browser)
+- `server.ts` - `backendFetch()` for server-side (Server Components, Route Handlers)
+- `<domain>.ts` - Domain API wrappers (e.g., `products.ts`, `brands.ts`)
 
-Files:
-- client.ts - apiFetch() for client-side (browser)
-- server.ts - backendFetch() for server-side (Server Components, Route Handlers)
-- auth.ts, products.ts, etc. - Domain API wrappers
-
-DO NOT:
-- Call backendFetch() from lib/api/ wrappers (Server Components only)
-- Mix client and server fetch in same file
+**Rules**:
+- Never call `backendFetch()` from client components
+- Never mix client and server fetch in same file
+- Domain wrappers use `apiFetch()` (client-side only)
 
 ### lib/auth/ - Authentication
 
-Auth logic, session management, route protection.
-
-Files:
-- session.ts - getSession() for server-side session retrieval
-- routes.ts - PUBLIC_PATHS, PROTECTED (shared config)
+**Files**: `session.ts` (getSession), `routes.ts` (PUBLIC_PATHS, PROTECTED)
 
 ### schemas/ - Zod Validation
 
-Form validation schemas at root level. One file per domain.
-
-Example: schemas/auth.ts, schemas/products.ts, schemas/categories.ts
+**Root-level validation schemas**, one file per domain (e.g., `schemas/auth.ts`, `schemas/products.ts`)
 
 ### types/ - Shared Types
 
-Types used across multiple domains at root level.
+**When to use**:
+- Used across multiple domains (e.g., `Page<T>`)
+- Used in UI components, not just API (e.g., `TreeNode`)
+- Generic utility types (e.g., `PaginationParams`)
 
-When to put types here:
-- Used across multiple domains (e.g., Page<T>)
-- Used in UI components, not just API layer (e.g., TreeNode)
-- Generic utility types (e.g., PaginationParams)
-
-When NOT:
-- API request/response for one domain → Keep in lib/api/<domain>.ts
-- Form data shapes → Infer from zod schemas in schemas/
+**When NOT to use**:
+- API request/response for one domain → Keep in `lib/api/<domain>.ts`
+- Form data shapes → Infer from zod schemas
 
 ### hooks/ - Custom Hooks
 
-Custom React hooks used across 2+ routes.
+**Root-level hooks** used by 2+ routes (e.g., `use-mobile.ts`, `use-copy.ts`)
 
-When to use:
-- Used by multiple routes
-- General-purpose hooks (use-mobile, use-copy)
+**When NOT to use**: Tightly coupled to one route → Keep in route folder
 
-When NOT:
-- Tightly coupled to one route → Keep in route folder
+### stores/ - Zustand Global State
 
-### stores/ - Zustand Stores
+**Naming**: `kebab-case.ts` (e.g., `cart-store.ts`, `auth-store.ts`)
 
-Global app state using Zustand at root level.
+**When to use**: Cross-component state, state persisting across routes  
+**When NOT to use**: Server data (use TanStack Query), URL state (use nuqs), local state (use useState)
 
-Naming: kebab-case.ts (e.g., cart-store.ts, auth-store.ts)
+### providers/ - React Context
 
-When to use:
-- Cross-component state (shopping cart)
-- State that persists across route changes
+**Root-level providers** (e.g., `QueryClientProvider`, `NuqsAdapter`, `ThemeProvider`)  
+**Used in**: `app/layout.tsx`
 
-When NOT:
-- Server data → Use TanStack Query
-- URL-synced state → Use nuqs
-- Component-local state → Use useState
+## Naming Conventions (All kebab-case)
 
-### providers/ - React Providers
+## Naming Conventions (All kebab-case)
 
-React context providers at root level.
+| Type | Pattern | Example |
+|------|---------|---------|
+| Components | `kebab-case.tsx` | `brand-panel.tsx`, `product-form.tsx` |
+| Hooks | `use-*.ts` | `use-brands.ts`, `use-mobile.ts` |
+| Stores | `kebab-case.ts` | `cart-store.ts`, `auth-store.ts` |
+| API files | `kebab-case.ts` | `lib/api/brands.ts`, `lib/api/products.ts` |
+| Schemas | `kebab-case.ts` | `schemas/auth.ts`, `schemas/products.ts` |
+| Types | `kebab-case.ts` | `types/pagination.ts`, `types/categories.ts` |
+| Providers | `kebab-case.tsx` | `providers/query-provider.tsx` |
+| Utils | `kebab-case.ts` | `lib/utils/formatting.ts` |
 
-Example: QueryClientProvider, NuqsAdapter, ThemeProvider, etc.
+**Exceptions**: Next.js route files (`page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`, `route.ts`)
 
-Used in app/layout.tsx to wrap the entire app.
-
----
-
-## Naming Conventions
-
-| Type | Convention | Example |
-|------|-----------|---------|
-| Route files | page.tsx, layout.tsx, loading.tsx, error.tsx | app/dashboard/brands/page.tsx |
-| Route Handlers | route.ts | app/api/[...path]/route.ts |
-| Components | kebab-case.tsx | brand-panel.tsx, product-form.tsx |
-| Hooks | use-*.ts | use-brands.ts, use-mobile.ts |
-| Stores | kebab-case.ts | cart-store.ts, auth-store.ts |
-| API files | kebab-case.ts | lib/api/brands.ts, lib/api/products.ts |
-| Schemas | kebab-case.ts | schemas/auth.ts, schemas/products.ts |
-| Types | kebab-case.ts | types/pagination.ts, types/categories.ts |
-| Providers | kebab-case.tsx | providers/query-provider.tsx |
-| Utils | kebab-case.ts | lib/utils/formatting.ts |
-
-Rules:
-- Be descriptive: brand-panel.tsx not panel.tsx
-- route.ts reserved for Route Handlers in app/api/ only
-- Default export only for Next.js route files (page.tsx, layout.tsx, etc.)
+**Rules**:
+- Be descriptive: `brand-panel.tsx` not `panel.tsx`
+- `route.ts` reserved for API Route Handlers only
+- Default exports only for Next.js route files
 - Named exports for everything else
 
----
-
-## File Placement Rules
-
-Decision tree:
+## File Placement Decision Tree
 
 ```
-Is it a route file (page.tsx, layout.tsx)?
+Is it a Next.js route file (page.tsx, layout.tsx, etc.)?
   → app/<route>/
 
 Is it only used by ONE route?
   → app/<route>/<file>.tsx
 
 Is it used by 2+ routes?
-  ↓
-  Is it a UI component? → components/<file>.tsx
-  Is it a React hook? → hooks/<file>.ts
-  Is it an API wrapper? → lib/api/<domain>.ts
-  Is it a validation schema? → schemas/<domain>.ts
-  Is it a type used across multiple domains? → types/<file>.ts
-  Is it a utility function? → lib/utils/<file>.ts or lib/utils.ts
-  Is it global state? → stores/<file>.ts
-  Is it a React provider? → providers/<file>.tsx
+  ├─ UI component? → components/<file>.tsx
+  ├─ React hook? → hooks/<file>.ts
+  ├─ API wrapper? → lib/api/<domain>.ts
+  ├─ Validation schema? → schemas/<domain>.ts
+  ├─ Shared type? → types/<file>.ts
+  ├─ Utility function? → lib/utils/<file>.ts or lib/utils.ts
+  ├─ Global state? → stores/<file>.ts
+  └─ React provider? → providers/<file>.tsx
 ```
 
-Type placement:
+## State Management Strategy
 
-| Situation | Location |
-|-----------|----------|
-| API request/response for one domain | lib/api/<domain>.ts |
-| Used across multiple domains | types/<name>.ts |
-| Used in UI components, not just API | types/<name>.ts |
-| Generic utility type (Page<T>) | types/pagination.ts |
-| Form data shape (inferred from zod) | schemas/<domain>.ts |
+| State Type | Tool | When to Use |
+|------------|------|-------------|
+| Server data | TanStack Query | API data, caching, mutations |
+| URL state | nuqs | Filters, pagination, search params |
+| Local UI state | useState/useCallback | Component-specific state |
+| Global app state | Zustand | Cart, cross-component state |
 
----
+## Data Fetching Patterns
 
-## Key Principles
+**Server Components** (default):
+```typescript
+// app/dashboard/products/[id]/page.tsx
+import { backendFetch } from '@/lib/api/server'
+import { cookies } from 'next/headers'
 
-1. Co-locate first - Keep files close to where they're used
-2. Move to shared only when reused - Don't abstract prematurely
-3. Separate client and server - Clear boundaries
-4. Use Server Components by default - Better performance
-5. Use shadcn/ui components - Never raw HTML elements
-6. Type everything - TypeScript strict mode
-7. Follow conventions - Naming, file structure, patterns
+export default async function ProductPage({ params }: { params: { id: string } }) {
+  const cookieStore = await cookies()
+  const cookieHeader = cookieStore.getAll().map(c => `${c.name}=${c.value}`).join('; ')
+  
+  const res = await backendFetch(`/api/products/${params.id}`, { cookieHeader })
+  const { data: product } = await res.json()
+  
+  return <ProductForm product={product} />
+}
+```
 
-Remember:
-- Route-specific files stay in route folders
-- Shared files go in components/, hooks/, lib/
-- One universal API proxy in app/api/[...path]/route.ts
-- Auth boundary in proxy.ts
-- schemas/, types/, stores/, providers/ at root level
-- All naming in kebab-case (except route files)
-- Always use shadcn/ui components instead of raw HTML
+**Client Components** (when needed):
+```typescript
+'use client'
+
+import { useQuery } from '@tanstack/react-query'
+import { useQueryState } from 'nuqs'
+import { getProducts } from '@/lib/api/products'
+
+export default function ProductsPage() {
+  const [page] = useQueryState('page', { defaultValue: 1 })
+  const [search] = useQueryState('search', { defaultValue: '' })
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['products', { page, search }],
+    queryFn: () => getProducts({ page, search })
+  })
+
+  if (isLoading) return <Skeleton />
+  if (!data?.content.length) return <EmptyState />
+  
+  return <ProductList products={data.content} />
+}
+```
+
+## Critical Rules
+
+1. **Co-locate first** - Keep files in route folder until reused
+2. **Server Components by default** - Use client components only when needed (interactivity, hooks, browser APIs)
+3. **Never mix client/server** - Separate `lib/api/client.ts` and `lib/api/server.ts`
+4. **Always use shadcn/ui** - Never raw HTML elements
+5. **Type everything** - TypeScript strict mode enabled
+6. **Single API proxy** - All client requests go through `app/api/[...path]/route.ts`
+7. **Handle all states** - Loading, error, empty states required
+8. **Validate both sides** - Client (UX) + Server (security)
+9. **Accessibility always** - ARIA labels, keyboard nav, focus management
+10. **Be descriptive** - Clear, specific file and component names
+
+## Common Mistakes to Avoid
+
+❌ Calling `apiFetch()` from Server Components (use `backendFetch()`)  
+❌ Creating separate route handlers per endpoint (use universal proxy)  
+❌ Using raw HTML elements (use shadcn/ui components)  
+❌ Mixing client and server code in same file  
+❌ Premature abstraction (moving to shared before reused)  
+❌ Using `space-x-*`/`space-y-*` (use `flex` with `gap-*`)  
+❌ Using `w-*` and `h-*` separately when equal (use `size-*`)  
+❌ Inline SVG (use lucide-react or components/icons/)  
+❌ Not handling loading/error/empty states  
+❌ Missing accessibility attributes

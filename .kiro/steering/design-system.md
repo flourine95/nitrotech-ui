@@ -5,206 +5,142 @@ inclusion: manual
 # Design System - NitroTech
 
 Version: 3.0.0  
-Updated: 2026-05-23  
 Framework: shadcn/ui (radix-nova)
 
 ---
 
 ## Design Philosophy
 
-### Core Principles
+**Core Principles**:
+1. Professional First - Enterprise-ready, trustworthy
+2. Clean & Minimal - Less is more
+3. Timeless Design - Avoid trendy effects
+4. Neutral Palette - Subtle colors
+5. Purposeful Interactions - Every animation has a reason
 
-1. **Professional First** - Enterprise-ready, trustworthy
-2. **Clean & Minimal** - Less is more, avoid unnecessary complexity
-3. **Timeless Design** - Avoid trendy effects that age quickly
-4. **Neutral Palette** - Subtle colors, avoid "AI look" (no purple/pink gradients)
-5. **Purposeful Interactions** - Every animation and effect has a reason
-
-### What to Avoid (AI Look)
-
-- Purple/pink gradients
-- Glassmorphism effects
-- Heavy shadows
-- Colored shadows
-- Too many colors (>3)
-- Excessive animations
-- Gradient orbs everywhere
+**Avoid "AI Look"**: No purple/pink gradients, glassmorphism, heavy shadows, colored shadows, excessive animations
 
 ---
 
-## Colors
+## Critical Rules
 
-### IMPORTANT: Use Semantic Tokens
+### Use Semantic Tokens (Not Raw Colors)
 
-shadcn/ui requires semantic tokens instead of raw Tailwind colors.
+shadcn/ui requires semantic tokens for dark mode support.
 
-### Text Colors
+| Category | Semantic Token | Replaces |
+|----------|---------------|----------|
+| Text | `text-foreground` | `text-slate-900` |
+| Text | `text-muted-foreground` | `text-slate-500` |
+| Text | `text-primary` | `text-blue-600` |
+| Background | `bg-background` | `bg-white` |
+| Background | `bg-card` | `bg-white` |
+| Background | `bg-muted` | `bg-slate-50` |
+| Border | `border-border` | `border-slate-200` |
+| Border | `border-input` | `border-slate-200` |
 
-```tsx
-// GOOD - Semantic tokens
-text-foreground           // Primary text (replaces text-slate-900)
-text-muted-foreground     // Secondary text (replaces text-slate-500)
-text-primary              // Links, accents (replaces text-blue-600)
-text-destructive          // Error text (replaces text-rose-500)
-
-// BAD - Raw colors
-text-slate-900
-text-slate-500
-text-blue-600
-text-rose-500
-```
-
-### Background Colors
+### Use `gap-*` (Not `space-*`)
 
 ```tsx
-// GOOD - Semantic tokens
-bg-background             // Page background (replaces bg-white)
-bg-card                   // Card background (replaces bg-white)
-bg-muted                  // Light background (replaces bg-slate-50)
-bg-primary                // Primary background (button, etc.)
-bg-destructive            // Error background
+✗ BAD
+<div className="space-y-4">
 
-// BAD - Raw colors
-bg-white
-bg-slate-50
-bg-blue-600
+✓ GOOD
+<div className="flex flex-col gap-4">
 ```
 
-### Border Colors
+### Use `FieldGroup` for Forms
 
 ```tsx
-// GOOD - Semantic tokens
-border-border             // Default border (replaces border-slate-200)
-border-input              // Input border (replaces border-slate-200)
-border-primary            // Primary border
-border-destructive        // Error border (replaces border-rose-400)
+✗ BAD
+<form className="space-y-4">
+  <Field>...</Field>
+</form>
 
-// BAD - Raw colors
-border-slate-200
-border-rose-400
+✓ GOOD
+<form>
+  <FieldGroup>
+    <Field>...</Field>
+  </FieldGroup>
+</form>
 ```
 
-### Why Semantic Tokens?
+### Use `data-icon` in Components
 
-1. **Dark Mode Support** - Automatically adapts to theme
-2. **Easy Maintenance** - Change theme in one place
-3. **Consistency** - Follows shadcn/ui standards
-4. **Future-proof** - Compatible with updates
+```tsx
+✗ BAD
+<Button>
+  <Eye className="h-4 w-4" />
+  View
+</Button>
+
+✓ GOOD
+<Button>
+  <Eye data-icon="inline-start" />
+  View
+</Button>
+```
 
 ---
 
 ## Typography
 
-### Font Sizes
+| Size | Usage | Example |
+|------|-------|---------|
+| `text-2xl` | Page titles (h1) | `<h1 className="text-2xl font-bold">Login</h1>` |
+| `text-xl` | Section titles (h2) | `<h2 className="text-xl font-bold">Personal Info</h2>` |
+| `text-lg` | Subsection titles (h3) | `<h3 className="text-lg font-semibold">Details</h3>` |
+| `text-base` | Body text | `<p className="text-base">Content</p>` |
+| `text-sm` | Labels, secondary text | `<label className="text-sm font-medium">Email</label>` |
+| `text-xs` | Captions, helper text | `<span className="text-xs text-muted-foreground">Min 6 chars</span>` |
 
-```tsx
-text-2xl    // 24px - Page titles (h1)
-text-xl     // 20px - Section titles (h2)
-text-lg     // 18px - Subsection titles (h3)
-text-base   // 16px - Default body text
-text-sm     // 14px - Secondary text, labels
-text-xs     // 12px - Captions, helper text
-```
-
-### Font Weights
-
-```tsx
-font-bold       // 700 - Headings, emphasis
-font-semibold   // 600 - Buttons, strong labels
-font-medium     // 500 - Labels, navigation
-font-normal     // 400 - Body text
-```
-
-### Examples
-
-```tsx
-// Page title
-<h1 className="text-2xl font-bold">Login</h1>
-
-// Section title
-<h2 className="text-xl font-bold">Personal Information</h2>
-
-// Secondary text
-<p className="text-sm text-muted-foreground">Welcome back</p>
-
-// Label
-<label className="text-sm font-medium">Email</label>
-
-// Helper text
-<span className="text-xs text-muted-foreground">Minimum 6 characters</span>
-```
+**Font weights**: `font-bold` (700), `font-semibold` (600), `font-medium` (500), `font-normal` (400)
 
 ---
 
 ## Spacing
 
-### IMPORTANT: Use `gap-*` not `space-*`
+### Use `gap-*` (Not `space-*`)
 
 ```tsx
-// BAD - space-y-* deprecated in shadcn/ui
+✗ BAD
 <div className="space-y-4">
   <div>Item 1</div>
   <div>Item 2</div>
 </div>
 
-// GOOD - Use flex + gap
+✓ GOOD
 <div className="flex flex-col gap-4">
   <div>Item 1</div>
   <div>Item 2</div>
 </div>
 ```
 
-### Common Patterns
+### Common Spacing
 
-```tsx
-// Card padding
-p-8         // 32px - Standard card padding
-
-// Form spacing - Use FieldGroup (handles spacing automatically)
-<FieldGroup>
-  <Field>...</Field>
-  <Field>...</Field>
-</FieldGroup>
-
-// Section spacing
-mb-6        // 24px - Between sections
-mb-8        // 32px - Between major sections
-
-// Button padding
-px-4 py-3   // Horizontal: 16px, Vertical: 12px
-
-// Input padding
-px-4 py-3   // Horizontal: 16px, Vertical: 12px
-```
+| Context | Class | Value |
+|---------|-------|-------|
+| Card padding | `p-8` | 32px |
+| Form spacing | `<FieldGroup>` | Auto |
+| Section spacing | `mb-6` | 24px |
+| Major sections | `mb-8` | 32px |
+| Button padding | `px-4 py-3` | 16px / 12px |
+| Input padding | `px-4 py-3` | 16px / 12px |
 
 ---
 
 ## Border Radius
 
-### Scale
+| Class | Size | Usage |
+|-------|------|-------|
+| `rounded-lg` | 8px | Default for most elements |
+| `rounded-xl` | 12px | Larger cards, dropdowns |
+| `rounded-2xl` | 16px | Icons, avatars, modals |
+| `rounded-3xl` | 24px | Cards |
+| `rounded-full` | 9999px | Buttons, inputs, pills, badges |
 
-```tsx
-rounded-lg      // 8px - Default for most elements
-rounded-xl      // 12px - Larger cards
-rounded-2xl     // 16px - Icons, avatars
-rounded-3xl     // 24px - Cards, modals
-rounded-full    // 9999px - Pills
-```
-
-### Usage Guidelines
-
-**Pill Shape (rounded-full):**
-- Buttons (primary, secondary, outline)
-- Text inputs
-- Search bars
-- Tags, badges
-- Pills, chips
-
-**Rounded Corners:**
-- Cards: `rounded-3xl`
-- Modals: `rounded-2xl`
-- Dropdowns: `rounded-xl`
-- Images: `rounded-lg`
+**Pill shape** (`rounded-full`): Buttons, text inputs, search bars, tags, badges, chips  
+**Rounded corners**: Cards (`rounded-3xl`), modals (`rounded-2xl`), dropdowns (`rounded-xl`), images (`rounded-lg`)
 
 ---
 
@@ -388,136 +324,88 @@ className="h-full px-3"
 
 ## Shadows
 
-### Scale
+| Class | Usage | Notes |
+|-------|-------|-------|
+| `shadow-md` | Small elements | OK for small components |
+| `shadow-lg` | Cards | **RECOMMENDED** |
+| `shadow-xl` | Hover states, dropdowns | For emphasis |
+| `shadow-2xl` | Modals only | Too dramatic for most |
 
-```tsx
-shadow-sm   // Subtle - NOT RECOMMENDED (too flat)
-shadow      // Default - NOT RECOMMENDED (too subtle)
-shadow-md   // Medium - OK for small elements
-shadow-lg   // Large - RECOMMENDED for cards
-shadow-xl   // Extra large - For hover states
-shadow-2xl  // Too dramatic - AVOID
-```
-
-### Usage
-
-```tsx
-// Cards
-shadow-lg hover:shadow-xl
-
-// Dropdowns
-shadow-xl
-
-// Modals
-shadow-2xl  // Exception: modals can use larger shadows
-```
-
-### Important Rules
-
-```tsx
-// BAD - Don't use colored shadows
-shadow-slate-900/10
-shadow-blue-500/20
-
-// GOOD - Use default shadows
-shadow-lg
-shadow-xl
-```
+**Rules**:
+- ✓ Use default shadows (`shadow-lg`)
+- ✗ Don't use colored shadows (`shadow-slate-900/10`)
+- ✓ Cards: `shadow-lg hover:shadow-xl`
 
 ---
 
 ## Icons
 
-### IMPORTANT: Use `data-icon` Attribute
+### Use `data-icon` in Components
 
 ```tsx
-// BAD - Don't use sizing classes in components
+✗ BAD
 <Button>
   <Eye className="h-4 w-4" />
   Text
 </Button>
 
-// GOOD - Use data-icon
+✓ GOOD
 <Button>
   <Eye data-icon="inline-start" />
   Text
 </Button>
-
-// data-icon values:
-// - "inline-start" - Icon at start
-// - "inline-end" - Icon at end
 ```
+
+**Values**: `data-icon="inline-start"` (icon at start), `data-icon="inline-end"` (icon at end)
 
 ### Sizes (Outside Components)
 
-```tsx
-// Only use when icon is NOT inside Button, Input, etc.
-size-3      // 12px - Tiny icons
-size-3.5    // 14px - Small icons (arrows, etc.)
-size-4      // 16px - Default icons (most common)
-size-5      // 20px - Medium icons
-size-6      // 24px - Large icons
-size-8      // 32px - Logo, hero icons
+Only use when icon is NOT inside Button, Input, etc.
 
-// Note: Use size-* instead of h-* w-*
-// BAD: h-4 w-4
-// GOOD: size-4
-```
+| Class | Size | Usage |
+|-------|------|-------|
+| `size-3` | 12px | Tiny icons |
+| `size-3.5` | 14px | Small icons (arrows) |
+| `size-4` | 16px | Default icons (most common) |
+| `size-5` | 20px | Medium icons |
+| `size-6` | 24px | Large icons |
+| `size-8` | 32px | Logo, hero icons |
 
-### UI Icons (Lucide React)
+**Note**: Use `size-*` instead of `h-* w-*`
 
-```tsx
-import { Eye, Mail, ArrowLeft } from 'lucide-react';
+### Icon Sources
 
-// In button
-<Button>
-  <Eye data-icon="inline-start" />
-  View
-</Button>
-
-// Standalone (not in component)
-<Mail className="size-4 text-muted-foreground" />
-```
+| Type | Source | Example |
+|------|--------|---------|
+| UI icons | lucide-react | `import { Eye, Mail } from 'lucide-react'` |
+| Brand icons | components/icons/brand/ | `import { Facebook } from '@/components/icons/brand'` |
+| Custom icons | components/icons/ | `import { Logo } from '@/components/icons'` |
 
 ---
 
 ## Animations & Transitions
 
-### Timing
-
-```tsx
-duration-150    // 150ms - Quick interactions (hover, focus)
-duration-200    // 200ms - Standard transitions (most common)
-duration-300    // 300ms - Slow transitions (shadows, complex)
-duration-700    // 700ms - Page entrance animations
-```
+| Duration | Usage |
+|----------|-------|
+| `duration-150` | Quick interactions (hover, focus) |
+| `duration-200` | Standard transitions (most common) |
+| `duration-300` | Slow transitions (shadows, complex) |
+| `duration-700` | Page entrance animations |
 
 ### Common Patterns
 
-**Shadow Transition:**
 ```tsx
+// Shadow transition
 transition-shadow hover:shadow-xl
-```
 
-**Color Transition:**
-```tsx
+// Color transition
 transition-colors hover:text-primary
-```
 
-**Page Entrance:**
-```tsx
+// Page entrance
 animate-in fade-in slide-in-from-bottom-4 duration-700
 ```
 
-### DO NOT Add Custom Animations on Components
-
-```tsx
-// BAD - Components handle animations themselves
-<Button className="transition-all hover:scale-[1.02]">
-
-// GOOD - Let component handle it
-<Button>
-```
+**DO NOT** add custom animations on components - they handle animations themselves.
 
 ---
 
@@ -525,54 +413,35 @@ animate-in fade-in slide-in-from-bottom-4 duration-700
 
 ### Container Widths
 
-```tsx
-max-w-md    // 448px - Forms, auth pages
-max-w-lg    // 512px - Small content
-max-w-xl    // 576px - Medium content
-max-w-2xl   // 672px - Large content
-max-w-4xl   // 896px - Wide content
-max-w-7xl   // 1280px - Full width content
-```
+| Class | Width | Usage |
+|-------|-------|-------|
+| `max-w-md` | 448px | Forms, auth pages |
+| `max-w-lg` | 512px | Small content |
+| `max-w-xl` | 576px | Medium content |
+| `max-w-2xl` | 672px | Large content |
+| `max-w-4xl` | 896px | Wide content |
+| `max-w-7xl` | 1280px | Full width content |
 
-### Grid Layouts
+### Common Patterns
 
 ```tsx
 // Two columns (social buttons)
 <div className="grid grid-cols-2 gap-3">
-  <Button>Google</Button>
-  <Button>Facebook</Button>
-</div>
 
-// Responsive
+// Responsive grid
 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-  {/* Items */}
-</div>
-```
 
-### Flex Layouts
-
-```tsx
-// Horizontal (default)
+// Horizontal flex
 <div className="flex items-center gap-2">
-  <Icon />
-  <span>Text</span>
-</div>
 
-// Vertical
+// Vertical flex
 <div className="flex flex-col gap-4">
-  {/* Items */}
-</div>
 
 // Space between
 <div className="flex items-center justify-between">
-  <span>Left</span>
-  <span>Right</span>
-</div>
 
 // Center
 <div className="flex items-center justify-center">
-  {/* Centered content */}
-</div>
 ```
 
 ---
@@ -726,30 +595,20 @@ focus:ring-primary
 
 ### Breakpoints
 
+| Prefix | Min Width |
+|--------|-----------|
+| `sm:` | 640px |
+| `md:` | 768px |
+| `lg:` | 1024px |
+| `xl:` | 1280px |
+| `2xl:` | 1536px |
+
+### Mobile-First Patterns
+
 ```tsx
-sm:   // 640px
-md:   // 768px
-lg:   // 1024px
-xl:   // 1280px
-2xl:  // 1536px
-```
-
-### Mobile-First Approach
-
-```tsx
-// Base (mobile)
-<div className="px-4">
-
-// Tablet and up
-<div className="px-4 md:px-6">
-
-// Desktop and up
+// Responsive padding
 <div className="px-4 md:px-6 lg:px-8">
-```
 
-### Common Patterns
-
-```tsx
 // Stack on mobile, row on desktop
 <div className="flex flex-col gap-4 md:flex-row">
 
@@ -765,11 +624,11 @@ xl:   // 1280px
 
 ---
 
-## Checklist for New Components
+## Component Checklist
 
 When creating a new component, ensure:
 
-- [ ] Use semantic tokens (`text-foreground`, `bg-card`, etc.)
+- [ ] Use semantic tokens (`text-foreground`, `bg-card`, not raw colors)
 - [ ] Use `FieldGroup` for forms (no `space-y-*`)
 - [ ] Use `data-icon` for icons in buttons
 - [ ] Use `size-*` instead of `h-* w-*` for equal dimensions
@@ -814,20 +673,24 @@ When creating a new component, ensure:
 ### Card
 ```tsx
 <div className="rounded-3xl border bg-card p-8 shadow-lg">
+  {/* Content */}
+</div>
 ```
 
 ### Link
 ```tsx
 <Link className="text-primary hover:underline">
+  Link text
+</Link>
 ```
 
 ### Icon
 ```tsx
 // In button
-<Icon data-icon="inline-start" />
+<Eye data-icon="inline-start" />
 
 // Standalone
-<Icon className="size-4 text-muted-foreground" />
+<Eye className="size-4 text-muted-foreground" />
 ```
 
 ### Separator
@@ -837,8 +700,51 @@ When creating a new component, ensure:
 
 ---
 
-## Version History
+## Common Patterns
 
-- **3.0.0** (2026-05-23) - Simplified, English, updated with latest shadcn/ui patterns
-- **2.0.0** (2026-05-17) - Updated with shadcn/ui conventions, Vietnamese
-- **1.0.0** (2026-05-17) - Initial version based on auth module
+### Password Input with Toggle
+```tsx
+<div className="relative">
+  <Input
+    type={showPass ? 'text' : 'password'}
+    className="h-auto rounded-full px-4 py-3 pr-12"
+  />
+  <Button
+    variant="ghost"
+    size="icon"
+    className="absolute top-0 right-0 h-full px-3 hover:bg-transparent"
+  >
+    <Eye data-icon />
+  </Button>
+</div>
+```
+
+### Separator with Text
+```tsx
+<div className="flex items-center gap-3">
+  <Separator className="flex-1" />
+  <span className="text-xs text-muted-foreground">or</span>
+  <Separator className="flex-1" />
+</div>
+```
+
+### Card Structure
+```tsx
+<div className="rounded-3xl border bg-card p-8 shadow-lg">
+  {/* Header */}
+  <div className="mb-8 text-center">
+    <h1 className="mb-1 text-2xl font-bold">Title</h1>
+    <p className="text-sm text-muted-foreground">Subtitle</p>
+  </div>
+
+  {/* Body */}
+  <FieldGroup>
+    {/* Form fields or content */}
+  </FieldGroup>
+
+  {/* Footer */}
+  <p className="mt-6 text-center text-sm text-muted-foreground">
+    Footer text
+  </p>
+</div>
+```
