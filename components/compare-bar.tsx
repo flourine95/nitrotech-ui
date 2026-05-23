@@ -1,6 +1,6 @@
 'use client';
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 // ── Context ──────────────────────────────────────────────────────────────────
 type CompareItem = { slug: string; name: string; cat: string };
@@ -54,7 +54,10 @@ export function CompareProvider({ children }: { children: ReactNode }) {
 function CompareBar() {
   const { items, toggle, clear } = useCompare();
   const router = useRouter();
+  const pathname = usePathname();
 
+  // Ẩn compare bar khi đang ở trang compare
+  if (pathname === '/compare') return null;
   if (items.length === 0) return null;
 
   const slugs = items.map((i) => i.slug);

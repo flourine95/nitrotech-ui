@@ -1,9 +1,12 @@
 'use client';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { X, Plus } from 'lucide-react';
+import { X, Plus, Search, AlertTriangle } from 'lucide-react';
 import { useCompare } from '@/components/compare-bar';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { ProductImagePlaceholder } from '@/components/product-image-placeholder';
 
 const allProducts = [
   {
@@ -154,6 +157,7 @@ const MAX = 3;
 export default function ComparePage() {
   const { items, toggle, clear } = useCompare();
   const [showPicker, setShowPicker] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Dùng items từ context làm nguồn duy nhất
   const slugs = items.map((i) => i.slug);
@@ -165,6 +169,20 @@ export default function ComparePage() {
   const cats = [...new Set(items.map((i) => i.cat))];
   const mixedCategories = cats.length > 1;
 
+  // Filter products based on search query
+  const filteredProducts = useMemo(() => {
+    return allProducts
+      .filter((ap) => !slugs.includes(ap.slug))
+      .filter((ap) => {
+        if (!searchQuery.trim()) return true;
+        const query = searchQuery.toLowerCase();
+        return (
+          ap.name.toLowerCase().includes(query) ||
+          ap.cat.toLowerCase().includes(query)
+        );
+      });
+  }, [slugs, searchQuery]);
+
   function addSlot(slot: number, slug: string) {
     const item = allProducts.find((p) => p.slug === slug);
     if (!item) return;
@@ -172,56 +190,58 @@ export default function ComparePage() {
     if (slugs[slot]) toggle({ slug: slugs[slot], name: '', cat: '' });
     toggle({ slug: item.slug, name: item.name, cat: item.cat });
     setShowPicker(null);
+    setSearchQuery(''); // Reset search when closing
   }
 
   return (
-    <main className="min-h-screen bg-[#F8FAFC] pb-24">
+    <main className="min-h-screen bg-muted/30 pb-24">
         <div className="mx-auto max-w-7xl px-6 py-10">
           <div className="mb-8 flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-slate-900">So sánh sản phẩm</h1>
-              <p className="mt-1 text-sm text-slate-400">
-                {items.length === 0
-                  ? 'Chưa có sản phẩm nào — thêm từ trang sản phẩm'
-                  : `Đang so sánh ${items.length}/${MAX} sản phẩm`}
-              </p>
+              {items.length > 0 && (
+                <p className="mt-1 text-sm text-slate-400">
+                  Đang so sánh {items.length}/{MAX} sản phẩm
+                </p>
+              )}
             </div>
             {items.length > 0 && (
-              <Button
-                onClick={clear}
-                variant="outline"
-                className="h-auto rounded-full px-4 py-2.5 text-sm font-semibold"
-              >
-                Xóa tất cả
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  className="h-auto rounded-full px-4 py-2.5 text-sm font-semibold"
+                  asChild
+                >
+                  <Link href="/products">
+                    <Plus className="mr-2 size-4" />
+                    Thêm sản phẩm
+                  </Link>
+                </Button>
+                <Button
+                  onClick={clear}
+                  variant="outline"
+                  className="h-auto rounded-full px-4 py-2.5 text-sm font-semibold"
+                >
+                  Xóa tất cả
+                </Button>
+              </div>
             )}
           </div>
 
           {/* Mixed category warning */}
           {mixedCategories && (
-            <div className="mb-6 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
-              <svg
-                viewBox="0 0 24 24"
-                className="mt-0.5 size-5 shrink-0 fill-current text-amber-500"
-                aria-hidden="true"
-              >
-                <path d="M12 2L1 21h22L12 2zm0 3.5L20.5 19h-17L12 5.5zM11 10v4h2v-4h-2zm0 6v2h2v-2h-2z" />
-              </svg>
-              <div>
-                <p className="text-sm font-semibold text-amber-800">
-                  Đang so sánh sản phẩm khác danh mục
-                </p>
-                <p className="mt-0.5 text-xs text-amber-600">
-                  Bạn đang so sánh {cats.join(', ')}. Một số thông số có thể không áp dụng và sẽ
-                  hiển thị "—". Bạn vẫn có thể so sánh bình thường.
-                </p>
-              </div>
-            </div>
+            <Alert variant="default" className="mb-6 border-amber-200 bg-amber-50 text-amber-800">
+              <AlertTriangle className="size-4 text-amber-600" />
+              <AlertTitle className="text-amber-900">Đang so sánh khác danh mục</AlertTitle>
+              <AlertDescription className="text-amber-700">
+                {cats.join(' và ')} có thông số khác nhau, một số ô sẽ hiển thị "-"
+              </AlertDescription>
+            </Alert>
           )}
 
           {items.length === 0 ? (
             /* Empty state */
-            <div className="rounded-3xl border border-slate-200 bg-white p-16 text-center shadow-sm">
+            <div className="rounded-3xl border border-slate-200 bg-white p-12 text-center shadow-sm">
               <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-slate-100">
                 <svg
                   viewBox="0 0 24 24"
@@ -236,12 +256,116 @@ export default function ComparePage() {
                 </svg>
               </div>
               <h2 className="mb-2 text-lg font-bold text-slate-900">Chưa có sản phẩm để so sánh</h2>
-              <p className="mb-6 text-sm text-slate-500">
-                Nhấn vào icon so sánh trên các sản phẩm để thêm vào đây
+              <p className="mb-8 text-sm text-slate-500">
+                Thêm 2-3 sản phẩm để xem thông số và giá cạnh nhau
               </p>
+
+              {/* Empty slots */}
+              <div className="mx-auto mb-8 flex max-w-3xl items-center justify-center gap-4">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="relative w-48">
+                    <Button
+                      onClick={() => setShowPicker(i)}
+                      variant="ghost"
+                      className="flex h-48 w-full flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-slate-200 text-slate-400 hover:border-blue-400 hover:bg-transparent hover:text-blue-500"
+                    >
+                      <Plus className="size-10" />
+                      <span className="text-sm font-medium">Sản phẩm {i + 1}</span>
+                    </Button>
+                    {showPicker === i && (
+                      <>
+                        <div
+                          className="fixed inset-0 z-40"
+                          onClick={() => {
+                            setShowPicker(null);
+                            setSearchQuery('');
+                          }}
+                          aria-hidden="true"
+                        />
+                        <div className="absolute top-full right-0 left-0 z-50 mt-2 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
+                          <div className="border-b border-slate-100 p-3">
+                            <div className="relative">
+                              <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-slate-400" />
+                              <Input
+                                type="text"
+                                placeholder="Tìm sản phẩm..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="h-9 pl-9 text-sm font-normal rounded-full focus-visible:ring-1"
+                                autoFocus
+                              />
+                            </div>
+                          </div>
+                          <ul className="max-h-60 overflow-y-auto py-1">
+                            {filteredProducts.map((ap) => (
+                              <li key={ap.slug}>
+                                <Button
+                                  onClick={() => addSlot(i, ap.slug)}
+                                  variant="ghost"
+                                  className="h-auto w-full justify-start rounded-none px-4 py-2.5 hover:bg-slate-50"
+                                >
+                                  <div className="text-left">
+                                    <div className="text-sm font-medium text-slate-900">
+                                      {ap.name}
+                                    </div>
+                                    <div className="text-xs text-slate-400">
+                                      {ap.cat} · {ap.price}
+                                    </div>
+                                  </div>
+                                </Button>
+                              </li>
+                            ))}
+                            {filteredProducts.length === 0 && (
+                              <li className="px-4 py-3 text-center">
+                                <p className="text-sm text-slate-500 font-normal antialiased">
+                                  {searchQuery.trim() 
+                                    ? 'Không tìm thấy sản phẩm'
+                                    : 'Không còn sản phẩm để thêm'
+                                  }
+                                </p>
+                              </li>
+                            )}
+                          </ul>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Quick suggestions */}
+              <div className="mb-6 flex items-center justify-center gap-2">
+                <span className="text-xs text-slate-400">Gợi ý:</span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-auto rounded-full px-3 py-1.5 text-xs"
+                  asChild
+                >
+                  <Link href="/products?category=laptop-gaming">Laptop Gaming</Link>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-auto rounded-full px-3 py-1.5 text-xs"
+                  asChild
+                >
+                  <Link href="/products?category=gpu">Card đồ họa</Link>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-auto rounded-full px-3 py-1.5 text-xs"
+                  asChild
+                >
+                  <Link href="/products?category=ssd">SSD NVMe</Link>
+                </Button>
+              </div>
+
+              {/* Primary CTA */}
               <Button className="h-auto rounded-full px-8 py-3 font-semibold" asChild>
                 <Link href="/products">
-                  Xem sản phẩm
+                  Chọn sản phẩm
                 </Link>
               </Button>
             </div>
@@ -261,7 +385,7 @@ export default function ComparePage() {
                       return (
                         <th key={i} className="w-56 px-2 pb-6 align-top">
                           {p ? (
-                            <div className="relative flex h-64 flex-col rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm">
+                            <div className="relative flex flex-col rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm">
                               <Button
                                 onClick={() =>
                                   toggle({
@@ -278,42 +402,26 @@ export default function ComparePage() {
                                 <X className="size-3.5" />
                               </Button>
                               {/* Image */}
-                              <div className="mb-3 flex h-24 w-full shrink-0 items-center justify-center rounded-xl border border-slate-100 bg-slate-50">
-                                <svg
-                                  viewBox="0 0 60 45"
-                                  className="h-auto w-12 text-slate-300"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="1.5"
-                                  aria-hidden="true"
-                                >
-                                  <rect x="3" y="3" width="54" height="39" rx="3" />
-                                  <rect
-                                    x="8"
-                                    y="8"
-                                    width="44"
-                                    height="29"
-                                    rx="2"
-                                    fill="rgba(59,130,246,0.04)"
-                                    stroke="rgba(59,130,246,0.15)"
-                                  />
-                                </svg>
-                              </div>
-                              <div className="mb-0.5 shrink-0 text-xs text-slate-400">{p.cat}</div>
-                              <div className="mb-1 line-clamp-2 flex-1 text-sm leading-snug font-semibold text-slate-900">
+                              <Link
+                                href={`/products/${p.slug}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="mb-3 flex h-32 w-full shrink-0 items-center justify-center rounded-xl border border-slate-100 bg-slate-50 transition-colors hover:border-slate-200 hover:bg-slate-100"
+                              >
+                                <ProductImagePlaceholder size="lg" />
+                              </Link>
+                              <div className="mb-1 shrink-0 text-xs text-slate-400">{p.cat}</div>
+                              <Link
+                                href={`/products/${p.slug}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="mb-2 line-clamp-2 text-sm leading-snug font-semibold text-slate-900 transition-colors hover:text-blue-600 hover:underline"
+                              >
                                 {p.name}
-                              </div>
-                              <div className="mb-3 shrink-0 text-sm font-bold text-blue-600">
+                              </Link>
+                              <div className="shrink-0 text-base font-bold text-blue-600">
                                 {p.price}
                               </div>
-                              <Button 
-                                className="h-auto w-full rounded-full py-2 text-xs font-semibold" 
-                                asChild
-                              >
-                                <Link href={`/products/${p.slug}`}>
-                                  Xem chi tiết
-                                </Link>
-                              </Button>
                             </div>
                           ) : (
                             <div className="relative h-64">
@@ -329,40 +437,53 @@ export default function ComparePage() {
                                 <>
                                   <div
                                     className="fixed inset-0 z-40"
-                                    onClick={() => setShowPicker(null)}
+                                    onClick={() => {
+                                      setShowPicker(null);
+                                      setSearchQuery('');
+                                    }}
                                     aria-hidden="true"
                                   />
                                   <div className="absolute top-full right-0 left-0 z-50 mt-2 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
                                     <div className="border-b border-slate-100 p-3">
-                                      <p className="text-xs font-semibold text-slate-500">
-                                        Chọn sản phẩm
-                                      </p>
+                                      <div className="relative">
+                                        <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-slate-400" />
+                                        <Input
+                                          type="text"
+                                          placeholder="Tìm sản phẩm..."
+                                          value={searchQuery}
+                                          onChange={(e) => setSearchQuery(e.target.value)}
+                                          className="h-9 pl-9 text-sm font-normal rounded-full focus-visible:ring-1"
+                                          autoFocus
+                                        />
+                                      </div>
                                     </div>
                                     <ul className="max-h-60 overflow-y-auto py-1">
-                                      {allProducts
-                                        .filter((ap) => !slugs.includes(ap.slug))
-                                        .map((ap) => (
-                                          <li key={ap.slug}>
-                                            <Button
-                                              onClick={() => addSlot(i, ap.slug)}
-                                              variant="ghost"
-                                              className="h-auto w-full justify-start rounded-none px-4 py-2.5 hover:bg-slate-50"
-                                            >
-                                              <div className="text-left">
-                                                <div className="text-sm font-medium text-slate-900">
-                                                  {ap.name}
-                                                </div>
-                                                <div className="text-xs text-slate-400">
-                                                  {ap.cat} · {ap.price}
-                                                </div>
+                                      {filteredProducts.map((ap) => (
+                                        <li key={ap.slug}>
+                                          <Button
+                                            onClick={() => addSlot(i, ap.slug)}
+                                            variant="ghost"
+                                            className="h-auto w-full justify-start rounded-none px-4 py-2.5 hover:bg-slate-50"
+                                          >
+                                            <div className="text-left">
+                                              <div className="text-sm font-medium text-slate-900">
+                                                {ap.name}
                                               </div>
-                                            </Button>
-                                          </li>
-                                        ))}
-                                      {allProducts.filter((ap) => !slugs.includes(ap.slug))
-                                        .length === 0 && (
-                                        <li className="px-4 py-3 text-sm text-slate-400">
-                                          Không còn sản phẩm để thêm
+                                              <div className="text-xs text-slate-400">
+                                                {ap.cat} · {ap.price}
+                                              </div>
+                                            </div>
+                                          </Button>
+                                        </li>
+                                      ))}
+                                      {filteredProducts.length === 0 && (
+                                        <li className="px-4 py-3 text-center">
+                                          <p className="text-sm text-slate-500 font-normal antialiased">
+                                            {searchQuery.trim() 
+                                              ? 'Không tìm thấy sản phẩm'
+                                              : 'Không còn sản phẩm để thêm'
+                                            }
+                                          </p>
                                         </li>
                                       )}
                                     </ul>
@@ -403,18 +524,6 @@ export default function ComparePage() {
                       })}
                     </tr>
                   ))}
-                  <tr>
-                    <td className="pt-5 pr-4" />
-                    {slots.map((_, i) => (
-                      <td key={i} className="px-2 pt-5">
-                        {products[i] && (
-                          <Button className="h-auto w-full rounded-full py-3 font-semibold">
-                            Thêm vào giỏ
-                          </Button>
-                        )}
-                      </td>
-                    ))}
-                  </tr>
                 </tbody>
               </table>
             </div>
