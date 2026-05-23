@@ -1,6 +1,6 @@
 import { apiFetch } from '@/lib/client';
-import type { Cart, CartResponse, CartItemResponse } from '@/lib/types/cart';
-import type { AddToCartData, UpdateCartItemData } from '@/lib/schemas/cart';
+import type { Cart, CartResponse, CartItemResponse } from '@/types/cart';
+import type { AddToCartData, UpdateCartItemData } from '@/schemas/cart';
 
 // GET /api/cart - Get user cart
 export async function getCart(): Promise<Cart> {

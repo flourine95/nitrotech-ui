@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { Check, ChevronsUpDown, FolderOpen } from 'lucide-react';
 import { createCategory, updateCategory, type Category } from '@/lib/api/categories';
 import { ApiException } from '@/lib/client';
-import { categorySchema, type CategoryFormData } from '@/lib/schemas/categories';
+import { categorySchema, type CategoryFormData } from '@/schemas/categories';
 import { slugify, cn } from '@/lib/utils';
 import {
   Command,

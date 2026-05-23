@@ -1,4 +1,4 @@
-import type { OrderStatus, PaymentMethod } from '../schemas/order';
+import type { OrderStatus, PaymentMethod } from '@/schemas/order';
 import type { CartItem } from './cart';
 
 export interface ShippingAddress {

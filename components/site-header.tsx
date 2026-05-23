@@ -7,7 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getMe } from '@/lib/api/auth';
 import { BrandLogo } from '@/components/icons';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { useCartStore } from '@/store/cart.store';
+import { useCartStore } from '@/stores/cart.store';
 
 const navLinks = [
   { label: 'Laptop', href: '/products?cat=laptop' },

@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import type { PaymentMethod } from '@/lib/schemas/order';
+import type { PaymentMethod } from '@/schemas/order';
 
 interface PaymentMethodSelectorProps {
   selectedMethod: PaymentMethod;

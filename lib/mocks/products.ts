@@ -1,5 +1,5 @@
 import type { Product } from '@/lib/api/products';
-import type { Page } from '@/lib/types/pagination';
+import type { Page } from '@/types/pagination';
 
 export const mockProducts: Product[] = [
   {

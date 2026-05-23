@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
-import { resetPasswordSchema, type ResetPasswordInput } from '@/lib/schemas/auth';
+import { resetPasswordSchema, type ResetPasswordInput } from '@/schemas/auth';
 import { resetPassword } from '@/lib/api/auth';
 import { ApiException } from '@/lib/client';
 import { FieldGroup, Field, FieldLabel, FieldDescription } from '@/components/ui/field';

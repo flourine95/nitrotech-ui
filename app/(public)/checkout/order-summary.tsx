@@ -8,9 +8,9 @@ import Link from 'next/link';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import type { Cart } from '@/lib/types/cart';
+import type { Cart } from '@/types/cart';
 import { validatePromotion } from '@/lib/api/promotions';
-import type { PromotionValidationResult } from '@/lib/types/promotion';
+import type { PromotionValidationResult } from '@/types/promotion';
 
 interface OrderSummaryProps {
   cart: Cart;

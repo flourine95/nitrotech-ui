@@ -1,5 +1,3 @@
-export const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080';
-
 export interface ApiError {
   status: number;
   code: string;
@@ -14,23 +12,14 @@ export class ApiException extends Error {
   }
 }
 
-interface FetchOptions extends RequestInit {
-  skipAuth?: boolean;
-}
-
-export async function apiFetch<T>(path: string, options: FetchOptions = {}): Promise<T> {
-  const { skipAuth = false, ...init } = options;
-
-  const url = skipAuth ? `${BASE_URL}${path}` : path;
-
+export async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
   let res: Response;
   try {
-    res = await fetch(url, {
-      ...init,
-      credentials: 'include',
+    res = await fetch(path, {
+      ...options,
       headers: {
         'Content-Type': 'application/json',
-        ...(init.headers as Record<string, string>),
+        ...(options.headers as Record<string, string>),
       },
     });
   } catch {
@@ -41,7 +30,7 @@ export async function apiFetch<T>(path: string, options: FetchOptions = {}): Pro
     });
   }
 
-  if (res.status === 401 && !skipAuth) {
+  if (res.status === 401) {
     window.location.href = '/login';
     return undefined as T;
   }

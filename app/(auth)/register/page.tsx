@@ -5,7 +5,7 @@ import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { Eye, EyeOff, CheckCircle2 } from 'lucide-react';
-import { type RegisterInput, registerSchema } from '@/lib/schemas/auth';
+import { type RegisterInput, registerSchema } from '@/schemas/auth';
 import { register as registerUser } from '@/lib/api/auth';
 import { ApiException } from '@/lib/client';
 import { FieldGroup, Field, FieldLabel, FieldDescription } from '@/components/ui/field';

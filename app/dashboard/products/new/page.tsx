@@ -3,7 +3,7 @@ import { backendFetch } from '@/lib/server';
 import { ProductForm } from '../product-form';
 import type { Category } from '@/lib/api/categories';
 import type { Brand } from '@/lib/api/brands';
-import type { Page } from '@/lib/types/pagination';
+import type { Page } from '@/types/pagination';
 
 async function fetchFormData() {
   const cookieStore = await cookies();

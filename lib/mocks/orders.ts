@@ -1,5 +1,5 @@
 import type { Order, OrderStatus } from '@/lib/api/orders';
-import type { Page } from '@/lib/types/pagination';
+import type { Page } from '@/types/pagination';
 
 const statuses: OrderStatus[] = ['PENDING', 'CONFIRMED', 'SHIPPING', 'COMPLETED', 'CANCELLED'];
 

@@ -13,7 +13,7 @@ import {
   Check,
 } from 'lucide-react';
 import type { Category } from '@/lib/api/categories';
-import type { TreeNode } from '@/lib/types/categories';
+import type { TreeNode } from '@/types/categories';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   DropdownMenu,

@@ -26,7 +26,7 @@ import type { Category } from '@/lib/api/categories';
 import type { Brand } from '@/lib/api/brands';
 import { ApiException } from '@/lib/client';
 import { slugify } from '@/lib/utils';
-import { type ProductFormData, productSchema } from '@/lib/schemas/products';
+import { type ProductFormData, productSchema } from '@/schemas/products';
 import type { MediaPickerProps } from '@/components/media-picker-dialog';
 import {
   Select,

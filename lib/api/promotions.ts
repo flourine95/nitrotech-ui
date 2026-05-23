@@ -4,8 +4,8 @@ import type {
   PromotionValidationResult,
   PromotionValidationResponse,
   PromotionListResponse,
-} from '@/lib/types/promotion';
-import type { ValidatePromotionData } from '@/lib/schemas/promotion';
+} from '@/types/promotion';
+import type { ValidatePromotionData } from '@/schemas/promotion';
 
 // POST /api/promotions/validate - Validate promotion code
 export async function validatePromotion(

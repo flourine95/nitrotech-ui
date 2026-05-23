@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { Mail, ArrowLeft, CheckCircle2 } from 'lucide-react';
-import { forgotPasswordSchema, type ForgotPasswordInput } from '@/lib/schemas/auth';
+import { forgotPasswordSchema, type ForgotPasswordInput } from '@/schemas/auth';
 import { forgotPassword } from '@/lib/api/auth';
 import { FieldGroup, Field, FieldLabel, FieldDescription } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';

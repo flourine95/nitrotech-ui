@@ -8,9 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { shippingAddressSchema } from '@/lib/schemas/address';
-import type { ShippingAddressData } from '@/lib/schemas/address';
-import type { ShippingAddress } from '@/lib/types/order';
+import { shippingAddressSchema } from '@/schemas/address';
+import type { ShippingAddressData } from '@/schemas/address';
+import type { ShippingAddress } from '@/types/order';
 
 interface ShippingFormProps {
   initialData: ShippingAddress | null;

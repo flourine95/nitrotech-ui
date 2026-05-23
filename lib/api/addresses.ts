@@ -1,6 +1,6 @@
 import { apiFetch } from '@/lib/client';
-import type { Address, AddressResponse, AddressListResponse } from '@/lib/types/address';
-import type { AddressFormData } from '@/lib/schemas/address';
+import type { Address, AddressResponse, AddressListResponse } from '@/types/address';
+import type { AddressFormData } from '@/schemas/address';
 
 // GET /api/addresses - Get user addresses
 export async function getAddresses(): Promise<Address[]> {

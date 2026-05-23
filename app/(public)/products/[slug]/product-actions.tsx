@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
-import { useCartStore } from '@/store/cart.store';
+import { useCartStore } from '@/stores/cart.store';
 
 interface ProductActionsProps {
   slug: string;

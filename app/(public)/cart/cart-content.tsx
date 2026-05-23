@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useCartStore } from '@/store/cart.store';
+import { useCartStore } from '@/stores/cart.store';
 
 export function CartContent() {
   const router = useRouter();

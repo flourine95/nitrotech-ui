@@ -4,8 +4,8 @@ import type {
   OrderListItem,
   OrderResponse,
   OrderListResponse,
-} from '@/lib/types/order';
-import type { CreateOrderData, CancelOrderData, OrderStatus } from '@/lib/schemas/order';
+} from '@/types/order';
+import type { CreateOrderData, CancelOrderData, OrderStatus } from '@/schemas/order';
 
 // POST /api/orders - Create order
 export async function createOrder(data: CreateOrderData): Promise<Order> {

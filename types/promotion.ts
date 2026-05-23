@@ -1,4 +1,4 @@
-import type { DiscountType } from '../schemas/promotion';
+import type { DiscountType } from '@/schemas/promotion';
 
 export interface Promotion {
   id: number;

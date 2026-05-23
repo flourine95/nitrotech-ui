@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { Eye, EyeOff } from 'lucide-react';
 import { GoogleIcon, FacebookIcon } from '@/components/icons';
-import { loginSchema, type LoginInput } from '@/lib/schemas/auth';
+import { loginSchema, type LoginInput } from '@/schemas/auth';
 import { FieldGroup, Field, FieldLabel, FieldDescription } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';

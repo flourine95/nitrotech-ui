@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Cart, CartItem } from '@/lib/types/cart';
+import type { Cart, CartItem } from '@/types/cart';
 import {
   getCart,
   addToCart as addToCartApi,
@@ -133,7 +133,7 @@ export const useCartStore = create<CartStore>()(
         }
       },
 
-      // Reset store
+      // Reset stores
       reset: () => set(initialState),
     }),
     {

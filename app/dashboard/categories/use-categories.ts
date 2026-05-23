@@ -14,8 +14,8 @@ import {
   updateCategory,
 } from '@/lib/api/categories';
 import { ApiException } from '@/lib/client';
-import { flattenTree, type TreeNode } from '@/lib/types/categories';
-import type { Page } from '@/lib/types/pagination';
+import { flattenTree, type TreeNode } from '@/types/categories';
+import type { Page } from '@/types/pagination';
 
 type FilterStatus = 'all' | 'active' | 'inactive' | 'deleted';
 

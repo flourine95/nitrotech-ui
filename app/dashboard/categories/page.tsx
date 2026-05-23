@@ -70,7 +70,7 @@ import {
   toggleCategory,
   updateCategory,
 } from '@/lib/api/categories';
-import { categorySchema, type CategoryFormData } from '@/lib/schemas/categories';
+import { categorySchema, type CategoryFormData } from '@/schemas/categories';
 import { Label } from '@/components/ui/label';
 
 // Helper function hoisted outside component to enable proper memoization
