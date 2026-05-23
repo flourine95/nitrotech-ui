@@ -1,7 +1,9 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
+import { X, Plus } from 'lucide-react';
 import { useCompare } from '@/components/compare-bar';
+import { Button } from '@/components/ui/button';
 
 const allProducts = [
   {
@@ -173,30 +175,7 @@ export default function ComparePage() {
   }
 
   return (
-    <>      <main className="min-h-screen bg-[#F8FAFC] pb-24">
-        {/* Breadcrumb */}
-        <div className="border-b border-slate-100 bg-white">
-          <div className="mx-auto flex max-w-7xl items-center gap-2 px-6 py-3 text-sm text-slate-400">
-            <Link
-              href="/"
-              className="cursor-pointer transition-colors duration-150 hover:text-slate-700"
-            >
-              Trang chủ
-            </Link>
-            <svg
-              viewBox="0 0 24 24"
-              className="h-3.5 w-3.5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              aria-hidden="true"
-            >
-              <path d="M9 18l6-6-6-6" />
-            </svg>
-            <span className="font-medium text-slate-700">So sánh sản phẩm</span>
-          </div>
-        </div>
-
+    <main className="min-h-screen bg-[#F8FAFC] pb-24">
         <div className="mx-auto max-w-7xl px-6 py-10">
           <div className="mb-8 flex items-center justify-between">
             <div>
@@ -208,12 +187,13 @@ export default function ComparePage() {
               </p>
             </div>
             {items.length > 0 && (
-              <button
+              <Button
                 onClick={clear}
-                className="cursor-pointer rounded-full border border-slate-200 px-4 py-2 text-sm text-slate-500 transition-colors duration-200 hover:bg-slate-100"
+                variant="outline"
+                className="h-auto rounded-full px-4 py-2.5 text-sm font-semibold"
               >
                 Xóa tất cả
-              </button>
+              </Button>
             )}
           </div>
 
@@ -222,7 +202,7 @@ export default function ComparePage() {
             <div className="mb-6 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
               <svg
                 viewBox="0 0 24 24"
-                className="mt-0.5 h-5 w-5 shrink-0 fill-current text-amber-500"
+                className="mt-0.5 size-5 shrink-0 fill-current text-amber-500"
                 aria-hidden="true"
               >
                 <path d="M12 2L1 21h22L12 2zm0 3.5L20.5 19h-17L12 5.5zM11 10v4h2v-4h-2zm0 6v2h2v-2h-2z" />
@@ -242,10 +222,10 @@ export default function ComparePage() {
           {items.length === 0 ? (
             /* Empty state */
             <div className="rounded-3xl border border-slate-200 bg-white p-16 text-center shadow-sm">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
+              <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-slate-100">
                 <svg
                   viewBox="0 0 24 24"
-                  className="h-8 w-8 text-slate-400"
+                  className="size-8 text-slate-400"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="1.5"
@@ -259,12 +239,11 @@ export default function ComparePage() {
               <p className="mb-6 text-sm text-slate-500">
                 Nhấn vào icon so sánh trên các sản phẩm để thêm vào đây
               </p>
-              <Link
-                href="/products"
-                className="inline-block cursor-pointer rounded-full bg-slate-900 px-6 py-2.5 text-sm font-semibold text-white transition-colors duration-200 hover:bg-slate-700"
-              >
-                Xem sản phẩm
-              </Link>
+              <Button className="h-auto rounded-full px-8 py-3 font-semibold" asChild>
+                <Link href="/products">
+                  Xem sản phẩm
+                </Link>
+              </Button>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -283,7 +262,7 @@ export default function ComparePage() {
                         <th key={i} className="w-56 px-2 pb-6 align-top">
                           {p ? (
                             <div className="relative flex h-64 flex-col rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm">
-                              <button
+                              <Button
                                 onClick={() =>
                                   toggle({
                                     slug: p.slug,
@@ -291,20 +270,13 @@ export default function ComparePage() {
                                     cat: p.cat,
                                   })
                                 }
-                                className="absolute top-3 right-3 cursor-pointer rounded-full p-1 text-slate-300 transition-colors duration-150 hover:bg-rose-50 hover:text-rose-500"
+                                variant="ghost"
+                                size="icon"
+                                className="absolute top-3 right-3 size-7 rounded-full p-1 text-slate-300 hover:bg-rose-50 hover:text-rose-500"
                                 aria-label={`Xóa ${p.name}`}
                               >
-                                <svg
-                                  viewBox="0 0 24 24"
-                                  className="h-3.5 w-3.5"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="2"
-                                  aria-hidden="true"
-                                >
-                                  <path d="M18 6L6 18M6 6l12 12" />
-                                </svg>
-                              </button>
+                                <X className="size-3.5" />
+                              </Button>
                               {/* Image */}
                               <div className="mb-3 flex h-24 w-full shrink-0 items-center justify-center rounded-xl border border-slate-100 bg-slate-50">
                                 <svg
@@ -334,31 +306,25 @@ export default function ComparePage() {
                               <div className="mb-3 shrink-0 text-sm font-bold text-blue-600">
                                 {p.price}
                               </div>
-                              <Link
-                                href={`/products/${p.slug}`}
-                                className="block w-full shrink-0 cursor-pointer rounded-full bg-slate-900 py-1.5 text-center text-xs font-semibold text-white transition-colors duration-200 hover:bg-slate-700"
+                              <Button 
+                                className="h-auto w-full rounded-full py-2 text-xs font-semibold" 
+                                asChild
                               >
-                                Xem chi tiết
-                              </Link>
+                                <Link href={`/products/${p.slug}`}>
+                                  Xem chi tiết
+                                </Link>
+                              </Button>
                             </div>
                           ) : (
                             <div className="relative h-64">
-                              <button
+                              <Button
                                 onClick={() => setShowPicker(i)}
-                                className="flex h-full w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-slate-200 text-slate-400 transition-colors duration-200 hover:border-blue-400 hover:text-blue-500"
+                                variant="ghost"
+                                className="flex h-full w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-slate-200 text-slate-400 hover:border-blue-400 hover:bg-transparent hover:text-blue-500"
                               >
-                                <svg
-                                  viewBox="0 0 24 24"
-                                  className="h-8 w-8"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="1.5"
-                                  aria-hidden="true"
-                                >
-                                  <path d="M12 5v14M5 12h14" />
-                                </svg>
+                                <Plus className="size-8" />
                                 <span className="text-xs font-medium">Thêm sản phẩm</span>
-                              </button>
+                              </Button>
                               {showPicker === i && (
                                 <>
                                   <div
@@ -377,17 +343,20 @@ export default function ComparePage() {
                                         .filter((ap) => !slugs.includes(ap.slug))
                                         .map((ap) => (
                                           <li key={ap.slug}>
-                                            <button
+                                            <Button
                                               onClick={() => addSlot(i, ap.slug)}
-                                              className="w-full cursor-pointer px-4 py-2.5 text-left text-sm transition-colors duration-150 hover:bg-slate-50"
+                                              variant="ghost"
+                                              className="h-auto w-full justify-start rounded-none px-4 py-2.5 hover:bg-slate-50"
                                             >
-                                              <div className="font-medium text-slate-900">
-                                                {ap.name}
+                                              <div className="text-left">
+                                                <div className="text-sm font-medium text-slate-900">
+                                                  {ap.name}
+                                                </div>
+                                                <div className="text-xs text-slate-400">
+                                                  {ap.cat} · {ap.price}
+                                                </div>
                                               </div>
-                                              <div className="text-xs text-slate-400">
-                                                {ap.cat} · {ap.price}
-                                              </div>
-                                            </button>
+                                            </Button>
                                           </li>
                                         ))}
                                       {allProducts.filter((ap) => !slugs.includes(ap.slug))
@@ -439,9 +408,9 @@ export default function ComparePage() {
                     {slots.map((_, i) => (
                       <td key={i} className="px-2 pt-5">
                         {products[i] && (
-                          <button className="w-full cursor-pointer rounded-full bg-blue-600 py-2.5 text-sm font-semibold text-white transition-colors duration-200 hover:bg-blue-500">
+                          <Button className="h-auto w-full rounded-full py-3 font-semibold">
                             Thêm vào giỏ
-                          </button>
+                          </Button>
                         )}
                       </td>
                     ))}
@@ -450,15 +419,6 @@ export default function ComparePage() {
               </table>
             </div>
           )}
-
-          <div className="mt-10 text-center">
-            <Link
-              href="/products"
-              className="inline-block cursor-pointer rounded-full border border-slate-200 px-6 py-2.5 text-sm font-semibold text-slate-700 transition-colors duration-200 hover:bg-slate-100"
-            >
-              Xem thêm sản phẩm
-            </Link>
-          </div>
         </div>
       </main>
   );
