@@ -6,7 +6,7 @@ import { ScrollToTop } from '@/components/scroll-to-top';
 import { CompareProvider } from '@/components/compare-bar';
 import { Toaster } from '@/components/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { Providers } from '@/components/providers';
+import { Providers } from '@/providers/providers';
 import { ReactNode } from 'react';
 
 const beVietnamPro = Be_Vietnam_Pro({

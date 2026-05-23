@@ -13,7 +13,7 @@ import {
   restoreCategory,
   updateCategory,
 } from '@/lib/api/categories';
-import { ApiException } from '@/lib/client';
+import { ApiException } from '@/lib/api/client';
 import { flattenTree, type TreeNode } from '@/types/categories';
 import type { Page } from '@/types/pagination';
 

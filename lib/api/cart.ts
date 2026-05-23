@@ -1,4 +1,4 @@
-import { apiFetch } from '@/lib/client';
+import { apiFetch } from '@/lib/api/client';
 import type { Cart, CartResponse, CartItemResponse } from '@/types/cart';
 import type { AddToCartData, UpdateCartItemData } from '@/schemas/cart';
 

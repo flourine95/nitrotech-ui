@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { toast } from 'sonner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { updateProfile, getMe } from '@/lib/api/auth';
-import { ApiException } from '@/lib/client';
+import { ApiException } from '@/lib/api/client';
 
 const profileSchema = z.object({
   name: z.string().min(2, 'Họ tên tối thiểu 2 ký tự'),

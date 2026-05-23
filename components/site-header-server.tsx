@@ -1,4 +1,4 @@
-import { getSession } from '@/lib/auth';
+import { getSession } from '@/lib/auth/session';
 import { SiteHeader } from './site-header';
 
 export async function SiteHeaderServer() {

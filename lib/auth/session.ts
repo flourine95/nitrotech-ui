@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 import { cache } from 'react';
-import { backendFetch } from './server';
 import type { User } from '@/lib/api/auth';
+import { backendFetch } from '../api/server';
 
 export type AuthUser = Pick<User, 'id' | 'name' | 'email' | 'phone' | 'avatar'>;
 

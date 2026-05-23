@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { Eye, EyeOff, CheckCircle2 } from 'lucide-react';
 import { type RegisterInput, registerSchema } from '@/schemas/auth';
 import { register as registerUser } from '@/lib/api/auth';
-import { ApiException } from '@/lib/client';
+import { ApiException } from '@/lib/api/client';
 import { FieldGroup, Field, FieldLabel, FieldDescription } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';

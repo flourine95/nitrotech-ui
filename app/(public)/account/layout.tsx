@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { getSession } from '@/lib/auth';
+import { getSession } from '@/lib/auth/session';
 import { AccountSidebar } from './account-sidebar';
 import { HydrationBoundary, QueryClient, dehydrate } from '@tanstack/react-query';
 

@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { cookies } from 'next/headers';
-import { backendFetch } from '@/lib/server';
+import { backendFetch } from '@/lib/api/server';
 import type { Category } from '@/lib/api/categories';
 import type { Brand } from '@/lib/api/brands';
 import type { Page } from '@/types/pagination';

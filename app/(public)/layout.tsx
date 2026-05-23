@@ -1,6 +1,6 @@
 import { SiteHeader } from '@/components/site-header';
 import { SiteFooter } from '@/components/site-footer';
-import { getSession } from '@/lib/auth';
+import { getSession } from '@/lib/auth/session';
 import { dehydrate, HydrationBoundary, QueryClient } from '@tanstack/react-query';
 import { ReactNode } from 'react';
 

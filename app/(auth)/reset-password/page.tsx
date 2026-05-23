@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { resetPasswordSchema, type ResetPasswordInput } from '@/schemas/auth';
 import { resetPassword } from '@/lib/api/auth';
-import { ApiException } from '@/lib/client';
+import { ApiException } from '@/lib/api/client';
 import { FieldGroup, Field, FieldLabel, FieldDescription } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';

@@ -21,7 +21,7 @@ import type { Category } from '@/lib/api/categories';
 import { getCategories } from '@/lib/api/categories';
 import { getBrands } from '@/lib/api/brands';
 import type { Brand } from '@/lib/api/brands';
-import { ApiException } from '@/lib/client';
+import { ApiException } from '@/lib/api/client';
 import { Button } from '@/components/ui/button';
 import { useCallback, useMemo, useState, startTransition } from 'react';
 import { useTableSelection } from '@/hooks/use-table-selection';

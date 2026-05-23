@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { changePasswordSchema, type ChangePasswordInput } from '@/schemas/auth';
 import { changePassword, logoutAll } from '@/lib/api/auth';
-import { ApiException } from '@/lib/client';
+import { ApiException } from '@/lib/api/client';
 
 export default function SecurityPage() {
   const router = useRouter();

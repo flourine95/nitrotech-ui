@@ -1,4 +1,4 @@
-import { apiFetch } from '@/lib/client';
+import { apiFetch } from '@/lib/api/client';
 import type { Page } from '@/types/pagination';
 
 export interface ProductVariant {

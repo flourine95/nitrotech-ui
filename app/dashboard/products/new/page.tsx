@@ -1,5 +1,5 @@
 import { cookies } from 'next/headers';
-import { backendFetch } from '@/lib/server';
+import { backendFetch } from '@/lib/api/server';
 import { ProductForm } from '../product-form';
 import type { Category } from '@/lib/api/categories';
 import type { Brand } from '@/lib/api/brands';
