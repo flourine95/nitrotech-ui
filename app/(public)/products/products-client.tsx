@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useQueryState, parseAsInteger, parseAsString, parseAsArrayOf } from 'nuqs';
+import { parseAsArrayOf, parseAsInteger, parseAsString, useQueryState } from 'nuqs';
 import { toast } from 'sonner';
-import { getProducts, getProductFacets } from '@/lib/api/products';
+import { getProductFacets, getProducts } from '@/lib/api/products';
 import { ProductCard } from '@/components/product-card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -16,7 +16,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { ChevronLeft, ChevronRight, Filter, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Filter, Loader2, X } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -34,7 +34,6 @@ const sortOptions = [
 ];
 
 const pageSizeOptions = [
-  { label: '12', value: 12 },
   { label: '24', value: 24 },
   { label: '48', value: 48 },
   { label: '96', value: 96 },
@@ -69,17 +68,6 @@ export function ProductsClient() {
   } = useQuery({
     queryKey: ['products', { page, size, sort, search, category, brands, minPrice, maxPrice }],
     queryFn: async () => {
-      console.log('Fetching products with params:', {
-        page,
-        size,
-        sort,
-        search: search || undefined,
-        category: category || undefined,
-        brand: brands.length > 0 ? brands : undefined,
-        minPrice: minPrice ?? undefined,
-        maxPrice: maxPrice ?? undefined,
-        active: true,
-      });
       const result = await getProducts({
         page,
         size,
@@ -91,15 +79,10 @@ export function ProductsClient() {
         maxPrice: maxPrice ?? undefined,
         active: true,
       });
-      console.log('Products result:', result);
       return result;
     },
     placeholderData: (prev) => prev, // Keep previous data while fetching
   });
-
-  console.log('Products data:', productsData);
-  console.log('Products loading:', productsLoading);
-  console.log('Products error:', error);
 
   // Fetch facets (without filters to get all options)
   const { data: facets, isLoading: facetsLoading } = useQuery({
@@ -130,9 +113,9 @@ export function ProductsClient() {
       <aside className="hidden w-64 shrink-0 lg:block">
         <div className="sticky top-36">
           {/* Filters */}
-          <div className="rounded-lg border border-slate-200 bg-white">
+          <div className="rounded-lg border border-border bg-card">
             {facetsLoading ? (
-              <div className="space-y-4 p-4">
+              <div className="flex flex-col gap-4 p-4">
                 <Skeleton className="h-32" />
                 <Skeleton className="h-32" />
                 <Skeleton className="h-24" />
@@ -150,7 +133,7 @@ export function ProductsClient() {
                       Danh mục
                     </AccordionTrigger>
                     <AccordionContent className="px-4 pb-4">
-                      <div className="space-y-3">
+                      <div className="flex flex-col gap-3">
                         {visibleCategories.map((cat) => {
                           const isSelected = category === cat.slug;
                           return (
@@ -168,7 +151,7 @@ export function ProductsClient() {
                                 className="flex flex-1 cursor-pointer items-center justify-between text-sm font-normal"
                               >
                                 <span className="truncate">{cat.name}</span>
-                                <span className="ml-2 shrink-0 text-xs text-slate-400">
+                                <span className="ml-2 shrink-0 text-xs text-muted-foreground">
                                   {cat.count}
                                 </span>
                               </Label>
@@ -176,14 +159,16 @@ export function ProductsClient() {
                           );
                         })}
                         {categoriesList.length > MAX_VISIBLE_ITEMS && (
-                          <button
+                          <Button
                             onClick={() => setShowAllCategories(!showAllCategories)}
-                            className="text-xs text-slate-500 transition-colors hover:text-slate-700"
+                            variant="ghost"
+                            size="sm"
+                            className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground"
                           >
                             {showAllCategories
                               ? 'Thu gọn'
                               : `Xem thêm ${categoriesList.length - MAX_VISIBLE_ITEMS}`}
-                          </button>
+                          </Button>
                         )}
                       </div>
                     </AccordionContent>
@@ -197,7 +182,7 @@ export function ProductsClient() {
                       Thương hiệu
                     </AccordionTrigger>
                     <AccordionContent className="px-4 pb-4">
-                      <div className="space-y-3">
+                      <div className="flex flex-col gap-3">
                         {visibleBrands.map((brand) => {
                           const isSelected = brands.includes(brand.slug);
                           return (
@@ -219,7 +204,7 @@ export function ProductsClient() {
                                 className="flex flex-1 cursor-pointer items-center justify-between text-sm font-normal"
                               >
                                 <span className="truncate">{brand.name}</span>
-                                <span className="ml-2 shrink-0 text-xs text-slate-400">
+                                <span className="ml-2 shrink-0 text-xs text-muted-foreground">
                                   {brand.count}
                                 </span>
                               </Label>
@@ -227,14 +212,16 @@ export function ProductsClient() {
                           );
                         })}
                         {brandsList.length > MAX_VISIBLE_ITEMS && (
-                          <button
+                          <Button
                             onClick={() => setShowAllBrands(!showAllBrands)}
-                            className="text-xs text-slate-500 transition-colors hover:text-slate-700"
+                            variant="ghost"
+                            size="sm"
+                            className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground"
                           >
                             {showAllBrands
                               ? 'Thu gọn'
                               : `Xem thêm ${brandsList.length - MAX_VISIBLE_ITEMS}`}
-                          </button>
+                          </Button>
                         )}
                       </div>
                     </AccordionContent>
@@ -248,7 +235,7 @@ export function ProductsClient() {
                       Khoảng giá
                     </AccordionTrigger>
                     <AccordionContent className="px-4 pb-4">
-                      <div className="space-y-3">
+                      <div className="flex flex-col gap-3">
                         {facets.priceRanges.map((range, idx) => {
                           const isSelected = minPrice === range.min && maxPrice === range.max;
                           const label =
@@ -276,7 +263,7 @@ export function ProductsClient() {
                                 className="flex flex-1 cursor-pointer items-center justify-between text-sm font-normal"
                               >
                                 <span>{label}</span>
-                                <span className="ml-2 shrink-0 text-xs text-slate-400">
+                                <span className="ml-2 shrink-0 text-xs text-muted-foreground">
                                   {range.count}
                                 </span>
                               </Label>
@@ -299,11 +286,11 @@ export function ProductsClient() {
         <div className="mb-6 space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <p className="text-sm text-slate-500">
-                <span className="font-semibold text-slate-900">{totalElements}</span> sản phẩm
+              <p className="text-sm text-muted-foreground">
+                <span className="font-semibold text-foreground">{totalElements}</span> sản phẩm
               </p>
               {isFetching && !productsLoading && (
-                <div className="size-4 animate-spin rounded-full border-2 border-slate-200 border-t-slate-900" />
+                <Loader2 className="size-4 animate-spin text-muted-foreground" />
               )}
             </div>
             <div className="flex items-center gap-3">
@@ -315,7 +302,7 @@ export function ProductsClient() {
 
               {/* Page size */}
               <div className="flex items-center gap-2">
-                <Label htmlFor="pageSize" className="hidden text-sm text-slate-500 sm:block">
+                <Label htmlFor="pageSize" className="hidden text-sm text-muted-foreground sm:block">
                   Hiển thị:
                 </Label>
                 <Select
@@ -328,7 +315,7 @@ export function ProductsClient() {
                   <SelectTrigger id="pageSize" className="h-9 w-20 rounded-full text-sm">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent position="popper" sideOffset={4} className="min-w-0 w-20">
+                  <SelectContent position="popper" sideOffset={4} className="w-20 min-w-0">
                     {pageSizeOptions.map((o) => (
                       <SelectItem key={o.value} value={String(o.value)}>
                         {o.label}
@@ -340,7 +327,7 @@ export function ProductsClient() {
 
               {/* Sort */}
               <div className="flex items-center gap-2">
-                <Label htmlFor="sort" className="hidden text-sm text-slate-500 sm:block">
+                <Label htmlFor="sort" className="hidden text-sm text-muted-foreground sm:block">
                   Sắp xếp:
                 </Label>
                 <Select
@@ -353,7 +340,7 @@ export function ProductsClient() {
                   <SelectTrigger id="sort" className="h-9 w-40 rounded-full text-sm">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent position="popper" sideOffset={4} className="min-w-0 w-40">
+                  <SelectContent position="popper" sideOffset={4} className="w-40 min-w-0">
                     {sortOptions.map((o) => (
                       <SelectItem key={o.value} value={o.value}>
                         {o.label}
@@ -368,40 +355,46 @@ export function ProductsClient() {
           {/* Active filters */}
           {hasActiveFilters && (
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs text-slate-500">Lọc theo:</span>
+              <span className="text-xs text-muted-foreground">Lọc theo:</span>
               {category && (
-                <button
+                <Button
                   onClick={() => {
                     setCategory(null);
                     setPage(0);
                   }}
-                  className="flex items-center gap-1.5 rounded-full bg-slate-900 px-3 py-1 text-xs text-white transition-colors hover:bg-slate-700"
+                  variant="secondary"
+                  size="sm"
+                  className="h-auto gap-1.5 rounded-full px-3 py-1 text-xs"
                 >
                   <span>{category}</span>
                   <X className="size-3" />
-                </button>
+                </Button>
               )}
               {brands.map((brand) => (
-                <button
+                <Button
                   key={brand}
                   onClick={() => {
                     setBrands(brands.filter((b) => b !== brand));
                     setPage(0);
                   }}
-                  className="flex items-center gap-1.5 rounded-full bg-slate-900 px-3 py-1 text-xs text-white transition-colors hover:bg-slate-700"
+                  variant="secondary"
+                  size="sm"
+                  className="h-auto gap-1.5 rounded-full px-3 py-1 text-xs"
                 >
                   <span>{brand}</span>
                   <X className="size-3" />
-                </button>
+                </Button>
               ))}
               {(minPrice !== null || maxPrice !== null) && (
-                <button
+                <Button
                   onClick={() => {
                     setMinPrice(null);
                     setMaxPrice(null);
                     setPage(0);
                   }}
-                  className="flex items-center gap-1.5 rounded-full bg-slate-900 px-3 py-1 text-xs text-white transition-colors hover:bg-slate-700"
+                  variant="secondary"
+                  size="sm"
+                  className="h-auto gap-1.5 rounded-full px-3 py-1 text-xs"
                 >
                   <span>
                     {minPrice !== null && maxPrice !== null
@@ -411,9 +404,9 @@ export function ProductsClient() {
                         : `Dưới ${maxPrice?.toLocaleString()}₫`}
                   </span>
                   <X className="size-3" />
-                </button>
+                </Button>
               )}
-              <button
+              <Button
                 onClick={() => {
                   setCategory(null);
                   setBrands([]);
@@ -421,10 +414,12 @@ export function ProductsClient() {
                   setMaxPrice(null);
                   setPage(0);
                 }}
-                className="text-xs text-slate-500 transition-colors hover:text-slate-700"
+                variant="ghost"
+                size="sm"
+                className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground"
               >
                 Xóa tất cả
-              </button>
+              </Button>
             </div>
           )}
         </div>
@@ -437,8 +432,8 @@ export function ProductsClient() {
             ))}
           </div>
         ) : products.length === 0 ? (
-          <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center">
-            <p className="text-slate-500">Không tìm thấy sản phẩm</p>
+          <div className="rounded-2xl border border-border bg-card p-12 text-center">
+            <p className="text-muted-foreground">Không tìm thấy sản phẩm</p>
           </div>
         ) : (
           <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">

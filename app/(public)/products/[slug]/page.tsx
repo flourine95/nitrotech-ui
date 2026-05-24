@@ -1,12 +1,15 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getProduct, getRelatedProducts, getAllProducts } from '@/lib/data/products';
+import { cookies } from 'next/headers';
+import { ChevronRight } from 'lucide-react';
+import { backendFetch } from '@/lib/api/server';
+import type { Product } from '@/lib/api/products';
 import { ProductActions } from './product-actions';
-
-export async function generateStaticParams() {
-  return getAllProducts().map((p) => ({ slug: p.slug }));
-}
+import { ProductImagePlaceholder } from '@/components/product-image-placeholder';
+import { ProductRating } from '@/components/product-rating';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 export async function generateMetadata({
   params,
@@ -14,8 +17,21 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const product = getProduct(slug);
-  return { title: product?.name ?? 'Sản phẩm' };
+  
+  try {
+    const cookieStore = await cookies();
+    const cookieHeader = cookieStore.getAll().map(c => `${c.name}=${c.value}`).join('; ');
+    const res = await backendFetch(`/api/products/${slug}`, { cookieHeader });
+    
+    if (!res.ok) {
+      return { title: 'Sản phẩm' };
+    }
+    
+    const { data: product } = await res.json() as { data: Product };
+    return { title: product.name };
+  } catch {
+    return { title: 'Sản phẩm' };
+  }
 }
 
 const reviewsData = [
@@ -44,121 +60,82 @@ const reviewsData = [
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const product = getProduct(slug);
-  if (!product) notFound();
-  const related = getRelatedProducts(product.relatedSlugs);
+  
+  // Fetch product from API
+  const cookieStore = await cookies();
+  const cookieHeader = cookieStore.getAll().map(c => `${c.name}=${c.value}`).join('; ');
+  
+  let product: Product;
+  try {
+    const res = await backendFetch(`/api/products/${slug}`, { cookieHeader });
+    if (!res.ok) {
+      notFound();
+    }
+    const json = await res.json() as { data: Product };
+    product = json.data;
+  } catch {
+    notFound();
+  }
+
+  // Mock data for now (will be replaced with API later)
+  const mockSpecs = [
+    { label: 'Thương hiệu', value: product.brandName || 'N/A' },
+    { label: 'Danh mục', value: product.categoryName || 'N/A' },
+    { label: 'SKU', value: product.slug },
+  ];
+  
+  // Add specs from product.specs if available
+  const specs = product.specs 
+    ? [...mockSpecs, ...Object.entries(product.specs).map(([label, value]) => ({ label, value }))]
+    : mockSpecs;
 
   return (
-    <main className="min-h-screen bg-[#F8FAFC]">
-        {/* Breadcrumb */}
-        <div className="border-b border-slate-100 bg-white">
-          <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-2 px-6 py-3 text-sm text-slate-400">
-            <Link
-              href="/"
-              className="cursor-pointer transition-colors duration-150 hover:text-slate-700"
-            >
-              Trang chủ
-            </Link>
-            <svg
-              viewBox="0 0 24 24"
-              className="h-3.5 w-3.5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              aria-hidden="true"
-            >
-              <path d="M9 18l6-6-6-6" />
-            </svg>
-            <Link
-              href="/products"
-              className="cursor-pointer transition-colors duration-150 hover:text-slate-700"
-            >
-              Sản phẩm
-            </Link>
-            <svg
-              viewBox="0 0 24 24"
-              className="h-3.5 w-3.5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              aria-hidden="true"
-            >
-              <path d="M9 18l6-6-6-6" />
-            </svg>
-            <Link
-              href={`/products?cat=${product.catSlug}`}
-              className="cursor-pointer transition-colors duration-150 hover:text-slate-700"
-            >
-              {product.cat}
-            </Link>
-            <svg
-              viewBox="0 0 24 24"
-              className="h-3.5 w-3.5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              aria-hidden="true"
-            >
-              <path d="M9 18l6-6-6-6" />
-            </svg>
-            <span className="max-w-52 truncate font-medium text-slate-700">{product.name}</span>
-          </div>
+    <main className="min-h-screen bg-muted/30">
+      {/* Breadcrumb */}
+      <div className="border-b border-border bg-card">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-2 px-6 py-3 text-sm text-muted-foreground">
+          <Link href="/" className="transition-colors hover:text-foreground">
+            Trang chủ
+          </Link>
+          <ChevronRight className="size-3.5" aria-hidden="true" />
+          <Link href="/products" className="transition-colors hover:text-foreground">
+            Sản phẩm
+          </Link>
+          <ChevronRight className="size-3.5" aria-hidden="true" />
+          {product.categoryName && (
+            <>
+              <Link
+                href={`/products?category=${product.categoryName}`}
+                className="transition-colors hover:text-foreground"
+              >
+                {product.categoryName}
+              </Link>
+              <ChevronRight className="size-3.5" aria-hidden="true" />
+            </>
+          )}
+          <span className="max-w-52 truncate font-medium text-foreground">{product.name}</span>
         </div>
+      </div>
 
         <div className="mx-auto max-w-7xl px-6 py-10">
           {/* Product main */}
           <div className="mb-16 grid gap-12 lg:grid-cols-2">
             {/* Images */}
             <div>
-              <div className="mb-4 flex aspect-square items-center justify-center rounded-3xl border border-slate-200 bg-white shadow-sm">
-                <svg
-                  viewBox="0 0 200 140"
-                  className="h-auto w-48 text-slate-300"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  aria-hidden="true"
-                >
-                  <rect x="10" y="8" width="180" height="110" rx="6" strokeWidth="2" />
-                  <rect
-                    x="20"
-                    y="18"
-                    width="160"
-                    height="90"
-                    rx="3"
-                    fill="rgba(59,130,246,0.05)"
-                    stroke="rgba(59,130,246,0.2)"
-                  />
-                  <path d="M4 118h192l-8 14H12l-8-14z" strokeWidth="2" />
-                </svg>
+              <div className="mb-4 flex aspect-square items-center justify-center rounded-3xl border border-border bg-card shadow-sm">
+                <ProductImagePlaceholder size="lg" className="w-48" />
               </div>
               <div className="flex gap-3">
                 {[1, 2, 3, 4].map((i) => (
-                  <button
+                  <Button
                     key={i}
-                    className={`flex aspect-square flex-1 cursor-pointer items-center justify-center rounded-2xl border bg-white transition-colors duration-200 ${i === 1 ? 'border-slate-900' : 'border-slate-200 hover:border-slate-400'}`}
+                    variant={i === 1 ? 'outline' : 'ghost'}
+                    size="icon"
+                    className="aspect-square flex-1 rounded-2xl"
                     aria-label={`Ảnh ${i}`}
                   >
-                    <svg
-                      viewBox="0 0 40 30"
-                      className="h-auto w-8 text-slate-300"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      aria-hidden="true"
-                    >
-                      <rect x="2" y="2" width="36" height="26" rx="2" />
-                      <rect
-                        x="5"
-                        y="5"
-                        width="30"
-                        height="20"
-                        rx="1"
-                        fill="rgba(59,130,246,0.04)"
-                        stroke="rgba(59,130,246,0.15)"
-                      />
-                    </svg>
-                  </button>
+                    <ProductImagePlaceholder size="sm" />
+                  </Button>
                 ))}
               </div>
             </div>
@@ -166,74 +143,68 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
             {/* Info */}
             <div>
               <div className="mb-3 flex items-center gap-2">
-                <span
-                  className={`rounded-full px-3 py-1 text-xs font-semibold ${product.badgeColor}`}
-                >
-                  {product.badge}
-                </span>
-                <span className="text-xs text-slate-400">SKU: {product.sku}</span>
+                {product.badge && (
+                  <Badge className="bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400">
+                    {product.badge}
+                  </Badge>
+                )}
+                <span className="text-xs text-muted-foreground">SKU: {product.slug}</span>
               </div>
-              <h1 className="mb-2 text-2xl font-bold text-slate-900 sm:text-3xl">{product.name}</h1>
-              <p className="mb-4 text-sm leading-relaxed text-slate-500">{product.description}</p>
+              <h1 className="mb-2 text-2xl font-bold text-foreground sm:text-3xl">
+                {product.name}
+              </h1>
+              {product.description && (
+                <p className="mb-4 text-sm leading-relaxed text-muted-foreground">
+                  {product.description}
+                </p>
+              )}
 
               {/* Rating */}
               <div className="mb-5 flex items-center gap-3">
-                <div className="flex gap-1" aria-label={`${product.rating} sao`}>
-                  {[1, 2, 3, 4, 5].map((s) => (
-                    <svg
-                      key={s}
-                      viewBox="0 0 24 24"
-                      className={`h-4 w-4 ${s <= Math.floor(product.rating) ? 'text-amber-400' : 'text-slate-200'} fill-current`}
-                      aria-hidden="true"
-                    >
-                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                    </svg>
-                  ))}
-                </div>
-                <span className="text-sm font-semibold text-slate-900">{product.rating}</span>
-                <span className="text-sm text-slate-400">{product.reviews} đánh giá</span>
-                <span
-                  className={`text-sm font-medium ${product.inStock ? 'text-green-600' : 'text-rose-500'}`}
-                >
-                  {product.inStock ? 'Còn hàng' : 'Hết hàng'}
+                <ProductRating rating={product.rating || 0} showReviews={false} />
+                <span className="text-sm font-semibold text-foreground">{product.rating || 0}</span>
+                <span className="text-sm text-muted-foreground">{product.reviewCount || 0} đánh giá</span>
+                <span className="text-sm font-medium text-green-600">
+                  {product.active ? 'Còn hàng' : 'Hết hàng'}
                 </span>
               </div>
 
               {/* Price + Variants + Colors + Qty + CTAs + Trust — client */}
               <ProductActions
                 slug={product.slug}
-                price={product.price}
-                old={product.old}
-                discount={product.discount}
-                variants={product.variants}
-                colors={product.colors}
-                stockCount={product.stockCount}
-                warranty={product.warranty}
+                price={product.priceMin ? `${product.priceMin.toLocaleString()}₫` : 'Liên hệ'}
+                old={product.priceMax && product.priceMax > (product.priceMin || 0) ? `${product.priceMax.toLocaleString()}₫` : ''}
+                discount={product.priceMax && product.priceMin && product.priceMax > product.priceMin ? `-${Math.round((1 - product.priceMin / product.priceMax) * 100)}%` : ''}
+                variants={product.variants?.map(v => v.name) || []}
+                colors={[]}
+                stockCount={product.variantCount || 0}
+                warranty="12 tháng chính hãng"
               />
             </div>
           </div>
           {/* Specs */}
           <div className="mb-16">
-            <div className="mb-8 flex gap-1 border-b border-slate-200">
-              {['Thông số kỹ thuật', `Đánh giá (${product.reviews})`, 'Mô tả'].map((tab, i) => (
-                <button
+            <div className="mb-8 flex gap-1 border-b border-border">
+              {['Thông số kỹ thuật', `Đánh giá (${product.reviewCount || 0})`, 'Mô tả'].map((tab, i) => (
+                <Button
                   key={tab}
-                  className={`-mb-px cursor-pointer border-b-2 px-5 py-3 text-sm font-medium transition-colors duration-200 ${i === 0 ? 'border-slate-900 text-slate-900' : 'border-transparent text-slate-500 hover:text-slate-900'}`}
+                  variant="ghost"
+                  className={`-mb-px rounded-none border-b-2 px-5 py-3 ${i === 0 ? 'border-foreground text-foreground' : 'border-transparent text-muted-foreground'}`}
                 >
                   {tab}
-                </button>
+                </Button>
               ))}
             </div>
-            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
               <table className="w-full text-sm">
                 <caption className="sr-only">Thông số kỹ thuật {product.name}</caption>
                 <tbody>
-                  {product.specs.map((s, i) => (
-                    <tr key={s.label} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
-                      <td className="w-44 border-r border-slate-100 px-6 py-3.5 font-medium text-slate-600">
+                  {specs.map((s, i) => (
+                    <tr key={s.label} className={i % 2 === 0 ? 'bg-card' : 'bg-muted/30'}>
+                      <td className="w-44 border-r border-border px-6 py-3.5 font-medium text-muted-foreground">
                         {s.label}
                       </td>
-                      <td className="px-6 py-3.5 text-slate-900">{s.value}</td>
+                      <td className="px-6 py-3.5 text-foreground">{s.value}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -244,27 +215,18 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
           {/* Reviews */}
           <div className="mb-16">
             <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-slate-900">Đánh giá từ khách hàng</h2>
-              <button className="cursor-pointer rounded-full border border-slate-200 px-5 py-2 text-sm font-semibold text-slate-700 transition-colors duration-200 hover:bg-slate-100">
+              <h2 className="text-xl font-bold text-foreground">Đánh giá từ khách hàng</h2>
+              <Button variant="outline" className="rounded-full">
                 Viết đánh giá
-              </button>
+              </Button>
             </div>
-            <div className="mb-6 flex items-center gap-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="mb-6 flex items-center gap-8 rounded-2xl border border-border bg-card p-6 shadow-sm">
               <div className="text-center">
-                <div className="text-5xl font-bold text-slate-900">{product.rating}</div>
-                <div className="my-2 flex justify-center gap-1">
-                  {[1, 2, 3, 4, 5].map((s) => (
-                    <svg
-                      key={s}
-                      viewBox="0 0 24 24"
-                      className={`h-4 w-4 ${s <= Math.floor(product.rating) ? 'text-amber-400' : 'text-slate-200'} fill-current`}
-                      aria-hidden="true"
-                    >
-                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                    </svg>
-                  ))}
+                <div className="text-5xl font-bold text-foreground">{product.rating || 0}</div>
+                <div className="my-2 flex justify-center">
+                  <ProductRating rating={product.rating || 0} showReviews={false} />
                 </div>
-                <div className="text-xs text-slate-400">{product.reviews} đánh giá</div>
+                <div className="text-xs text-muted-foreground">{product.reviewCount || 0} đánh giá</div>
               </div>
               <div className="flex-1 space-y-2">
                 {[
@@ -275,35 +237,29 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                   [1, 1],
                 ].map(([star, pct]) => (
                   <div key={star} className="flex items-center gap-3">
-                    <span className="w-4 text-xs text-slate-500">{star}</span>
-                    <svg
-                      viewBox="0 0 24 24"
-                      className="h-3 w-3 shrink-0 fill-current text-amber-400"
-                      aria-hidden="true"
-                    >
-                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                    </svg>
-                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
+                    <span className="w-4 text-xs text-muted-foreground">{star}</span>
+                    <ProductRating rating={1} showReviews={false} size="sm" />
+                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
                       <div
-                        className="h-full rounded-full bg-amber-400"
+                        className="h-full rounded-full bg-yellow-500"
                         style={{ width: `${pct}%` }}
                       />
                     </div>
-                    <span className="w-8 text-xs text-slate-400">{pct}%</span>
+                    <span className="w-8 text-xs text-muted-foreground">{pct}%</span>
                   </div>
                 ))}
               </div>
             </div>
-            <div className="space-y-4">
+            <div className="flex flex-col gap-4">
               {reviewsData.map((r) => (
                 <article
                   key={r.name}
-                  className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+                  className="rounded-2xl border border-border bg-card p-6 shadow-sm"
                 >
                   <div className="mb-3 flex items-start justify-between">
                     <div className="flex items-center gap-3">
                       <div
-                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white"
+                        className="flex size-9 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white"
                         aria-hidden="true"
                       >
                         {r.name
@@ -313,80 +269,22 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                           .join('')}
                       </div>
                       <div>
-                        <div className="text-sm font-semibold text-slate-900">{r.name}</div>
-                        <div className="text-xs text-slate-400">{r.role}</div>
+                        <div className="text-sm font-semibold text-foreground">{r.name}</div>
+                        <div className="text-xs text-muted-foreground">{r.role}</div>
                       </div>
                     </div>
-                    <span className="text-xs text-slate-400">{r.date}</span>
+                    <span className="text-xs text-muted-foreground">{r.date}</span>
                   </div>
-                  <div className="mb-2 flex gap-1" aria-label={`${r.rating} sao`}>
-                    {[1, 2, 3, 4, 5].map((s) => (
-                      <svg
-                        key={s}
-                        viewBox="0 0 24 24"
-                        className={`h-3.5 w-3.5 ${s <= r.rating ? 'text-amber-400' : 'text-slate-200'} fill-current`}
-                        aria-hidden="true"
-                      >
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                      </svg>
-                    ))}
+                  <div className="mb-2">
+                    <ProductRating rating={r.rating} showReviews={false} size="sm" />
                   </div>
-                  <p className="text-sm leading-relaxed text-slate-600">{r.text}</p>
+                  <p className="text-sm leading-relaxed text-muted-foreground">{r.text}</p>
                 </article>
               ))}
             </div>
           </div>
 
-          {/* Related */}
-          {related.length > 0 && (
-            <div>
-              <h2 className="mb-6 text-xl font-bold text-slate-900">Sản phẩm liên quan</h2>
-              <div className="grid gap-5 sm:grid-cols-3">
-                {related.map((p) => (
-                  <Link
-                    key={p.slug}
-                    href={`/products/${p.slug}`}
-                    className="group flex cursor-pointer flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition-all duration-200 hover:border-slate-300 hover:shadow-lg"
-                  >
-                    <div className="flex h-40 items-center justify-center border-b border-slate-100 bg-slate-50">
-                      <svg
-                        viewBox="0 0 80 60"
-                        className="h-auto w-20 text-slate-300"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        aria-hidden="true"
-                      >
-                        <rect x="5" y="5" width="70" height="50" rx="4" />
-                        <rect
-                          x="12"
-                          y="12"
-                          width="56"
-                          height="36"
-                          rx="2"
-                          fill="rgba(59,130,246,0.04)"
-                          stroke="rgba(59,130,246,0.15)"
-                        />
-                      </svg>
-                    </div>
-                    <div className="p-4">
-                      <div className="mb-1 text-xs text-slate-400">{p.cat}</div>
-                      <div className="mb-3 text-sm font-semibold text-slate-900">{p.name}</div>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="text-sm font-bold text-slate-900">{p.price}</div>
-                          <div className="text-xs text-slate-300 line-through">{p.old}</div>
-                        </div>
-                        <button className="cursor-pointer rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white transition-colors duration-200 hover:bg-slate-700">
-                          Mua
-                        </button>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
+          {/* Related - Hidden for now since we don't have related products from API */}
         </div>
       </main>
   );

@@ -3,8 +3,10 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
+import { Loader2, GitCompare, Heart, Shield, Zap, Package, CreditCard } from 'lucide-react';
 import { useCartStore } from '@/stores/cart.store';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 interface ProductActionsProps {
   slug: string;
@@ -84,30 +86,39 @@ export function ProductActions({
     }
   };
 
+  const trustBadges = [
+    { icon: Shield, text: warranty },
+    { icon: Zap, text: 'Giao trong 2 giờ' },
+    { icon: Package, text: 'Đổi trả trong 30 ngày' },
+    { icon: CreditCard, text: 'Trả góp 0% lãi suất' },
+  ];
+
   return (
     <>
       {/* Price */}
-      <div className="mb-6 flex items-baseline gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-4">
-        <span className="text-3xl font-bold text-slate-900">{price}</span>
-        <span className="text-lg text-slate-300 line-through">{old}</span>
-        <span className="rounded-full bg-rose-50 px-2.5 py-1 text-sm font-semibold text-rose-600">
+      <div className="mb-6 flex items-baseline gap-3 rounded-2xl border border-border bg-muted/30 p-4">
+        <span className="text-3xl font-bold text-foreground">{price}</span>
+        <span className="text-lg text-muted-foreground line-through">{old}</span>
+        <Badge variant="destructive" className="rounded-full">
           {discount}
-        </span>
+        </Badge>
       </div>
 
       {/* Variants */}
       {variants.length > 0 && (
         <div className="mb-6">
-          <p className="mb-2 text-sm font-semibold text-slate-900">Cấu hình</p>
+          <p className="mb-2 text-sm font-semibold text-foreground">Cấu hình</p>
           <div className="flex flex-wrap gap-2">
             {variants.map((v, i) => (
-              <button
+              <Button
                 key={v}
                 onClick={() => setActiveVariant(i)}
-                className={`cursor-pointer rounded-full border px-4 py-2 text-sm font-medium transition-colors duration-200 ${i === activeVariant ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 text-slate-600 hover:border-slate-400'}`}
+                variant={i === activeVariant ? 'default' : 'outline'}
+                size="sm"
+                className="rounded-full"
               >
                 {v}
-              </button>
+              </Button>
             ))}
           </div>
         </div>
@@ -116,13 +127,13 @@ export function ProductActions({
       {/* Colors */}
       {colors.length > 0 && (
         <div className="mb-6">
-          <p className="mb-2 text-sm font-semibold text-slate-900">Màu sắc</p>
+          <p className="mb-2 text-sm font-semibold text-foreground">Màu sắc</p>
           <div className="flex gap-2">
             {colors.map((c, i) => (
               <button
                 key={c.name}
                 onClick={() => setActiveColor(i)}
-                className={`h-8 w-8 rounded-full ${c.color} cursor-pointer transition-all duration-200 ${i === activeColor ? `ring-2 ring-offset-2 ${c.ring}` : 'hover:ring-2 hover:ring-slate-300 hover:ring-offset-2'}`}
+                className={`size-8 rounded-full ${c.color} transition-all ${i === activeColor ? `ring-2 ring-offset-2 ${c.ring}` : 'hover:ring-2 hover:ring-muted hover:ring-offset-2'}`}
                 aria-label={c.name}
                 title={c.name}
               />
@@ -133,162 +144,99 @@ export function ProductActions({
 
       {/* Quantity */}
       <div className="mb-6">
-        <p className="mb-2 text-sm font-semibold text-slate-900">Số lượng</p>
+        <p className="mb-2 text-sm font-semibold text-foreground">Số lượng</p>
         <div className="flex items-center gap-3">
-          <div className="flex items-center overflow-hidden rounded-full border border-slate-200">
-            <button
+          <div className="flex items-center overflow-hidden rounded-full border border-border">
+            <Button
               onClick={() => setQty((q) => Math.max(1, q - 1))}
-              className="cursor-pointer px-4 py-2 text-lg leading-none text-slate-600 transition-colors duration-200 hover:bg-slate-100"
+              variant="ghost"
+              size="sm"
+              className="rounded-none px-4"
               aria-label="Giảm"
             >
               −
-            </button>
+            </Button>
             <span
-              className="min-w-12 px-4 py-2 text-center text-sm font-semibold text-slate-900"
+              className="min-w-12 px-4 text-center text-sm font-semibold text-foreground"
               aria-live="polite"
             >
               {qty}
             </span>
-            <button
+            <Button
               onClick={() => setQty((q) => Math.min(stockCount, q + 1))}
-              className="cursor-pointer px-4 py-2 text-lg leading-none text-slate-600 transition-colors duration-200 hover:bg-slate-100"
+              variant="ghost"
+              size="sm"
+              className="rounded-none px-4"
               aria-label="Tăng"
             >
               +
-            </button>
+            </Button>
           </div>
-          <span className="text-xs text-slate-400">Còn {stockCount} sản phẩm</span>
+          <span className="text-xs text-muted-foreground">Còn {stockCount} sản phẩm</span>
         </div>
       </div>
 
       {/* CTAs */}
       <div className="mb-6 flex gap-3">
-        <button
+        <Button
           onClick={handleAddToCart}
           disabled={isLoading}
-          className="flex flex-1 items-center justify-center gap-2 rounded-full bg-slate-900 py-3.5 text-center text-sm font-semibold text-white transition-colors duration-200 hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+          variant="secondary"
+          className="flex-1 rounded-full"
         >
           {isLoading ? (
             <>
-              <Loader2 className="size-4 animate-spin" />
+              <Loader2 data-icon="inline-start" className="animate-spin" />
               Đang thêm...
             </>
           ) : (
             'Thêm vào giỏ'
           )}
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={handleBuyNow}
           disabled={isLoading}
-          className="flex flex-1 items-center justify-center rounded-full bg-blue-600 py-3.5 text-center text-sm font-semibold text-white transition-colors duration-200 hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex-1 rounded-full bg-blue-600 hover:bg-blue-500"
         >
           Mua ngay
-        </button>
-        <Link
-          href={`/compare?add=${slug}`}
-          className="cursor-pointer rounded-full border border-slate-200 p-3.5 text-slate-400 transition-colors duration-200 hover:border-blue-200 hover:text-blue-500"
+        </Button>
+        <Button
+          asChild
+          variant="outline"
+          size="icon"
+          className="rounded-full"
           aria-label="So sánh"
           title="So sánh"
         >
-          <svg
-            viewBox="0 0 24 24"
-            className="h-5 w-5"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            aria-hidden="true"
-          >
-            <rect x="3" y="3" width="7" height="18" rx="1" />
-            <rect x="14" y="3" width="7" height="18" rx="1" />
-          </svg>
-        </Link>
-        <button
+          <Link href={`/compare?add=${slug}`}>
+            <GitCompare className="size-5" />
+          </Link>
+        </Button>
+        <Button
           onClick={() => toast.success('Đã thêm vào yêu thích')}
-          className="cursor-pointer rounded-full border border-slate-200 p-3.5 text-slate-400 transition-colors duration-200 hover:border-rose-200 hover:text-rose-500"
+          variant="outline"
+          size="icon"
+          className="rounded-full hover:text-rose-500"
           aria-label="Yêu thích"
         >
-          <svg
-            viewBox="0 0 24 24"
-            className="h-5 w-5"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            aria-hidden="true"
-          >
-            <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
-          </svg>
-        </button>
+          <Heart className="size-5" />
+        </Button>
       </div>
 
       {/* Trust badges */}
       <div className="grid grid-cols-2 gap-3">
-        {[
-          {
-            icon: (
-              <svg
-                viewBox="0 0 24 24"
-                className="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-              >
-                <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-              </svg>
-            ),
-            text: warranty,
-          },
-          {
-            icon: (
-              <svg
-                viewBox="0 0 24 24"
-                className="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-              >
-                <path d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            ),
-            text: 'Giao trong 2 giờ',
-          },
-          {
-            icon: (
-              <svg
-                viewBox="0 0 24 24"
-                className="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-              >
-                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                <polyline points="22,6 12,13 2,6" />
-              </svg>
-            ),
-            text: 'Đổi trả trong 30 ngày',
-          },
-          {
-            icon: (
-              <svg
-                viewBox="0 0 24 24"
-                className="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-              >
-                <path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-              </svg>
-            ),
-            text: 'Trả góp 0% lãi suất',
-          },
-        ].map((b) => (
-          <div
-            key={b.text}
-            className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50 p-3 text-xs text-slate-600"
-          >
-            <span className="shrink-0 text-blue-600">{b.icon}</span>
-            {b.text}
-          </div>
-        ))}
+        {trustBadges.map((b) => {
+          const Icon = b.icon;
+          return (
+            <div
+              key={b.text}
+              className="flex items-center gap-2 rounded-xl border border-border bg-muted/30 p-3 text-xs text-muted-foreground"
+            >
+              <Icon className="size-4 shrink-0 text-blue-600" />
+              {b.text}
+            </div>
+          );
+        })}
       </div>
     </>
   );
