@@ -9,12 +9,12 @@ interface ProductCardProps {
   name: string;
   cat: string;
   price: string;
-  old: string;
-  badge: string;
-  badgeColor: string;
+  old?: string;
+  badge?: string;
+  badgeColor?: string;
   accent?: string;
   rating: number;
-  reviews: number;
+  reviews?: number;
   specs?: string[];
 }
 
@@ -76,11 +76,13 @@ export function ProductCard({
             stroke="rgba(59,130,246,0.15)"
           />
         </svg>
-        <span
-          className={`absolute top-3 left-3 rounded-full px-3 py-1 text-xs font-semibold ${badgeColor}`}
-        >
-          {badge}
-        </span>
+        {badge && (
+          <span
+            className={`absolute top-3 left-3 rounded-full px-3 py-1 text-xs font-semibold ${badgeColor || 'bg-blue-100 text-blue-700'}`}
+          >
+            {badge}
+          </span>
+        )}
         <div className="absolute top-3 right-3 flex items-center gap-1">
           <Tooltip>
             <TooltipTrigger asChild>
@@ -156,12 +158,14 @@ export function ProductCard({
         )}
         <div className="mb-4 flex items-center gap-1.5">
           <Stars rating={rating} />
-          <span className="text-xs text-slate-400">({reviews})</span>
+          {reviews !== undefined && reviews > 0 && (
+            <span className="text-xs text-slate-400">({reviews})</span>
+          )}
         </div>
         <div className="mt-auto flex items-center justify-between">
           <div>
             <div className="text-base font-bold text-slate-900">{price}</div>
-            <div className="text-sm text-slate-300 line-through">{old}</div>
+            {old && <div className="text-sm text-slate-300 line-through">{old}</div>}
           </div>
           <button
             onClick={(e) => {
