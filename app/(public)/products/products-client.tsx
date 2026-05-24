@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useQueryState, parseAsInteger, parseAsString, parseAsArrayOf } from 'nuqs';
+import { toast } from 'sonner';
 import { getProducts, getProductFacets } from '@/lib/api/products';
 import { ProductCard } from '@/components/product-card';
 import { Button } from '@/components/ui/button';
@@ -33,6 +34,7 @@ const sortOptions = [
 ];
 
 const pageSizeOptions = [
+  { label: '12', value: 12 },
   { label: '24', value: 24 },
   { label: '48', value: 48 },
   { label: '96', value: 96 },
@@ -450,6 +452,12 @@ export function ProductsClient() {
                 badge={p.badge || undefined}
                 rating={p.rating || 0}
                 reviews={p.reviewCount}
+                onAddToCart={(product) => {
+                  toast.success('Đã thêm vào giỏ hàng', { description: product.name });
+                }}
+                onAddToWishlist={(product) => {
+                  toast.success('Đã thêm vào yêu thích', { description: product.name });
+                }}
               />
             ))}
           </div>
