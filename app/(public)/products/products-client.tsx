@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useTransition } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { parseAsArrayOf, parseAsInteger, parseAsString, useQueryState } from 'nuqs';
 import { toast } from 'sonner';
@@ -10,6 +10,7 @@ import { ProductCard } from '@/components/product-card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Checkbox } from '@/components/ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import {
@@ -43,17 +44,17 @@ const pageSizeOptions = [
 
 export function ProductsClient() {
   // URL state
-  const [page, setPage] = useQueryState('page', parseAsInteger.withDefault(0));
-  const [size, setSize] = useQueryState('size', parseAsInteger.withDefault(24));
-  const [sort, setSort] = useQueryState('sort', parseAsString.withDefault('createdAt,desc'));
-  const [search] = useQueryState('search', parseAsString.withDefault(''));
-  const [category, setCategory] = useQueryState('category', parseAsString);
+  const [page, setPage] = useQueryState('page', parseAsInteger.withDefault(0).withOptions({ shallow: true }));
+  const [size, setSize] = useQueryState('size', parseAsInteger.withDefault(24).withOptions({ shallow: true }));
+  const [sort, setSort] = useQueryState('sort', parseAsString.withDefault('createdAt,desc').withOptions({ shallow: true }));
+  const [search] = useQueryState('search', parseAsString.withDefault('').withOptions({ shallow: true }));
+  const [category, setCategory] = useQueryState('category', parseAsString.withOptions({ shallow: true }));
   const [brands, setBrands] = useQueryState(
     'brands',
-    parseAsArrayOf(parseAsString).withDefault([]),
+    parseAsArrayOf(parseAsString).withDefault([]).withOptions({ shallow: true }),
   );
-  const [minPrice, setMinPrice] = useQueryState('minPrice', parseAsInteger);
-  const [maxPrice, setMaxPrice] = useQueryState('maxPrice', parseAsInteger);
+  const [minPrice, setMinPrice] = useQueryState('minPrice', parseAsInteger.withOptions({ shallow: true }));
+  const [maxPrice, setMaxPrice] = useQueryState('maxPrice', parseAsInteger.withOptions({ shallow: true }));
 
   // Local state for filter search
   const [categorySearch, setCategorySearch] = useState('');
@@ -100,12 +101,28 @@ export function ProductsClient() {
       return result;
     },
     placeholderData: (prev) => prev, // Keep previous data while fetching
+    staleTime: 2 * 60 * 1000, // Cache for 2 minutes
   });
 
-  // Fetch facets (without filters to get all options)
+  // Debounced filters for facets (avoid too many API calls)
+  const [debouncedBrands, setDebouncedBrands] = useState<string[]>([]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedBrands(brands);
+    }, 500); // Wait 500ms after user stops selecting brands
+    return () => clearTimeout(timer);
+  }, [brands]);
+
+  // Fetch facets WITHOUT any filters
+  // Show original counts for all facets (not affected by current filters)
+  // This provides a stable reference for users to understand the full catalog
   const { data: facets, isLoading: facetsLoading } = useQuery({
-    queryKey: ['product-facets-all'],
-    queryFn: () => getProductFacets({ active: true }),
+    queryKey: ['product-facets'],
+    queryFn: () => getProductFacets({ 
+      active: true,
+      // DO NOT include any filters - show original counts
+    }),
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
@@ -172,21 +189,15 @@ export function ProductsClient() {
                         placeholder="Tìm danh mục..."
                         value={categorySearch}
                         onChange={(e) => setCategorySearch(e.target.value)}
-                        className="h-9 rounded-full pr-9 pl-9 text-sm font-normal focus-visible:ring-1"
+                        className="h-9 rounded-full pl-9 text-sm font-normal focus-visible:ring-1"
                       />
-                      {categorySearch && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setCategorySearch('')}
-                          className="absolute top-1/2 right-1 size-7 -translate-y-1/2"
-                          aria-label="Xóa tìm kiếm"
-                        >
-                          <X className="size-4" />
-                        </Button>
-                      )}
                     </div>
-                    <div
+                    <RadioGroup
+                      value={category || ''}
+                      onValueChange={(value) => {
+                        setCategory(value || null);
+                        setPage(0);
+                      }}
                       className={`space-y-3 pr-2 ${filteredCategories.length > 8 ? 'max-h-64 overflow-y-auto' : ''}`}
                     >
                       {filteredCategories.length === 0 ? (
@@ -194,18 +205,20 @@ export function ProductsClient() {
                           Không tìm thấy danh mục
                         </p>
                       ) : (
-                        filteredCategories.map((cat) => {
-                          const isSelected = category === cat.slug;
-                          return (
+                        <>
+                          {/* Option "Tất cả" luôn hiển thị */}
+                          <div className="flex items-center gap-2">
+                            <RadioGroupItem value="" id="cat-all" />
+                            <Label
+                              htmlFor="cat-all"
+                              className="flex flex-1 cursor-pointer items-center text-sm font-normal"
+                            >
+                              <span>Tất cả danh mục</span>
+                            </Label>
+                          </div>
+                          {filteredCategories.map((cat) => (
                             <div key={cat.slug} className="flex items-center gap-2">
-                              <Checkbox
-                                id={`cat-${cat.slug}`}
-                                checked={isSelected}
-                                onCheckedChange={(checked) => {
-                                  setCategory(checked ? cat.slug : null);
-                                  setPage(0);
-                                }}
-                              />
+                              <RadioGroupItem value={cat.slug} id={`cat-${cat.slug}`} />
                               <Label
                                 htmlFor={`cat-${cat.slug}`}
                                 className="flex flex-1 cursor-pointer items-center justify-between text-sm font-normal"
@@ -216,10 +229,10 @@ export function ProductsClient() {
                                 </span>
                               </Label>
                             </div>
-                          );
-                        })
+                          ))}
+                        </>
                       )}
-                    </div>
+                    </RadioGroup>
                   </AccordionContent>
                 </AccordionItem>
               )}
@@ -239,19 +252,8 @@ export function ProductsClient() {
                         placeholder="Tìm thương hiệu..."
                         value={brandSearch}
                         onChange={(e) => setBrandSearch(e.target.value)}
-                        className="h-9 rounded-full pr-9 pl-9 text-sm font-normal focus-visible:ring-1"
+                        className="h-9 rounded-full pl-9 text-sm font-normal focus-visible:ring-1"
                       />
-                      {brandSearch && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setBrandSearch('')}
-                          className="absolute top-1/2 right-1 size-7 -translate-y-1/2"
-                          aria-label="Xóa tìm kiếm"
-                        >
-                          <X className="size-4" />
-                        </Button>
-                      )}
                     </div>
                     <div
                       className={`space-y-3 pr-2 ${filteredBrands.length > 8 ? 'max-h-64 overflow-y-auto' : ''}`}
@@ -302,34 +304,55 @@ export function ProductsClient() {
                     Khoảng giá
                   </AccordionTrigger>
                   <AccordionContent className="px-4 pb-4">
-                    <div className="flex flex-col gap-3">
+                    <RadioGroup
+                      value={minPrice !== null && maxPrice !== null ? `${minPrice}-${maxPrice}` : minPrice !== null ? `${minPrice}-null` : ''}
+                      onValueChange={(value) => {
+                        if (!value) {
+                          setMinPrice(null);
+                          setMaxPrice(null);
+                        } else {
+                          const [min, max] = value.split('-');
+                          setMinPrice(parseInt(min));
+                          setMaxPrice(max === 'null' ? null : parseInt(max));
+                        }
+                        setPage(0);
+                      }}
+                      className="flex flex-col gap-3"
+                    >
+                      {/* Option "Tất cả" luôn hiển thị */}
+                      <div className="flex items-center gap-2">
+                        <RadioGroupItem value="" id="price-all" />
+                        <Label
+                          htmlFor="price-all"
+                          className="flex flex-1 cursor-pointer items-center text-sm font-normal"
+                        >
+                          <span>Tất cả mức giá</span>
+                        </Label>
+                      </div>
                       {facets.priceRanges.map((range, idx) => {
-                        const isSelected = minPrice === range.min && maxPrice === range.max;
+                        // Format giá ngắn gọn hơn
+                        const formatPrice = (price: number) => {
+                          if (price >= 1000000) {
+                            return `${(price / 1000000).toFixed(price % 1000000 === 0 ? 0 : 1)}tr`;
+                          }
+                          return `${(price / 1000).toFixed(0)}k`;
+                        };
+                        
                         const label =
                           range.max === null
-                            ? `Trên ${range.min.toLocaleString()}₫`
-                            : `${range.min.toLocaleString()}₫ - ${range.max.toLocaleString()}₫`;
+                            ? `Trên ${formatPrice(range.min)}`
+                            : `${formatPrice(range.min)} - ${formatPrice(range.max)}`;
+                        
+                        const value = range.max === null ? `${range.min}-null` : `${range.min}-${range.max}`;
+                            
                         return (
                           <div key={idx} className="flex items-center gap-2">
-                            <Checkbox
-                              id={`price-${idx}`}
-                              checked={isSelected}
-                              onCheckedChange={(checked) => {
-                                if (checked) {
-                                  setMinPrice(range.min);
-                                  setMaxPrice(range.max);
-                                } else {
-                                  setMinPrice(null);
-                                  setMaxPrice(null);
-                                }
-                                setPage(0);
-                              }}
-                            />
+                            <RadioGroupItem value={value} id={`price-${idx}`} />
                             <Label
                               htmlFor={`price-${idx}`}
                               className="flex flex-1 cursor-pointer items-center justify-between text-sm font-normal"
                             >
-                              <span>{label}</span>
+                              <span className="truncate">{label}</span>
                               <span className="ml-2 shrink-0 text-xs text-muted-foreground">
                                 {range.count}
                               </span>
@@ -337,7 +360,7 @@ export function ProductsClient() {
                           </div>
                         );
                       })}
-                    </div>
+                    </RadioGroup>
                   </AccordionContent>
                 </AccordionItem>
               )}
@@ -355,9 +378,6 @@ export function ProductsClient() {
               <p className="text-sm text-muted-foreground">
                 <span className="font-semibold text-foreground">{totalElements}</span> sản phẩm
               </p>
-              {isFetching && !productsLoading && (
-                <Loader2 className="size-4 animate-spin text-muted-foreground" />
-              )}
             </div>
             <div className="flex items-center gap-3">
               {/* Mobile filter */}
