@@ -1,6 +1,5 @@
 'use client';
 
-import { useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getProducts } from '@/lib/api/products';
 import { useProductFilters } from './use-product-filters';
@@ -47,34 +46,28 @@ export function ProductsClient() {
   const totalElements = productsData?.totalElements || 0;
   const totalPages = productsData?.totalPages || 0;
 
-  // Memoized callbacks
-  const handlePriceChange = useCallback(
-    (min: number | null, max: number | null) => {
-      void filters.setMinPrice(min);
-      void filters.setMaxPrice(max);
-    },
-    [filters.setMinPrice, filters.setMaxPrice],
-  );
+  // Event handlers (React Compiler auto-optimizes these)
+  const handlePriceChange = (min: number | null, max: number | null) => {
+    void filters.setMinPrice(min);
+    void filters.setMaxPrice(max);
+  };
 
-  const handlePageReset = useCallback(() => {
+  const handlePageReset = () => {
     void filters.setPage(0);
-  }, [filters.setPage]);
+  };
 
-  const handleCategoryRemove = useCallback(() => {
+  const handleCategoryRemove = () => {
     void filters.setCategory(null);
-  }, [filters.setCategory]);
+  };
 
-  const handleBrandRemove = useCallback(
-    (brand: string) => {
-      filters.setBrands(filters.brands.filter((b) => b !== brand));
-    },
-    [filters.brands, filters.setBrands],
-  );
+  const handleBrandRemove = (brand: string) => {
+    void filters.setBrands(filters.brands.filter((b) => b !== brand));
+  };
 
-  const handlePriceRemove = useCallback(() => {
+  const handlePriceRemove = () => {
     void filters.setMinPrice(null);
     void filters.setMaxPrice(null);
-  }, [filters.setMinPrice, filters.setMaxPrice]);
+  };
 
   return (
     <div className="flex gap-8">

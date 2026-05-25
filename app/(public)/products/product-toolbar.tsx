@@ -140,7 +140,7 @@ export function ProductToolbar({
               className="h-7 gap-1.5 rounded-full border-blue-200 bg-blue-50 px-3 text-xs text-blue-700 hover:bg-blue-100 hover:text-blue-800 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300"
             >
               <span>{category}</span>
-              <X className="size-3" />
+              <X data-icon />
             </Button>
           )}
           {brands.map((brand) => (
@@ -155,7 +155,7 @@ export function ProductToolbar({
               className="h-7 gap-1.5 rounded-full border-purple-200 bg-purple-50 px-3 text-xs text-purple-700 hover:bg-purple-100 hover:text-purple-800 dark:border-purple-800 dark:bg-purple-950 dark:text-purple-300"
             >
               <span>{brand}</span>
-              <X className="size-3" />
+              <X data-icon />
             </Button>
           ))}
           {(minPrice !== null || maxPrice !== null) && (
@@ -175,7 +175,7 @@ export function ProductToolbar({
                     ? `Trên ${minPrice.toLocaleString()}₫`
                     : `Dưới ${maxPrice?.toLocaleString()}₫`}
               </span>
-              <X className="size-3" />
+              <X data-icon />
             </Button>
           )}
           <Button
