@@ -57,7 +57,7 @@ export function Pagination({ page, totalPages, onPageChange }: PaginationProps) 
             key={pageNum}
             variant={page === pageNum ? 'default' : 'outline'}
             size="sm"
-            className="size-9 rounded-full"
+            className={page === pageNum ? 'size-9 rounded-full bg-slate-800 hover:bg-slate-700' : 'size-9 rounded-full'}
             onClick={() => onPageChange(pageNum)}
             aria-label={`Trang ${pageNum + 1}`}
             aria-current={page === pageNum ? 'page' : undefined}

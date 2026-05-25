@@ -86,6 +86,7 @@ export function ProductCard({
                 size="icon"
                 className={cn(
                   'size-7 rounded-full',
+                  inCompare && 'bg-slate-800 hover:bg-slate-700',
                   !inCompare && 'bg-background hover:bg-background hover:text-blue-600'
                 )}
                 aria-label={inCompare ? 'Bỏ so sánh' : 'So sánh sản phẩm này'}
@@ -135,7 +136,7 @@ export function ProductCard({
           <Button
             onClick={handleAddToCart}
             size="sm"
-            className="h-9 rounded-full px-4"
+            className="h-9 rounded-full bg-slate-800 px-4 hover:bg-slate-700"
           >
             Mua
           </Button>

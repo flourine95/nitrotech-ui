@@ -194,7 +194,7 @@ export function SiteHeader() {
             <div className="relative hidden sm:block">
               <button
                 onClick={() => setAccountOpen(!accountOpen)}
-                className="flex cursor-pointer items-center gap-2 rounded-full bg-slate-900 px-3 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:bg-slate-700"
+                className="flex cursor-pointer items-center gap-2 rounded-full bg-slate-800 px-3 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:bg-slate-700"
                 aria-expanded={accountOpen}
                 aria-haspopup="true"
               >
@@ -392,7 +392,7 @@ export function SiteHeader() {
           ) : (
             <Link
               href="/login"
-              className="hidden cursor-pointer rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:bg-slate-700 sm:block"
+              className="hidden cursor-pointer rounded-full bg-slate-800 px-5 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:bg-slate-700 sm:block"
             >
               Đăng nhập
             </Link>
@@ -431,7 +431,7 @@ export function SiteHeader() {
               href={c.href}
               className={`cursor-pointer rounded-full px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors duration-200 ${
                 pathname === c.href
-                  ? 'bg-slate-900 text-white'
+                  ? 'bg-slate-800 text-white'
                   : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
               }`}
             >
@@ -486,7 +486,7 @@ export function SiteHeader() {
             <Link
               href="/login"
               onClick={() => setMobileOpen(false)}
-              className="block w-full cursor-pointer rounded-full bg-slate-900 py-2.5 text-center text-sm font-semibold text-white"
+              className="block w-full cursor-pointer rounded-full bg-slate-800 py-2.5 text-center text-sm font-semibold text-white"
             >
               Đăng nhập
             </Link>
