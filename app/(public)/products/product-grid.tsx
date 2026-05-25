@@ -1,6 +1,7 @@
 import { toast } from 'sonner';
 import { ProductCard } from '@/components/product-card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Empty, EmptyHeader, EmptyTitle, EmptyDescription } from '@/components/ui/empty';
 import type { Product } from '@/lib/api/products';
 
 interface ProductGridProps {
@@ -21,9 +22,14 @@ export function ProductGrid({ products, isLoading }: ProductGridProps) {
 
   if (products.length === 0) {
     return (
-      <div className="rounded-2xl border border-border bg-card p-12 text-center">
-        <p className="text-muted-foreground">Không tìm thấy sản phẩm</p>
-      </div>
+      <Empty>
+        <EmptyHeader>
+          <EmptyTitle>Không tìm thấy sản phẩm</EmptyTitle>
+          <EmptyDescription>
+            Thử điều chỉnh bộ lọc hoặc tìm kiếm với từ khóa khác
+          </EmptyDescription>
+        </EmptyHeader>
+      </Empty>
     );
   }
 

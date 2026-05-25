@@ -1,5 +1,6 @@
 'use client';
 
+import { useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getProducts } from '@/lib/api/products';
 import { useProductFilters } from './use-product-filters';
@@ -26,8 +27,8 @@ export function ProductsClient() {
         maxPrice: filters.maxPrice,
       },
     ],
-    queryFn: async () => {
-      return await getProducts({
+    queryFn: () =>
+      getProducts({
         page: filters.page,
         size: filters.size,
         sort: filters.sort,
@@ -37,8 +38,7 @@ export function ProductsClient() {
         minPrice: filters.minPrice ?? undefined,
         maxPrice: filters.maxPrice ?? undefined,
         active: true,
-      });
-    },
+      }),
     placeholderData: (prev) => prev,
     staleTime: 2 * 60 * 1000,
   });
@@ -46,6 +46,35 @@ export function ProductsClient() {
   const products = productsData?.content || [];
   const totalElements = productsData?.totalElements || 0;
   const totalPages = productsData?.totalPages || 0;
+
+  // Memoized callbacks
+  const handlePriceChange = useCallback(
+    (min: number | null, max: number | null) => {
+      void filters.setMinPrice(min);
+      void filters.setMaxPrice(max);
+    },
+    [filters.setMinPrice, filters.setMaxPrice],
+  );
+
+  const handlePageReset = useCallback(() => {
+    void filters.setPage(0);
+  }, [filters.setPage]);
+
+  const handleCategoryRemove = useCallback(() => {
+    void filters.setCategory(null);
+  }, [filters.setCategory]);
+
+  const handleBrandRemove = useCallback(
+    (brand: string) => {
+      filters.setBrands(filters.brands.filter((b) => b !== brand));
+    },
+    [filters.brands, filters.setBrands],
+  );
+
+  const handlePriceRemove = useCallback(() => {
+    void filters.setMinPrice(null);
+    void filters.setMaxPrice(null);
+  }, [filters.setMinPrice, filters.setMaxPrice]);
 
   return (
     <div className="flex gap-8">
@@ -56,11 +85,8 @@ export function ProductsClient() {
         onBrandsChange={filters.setBrands}
         minPrice={filters.minPrice}
         maxPrice={filters.maxPrice}
-        onPriceChange={(min, max) => {
-          filters.setMinPrice(min);
-          filters.setMaxPrice(max);
-        }}
-        onPageReset={() => filters.setPage(0)}
+        onPriceChange={handlePriceChange}
+        onPageReset={handlePageReset}
       />
 
       <div className="min-w-0 flex-1">
@@ -71,27 +97,20 @@ export function ProductsClient() {
           sort={filters.sort}
           onSortChange={filters.setSort}
           category={filters.category}
-          onCategoryRemove={() => filters.setCategory(null)}
+          onCategoryRemove={handleCategoryRemove}
           brands={filters.brands}
-          onBrandRemove={(brand) => filters.setBrands(filters.brands.filter((b) => b !== brand))}
+          onBrandRemove={handleBrandRemove}
           minPrice={filters.minPrice}
           maxPrice={filters.maxPrice}
-          onPriceRemove={() => {
-            filters.setMinPrice(null);
-            filters.setMaxPrice(null);
-          }}
+          onPriceRemove={handlePriceRemove}
           hasActiveFilters={filters.hasActiveFilters}
           onClearAll={filters.clearAllFilters}
-          onPageReset={() => filters.setPage(0)}
+          onPageReset={handlePageReset}
         />
 
         <ProductGrid products={products} isLoading={productsLoading} />
 
-        <Pagination
-          page={filters.page}
-          totalPages={totalPages}
-          onPageChange={filters.setPage}
-        />
+        <Pagination page={filters.page} totalPages={totalPages} onPageChange={filters.setPage} />
       </div>
     </div>
   );

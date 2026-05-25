@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useDebounce } from 'use-debounce';
 import { getProductFacets } from '@/lib/api/products';
-import { removeVietnameseTones } from '@/lib/utils';
+import { removeVietnameseTones, cn } from '@/lib/utils';
 import { formatPriceShort } from '@/lib/utils/formatting';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -41,24 +42,9 @@ export function ProductFilters({
   const [categorySearch, setCategorySearch] = useState('');
   const [brandSearch, setBrandSearch] = useState('');
 
-  // Debounced search values
-  const [debouncedCategorySearch, setDebouncedCategorySearch] = useState('');
-  const [debouncedBrandSearch, setDebouncedBrandSearch] = useState('');
-
-  // Debounce search input
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedCategorySearch(categorySearch);
-    }, 150);
-    return () => clearTimeout(timer);
-  }, [categorySearch]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedBrandSearch(brandSearch);
-    }, 150);
-    return () => clearTimeout(timer);
-  }, [brandSearch]);
+  // Debounced search values using use-debounce library
+  const [debouncedCategorySearch] = useDebounce(categorySearch, 150);
+  const [debouncedBrandSearch] = useDebounce(brandSearch, 150);
 
   // Fetch facets WITHOUT any filters
   const { data: facets, isLoading: facetsLoading } = useQuery({
@@ -126,7 +112,10 @@ export function ProductFilters({
                       onCategoryChange(value || null);
                       onPageReset();
                     }}
-                    className={`space-y-3 pr-2 ${filteredCategories.length > 8 ? 'max-h-64 overflow-y-auto' : ''}`}
+                    className={cn(
+                      'space-y-3 pr-2',
+                      filteredCategories.length > 8 && 'max-h-64 overflow-y-auto',
+                    )}
                   >
                     {filteredCategories.length === 0 ? (
                       <p className="py-4 text-center text-sm text-muted-foreground">
@@ -183,7 +172,10 @@ export function ProductFilters({
                     />
                   </div>
                   <div
-                    className={`space-y-3 pr-2 ${filteredBrands.length > 8 ? 'max-h-64 overflow-y-auto' : ''}`}
+                    className={cn(
+                      'space-y-3 pr-2',
+                      filteredBrands.length > 8 && 'max-h-64 overflow-y-auto',
+                    )}
                   >
                     {filteredBrands.length === 0 ? (
                       <p className="py-4 text-center text-sm text-muted-foreground">
@@ -198,7 +190,7 @@ export function ProductFilters({
                               id={`brand-${brand.slug}`}
                               checked={isSelected}
                               onCheckedChange={(checked) => {
-                                if (checked) {
+                                if (checked === true) {
                                   onBrandsChange([...brands, brand.slug]);
                                 } else {
                                   onBrandsChange(brands.filter((b) => b !== brand.slug));

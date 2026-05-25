@@ -1,7 +1,6 @@
 import { parseAsArrayOf, parseAsInteger, parseAsString, useQueryState } from 'nuqs';
 
 export function useProductFilters() {
-  // URL state
   const [page, setPage] = useQueryState('page', parseAsInteger.withDefault(0).withOptions({ shallow: true }));
   const [size, setSize] = useQueryState('size', parseAsInteger.withDefault(24).withOptions({ shallow: true }));
   const [sort, setSort] = useQueryState('sort', parseAsString.withDefault('createdAt,desc').withOptions({ shallow: true }));
@@ -14,14 +13,14 @@ export function useProductFilters() {
   const [minPrice, setMinPrice] = useQueryState('minPrice', parseAsInteger.withOptions({ shallow: true }));
   const [maxPrice, setMaxPrice] = useQueryState('maxPrice', parseAsInteger.withOptions({ shallow: true }));
 
-  const hasActiveFilters = category || brands.length > 0 || minPrice !== null || maxPrice !== null;
+  const hasActiveFilters = !!category || brands.length > 0 || minPrice !== null || maxPrice !== null;
 
   const clearAllFilters = () => {
-    setCategory(null);
-    setBrands([]);
-    setMinPrice(null);
-    setMaxPrice(null);
-    setPage(0);
+    void setCategory(null);
+    void setBrands([]);
+    void setMinPrice(null);
+    void setMaxPrice(null);
+    void setPage(0);
   };
 
   return {

@@ -59,7 +59,7 @@ export function ProductToolbar({
   onPageReset,
 }: ProductToolbarProps) {
   return (
-    <div className="mb-6 space-y-4">
+    <div className="mb-6 flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <p className="text-sm text-muted-foreground">

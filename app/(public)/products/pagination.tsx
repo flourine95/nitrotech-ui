@@ -24,7 +24,7 @@ export function Pagination({ page, totalPages, onPageChange }: PaginationProps) 
         onClick={() => onPageChange(0)}
         aria-label="Trang đầu"
       >
-        <ChevronsLeft className="size-4" />
+        <ChevronsLeft data-icon />
       </Button>
 
       {/* Previous page */}
@@ -36,7 +36,7 @@ export function Pagination({ page, totalPages, onPageChange }: PaginationProps) 
         onClick={() => onPageChange(page - 1)}
         aria-label="Trang trước"
       >
-        <ChevronLeft className="size-4" />
+        <ChevronLeft data-icon />
       </Button>
 
       {/* Page numbers with ellipsis */}
@@ -76,7 +76,7 @@ export function Pagination({ page, totalPages, onPageChange }: PaginationProps) 
         onClick={() => onPageChange(page + 1)}
         aria-label="Trang sau"
       >
-        <ChevronRight className="size-4" />
+        <ChevronRight data-icon />
       </Button>
 
       {/* Last page */}
@@ -88,7 +88,7 @@ export function Pagination({ page, totalPages, onPageChange }: PaginationProps) 
         onClick={() => onPageChange(totalPages - 1)}
         aria-label="Trang cuối"
       >
-        <ChevronsRight className="size-4" />
+        <ChevronsRight data-icon />
       </Button>
     </div>
   );
