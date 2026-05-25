@@ -20,7 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import type { OrderStatus } from '@/lib/api/orders';
+import { OrderStatus } from '@/lib/api/orders';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

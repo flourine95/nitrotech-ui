@@ -9,7 +9,6 @@ import {
   hardDeleteCategory,
   moveCategoryUp,
   moveCategoryDown,
-  changeCategoryParent,
   restoreCategory,
   updateCategory,
 } from '@/lib/api/categories';
@@ -280,7 +279,7 @@ export function useCategories() {
       const snapshot = { flatList, tree };
       applyChangeParent(id, fromParentId, newParentId);
       try {
-        await changeCategoryParent(id, newParentId);
+        await updateCategory(id, { parentId: newParentId });
         await load(); // Reload to get correct sortOrder from backend
         toast.success('Đã đổi danh mục cha');
       } catch (error: any) {

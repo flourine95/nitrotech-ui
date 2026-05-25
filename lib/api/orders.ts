@@ -1,14 +1,29 @@
 import { apiFetch } from '@/lib/api/client';
 import type {
-  Order,
+  Order as ApiOrder,
   OrderListItem,
   OrderResponse,
   OrderListResponse,
 } from '@/types/order';
-import type { CreateOrderData, CancelOrderData, OrderStatus } from '@/schemas/order';
+import type { CreateOrderData, CancelOrderData, OrderStatus as ApiOrderStatus } from '@/schemas/order';
+
+// Dashboard OrderStatus (uppercase) - used in admin panel
+export type OrderStatus = 'PENDING' | 'CONFIRMED' | 'SHIPPING' | 'COMPLETED' | 'CANCELLED';
+
+// Dashboard Order type (for admin panel) - extends the base Order type
+export interface Order {
+  id: number;
+  code: string;
+  customerName: string;
+  customerEmail: string;
+  totalAmount: number;
+  status: OrderStatus;
+  itemCount: number;
+  createdAt: string;
+}
 
 // POST /api/orders - Create order
-export async function createOrder(data: CreateOrderData): Promise<Order> {
+export async function createOrder(data: CreateOrderData): Promise<ApiOrder> {
   const res = await apiFetch<OrderResponse>('/api/orders', {
     method: 'POST',
     body: JSON.stringify(data),
@@ -20,7 +35,7 @@ export async function createOrder(data: CreateOrderData): Promise<Order> {
 export async function getOrders(params?: {
   page?: number;
   limit?: number;
-  status?: OrderStatus;
+  status?: ApiOrderStatus;
 }): Promise<OrderListResponse> {
   const searchParams = new URLSearchParams();
   if (params?.page) searchParams.set('page', params.page.toString());
@@ -32,7 +47,7 @@ export async function getOrders(params?: {
 }
 
 // GET /api/orders/{id} - Get order details
-export async function getOrder(id: number): Promise<Order> {
+export async function getOrder(id: number): Promise<ApiOrder> {
   const res = await apiFetch<OrderResponse>(`/api/orders/${id}`);
   return res.data;
 }

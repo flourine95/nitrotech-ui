@@ -172,22 +172,12 @@ export async function getProducts(query?: ProductsQuery): Promise<Page<Product>>
   // Map API response to Page<Product> format
   return {
     content: res.data,
-    pageable: {
-      pageNumber: res.meta.page,
-      pageSize: res.meta.size,
-      sort: { empty: true, sorted: false, unsorted: true },
-      offset: res.meta.page * res.meta.size,
-      paged: true,
-      unpaged: false,
-    },
     last: !res.meta.hasNext,
     totalPages: res.meta.totalPages,
     totalElements: res.meta.totalElements,
     size: res.meta.size,
     number: res.meta.page,
-    sort: { empty: true, sorted: false, unsorted: true },
     first: !res.meta.hasPrevious,
-    numberOfElements: res.data.length,
     empty: res.data.length === 0,
   };
 }
@@ -324,8 +314,8 @@ export async function exportProducts(query?: ProductsQuery): Promise<Page<Produc
   if (query?.search?.trim()) q.set('search', query.search.trim());
   if (query?.active !== undefined) q.set('active', String(query.active));
   if (query?.deleted !== undefined) q.set('deleted', String(query.deleted));
-  if (query?.categoryId !== undefined) q.set('categoryId', String(query.categoryId));
-  if (query?.brandId !== undefined) q.set('brandId', String(query.brandId));
+  if (query?.category !== undefined) q.set('category', String(query.category));
+  if (query?.brand !== undefined) q.set('brand', String(query.brand));
   q.set('page', '0');
   q.set('size', '10000');
   if (query?.sort) q.set('sort', query.sort);

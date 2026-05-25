@@ -56,7 +56,8 @@ const sections = [
 
 export default function PrivacyPage() {
   return (
-    <>      <main className="min-h-screen bg-slate-50">
+    <>
+      <main className="min-h-screen bg-slate-50">
         {/* Breadcrumb */}
         <div className="border-b border-slate-100 bg-white">
           <div className="mx-auto flex max-w-7xl items-center gap-2 px-6 py-3 text-sm text-slate-400">
@@ -135,5 +136,6 @@ export default function PrivacyPage() {
           </div>
         </div>
       </main>
+    </>
   );
 }

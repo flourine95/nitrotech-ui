@@ -3,7 +3,7 @@ import { shippingAddressSchema } from './address';
 
 // Payment methods
 export const paymentMethodSchema = z.enum(['cod', 'vnpay', 'momo'], {
-  errorMap: () => ({ message: 'Phương thức thanh toán không hợp lệ' }),
+  message: 'Phương thức thanh toán không hợp lệ',
 });
 
 export type PaymentMethod = z.infer<typeof paymentMethodSchema>;

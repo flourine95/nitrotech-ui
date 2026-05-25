@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useDeferredValue, useMemo, useState, useTransition } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useQueryState, parseAsBoolean } from 'nuqs';
 import { useForm } from 'react-hook-form';
@@ -17,7 +17,9 @@ import {
   Pencil,
   Plus,
   RotateCcw,
+  SearchIcon,
   Trash2,
+  XIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -350,6 +352,11 @@ function CategoryTreeNode({
 export default function DashboardCategoriesPage() {
   const queryClient = useQueryClient();
   
+  // Search state
+  const [search, setSearch] = useState('');
+  const [isPending, startTransition] = useTransition();
+  const deferredSearch = useDeferredValue(search);
+  
   // URL state management with nuqs
   const [showDeleted, setShowDeleted] = useQueryState(
     'deleted',
@@ -403,6 +410,42 @@ export default function DashboardCategoriesPage() {
 
   const categories = useMemo(() => treeData?.data || [], [treeData?.data]);
   const deletedCategories = deletedData || [];
+
+  // Filter categories by search
+  const filteredCategories = useMemo(() => {
+    if (!deferredSearch.trim()) return categories;
+    
+    const searchLower = deferredSearch.toLowerCase();
+    
+    function filterTree(cats: Category[]): Category[] {
+      return cats.reduce<Category[]>((acc, cat) => {
+        const nameMatch = cat.name.toLowerCase().includes(searchLower);
+        const slugMatch = cat.slug.toLowerCase().includes(searchLower);
+        const filteredChildren = cat.children.length > 0 ? filterTree(cat.children) : [];
+        
+        if (nameMatch || slugMatch || filteredChildren.length > 0) {
+          acc.push({
+            ...cat,
+            children: filteredChildren,
+          });
+        }
+        
+        return acc;
+      }, []);
+    }
+    
+    return filterTree(categories);
+  }, [categories, deferredSearch]);
+
+  const filteredDeletedCategories = useMemo(() => {
+    if (!deferredSearch.trim()) return deletedCategories;
+    
+    const searchLower = deferredSearch.toLowerCase();
+    return deletedCategories.filter(cat =>
+      cat.name.toLowerCase().includes(searchLower) ||
+      cat.slug.toLowerCase().includes(searchLower)
+    );
+  }, [deletedCategories, deferredSearch]);
 
   // Use backend facets instead of calculating on frontend
   const stats = useMemo(() => {
@@ -710,7 +753,7 @@ export default function DashboardCategoriesPage() {
         }
       });
     };
-    collectIds(categories);
+    collectIds(filteredCategories);
     setExpandedIds(allIds);
   }
 
@@ -847,23 +890,39 @@ export default function DashboardCategoriesPage() {
 
       {/* Stats summary + actions */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-        <p className="text-sm text-muted-foreground">
-          {showDeleted ? (
-            <>
-              <span className="font-medium text-foreground">{stats.deleted}</span> danh mục đã xóa
-            </>
-          ) : (
-            <>
-              <span className="font-medium text-foreground">{stats.total}</span> danh mục
-              {' · '}
-              <span className="font-medium text-foreground">{stats.active}</span> hoạt động
-              {' · '}
-              <span className="font-medium text-primary">{stats.root}</span> gốc
-              {' · '}
-              <span className="font-medium text-foreground/70">{stats.sub}</span> con
-            </>
+        {/* Search input */}
+        <div className="relative flex-1 max-w-md">
+          <SearchIcon className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+          <Input
+            type="search"
+            placeholder="Tìm danh mục theo tên hoặc slug..."
+            value={search}
+            onChange={(e) => {
+              startTransition(() => {
+                setSearch(e.target.value);
+              });
+            }}
+            className={cn(
+              'h-9 pl-9 pr-9',
+              isPending && 'opacity-60'
+            )}
+          />
+          {search && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                startTransition(() => {
+                  setSearch('');
+                });
+              }}
+              className="absolute top-1/2 right-1 size-7 -translate-y-1/2"
+              aria-label="Xóa tìm kiếm"
+            >
+              <XIcon className="size-4" />
+            </Button>
           )}
-        </p>
+        </div>
 
         <div className="flex items-center gap-2">
           {!showDeleted && (
@@ -894,18 +953,18 @@ export default function DashboardCategoriesPage() {
         {showDeleted ? (
           <div className="divide-y divide-border">
             {/* Empty state for trash */}
-            {deletedCategories.length === 0 ? (
+            {filteredDeletedCategories.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <Trash2 className="mb-3 size-10 text-muted-foreground/40" />
                 <p className="text-sm font-medium text-muted-foreground">
-                  Không có danh mục đã xóa
+                  {search ? 'Không tìm thấy danh mục nào' : 'Không có danh mục đã xóa'}
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground/70">
-                  Các danh mục đã xóa sẽ xuất hiện ở đây
+                  {search ? 'Thử tìm kiếm với từ khóa khác' : 'Các danh mục đã xóa sẽ xuất hiện ở đây'}
                 </p>
               </div>
             ) : (
-              deletedCategories.map((cat) => (
+              filteredDeletedCategories.map((cat) => (
                 <div
                   key={cat.id}
                   className="flex flex-col gap-3 px-4 py-3 hover:bg-muted/50 sm:flex-row sm:items-center sm:gap-3"

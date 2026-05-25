@@ -1,22 +1,24 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { parseAsArrayOf, parseAsInteger, parseAsString, useQueryState } from 'nuqs';
 import { toast } from 'sonner';
 import { getProductFacets, getProducts } from '@/lib/api/products';
+import { removeVietnameseTones } from '@/lib/utils';
 import { ProductCard } from '@/components/product-card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { ChevronLeft, ChevronRight, Filter, Loader2, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Filter, Loader2, Search, X } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -39,8 +41,6 @@ const pageSizeOptions = [
   { label: '96', value: 96 },
 ];
 
-const MAX_VISIBLE_ITEMS = 8;
-
 export function ProductsClient() {
   // URL state
   const [page, setPage] = useQueryState('page', parseAsInteger.withDefault(0));
@@ -55,16 +55,34 @@ export function ProductsClient() {
   const [minPrice, setMinPrice] = useQueryState('minPrice', parseAsInteger);
   const [maxPrice, setMaxPrice] = useQueryState('maxPrice', parseAsInteger);
 
-  // Local state for "show more"
-  const [showAllCategories, setShowAllCategories] = useState(false);
-  const [showAllBrands, setShowAllBrands] = useState(false);
+  // Local state for filter search
+  const [categorySearch, setCategorySearch] = useState('');
+  const [brandSearch, setBrandSearch] = useState('');
+
+  // Debounced search values
+  const [debouncedCategorySearch, setDebouncedCategorySearch] = useState('');
+  const [debouncedBrandSearch, setDebouncedBrandSearch] = useState('');
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedCategorySearch(categorySearch);
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [categorySearch]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedBrandSearch(brandSearch);
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [brandSearch]);
 
   // Fetch products with keepPreviousData to avoid flickering
   const {
     data: productsData,
     isLoading: productsLoading,
     isFetching,
-    error,
   } = useQuery({
     queryKey: ['products', { page, size, sort, search, category, brands, minPrice, maxPrice }],
     queryFn: async () => {
@@ -95,15 +113,29 @@ export function ProductsClient() {
   const totalElements = productsData?.totalElements || 0;
   const totalPages = productsData?.totalPages || 0;
 
-  // Prepare categories list
   const categoriesList = facets?.categories || [];
-  const visibleCategories = showAllCategories
-    ? categoriesList
-    : categoriesList.slice(0, MAX_VISIBLE_ITEMS);
-
-  // Prepare brands list
   const brandsList = facets?.brands || [];
-  const visibleBrands = showAllBrands ? brandsList : brandsList.slice(0, MAX_VISIBLE_ITEMS);
+
+  // Filter categories and brands based on search with Vietnamese tone removal
+  const filteredCategories = categoriesList.filter((cat) => {
+    if (!debouncedCategorySearch.trim()) return true;
+    const query = removeVietnameseTones(debouncedCategorySearch.trim());
+    const name = removeVietnameseTones(cat.name);
+
+    // Split query into words and check if all words are found in name
+    const queryWords = query.split(/\s+/);
+    return queryWords.every((word) => name.includes(word));
+  });
+
+  const filteredBrands = brandsList.filter((brand) => {
+    if (!debouncedBrandSearch.trim()) return true;
+    const query = removeVietnameseTones(debouncedBrandSearch.trim());
+    const name = removeVietnameseTones(brand.name);
+
+    // Split query into words and check if all words are found in name
+    const queryWords = query.split(/\s+/);
+    return queryWords.every((word) => name.includes(word));
+  });
 
   const hasActiveFilters = category || brands.length > 0 || minPrice !== null || maxPrice !== null;
 
@@ -111,30 +143,58 @@ export function ProductsClient() {
     <div className="flex gap-8">
       {/* Sidebar */}
       <aside className="hidden w-64 shrink-0 lg:block">
-        <div className="sticky top-36">
+        <div className="sticky top-24 rounded-lg border border-border bg-card">
           {/* Filters */}
-          <div className="rounded-lg border border-border bg-card">
-            {facetsLoading ? (
-              <div className="flex flex-col gap-4 p-4">
-                <Skeleton className="h-32" />
-                <Skeleton className="h-32" />
-                <Skeleton className="h-24" />
-              </div>
-            ) : (
-              <Accordion
-                type="multiple"
-                defaultValue={['categories', 'brands', 'price']}
-                className="w-full"
-              >
-                {/* Categories */}
-                {categoriesList.length > 0 && (
-                  <AccordionItem value="categories">
-                    <AccordionTrigger className="px-4 text-sm font-semibold">
-                      Danh mục
-                    </AccordionTrigger>
-                    <AccordionContent className="px-4 pb-4">
-                      <div className="flex flex-col gap-3">
-                        {visibleCategories.map((cat) => {
+          {facetsLoading ? (
+            <div className="flex flex-col gap-4 p-4">
+              <Skeleton className="h-32" />
+              <Skeleton className="h-32" />
+              <Skeleton className="h-24" />
+            </div>
+          ) : (
+            <Accordion
+              type="multiple"
+              defaultValue={['categories', 'brands', 'price']}
+              className="w-full"
+            >
+              {/* Categories */}
+              {categoriesList.length > 0 && (
+                <AccordionItem value="categories">
+                  <AccordionTrigger className="px-4 text-sm font-semibold">
+                    Danh mục
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-4">
+                    {/* Search input */}
+                    <div className="relative mb-3">
+                      <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        type="text"
+                        placeholder="Tìm danh mục..."
+                        value={categorySearch}
+                        onChange={(e) => setCategorySearch(e.target.value)}
+                        className="h-9 rounded-full pr-9 pl-9 text-sm font-normal focus-visible:ring-1"
+                      />
+                      {categorySearch && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setCategorySearch('')}
+                          className="absolute top-1/2 right-1 size-7 -translate-y-1/2"
+                          aria-label="Xóa tìm kiếm"
+                        >
+                          <X className="size-4" />
+                        </Button>
+                      )}
+                    </div>
+                    <div
+                      className={`space-y-3 pr-2 ${filteredCategories.length > 8 ? 'max-h-64 overflow-y-auto' : ''}`}
+                    >
+                      {filteredCategories.length === 0 ? (
+                        <p className="py-4 text-center text-sm text-muted-foreground">
+                          Không tìm thấy danh mục
+                        </p>
+                      ) : (
+                        filteredCategories.map((cat) => {
                           const isSelected = category === cat.slug;
                           return (
                             <div key={cat.slug} className="flex items-center gap-2">
@@ -157,33 +217,51 @@ export function ProductsClient() {
                               </Label>
                             </div>
                           );
-                        })}
-                        {categoriesList.length > MAX_VISIBLE_ITEMS && (
-                          <Button
-                            onClick={() => setShowAllCategories(!showAllCategories)}
-                            variant="ghost"
-                            size="sm"
-                            className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground"
-                          >
-                            {showAllCategories
-                              ? 'Thu gọn'
-                              : `Xem thêm ${categoriesList.length - MAX_VISIBLE_ITEMS}`}
-                          </Button>
-                        )}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                )}
+                        })
+                      )}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              )}
 
-                {/* Brands */}
-                {brandsList.length > 0 && (
-                  <AccordionItem value="brands">
-                    <AccordionTrigger className="px-4 text-sm font-semibold">
-                      Thương hiệu
-                    </AccordionTrigger>
-                    <AccordionContent className="px-4 pb-4">
-                      <div className="flex flex-col gap-3">
-                        {visibleBrands.map((brand) => {
+              {/* Brands */}
+              {brandsList.length > 0 && (
+                <AccordionItem value="brands">
+                  <AccordionTrigger className="px-4 text-sm font-semibold">
+                    Thương hiệu
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-4">
+                    {/* Search input */}
+                    <div className="relative mb-3">
+                      <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        type="text"
+                        placeholder="Tìm thương hiệu..."
+                        value={brandSearch}
+                        onChange={(e) => setBrandSearch(e.target.value)}
+                        className="h-9 rounded-full pr-9 pl-9 text-sm font-normal focus-visible:ring-1"
+                      />
+                      {brandSearch && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setBrandSearch('')}
+                          className="absolute top-1/2 right-1 size-7 -translate-y-1/2"
+                          aria-label="Xóa tìm kiếm"
+                        >
+                          <X className="size-4" />
+                        </Button>
+                      )}
+                    </div>
+                    <div
+                      className={`space-y-3 pr-2 ${filteredBrands.length > 8 ? 'max-h-64 overflow-y-auto' : ''}`}
+                    >
+                      {filteredBrands.length === 0 ? (
+                        <p className="py-4 text-center text-sm text-muted-foreground">
+                          Không tìm thấy thương hiệu
+                        </p>
+                      ) : (
+                        filteredBrands.map((brand) => {
                           const isSelected = brands.includes(brand.slug);
                           return (
                             <div key={brand.slug} className="flex items-center gap-2">
@@ -210,73 +288,61 @@ export function ProductsClient() {
                               </Label>
                             </div>
                           );
-                        })}
-                        {brandsList.length > MAX_VISIBLE_ITEMS && (
-                          <Button
-                            onClick={() => setShowAllBrands(!showAllBrands)}
-                            variant="ghost"
-                            size="sm"
-                            className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground"
-                          >
-                            {showAllBrands
-                              ? 'Thu gọn'
-                              : `Xem thêm ${brandsList.length - MAX_VISIBLE_ITEMS}`}
-                          </Button>
-                        )}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                )}
+                        })
+                      )}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              )}
 
-                {/* Price Ranges */}
-                {facets?.priceRanges && facets.priceRanges.length > 0 && (
-                  <AccordionItem value="price">
-                    <AccordionTrigger className="px-4 text-sm font-semibold">
-                      Khoảng giá
-                    </AccordionTrigger>
-                    <AccordionContent className="px-4 pb-4">
-                      <div className="flex flex-col gap-3">
-                        {facets.priceRanges.map((range, idx) => {
-                          const isSelected = minPrice === range.min && maxPrice === range.max;
-                          const label =
-                            range.max === null
-                              ? `Trên ${range.min.toLocaleString()}₫`
-                              : `${range.min.toLocaleString()}₫ - ${range.max.toLocaleString()}₫`;
-                          return (
-                            <div key={idx} className="flex items-center gap-2">
-                              <Checkbox
-                                id={`price-${idx}`}
-                                checked={isSelected}
-                                onCheckedChange={(checked) => {
-                                  if (checked) {
-                                    setMinPrice(range.min);
-                                    setMaxPrice(range.max);
-                                  } else {
-                                    setMinPrice(null);
-                                    setMaxPrice(null);
-                                  }
-                                  setPage(0);
-                                }}
-                              />
-                              <Label
-                                htmlFor={`price-${idx}`}
-                                className="flex flex-1 cursor-pointer items-center justify-between text-sm font-normal"
-                              >
-                                <span>{label}</span>
-                                <span className="ml-2 shrink-0 text-xs text-muted-foreground">
-                                  {range.count}
-                                </span>
-                              </Label>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                )}
-              </Accordion>
-            )}
-          </div>
+              {/* Price Ranges */}
+              {facets?.priceRanges && facets.priceRanges.length > 0 && (
+                <AccordionItem value="price">
+                  <AccordionTrigger className="px-4 text-sm font-semibold">
+                    Khoảng giá
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-4">
+                    <div className="flex flex-col gap-3">
+                      {facets.priceRanges.map((range, idx) => {
+                        const isSelected = minPrice === range.min && maxPrice === range.max;
+                        const label =
+                          range.max === null
+                            ? `Trên ${range.min.toLocaleString()}₫`
+                            : `${range.min.toLocaleString()}₫ - ${range.max.toLocaleString()}₫`;
+                        return (
+                          <div key={idx} className="flex items-center gap-2">
+                            <Checkbox
+                              id={`price-${idx}`}
+                              checked={isSelected}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setMinPrice(range.min);
+                                  setMaxPrice(range.max);
+                                } else {
+                                  setMinPrice(null);
+                                  setMaxPrice(null);
+                                }
+                                setPage(0);
+                              }}
+                            />
+                            <Label
+                              htmlFor={`price-${idx}`}
+                              className="flex flex-1 cursor-pointer items-center justify-between text-sm font-normal"
+                            >
+                              <span>{label}</span>
+                              <span className="ml-2 shrink-0 text-xs text-muted-foreground">
+                                {range.count}
+                              </span>
+                            </Label>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              )}
+            </Accordion>
+          )}
         </div>
       </aside>
 
@@ -355,16 +421,16 @@ export function ProductsClient() {
           {/* Active filters */}
           {hasActiveFilters && (
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs text-muted-foreground">Lọc theo:</span>
+              <span className="text-xs font-medium text-muted-foreground">Đang lọc:</span>
               {category && (
                 <Button
                   onClick={() => {
                     setCategory(null);
                     setPage(0);
                   }}
-                  variant="secondary"
+                  variant="outline"
                   size="sm"
-                  className="h-auto gap-1.5 rounded-full px-3 py-1 text-xs"
+                  className="h-7 gap-1.5 rounded-full border-blue-200 bg-blue-50 px-3 text-xs text-blue-700 hover:bg-blue-100 hover:text-blue-800 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300"
                 >
                   <span>{category}</span>
                   <X className="size-3" />
@@ -377,9 +443,9 @@ export function ProductsClient() {
                     setBrands(brands.filter((b) => b !== brand));
                     setPage(0);
                   }}
-                  variant="secondary"
+                  variant="outline"
                   size="sm"
-                  className="h-auto gap-1.5 rounded-full px-3 py-1 text-xs"
+                  className="h-7 gap-1.5 rounded-full border-purple-200 bg-purple-50 px-3 text-xs text-purple-700 hover:bg-purple-100 hover:text-purple-800 dark:border-purple-800 dark:bg-purple-950 dark:text-purple-300"
                 >
                   <span>{brand}</span>
                   <X className="size-3" />
@@ -392,9 +458,9 @@ export function ProductsClient() {
                     setMaxPrice(null);
                     setPage(0);
                   }}
-                  variant="secondary"
+                  variant="outline"
                   size="sm"
-                  className="h-auto gap-1.5 rounded-full px-3 py-1 text-xs"
+                  className="h-7 gap-1.5 rounded-full border-green-200 bg-green-50 px-3 text-xs text-green-700 hover:bg-green-100 hover:text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-300"
                 >
                   <span>
                     {minPrice !== null && maxPrice !== null
@@ -416,7 +482,7 @@ export function ProductsClient() {
                 }}
                 variant="ghost"
                 size="sm"
-                className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground"
+                className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
               >
                 Xóa tất cả
               </Button>

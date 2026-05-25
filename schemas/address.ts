@@ -11,7 +11,7 @@ export const addressSchema = z.object({
   ward: z.string().min(1, 'Phường/Xã là bắt buộc'),
   district: z.string().min(1, 'Quận/Huyện là bắt buộc'),
   city: z.string().min(1, 'Tỉnh/Thành phố là bắt buộc'),
-  country: z.string().default('Vietnam'),
+  country: z.string().min(1, 'Quốc gia là bắt buộc'),
   isDefault: z.boolean().optional(),
 });
 

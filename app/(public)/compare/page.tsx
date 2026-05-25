@@ -1,10 +1,10 @@
 'use client';
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { X, Plus, Search, AlertTriangle } from 'lucide-react';
+import { X, Plus, AlertTriangle } from 'lucide-react';
 import { useCompare } from '@/components/compare-bar';
+import { SearchInput } from '@/components/search-input';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ProductImagePlaceholder } from '@/components/product-image-placeholder';
 
@@ -284,17 +284,12 @@ export default function ComparePage() {
                         />
                         <div className="absolute top-full right-0 left-0 z-50 mt-2 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
                           <div className="border-b border-slate-100 p-3">
-                            <div className="relative">
-                              <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-slate-400" />
-                              <Input
-                                type="text"
-                                placeholder="Tìm sản phẩm..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="h-9 pl-9 text-sm font-normal rounded-full focus-visible:ring-1"
-                                autoFocus
-                              />
-                            </div>
+                            <SearchInput
+                              value={searchQuery}
+                              onValueChange={setSearchQuery}
+                              placeholder="Tìm sản phẩm..."
+                              autoFocus
+                            />
                           </div>
                           <ul className="max-h-60 overflow-y-auto py-1">
                             {filteredProducts.map((ap) => (
@@ -445,17 +440,12 @@ export default function ComparePage() {
                                   />
                                   <div className="absolute top-full right-0 left-0 z-50 mt-2 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
                                     <div className="border-b border-slate-100 p-3">
-                                      <div className="relative">
-                                        <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-slate-400" />
-                                        <Input
-                                          type="text"
-                                          placeholder="Tìm sản phẩm..."
-                                          value={searchQuery}
-                                          onChange={(e) => setSearchQuery(e.target.value)}
-                                          className="h-9 pl-9 text-sm font-normal rounded-full focus-visible:ring-1"
-                                          autoFocus
-                                        />
-                                      </div>
+                                      <SearchInput
+                                        value={searchQuery}
+                                        onValueChange={setSearchQuery}
+                                        placeholder="Tìm sản phẩm..."
+                                        autoFocus
+                                      />
                                     </div>
                                     <ul className="max-h-60 overflow-y-auto py-1">
                                       {filteredProducts.map((ap) => (
