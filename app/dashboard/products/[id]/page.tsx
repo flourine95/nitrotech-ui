@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { ProductDetailClient } from './product-detail-client';
-import { backendFetch } from '@/lib/server';
+import { backendFetch } from '@/lib/api/server';
 import { cookies } from 'next/headers';
 import type { Product } from '@/lib/api/products';
 

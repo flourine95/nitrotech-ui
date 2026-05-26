@@ -1,9 +1,9 @@
 import { notFound } from 'next/navigation';
 import { cookies } from 'next/headers';
-import { backendFetch } from '@/lib/server';
+import { backendFetch } from '@/lib/api/server';
 import type { Category } from '@/lib/api/categories';
 import type { Brand } from '@/lib/api/brands';
-import type { Page } from '@/lib/types/pagination';
+import type { Page } from '@/types/pagination';
 import { ProductForm } from '@/app/dashboard/products/product-form';
 
 async function fetchPageData(id: number) {

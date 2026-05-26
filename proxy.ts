@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-const PROTECTED = ['/dashboard', '/account'];
+import { isProtectedPath } from '@/lib/auth/routes';
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const isProtected = PROTECTED.some((p) => pathname.startsWith(p));
 
-  if (!isProtected) return NextResponse.next();
+  if (!isProtectedPath(pathname)) {
+    return NextResponse.next();
+  }
 
-  // Spring Session dùng cookie tên "SESSION"
   if (!request.cookies.has('SESSION')) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('from', pathname);

@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import type { DateRange } from 'react-day-picker';
-import { type Order, type OrderStatus } from '@/lib/api/orders';
+import { type Order, OrderStatus } from '@/lib/api/orders';
 import { mockOrdersPage } from '@/lib/mocks/orders';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -126,7 +126,7 @@ export default function DashboardOrdersPage() {
   const [dateTo, setDateTo] = useQueryState('to', parseAsString.withDefault(''));
   const [statusFilter, setStatusFilter] = useQueryState('st', parseAsString.withDefault('all'));
   const [sortBy, setSortBy] = useQueryState('sort', parseAsString.withDefault('createdAt'));
-  const [sortDir, setSortDir] = useQueryState('dir', parseAsString.withDefault('desc') as ReturnType<typeof parseAsString>);
+  const [sortDir, setSortDir] = useQueryState('dir', parseAsString.withDefault('desc'));
   const [currentPage, setCurrentPage] = useQueryState('page', parseAsInteger.withDefault(0));
   const [pageSize, setPageSize] = useQueryState('size', parseAsInteger.withDefault(10));
 

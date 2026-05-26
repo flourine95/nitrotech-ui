@@ -6,7 +6,7 @@ import { ScrollToTop } from '@/components/scroll-to-top';
 import { CompareProvider } from '@/components/compare-bar';
 import { Toaster } from '@/components/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { Providers } from '@/components/providers';
+import { Providers } from '@/providers/providers';
 import { ReactNode } from 'react';
 
 const beVietnamPro = Be_Vietnam_Pro({
@@ -17,7 +17,7 @@ const beVietnamPro = Be_Vietnam_Pro({
 
 export const metadata: Metadata = {
   title: {
-    default: 'NitroTech — Linh kiện điện tử, Laptop & Máy tính',
+    default: 'NitroTech - Linh kiện điện tử, Laptop & Máy tính',
     template: '%s | NitroTech',
   },
   description:
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="vi" suppressHydrationWarning className={beVietnamPro.variable}>
-      <body suppressHydrationWarning className="bg-[#F8FAFC] font-sans text-[#0F172A] antialiased">
+      <body suppressHydrationWarning className="font-sans antialiased">
         <ProgressBar />
         <Providers>
           <TooltipProvider>

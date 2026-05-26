@@ -1,4 +1,4 @@
-import { apiFetch } from '@/lib/client';
+import { apiFetch } from '@/lib/api/client';
 
 export type AllowedFolder = 'products' | 'brands' | 'categories' | 'avatars' | 'banners';
 

@@ -15,6 +15,18 @@ export function formatPriceRange(min: number | null, max: number | null): string
     : `${vndFormatter.format(min)} – ${vndFormatter.format(max!)}`;
 }
 
+/**
+ * Format price in short form (e.g., 1.5tr, 500k)
+ * Used in filters, labels, and compact displays
+ */
+export function formatPriceShort(price: number): string {
+  if (price >= 1000000) {
+    const millions = price / 1000000;
+    return `${millions % 1 === 0 ? millions.toFixed(0) : millions.toFixed(1)}tr`;
+  }
+  return `${(price / 1000).toFixed(0)}k`;
+}
+
 export function formatRelativeDate(dateStr: string): string {
   const date = new Date(dateStr);
   const now = new Date();

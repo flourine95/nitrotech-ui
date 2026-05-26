@@ -98,3 +98,13 @@ export function slugify(str: string): string {
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '');
 }
+
+/**
+ * Remove Vietnamese tones for fuzzy search
+ * Example: "Bàn phím cơ" → "ban phim co"
+ */
+export function removeVietnameseTones(str: string): string {
+  return str
+    .toLowerCase()
+    .replace(/[^\u0000-\u007E]/g, (c) => VI_MAP[c] ?? c);
+}

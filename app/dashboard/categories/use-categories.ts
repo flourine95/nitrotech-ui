@@ -9,13 +9,12 @@ import {
   hardDeleteCategory,
   moveCategoryUp,
   moveCategoryDown,
-  changeCategoryParent,
   restoreCategory,
   updateCategory,
 } from '@/lib/api/categories';
-import { ApiException } from '@/lib/client';
-import { flattenTree, type TreeNode } from '@/lib/types/categories';
-import type { Page } from '@/lib/types/pagination';
+import { ApiException } from '@/lib/api/client';
+import { flattenTree, type TreeNode } from '@/types/categories';
+import type { Page } from '@/types/pagination';
 
 type FilterStatus = 'all' | 'active' | 'inactive' | 'deleted';
 
@@ -280,7 +279,7 @@ export function useCategories() {
       const snapshot = { flatList, tree };
       applyChangeParent(id, fromParentId, newParentId);
       try {
-        await changeCategoryParent(id, newParentId);
+        await updateCategory(id, { parentId: newParentId });
         await load(); // Reload to get correct sortOrder from backend
         toast.success('Đã đổi danh mục cha');
       } catch (error: any) {

@@ -1,23 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { backendFetch } from '@/lib/server';
-
-// Public endpoints — không cần SESSION cookie
-const PUBLIC_PATHS = [
-  '/api/auth/register',
-  '/api/auth/forgot-password',
-  '/api/auth/reset-password',
-  '/api/auth/verify-email',
-  '/api/auth/resend-verification',
-  '/api/products',
-  '/api/categories',
-  '/api/brands',
-];
-
-function isPublic(pathname: string): boolean {
-  return PUBLIC_PATHS.some(
-    (p) => pathname === p || pathname.startsWith(p + '?') || pathname.startsWith(p + '/'),
-  );
-}
+import { backendFetch } from '@/lib/api/server';
+import { isPublicApiPath } from '@/lib/auth/routes';
 
 async function handler(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
@@ -28,7 +11,7 @@ async function handler(request: NextRequest) {
 
   const springRes = await backendFetch(`${pathname}${search}`, {
     method: request.method,
-    cookieHeader: isPublic(pathname) ? undefined : cookieHeader,
+    cookieHeader: isPublicApiPath(pathname) ? undefined : cookieHeader,
     body,
   });
 

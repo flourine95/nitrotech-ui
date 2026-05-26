@@ -1,9 +1,13 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { useQuery } from '@tanstack/react-query';
+import { getMe } from '@/lib/api/auth';
+import { BrandLogo } from '@/components/icons';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useCartStore } from '@/stores/cart.store';
 
 const navLinks = [
   { label: 'Laptop', href: '/products?cat=laptop' },
@@ -44,20 +48,30 @@ const announcements = [
   },
 ];
 
-export function SiteHeader({
-  cartCount = 0,
-  initialUser,
-}: {
-  cartCount?: number;
-  initialUser?: { name?: string | null; email?: string | null; image?: string | null } | null;
-}) {
+export function SiteHeader() {
   const pathname = usePathname();
-  const user = initialUser;
-  const isLoggedIn = !!user;
-  const userName = user?.name ?? 'Tài khoản';
+  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
-  const router = useRouter();
+
+  // Get user from TanStack Query
+  const { data: user } = useQuery({
+    queryKey: ['user'],
+    queryFn: getMe,
+    retry: false,
+    staleTime: 5 * 60 * 1000, // Cache 5 phút
+  });
+
+  const isLoggedIn = !!user;
+  const userName = user?.name ?? 'Tài khoản';
+
+  const { totalItems, fetchCart } = useCartStore();
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      void fetchCart();
+    }
+  }, [isLoggedIn, fetchCart]);
 
   async function handleLogout() {
     try {
@@ -106,16 +120,7 @@ export function SiteHeader({
       {/* Main nav */}
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
         {/* Logo */}
-        <Link href="/" className="flex cursor-pointer items-center gap-2.5">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-slate-900">
-            <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current text-white" aria-hidden="true">
-              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-            </svg>
-          </div>
-          <span className="text-lg font-bold text-slate-900">
-            Nitro<span className="text-blue-600">Tech</span>
-          </span>
-        </Link>
+        <BrandLogo />
 
         {/* Desktop nav */}
         <div className="hidden items-center gap-1 md:flex">
@@ -161,7 +166,7 @@ export function SiteHeader({
               <Link
                 href="/cart"
                 className="relative cursor-pointer rounded-full p-2 text-slate-500 transition-colors duration-200 hover:bg-slate-100 hover:text-slate-900"
-                aria-label={`Giỏ hàng (${cartCount} sản phẩm)`}
+                aria-label={`Giỏ hàng (${totalItems} sản phẩm)`}
               >
                 <svg
                   viewBox="0 0 24 24"
@@ -175,21 +180,21 @@ export function SiteHeader({
                   <line x1="3" y1="6" x2="21" y2="6" />
                   <path d="M16 10a4 4 0 01-8 0" />
                 </svg>
-                {cartCount > 0 && (
+                {totalItems > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white">
-                    {cartCount}
+                    {totalItems}
                   </span>
                 )}
               </Link>
             </TooltipTrigger>
-            <TooltipContent side="bottom">Giỏ hàng ({cartCount})</TooltipContent>
+            <TooltipContent side="bottom">Giỏ hàng ({totalItems})</TooltipContent>
           </Tooltip>
           {/* Login / Account */}
           {isLoggedIn ? (
             <div className="relative hidden sm:block">
               <button
                 onClick={() => setAccountOpen(!accountOpen)}
-                className="flex cursor-pointer items-center gap-2 rounded-full bg-slate-900 px-3 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:bg-slate-700"
+                className="flex cursor-pointer items-center gap-2 rounded-full bg-slate-800 px-3 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:bg-slate-700"
                 aria-expanded={accountOpen}
                 aria-haspopup="true"
               >
@@ -226,7 +231,7 @@ export function SiteHeader({
                       <div className="truncate text-sm font-semibold text-slate-900">
                         {userName}
                       </div>
-                      <div className="truncate text-xs text-slate-400">email@example.com</div>
+                      <div className="truncate text-xs text-slate-400">{user?.email ?? 'email@example.com'}</div>
                     </div>
                     <div className="py-1.5">
                       {[
@@ -387,7 +392,7 @@ export function SiteHeader({
           ) : (
             <Link
               href="/login"
-              className="hidden cursor-pointer rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:bg-slate-700 sm:block"
+              className="hidden cursor-pointer rounded-full bg-slate-800 px-5 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:bg-slate-700 sm:block"
             >
               Đăng nhập
             </Link>
@@ -426,7 +431,7 @@ export function SiteHeader({
               href={c.href}
               className={`cursor-pointer rounded-full px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors duration-200 ${
                 pathname === c.href
-                  ? 'bg-slate-900 text-white'
+                  ? 'bg-slate-800 text-white'
                   : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
               }`}
             >
@@ -481,7 +486,7 @@ export function SiteHeader({
             <Link
               href="/login"
               onClick={() => setMobileOpen(false)}
-              className="block w-full cursor-pointer rounded-full bg-slate-900 py-2.5 text-center text-sm font-semibold text-white"
+              className="block w-full cursor-pointer rounded-full bg-slate-800 py-2.5 text-center text-sm font-semibold text-white"
             >
               Đăng nhập
             </Link>

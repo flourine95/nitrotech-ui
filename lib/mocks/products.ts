@@ -1,5 +1,5 @@
 import type { Product } from '@/lib/api/products';
-import type { Page } from '@/lib/types/pagination';
+import type { Page } from '@/types/pagination';
 
 export const mockProducts: Product[] = [
   {
@@ -13,6 +13,9 @@ export const mockProducts: Product[] = [
     description: 'Laptop cao cấp với chip M4, màn hình Liquid Retina XDR 14 inch.',
     thumbnail:
       'https://cdn.shadcnstudio.com/ss-assets/blocks/dashboard-application/widgets/image-7.png',
+    badge: null,
+    rating: 0,
+    reviewCount: 0,
     specs: {
       CPU: 'Apple M4',
       RAM: '16GB',
@@ -38,6 +41,9 @@ export const mockProducts: Product[] = [
     slug: 'rtx-4080-super-16gb',
     description: 'Card đồ họa flagship với 16GB GDDR6X, hiệu năng vượt trội.',
     thumbnail: null,
+    badge: null,
+    rating: 0,
+    reviewCount: 0,
     specs: { VRAM: '16GB GDDR6X', TDP: '320W', Interface: 'PCIe 4.0 x16' },
     active: true,
     images: [],
@@ -58,6 +64,9 @@ export const mockProducts: Product[] = [
     slug: 'asus-rog-strix-g16-2025',
     description: 'Laptop gaming mạnh mẽ với RTX 4070, màn hình 165Hz.',
     thumbnail: null,
+    badge: null,
+    rating: 0,
+    reviewCount: 0,
     specs: {
       CPU: 'Intel Core i9-14900HX',
       GPU: 'RTX 4070',
@@ -83,6 +92,9 @@ export const mockProducts: Product[] = [
     slug: 'samsung-990-pro-2tb',
     description: 'SSD NVMe PCIe 4.0 tốc độ cao, đọc 7450MB/s.',
     thumbnail: null,
+    badge: null,
+    rating: 0,
+    reviewCount: 0,
     specs: {
       Capacity: '2TB',
       Interface: 'PCIe 4.0 NVMe',
@@ -108,6 +120,9 @@ export const mockProducts: Product[] = [
     slug: 'intel-core-i9-14900k',
     description: 'CPU desktop cao cấp 24 nhân, xung nhịp boost 6.0GHz.',
     thumbnail: null,
+    badge: null,
+    rating: 0,
+    reviewCount: 0,
     specs: { Cores: '24 (8P+16E)', MaxBoost: '6.0 GHz', TDP: '125W', Socket: 'LGA1700' },
     active: true,
     images: [],
@@ -128,6 +143,9 @@ export const mockProducts: Product[] = [
     slug: 'lg-ultragear-27gr95qe',
     description: 'Màn hình gaming OLED 27 inch, 240Hz, 0.03ms response time.',
     thumbnail: null,
+    badge: null,
+    rating: 0,
+    reviewCount: 0,
     specs: { Panel: 'OLED', Resolution: '2560x1440', RefreshRate: '240Hz', ResponseTime: '0.03ms' },
     active: true,
     images: [],
@@ -148,6 +166,9 @@ export const mockProducts: Product[] = [
     slug: 'corsair-vengeance-ddr5-32gb',
     description: 'RAM DDR5 tốc độ cao 6000MHz, tối ưu cho Intel 13th/14th gen.',
     thumbnail: null,
+    badge: null,
+    rating: 0,
+    reviewCount: 0,
     specs: { Capacity: '32GB (2x16GB)', Speed: '6000MHz', Type: 'DDR5', Latency: 'CL36' },
     active: true,
     images: [],
@@ -168,6 +189,9 @@ export const mockProducts: Product[] = [
     slug: 'dell-xps-15-9530-oled',
     description: 'Laptop cao cấp màn hình OLED 3.5K, thiết kế mỏng nhẹ.',
     thumbnail: null,
+    badge: null,
+    rating: 0,
+    reviewCount: 0,
     specs: {
       CPU: 'Intel Core i7-13700H',
       RAM: '32GB',

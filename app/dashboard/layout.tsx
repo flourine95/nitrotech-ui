@@ -1,10 +1,14 @@
 import { redirect } from 'next/navigation';
-import { getSession } from '@/lib/auth';
+import { getSession } from '@/lib/auth/session';
 import { DashboardShell } from './dashboard-shell';
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await getSession();
   if (!user) redirect('/login?from=/dashboard');
 
-  return <DashboardShell user={user}>{children}</DashboardShell>;
+  return (
+    <div className="dashboard-theme">
+      <DashboardShell user={user}>{children}</DashboardShell>
+    </div>
+  );
 }

@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { toast } from 'sonner';
 import { Building2, Upload, ImageIcon } from 'lucide-react';
 import { createBrand, updateBrand, type Brand } from '@/lib/api/brands';
-import { ApiException } from '@/lib/client';
+import { ApiException } from '@/lib/api/client';
 import { slugify, cn } from '@/lib/utils';
 import MediaPickerDialog from '@/components/media-picker-dialog';
 import { Button } from '@/components/ui/button';

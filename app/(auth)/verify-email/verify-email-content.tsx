@@ -3,7 +3,7 @@ import { SubmitEventHandler, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { verifyEmail, resendVerification } from '@/lib/api/auth';
-import { ApiException } from '@/lib/client';
+import { ApiException } from '@/lib/api/client';
 
 type Status = 'loading' | 'success' | 'error';
 

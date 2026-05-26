@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { Building2, MoreHorizontal, Plus, RotateCcw, Trash2 } from 'lucide-react';
 import type { Brand } from '@/lib/api/brands';
-import { ApiException } from '@/lib/client';
+import { ApiException } from '@/lib/api/client';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {

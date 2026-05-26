@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useQueryState, parseAsInteger, parseAsString } from 'nuqs';
 import type { SortRule } from '@/components/data-table-toolbar';
-import { ApiException } from '@/lib/client';
+import { ApiException } from '@/lib/api/client';
 import {
   type Brand,
   type BrandsQuery,

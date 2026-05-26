@@ -17,11 +17,9 @@ import {
   restoreProduct,
   updateProduct,
 } from '@/lib/api/products';
-import type { Category } from '@/lib/api/categories';
-import { getCategories } from '@/lib/api/categories';
-import { getBrands } from '@/lib/api/brands';
-import type { Brand } from '@/lib/api/brands';
-import { ApiException } from '@/lib/client';
+import { getCategories, type Category } from '@/lib/api/categories';
+import { getBrands, type Brand } from '@/lib/api/brands';
+import { ApiException } from '@/lib/api/client';
 import { Button } from '@/components/ui/button';
 import { useCallback, useMemo, useState, startTransition } from 'react';
 import { useTableSelection } from '@/hooks/use-table-selection';
@@ -157,8 +155,8 @@ export default function DashboardProductsPage() {
         search: search || undefined,
         active: isDeleted ? undefined : activeFilter,
         deleted: isDeleted ? true : undefined,
-        categoryId: filterCategoryId ?? undefined,
-        brandId: filterBrandId ?? undefined,
+        category: categorySlug,
+        brand: brandSlug ? [brandSlug] : undefined,
         page: currentPage,
         size: pageSize,
         sort: sortBy,
@@ -185,10 +183,10 @@ export default function DashboardProductsPage() {
   const categoriesQuery = useQuery({
     queryKey: ['categories-flat'],
     queryFn: async () => {
-      const res = await getCategories({ tree: false });
+      const res = await getCategories({ deleted: false });
       return Array.isArray(res)
         ? (res as Category[])
-        : ((res as { content: Category[] }).content ?? []);
+        : ((res as { data: Category[] }).data ?? []);
     },
     staleTime: Infinity,
     gcTime: Infinity,
@@ -355,8 +353,8 @@ export default function DashboardProductsPage() {
         search: search || undefined,
         active: isDeleted ? undefined : activeFilter,
         deleted: isDeleted ? true : undefined,
-        categoryId: filterCategoryId ?? undefined,
-        brandId: filterBrandId ?? undefined,
+        category: categorySlug,
+        brand: brandSlug ? [brandSlug] : undefined,
         sort: sortBy,
       });
       downloadCSV(productsToCSV(data.content), `products-export-${Date.now()}.csv`);
@@ -388,6 +386,15 @@ export default function DashboardProductsPage() {
   );
   const brandName = useMemo(
     () => brands.find((b) => b.id === filterBrandId)?.name,
+    [brands, filterBrandId],
+  );
+  
+  const categorySlug = useMemo(
+    () => categories.find((c) => c.id === filterCategoryId)?.slug,
+    [categories, filterCategoryId],
+  );
+  const brandSlug = useMemo(
+    () => brands.find((b) => b.id === filterBrandId)?.slug,
     [brands, filterBrandId],
   );
 

@@ -4,9 +4,14 @@ import Link from 'next/link';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { type RegisterInput, registerSchema } from '@/lib/schemas/auth';
+import { Eye, EyeOff, CheckCircle2 } from 'lucide-react';
+import { type RegisterInput, registerSchema } from '@/schemas/auth';
 import { register as registerUser } from '@/lib/api/auth';
-import { ApiException } from '@/lib/client';
+import { ApiException } from '@/lib/api/client';
+import { FieldGroup, Field, FieldLabel, FieldDescription } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 
 export default function RegisterPage() {
   const [showPass, setShowPass] = useState(false);
@@ -67,27 +72,18 @@ export default function RegisterPage() {
   if (done) {
     return (
       <div className="w-full max-w-md">
-        <div className="rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm">
-          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-            <svg
-              viewBox="0 0 24 24"
-              className="h-8 w-8 fill-current text-green-600"
-              aria-hidden="true"
-            >
-              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+        <div className="rounded-3xl border bg-card p-8 text-center shadow-lg">
+          <div className="mx-auto mb-5 flex size-16 items-center justify-center rounded-full bg-green-100">
+            <CheckCircle2 className="size-8 text-green-600" aria-hidden="true" />
           </div>
-          <h2 className="mb-2 text-xl font-bold text-slate-900">Đăng ký thành công!</h2>
-          <p className="mb-6 text-sm leading-relaxed text-slate-500">
+          <h2 className="mb-2 text-xl font-bold">Đăng ký thành công!</h2>
+          <p className="mb-6 text-sm leading-relaxed text-muted-foreground">
             Chúng tôi đã gửi email xác thực đến hộp thư của bạn. Vui lòng kiểm tra và xác thực tài
             khoản trước khi đăng nhập.
           </p>
-          <Link
-            href="/login"
-            className="inline-block cursor-pointer rounded-full bg-slate-900 px-8 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-slate-700"
-          >
-            Đến trang đăng nhập
-          </Link>
+          <Button asChild className="h-auto rounded-full px-8 py-3 font-semibold">
+            <Link href="/login">Đến trang đăng nhập</Link>
+          </Button>
         </div>
       </div>
     );
@@ -95,10 +91,10 @@ export default function RegisterPage() {
 
   return (
     <div className="w-full max-w-md">
-      <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+      <div className="rounded-3xl border bg-card p-8 shadow-lg">
         <div className="mb-8 text-center">
-          <h1 className="mb-1 text-2xl font-bold text-slate-900">Tạo tài khoản</h1>
-          <p className="text-sm text-slate-500">Tham gia NitroTech để mua sắm dễ dàng hơn</p>
+          <h1 className="mb-1 text-2xl font-bold">Tạo tài khoản</h1>
+          <p className="text-sm text-muted-foreground">Tham gia NitroTech để mua sắm dễ dàng hơn</p>
         </div>
 
         {/* Step indicator */}
@@ -106,19 +102,13 @@ export default function RegisterPage() {
           {['Thông tin', 'Bảo mật'].map((s, i) => (
             <div key={s} className="flex flex-1 items-center">
               <div
-                className={`flex flex-1 items-center gap-2 ${i < step - 1 ? 'text-green-600' : i === step - 1 ? 'text-slate-900' : 'text-slate-300'}`}
+                className={`flex flex-1 items-center gap-2 ${i < step - 1 ? 'text-green-600' : i === step - 1 ? 'text-foreground' : 'text-muted-foreground'}`}
               >
                 <div
-                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors duration-200 ${i < step - 1 ? 'bg-green-100 text-green-600' : i === step - 1 ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-400'}`}
+                  className={`flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors ${i < step - 1 ? 'bg-green-100 text-green-600' : i === step - 1 ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground'}`}
                 >
                   {i < step - 1 ? (
-                    <svg
-                      viewBox="0 0 24 24"
-                      className="h-3.5 w-3.5 fill-current"
-                      aria-hidden="true"
-                    >
-                      <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+                    <CheckCircle2 className="size-3.5" aria-hidden="true" />
                   ) : (
                     i + 1
                   )}
@@ -126,7 +116,7 @@ export default function RegisterPage() {
                 <span className="text-sm font-medium">{s}</span>
               </div>
               {i < 1 && (
-                <div className={`mx-3 h-px flex-1 ${step > 1 ? 'bg-green-300' : 'bg-slate-200'}`} />
+                <Separator className={`mx-3 flex-1 ${step > 1 ? 'bg-green-300' : ''}`} />
               )}
             </div>
           ))}
@@ -134,82 +124,70 @@ export default function RegisterPage() {
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
           {step === 1 && (
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="name" className="mb-1.5 block text-sm font-medium text-slate-700">
-                  Họ và tên
-                </label>
-                <input
+            <FieldGroup>
+              <Field data-invalid={!!errors.name}>
+                <FieldLabel htmlFor="name">Họ và tên</FieldLabel>
+                <Input
                   id="name"
                   type="text"
                   placeholder="Nguyễn Văn A"
                   {...register('name')}
-                  className={`w-full rounded-full border px-4 py-3 text-sm placeholder-slate-400 transition-all duration-200 focus:ring-2 focus:outline-none ${errors.name ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-100' : 'border-slate-200 focus:border-blue-400 focus:ring-blue-100'}`}
+                  aria-invalid={!!errors.name}
+                  className="h-auto rounded-full px-4 py-3"
                 />
-                {errors.name && (
-                  <p className="mt-1.5 text-xs text-rose-500">{errors.name.message}</p>
-                )}
-              </div>
-              <div>
-                <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-slate-700">
-                  Email
-                </label>
-                <input
+                {errors.name && <FieldDescription>{errors.name.message}</FieldDescription>}
+              </Field>
+
+              <Field data-invalid={!!errors.email}>
+                <FieldLabel htmlFor="email">Email</FieldLabel>
+                <Input
                   id="email"
                   type="email"
                   placeholder="email@example.com"
                   {...register('email')}
-                  className={`w-full rounded-full border px-4 py-3 text-sm placeholder-slate-400 transition-all duration-200 focus:ring-2 focus:outline-none ${errors.email ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-100' : 'border-slate-200 focus:border-blue-400 focus:ring-blue-100'}`}
+                  aria-invalid={!!errors.email}
+                  className="h-auto rounded-full px-4 py-3"
                 />
-                {errors.email && (
-                  <p className="mt-1.5 text-xs text-rose-500">{errors.email.message}</p>
-                )}
-              </div>
-              <button
+                {errors.email && <FieldDescription>{errors.email.message}</FieldDescription>}
+              </Field>
+
+              <Button
                 type="button"
                 onClick={goNext}
-                className="w-full cursor-pointer rounded-full bg-slate-900 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-slate-700"
+                className="h-auto w-full rounded-full py-3 font-semibold"
               >
                 Tiếp theo
-              </button>
-            </div>
+              </Button>
+            </FieldGroup>
           )}
 
           {step === 2 && (
-            <div className="space-y-4">
-              <div>
-                <label
-                  htmlFor="password"
-                  className="mb-1.5 block text-sm font-medium text-slate-700"
-                >
-                  Mật khẩu
-                </label>
+            <FieldGroup>
+              <Field data-invalid={!!errors.password}>
+                <FieldLabel htmlFor="password">Mật khẩu</FieldLabel>
                 <div className="relative">
-                  <input
+                  <Input
                     id="password"
                     type={showPass ? 'text' : 'password'}
                     placeholder="Tối thiểu 6 ký tự"
                     {...register('password')}
-                    className={`w-full rounded-full border px-4 py-3 pr-12 text-sm placeholder-slate-400 transition-all duration-200 focus:ring-2 focus:outline-none ${errors.password ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-100' : 'border-slate-200 focus:border-blue-400 focus:ring-blue-100'}`}
+                    aria-invalid={!!errors.password}
+                    className="h-auto rounded-full px-4 py-3 pr-12"
                   />
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="icon"
                     onClick={() => setShowPass(!showPass)}
-                    className="absolute top-1/2 right-4 -translate-y-1/2 cursor-pointer text-slate-400 hover:text-slate-700"
-                    aria-label={showPass ? 'Ẩn' : 'Hiện'}
+                    className="absolute top-0 right-0 h-full px-3 hover:bg-transparent"
+                    aria-label={showPass ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
                   >
-                    <svg
-                      viewBox="0 0 24 24"
-                      className="h-4 w-4"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      aria-hidden="true"
-                    >
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                      <circle cx="12" cy="12" r="3" />
-                    </svg>
-                  </button>
+                    {showPass ? (
+                      <EyeOff data-icon="inline-start" aria-hidden="true" />
+                    ) : (
+                      <Eye data-icon="inline-start" aria-hidden="true" />
+                    )}
+                  </Button>
                 </div>
                 {password.length > 0 && (
                   <div className="mt-2">
@@ -217,7 +195,7 @@ export default function RegisterPage() {
                       {[1, 2, 3, 4].map((i) => (
                         <div
                           key={i}
-                          className={`h-1 flex-1 rounded-full transition-colors duration-200 ${i <= strength ? strengthColor : 'bg-slate-200'}`}
+                          className={`h-1 flex-1 rounded-full transition-colors ${i <= strength ? strengthColor : 'bg-muted'}`}
                         />
                       ))}
                     </div>
@@ -228,65 +206,55 @@ export default function RegisterPage() {
                     </p>
                   </div>
                 )}
-                {errors.password && (
-                  <p className="mt-1.5 text-xs text-rose-500">{errors.password.message}</p>
-                )}
-              </div>
+                {errors.password && <FieldDescription>{errors.password.message}</FieldDescription>}
+              </Field>
 
-              <div>
-                <label
-                  htmlFor="confirmPassword"
-                  className="mb-1.5 block text-sm font-medium text-slate-700"
-                >
-                  Xác nhận mật khẩu
-                </label>
+              <Field data-invalid={!!errors.confirmPassword}>
+                <FieldLabel htmlFor="confirmPassword">Xác nhận mật khẩu</FieldLabel>
                 <div className="relative">
-                  <input
+                  <Input
                     id="confirmPassword"
                     type={showConfirm ? 'text' : 'password'}
                     placeholder="Nhập lại mật khẩu"
                     {...register('confirmPassword')}
-                    className={`w-full rounded-full border px-4 py-3 pr-12 text-sm placeholder-slate-400 transition-all duration-200 focus:ring-2 focus:outline-none ${errors.confirmPassword ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-100' : 'border-slate-200 focus:border-blue-400 focus:ring-blue-100'}`}
+                    aria-invalid={!!errors.confirmPassword}
+                    className="h-auto rounded-full px-4 py-3 pr-12"
                   />
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="icon"
                     onClick={() => setShowConfirm(!showConfirm)}
-                    className="absolute top-1/2 right-4 -translate-y-1/2 cursor-pointer text-slate-400 hover:text-slate-700"
-                    aria-label={showConfirm ? 'Ẩn' : 'Hiện'}
+                    className="absolute top-0 right-0 h-full px-3 hover:bg-transparent"
+                    aria-label={showConfirm ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
                   >
-                    <svg
-                      viewBox="0 0 24 24"
-                      className="h-4 w-4"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      aria-hidden="true"
-                    >
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                      <circle cx="12" cy="12" r="3" />
-                    </svg>
-                  </button>
+                    {showConfirm ? (
+                      <EyeOff data-icon="inline-start" aria-hidden="true" />
+                    ) : (
+                      <Eye data-icon="inline-start" aria-hidden="true" />
+                    )}
+                  </Button>
                 </div>
                 {errors.confirmPassword && (
-                  <p className="mt-1.5 text-xs text-rose-500">{errors.confirmPassword.message}</p>
+                  <FieldDescription>{errors.confirmPassword.message}</FieldDescription>
                 )}
-              </div>
+              </Field>
 
               <div className="flex items-start gap-2">
                 <input
                   id="terms"
                   type="checkbox"
                   required
-                  className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer rounded accent-slate-900"
+                  className="mt-0.5 size-4 shrink-0 cursor-pointer rounded accent-foreground"
                 />
                 <label
                   htmlFor="terms"
-                  className="cursor-pointer text-sm leading-relaxed text-slate-600"
+                  className="cursor-pointer text-sm leading-relaxed text-muted-foreground"
                 >
                   Tôi đồng ý với{' '}
                   <Link
                     href="/terms"
-                    className="text-blue-600 hover:underline"
+                    className="text-primary hover:underline"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -295,7 +263,7 @@ export default function RegisterPage() {
                   và{' '}
                   <Link
                     href="/privacy"
-                    className="text-blue-600 hover:underline"
+                    className="text-primary hover:underline"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -305,30 +273,31 @@ export default function RegisterPage() {
               </div>
 
               <div className="flex gap-3">
-                <button
+                <Button
                   type="button"
                   onClick={() => setStep(1)}
-                  className="flex-1 cursor-pointer rounded-full border border-slate-200 py-3 text-sm font-semibold text-slate-700 transition-colors duration-200 hover:bg-slate-100"
+                  variant="outline"
+                  className="h-auto flex-1 rounded-full py-3 font-semibold"
                 >
                   Quay lại
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex-1 cursor-pointer rounded-full bg-slate-900 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="h-auto flex-1 rounded-full py-3 font-semibold"
                 >
                   {isSubmitting ? 'Đang tạo...' : 'Tạo tài khoản'}
-                </button>
+                </Button>
               </div>
-            </div>
+            </FieldGroup>
           )}
         </form>
 
-        <p className="mt-6 text-center text-sm text-slate-500">
+        <p className="mt-6 text-center text-sm text-muted-foreground">
           Đã có tài khoản?{' '}
           <Link
             href="/login"
-            className="cursor-pointer font-medium text-blue-600 transition-colors duration-150 hover:text-blue-700"
+            className="font-medium text-primary hover:underline"
           >
             Đăng nhập
           </Link>
