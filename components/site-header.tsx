@@ -8,6 +8,7 @@ import { getMe } from '@/lib/api/auth';
 import { BrandLogo } from '@/components/icons';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useCartStore } from '@/stores/cart.store';
+import { MegaCategoryMenu } from '@/components/mega-category-menu';
 
 const navLinks = [
   { label: 'Laptop', href: '/products?cat=laptop' },
@@ -16,19 +17,6 @@ const navLinks = [
   { label: 'Phụ kiện', href: '/products?cat=accessories' },
   { label: 'Khuyến mãi', href: '/products?sale=true' },
   { label: 'Blog', href: '/blog' },
-];
-
-const categories = [
-  { label: 'Tất cả', href: '/products' },
-  { label: 'Laptop Gaming', href: '/products?cat=laptop-gaming' },
-  { label: 'Laptop Văn phòng', href: '/products?cat=laptop-office' },
-  { label: 'PC Desktop', href: '/products?cat=desktop' },
-  { label: 'CPU & Bo mạch', href: '/products?cat=cpu' },
-  { label: 'Card đồ họa', href: '/products?cat=gpu' },
-  { label: 'RAM & SSD', href: '/products?cat=storage' },
-  { label: 'Màn hình', href: '/products?cat=monitors' },
-  { label: 'Bàn phím & Chuột', href: '/products?cat=peripherals' },
-  { label: 'Tai nghe', href: '/products?cat=audio' },
 ];
 
 const announcements = [
@@ -124,6 +112,9 @@ export function SiteHeader() {
 
         {/* Desktop nav */}
         <div className="hidden items-center gap-1 md:flex">
+          {/* Mega Category Menu */}
+          <MegaCategoryMenu />
+          
           {navLinks.map((l) => (
             <Link
               key={l.href}
@@ -421,25 +412,6 @@ export function SiteHeader() {
           </button>
         </div>
       </nav>
-
-      {/* Category bar */}
-      <div className="hidden border-t border-slate-100 md:block">
-        <div className="mx-auto flex max-w-7xl items-center gap-1 overflow-x-auto px-6 py-2">
-          {categories.map((c) => (
-            <Link
-              key={c.href}
-              href={c.href}
-              className={`cursor-pointer rounded-full px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors duration-200 ${
-                pathname === c.href
-                  ? 'bg-slate-800 text-white'
-                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-              }`}
-            >
-              {c.label}
-            </Link>
-          ))}
-        </div>
-      </div>
 
       {/* Mobile menu */}
       {mobileOpen && (
