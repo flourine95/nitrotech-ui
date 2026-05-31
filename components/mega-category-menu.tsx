@@ -51,7 +51,7 @@ export function MegaCategoryMenu() {
                       {categories.map((cat) => (
                         <NavigationMenuLink key={cat.id} asChild>
                           <Link
-                            href={`/products?category=${cat.name}`}
+                            href={`/products?category=${encodeURIComponent(cat.slug)}`}
                             onMouseEnter={() => setActiveCategory(cat.id)}
                             className={`flex items-center justify-between gap-2 rounded-full px-3 py-2 text-sm transition-colors ${
                               activeCategory === cat.id
@@ -82,7 +82,7 @@ export function MegaCategoryMenu() {
                             .map((sub) => (
                               <NavigationMenuLink key={sub.id} asChild>
                                 <Link
-                                  href={`/products?category=${sub.name}`}
+                                  href={`/products?category=${encodeURIComponent(sub.slug)}`}
                                   className="group flex items-center gap-2 rounded-full px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted"
                                 >
                                   <span className="truncate">{sub.name}</span>
