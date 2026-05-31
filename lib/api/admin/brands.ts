@@ -1,18 +1,11 @@
 import { apiFetch } from '@/lib/api/client';
 import type { Page } from '@/types/pagination';
+import { toPage } from '@/lib/api/public/products';
+import type { Brand } from '@/lib/api/public/brands';
 
-export interface Brand {
-  id: number;
-  name: string;
-  slug: string;
-  logo: string | null;
-  description: string | null;
-  active: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
+export type { Brand } from '@/lib/api/public/brands';
 
-export interface BrandsQuery {
+export interface AdminBrandsQuery {
   search?: string;
   active?: boolean;
   deleted?: boolean;
@@ -21,7 +14,7 @@ export interface BrandsQuery {
   sort?: string | string[];
 }
 
-export async function getBrands(query?: BrandsQuery): Promise<Page<Brand>> {
+export async function getAdminBrands(query?: AdminBrandsQuery): Promise<Page<Brand>> {
   const q = new URLSearchParams();
   if (query?.search?.trim()) q.set('search', query.search.trim());
   if (query?.active !== undefined) q.set('active', String(query.active));
@@ -37,17 +30,17 @@ export async function getBrands(query?: BrandsQuery): Promise<Page<Brand>> {
     qs = qs ? `${qs}&${sortStr}` : `?${sortStr}`;
   }
 
-  const res = await apiFetch<{ data: Page<Brand> }>(`/api/brands${qs}`);
-  return res.data;
+  const res = await apiFetch<Parameters<typeof toPage<Brand>>[0]>(`/api/admin/brands${qs}`);
+  return toPage(res);
 }
 
 export async function getBrand(id: number) {
-  const res = await apiFetch<{ data: Brand }>(`/api/brands/${id}`);
+  const res = await apiFetch<{ data: Brand }>(`/api/admin/brands/${id}`);
   return res.data;
 }
 
 export async function createBrand(body: Omit<Brand, 'id' | 'createdAt' | 'updatedAt'>) {
-  const res = await apiFetch<{ data: Brand; message: string }>('/api/brands', {
+  const res = await apiFetch<{ data: Brand; message: string }>('/api/admin/brands', {
     method: 'POST',
     body: JSON.stringify(body),
   });
@@ -58,7 +51,7 @@ export async function updateBrand(
   id: number,
   body: Partial<Omit<Brand, 'id' | 'createdAt' | 'updatedAt'>>,
 ) {
-  const res = await apiFetch<{ data: Brand }>(`/api/brands/${id}`, {
+  const res = await apiFetch<{ data: Brand }>(`/api/admin/brands/${id}`, {
     method: 'PUT',
     body: JSON.stringify(body),
   });
@@ -66,13 +59,13 @@ export async function updateBrand(
 }
 
 export async function deleteBrand(id: number) {
-  return apiFetch<{ message: string }>(`/api/brands/${id}`, { method: 'DELETE' });
+  return apiFetch<{ message: string }>(`/api/admin/brands/${id}`, { method: 'DELETE' });
 }
 
 export async function restoreBrand(id: number) {
-  return apiFetch<{ message: string }>(`/api/brands/${id}/restore`, { method: 'PATCH' });
+  return apiFetch<{ message: string }>(`/api/admin/brands/${id}/restore`, { method: 'PATCH' });
 }
 
 export async function hardDeleteBrand(id: number) {
-  return apiFetch<{ message: string }>(`/api/brands/${id}/permanent`, { method: 'DELETE' });
+  return apiFetch<{ message: string }>(`/api/admin/brands/${id}/permanent`, { method: 'DELETE' });
 }

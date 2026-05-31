@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { Check, ChevronsUpDown, FolderOpen } from 'lucide-react';
-import { createCategory, updateCategory, type Category } from '@/lib/api/categories';
+import { createCategory, updateCategory, type Category } from '@/lib/api/admin/categories';
 import { ApiException } from '@/lib/api/client';
 import { categorySchema, type CategoryFormData } from '@/schemas/categories';
 import { slugify, cn } from '@/lib/utils';

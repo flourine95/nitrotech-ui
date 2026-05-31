@@ -2,7 +2,7 @@ import { toast } from 'sonner';
 import { ProductCard } from '@/components/product-card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Empty, EmptyHeader, EmptyTitle, EmptyDescription } from '@/components/ui/empty';
-import type { Product } from '@/lib/api/products';
+import type { Product } from '@/lib/api/public/products';
 
 interface ProductGridProps {
   products: Product[];

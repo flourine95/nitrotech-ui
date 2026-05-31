@@ -15,8 +15,8 @@ import {
   AlertTriangle,
   TrendingDown,
 } from 'lucide-react';
-import type { Product, ProductVariant } from '@/lib/api/products';
-import { deleteProduct, updateProduct } from '@/lib/api/products';
+import type { Product, ProductVariant } from '@/lib/api/admin/products';
+import { deleteProduct, updateProduct } from '@/lib/api/admin/products';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';

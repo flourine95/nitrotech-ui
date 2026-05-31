@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { ProductDetailClient } from './product-detail-client';
 import { backendFetch } from '@/lib/api/server';
 import { cookies } from 'next/headers';
-import type { Product } from '@/lib/api/products';
+import type { Product } from '@/lib/api/admin/products';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -11,7 +11,7 @@ interface PageProps {
 async function fetchProduct(id: number) {
   const cookieStore = await cookies();
   const cookieHeader = cookieStore.toString();
-  const res = await backendFetch(`/api/products/${id}`, { cookieHeader });
+  const res = await backendFetch(`/api/admin/products/${id}`, { cookieHeader });
   if (res.status === 404) return null;
   if (!res.ok) throw new Error('Failed to fetch product');
   const json = await res.json();

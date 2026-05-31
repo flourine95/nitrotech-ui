@@ -37,20 +37,17 @@ export default function MediaPage() {
   const [search, setSearch] = useState('');
   const searchRef = useRef<HTMLInputElement>(null);
 
-  const onKeyRef = useRef<(e: KeyboardEvent) => void>(() => {});
-  onKeyRef.current = (e: KeyboardEvent) => {
-    if (e.key === '/' && document.activeElement?.tagName !== 'INPUT') {
-      e.preventDefault();
-      searchRef.current?.focus();
-    }
-    if (e.key === 'Escape') {
-      setActiveAsset(null);
-      setSearch('');
-    }
-  };
-
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => onKeyRef.current(e);
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === '/' && document.activeElement?.tagName !== 'INPUT') {
+        e.preventDefault();
+        searchRef.current?.focus();
+      }
+      if (e.key === 'Escape') {
+        setActiveAsset(null);
+        setSearch('');
+      }
+    };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, []);
@@ -62,10 +59,13 @@ export default function MediaPage() {
   const isFirstRender = useRef(true);
   useEffect(() => {
     if (isFirstRender.current) { isFirstRender.current = false; return; }
-    setSelected(new Set());
-    setActiveAsset(null);
-    setSearch('');
-    load(activeFolder);
+    const timer = setTimeout(() => {
+      setSelected(new Set());
+      setActiveAsset(null);
+      setSearch('');
+      load(activeFolder);
+    }, 0);
+    return () => clearTimeout(timer);
   }, [activeFolder]); // eslint-disable-line
 
   const filtered = useMemo(
@@ -83,7 +83,11 @@ export default function MediaPage() {
   function toggleSelect(id: string) {
     setSelected((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
       return next;
     });
   }

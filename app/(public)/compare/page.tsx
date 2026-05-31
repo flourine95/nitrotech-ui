@@ -1,5 +1,5 @@
 'use client';
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { X, Plus, AlertTriangle, Search } from 'lucide-react';
 import { useCompare } from '@/components/compare-bar';
@@ -194,20 +194,16 @@ export default function ComparePage() {
 
   const cats = [...new Set(items.map((i) => i.cat))];
   const mixedCategories = cats.length > 1;
+  const selectedSlugs = new Set(slugs);
 
   // Filter products based on search query
-  const filteredProducts = useMemo(() => {
-    return allProducts
-      .filter((ap) => !slugs.includes(ap.slug))
-      .filter((ap) => {
-        if (!searchQuery.trim()) return true;
-        const query = searchQuery.toLowerCase();
-        return (
-          ap.name.toLowerCase().includes(query) ||
-          ap.cat.toLowerCase().includes(query)
-        );
-      });
-  }, [slugs, searchQuery]);
+  const filteredProducts = allProducts
+    .filter((ap) => !selectedSlugs.has(ap.slug))
+    .filter((ap) => {
+      if (!searchQuery.trim()) return true;
+      const query = searchQuery.toLowerCase();
+      return ap.name.toLowerCase().includes(query) || ap.cat.toLowerCase().includes(query);
+    });
 
   function addSlot(slot: number, slug: string) {
     const item = allProducts.find((p) => p.slug === slug);
@@ -260,7 +256,7 @@ export default function ComparePage() {
               <AlertTriangle className="size-4 text-amber-600" />
               <AlertTitle className="text-amber-900">Đang so sánh khác danh mục</AlertTitle>
               <AlertDescription className="text-amber-700">
-                {cats.join(' và ')} có thông số khác nhau, một số ô sẽ hiển thị "-"
+                {cats.join(' và ')} có thông số khác nhau, một số ô sẽ hiển thị &quot;-&quot;
               </AlertDescription>
             </Alert>
           )}

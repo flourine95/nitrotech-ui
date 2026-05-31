@@ -1,4 +1,4 @@
-import type { Product, ProductVariant } from '@/lib/api/products';
+import type { Product, ProductVariant } from '@/lib/api/public/products';
 
 export interface CartItem {
   id: number;

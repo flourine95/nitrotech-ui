@@ -21,9 +21,9 @@ import {
   type Product,
   type ProductVariant,
   updateProduct,
-} from '@/lib/api/products';
-import type { Category } from '@/lib/api/categories';
-import type { Brand } from '@/lib/api/brands';
+} from '@/lib/api/admin/products';
+import type { Category } from '@/lib/api/admin/categories';
+import type { Brand } from '@/lib/api/admin/brands';
 import { ApiException } from '@/lib/api/client';
 import { slugify } from '@/lib/utils';
 import { type ProductFormData, productSchema } from '@/schemas/products';

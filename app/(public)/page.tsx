@@ -519,7 +519,7 @@ export default function HomePage() {
                       </svg>
                     ))}
                   </div>
-                  <p className="mb-5 text-sm leading-relaxed text-slate-600">"{t.text}"</p>
+                  <p className="mb-5 text-sm leading-relaxed text-slate-600">&quot;{t.text}&quot;</p>
                   <footer className="flex items-center gap-3">
                     <div
                       className={`h-9 w-9 rounded-full ${t.color} flex shrink-0 items-center justify-center text-xs font-bold text-white`}

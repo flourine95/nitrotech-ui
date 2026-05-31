@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronRight, Menu } from 'lucide-react';
-import { getCategories } from '@/lib/api/categories';
+import { getCategories } from '@/lib/api/public/categories';
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -25,9 +25,7 @@ export function MegaCategoryMenu() {
   });
 
   // Extract root categories (parentId === null)
-  const categories = Array.isArray(categoriesData)
-    ? categoriesData.filter((c) => c.parentId === null && c.active)
-    : (categoriesData?.data || []).filter((c) => c.parentId === null && c.active);
+  const categories = (categoriesData?.data ?? []).filter((c) => c.parentId === null && c.active);
 
   // Get active category with children
   const activeCat = categories.find((c) => c.id === activeCategory);

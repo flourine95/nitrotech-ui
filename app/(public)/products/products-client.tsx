@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { getProducts } from '@/lib/api/products';
+import { getProducts } from '@/lib/api/public/products';
 import { useProductFilters } from './use-product-filters';
 import { ProductFilters } from './product-filters';
 import { ProductToolbar } from './product-toolbar';

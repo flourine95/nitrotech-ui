@@ -9,6 +9,7 @@ const FALLBACK: CloudinaryFolder[] = ['brands', 'products', 'categories', 'avata
 );
 
 function readCache(): CloudinaryFolder[] | null {
+  if (typeof window === 'undefined') return null;
   try {
     const raw = localStorage.getItem(CACHE_KEY);
     return raw ? (JSON.parse(raw) as CloudinaryFolder[]) : null;
@@ -24,13 +25,7 @@ function writeCache(data: CloudinaryFolder[]) {
 }
 
 export function useFolders(enabled: boolean) {
-  const [folders, setFolders] = useState<CloudinaryFolder[]>(FALLBACK);
-
-  useEffect(() => {
-    // Đọc cache sau hydration để tránh mismatch
-    const cached = readCache();
-    if (cached) setFolders(cached);
-  }, []);
+  const [folders, setFolders] = useState<CloudinaryFolder[]>(() => readCache() ?? FALLBACK);
 
   useEffect(() => {
     if (!enabled) return;

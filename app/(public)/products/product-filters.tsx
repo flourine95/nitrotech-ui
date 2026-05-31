@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useDebounce } from 'use-debounce';
-import { getProductFacets } from '@/lib/api/products';
+import { getProductFacets } from '@/lib/api/public/products';
 import { removeVietnameseTones, cn } from '@/lib/utils';
 import { formatPriceShort } from '@/lib/utils/formatting';
 import { Skeleton } from '@/components/ui/skeleton';

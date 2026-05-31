@@ -7,13 +7,13 @@ import type { SortRule } from '@/components/data-table-toolbar';
 import { ApiException } from '@/lib/api/client';
 import {
   type Brand,
-  type BrandsQuery,
+  type AdminBrandsQuery,
   deleteBrand,
-  getBrands,
+  getAdminBrands,
   hardDeleteBrand,
   restoreBrand,
   updateBrand,
-} from '@/lib/api/brands';
+} from '@/lib/api/admin/brands';
 
 export type FilterStatus = 'all' | 'active' | 'inactive' | 'deleted';
 
@@ -38,8 +38,8 @@ export function useBrands() {
       })
     : [];
 
-  function buildQuery(): BrandsQuery {
-    const q: BrandsQuery = { page, size };
+  function buildQuery(): AdminBrandsQuery {
+    const q: AdminBrandsQuery = { page, size };
     if (search.trim()) q.search = search.trim();
     if (filterStatus === 'active') { q.active = true; q.deleted = false; }
     else if (filterStatus === 'inactive') { q.active = false; q.deleted = false; }
@@ -53,7 +53,7 @@ export function useBrands() {
 
   const { data, isLoading, isFetching, isError } = useQuery({
     queryKey,
-    queryFn: () => getBrands(buildQuery()),
+    queryFn: () => getAdminBrands(buildQuery()),
     placeholderData: (prev) => prev,
   });
 

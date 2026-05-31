@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { ChevronRight } from 'lucide-react';
 import { backendFetch } from '@/lib/api/server';
-import type { Product } from '@/lib/api/products';
+import type { Product } from '@/lib/api/public/products';
 import { ProductActions } from './product-actions';
 import { ProductImagePlaceholder } from '@/components/product-image-placeholder';
 import { ProductRating } from '@/components/product-rating';

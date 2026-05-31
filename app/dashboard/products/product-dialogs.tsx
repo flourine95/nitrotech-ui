@@ -11,7 +11,7 @@ import {
   AlertDialogMedia,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import type { Product } from '@/lib/api/products';
+import type { Product } from '@/lib/api/admin/products';
 
 interface ProductDialogsProps {
   deleteTarget: Product | null;

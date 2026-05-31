@@ -12,7 +12,7 @@ import {
   MoreHorizontal,
   Check,
 } from 'lucide-react';
-import type { Category } from '@/lib/api/categories';
+import type { Category } from '@/lib/api/admin/categories';
 import type { TreeNode } from '@/types/categories';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import {

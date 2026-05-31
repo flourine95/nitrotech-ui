@@ -10,7 +10,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { createProduct } from '@/lib/api/products';
+import { createProduct } from '@/lib/api/admin/products';
 import { parseImportCSV, type ParsedImportRow, downloadCSV } from './utils';
 
 const TEMPLATE_CSV = `name,slug,categoryId,brandId,description,thumbnail,active

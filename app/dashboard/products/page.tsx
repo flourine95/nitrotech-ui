@@ -11,14 +11,14 @@ import {
   bulkUpdateActive,
   deleteProduct,
   exportProducts,
-  getProducts,
+  getAdminProducts,
   hardDeleteProduct,
   type Product,
   restoreProduct,
   updateProduct,
-} from '@/lib/api/products';
-import { getCategories, type Category } from '@/lib/api/categories';
-import { getBrands, type Brand } from '@/lib/api/brands';
+} from '@/lib/api/admin/products';
+import { getCategories, type Category } from '@/lib/api/admin/categories';
+import { getAdminBrands, type Brand } from '@/lib/api/admin/brands';
 import { ApiException } from '@/lib/api/client';
 import { Button } from '@/components/ui/button';
 import { useCallback, useMemo, useState, startTransition } from 'react';
@@ -151,7 +151,7 @@ export default function DashboardProductsPage() {
   const productsQuery = useQuery({
     queryKey,
     queryFn: () =>
-      getProducts({
+      getAdminProducts({
         search: search || undefined,
         active: isDeleted ? undefined : activeFilter,
         deleted: isDeleted ? true : undefined,
@@ -194,7 +194,7 @@ export default function DashboardProductsPage() {
 
   const brandsQuery = useQuery({
     queryKey: ['brands-all'],
-    queryFn: () => getBrands({ size: 100 }).then((r) => r.content),
+    queryFn: () => getAdminBrands({ size: 100 }).then((r) => r.content),
     staleTime: Infinity,
     gcTime: Infinity,
   });

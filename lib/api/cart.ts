@@ -8,27 +8,27 @@ export async function getCart(): Promise<Cart> {
   return res.data;
 }
 
-// POST /api/cart - Add item to cart
+// POST /api/cart/items - Add item to cart
 export async function addToCart(data: AddToCartData) {
-  const res = await apiFetch<CartItemResponse>('/api/cart', {
+  const res = await apiFetch<CartItemResponse>('/api/cart/items', {
     method: 'POST',
     body: JSON.stringify(data),
   });
   return res.data;
 }
 
-// PUT /api/cart/{itemId} - Update cart item quantity
-export async function updateCartItem(itemId: number, data: UpdateCartItemData) {
-  const res = await apiFetch<CartItemResponse>(`/api/cart/${itemId}`, {
+// PUT /api/cart/items/{variantId} - Update cart item quantity
+export async function updateCartItem(variantId: number, data: UpdateCartItemData) {
+  const res = await apiFetch<CartItemResponse>(`/api/cart/items/${variantId}`, {
     method: 'PUT',
     body: JSON.stringify(data),
   });
   return res.data;
 }
 
-// DELETE /api/cart/{itemId} - Remove cart item
-export async function removeCartItem(itemId: number) {
-  return apiFetch<{ message: string }>(`/api/cart/${itemId}`, {
+// DELETE /api/cart/items/{variantId} - Remove cart item
+export async function removeCartItem(variantId: number) {
+  return apiFetch<{ message: string }>(`/api/cart/items/${variantId}`, {
     method: 'DELETE',
   });
 }

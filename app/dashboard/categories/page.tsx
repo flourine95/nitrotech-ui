@@ -71,7 +71,7 @@ import {
   restoreCategory,
   toggleCategory,
   updateCategory,
-} from '@/lib/api/categories';
+} from '@/lib/api/admin/categories';
 import { categorySchema, type CategoryFormData } from '@/schemas/categories';
 import { Label } from '@/components/ui/label';
 

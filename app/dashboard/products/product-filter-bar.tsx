@@ -12,8 +12,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import type { Category } from '@/lib/api/categories';
-import type { Brand } from '@/lib/api/brands';
+import type { Category } from '@/lib/api/admin/categories';
+import type { Brand } from '@/lib/api/admin/brands';
 import { SORT_OPTIONS, type SortValue } from './utils';
 
 export const STATUS_FILTERS: { value: FilterStatus; label: string }[] = [

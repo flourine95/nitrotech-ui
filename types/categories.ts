@@ -1,4 +1,4 @@
-import type { Category } from '@/lib/api/categories';
+import type { Category } from '@/lib/api/public/categories';
 
 export interface TreeNode extends Category {
   children: TreeNode[];

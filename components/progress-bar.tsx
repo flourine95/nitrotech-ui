@@ -22,8 +22,10 @@ export function ProgressBar() {
 
   // Page navigation progress
   useEffect(() => {
-    setVisible(true);
-    setProgress(0);
+    const t0 = setTimeout(() => {
+      setVisible(true);
+      setProgress(0);
+    }, 0);
     const t1 = setTimeout(() => setProgress(80), 50);
     const t2 = setTimeout(() => setProgress(100), 300);
     const t3 = setTimeout(() => {
@@ -31,6 +33,7 @@ export function ProgressBar() {
       setProgress(0);
     }, 600);
     return () => {
+      clearTimeout(t0);
       clearTimeout(t1);
       clearTimeout(t2);
       clearTimeout(t3);
