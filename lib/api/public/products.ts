@@ -17,6 +17,7 @@ export interface Product {
   id: number;
   categoryId: number;
   categoryName: string | null;
+  categorySlug?: string | null;
   brandId: number | null;
   brandName: string | null;
   name: string;

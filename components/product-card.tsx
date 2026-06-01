@@ -1,4 +1,5 @@
 'use client';
+import Image from 'next/image';
 import Link from 'next/link';
 import { GitCompare, Heart } from 'lucide-react';
 import { useCompare } from '@/components/compare-bar';
@@ -7,6 +8,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { ProductImagePlaceholder } from '@/components/product-image-placeholder';
 import { ProductRating } from '@/components/product-rating';
 import { cn } from '@/lib/utils';
+import { cloudinaryImage } from '@/lib/utils/cloudinary';
 
 interface ProductCardProps {
   slug: string;
@@ -18,6 +20,7 @@ interface ProductCardProps {
   badgeColor?: string;
   accent?: string;
   rating: number;
+  thumbnail?: string | null;
   reviews?: number;
   specs?: string[];
   onAddToCart?: (product: { slug: string; name: string }) => void;
@@ -34,6 +37,7 @@ export function ProductCard({
   badgeColor,
   accent = '',
   rating,
+  thumbnail,
   reviews,
   specs,
   onAddToCart,
@@ -66,7 +70,17 @@ export function ProductCard({
       )}
     >
       <div className="relative flex h-44 items-center justify-center border-b border-border bg-muted/30">
-        <ProductImagePlaceholder size="lg" />
+        {thumbnail ? (
+          <Image
+            src={cloudinaryImage(thumbnail, 'f_auto,q_auto,w_600,c_fill,ar_4:3')}
+            alt={name}
+            fill
+            sizes="(min-width: 1280px) 33vw, (min-width: 640px) 50vw, 100vw"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        ) : (
+          <ProductImagePlaceholder size="lg" />
+        )}
         {badge && (
           <span
             className={cn(

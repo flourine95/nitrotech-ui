@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { cookies } from 'next/headers';
@@ -10,6 +11,7 @@ import { ProductImagePlaceholder } from '@/components/product-image-placeholder'
 import { ProductRating } from '@/components/product-rating';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { cloudinaryImage } from '@/lib/utils/cloudinary';
 
 export async function generateMetadata({
   params,
@@ -105,7 +107,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
           {product.categoryName && (
             <>
               <Link
-                href={`/products?category=${product.categoryName}`}
+                href={`/products?category=${encodeURIComponent(product.categorySlug ?? product.categoryName)}`}
                 className="transition-colors hover:text-foreground"
               >
                 {product.categoryName}
@@ -122,8 +124,19 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
           <div className="mb-16 grid gap-12 lg:grid-cols-2">
             {/* Images */}
             <div>
-              <div className="mb-4 flex aspect-square items-center justify-center rounded-3xl border border-border bg-card shadow-sm">
-                <ProductImagePlaceholder size="lg" className="w-48" />
+              <div className="relative mb-4 flex aspect-square items-center justify-center overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
+                {product.thumbnail ? (
+                  <Image
+                    src={cloudinaryImage(product.thumbnail, 'f_auto,q_auto,w_1200')}
+                    alt={product.name}
+                    fill
+                    sizes="(min-width: 1024px) 50vw, 100vw"
+                    className="object-cover"
+                    priority
+                  />
+                ) : (
+                  <ProductImagePlaceholder size="lg" className="w-48" />
+                )}
               </div>
               <div className="flex gap-3">
                 {[1, 2, 3, 4].map((i) => (

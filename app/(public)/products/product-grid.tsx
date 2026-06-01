@@ -44,6 +44,7 @@ export function ProductGrid({ products, isLoading }: ProductGridProps) {
           price={`${p.priceMin?.toLocaleString()}₫`}
           badge={p.badge || undefined}
           rating={p.rating || 0}
+          thumbnail={p.thumbnail}
           reviews={p.reviewCount}
           onAddToCart={(product) => {
             toast.success('Đã thêm vào giỏ hàng', { description: product.name });
