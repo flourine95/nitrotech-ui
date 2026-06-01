@@ -1,17 +1,22 @@
 import type { Metadata } from 'next';
-import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { cookies } from 'next/headers';
-import { ChevronRight } from 'lucide-react';
 import { backendFetch } from '@/lib/api/server';
 import type { Product } from '@/lib/api/public/products';
 import { ProductActions } from './product-actions';
-import { ProductImagePlaceholder } from '@/components/product-image-placeholder';
+import { ProductGallery } from './product-gallery';
 import { ProductRating } from '@/components/product-rating';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { cloudinaryImage } from '@/lib/utils/cloudinary';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
 
 export async function generateMetadata({
   params,
@@ -92,30 +97,43 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     : mockSpecs;
 
   return (
-    <main className="min-h-screen bg-muted/30">
+    <main className="min-h-screen bg-background">
       {/* Breadcrumb */}
-      <div className="border-b border-border bg-card">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-2 px-6 py-3 text-sm text-muted-foreground">
-          <Link href="/" className="transition-colors hover:text-foreground">
-            Trang chủ
-          </Link>
-          <ChevronRight className="size-3.5" aria-hidden="true" />
-          <Link href="/products" className="transition-colors hover:text-foreground">
-            Sản phẩm
-          </Link>
-          <ChevronRight className="size-3.5" aria-hidden="true" />
-          {product.categoryName && (
-            <>
-              <Link
-                href={`/products?category=${encodeURIComponent(product.categorySlug ?? product.categoryName)}`}
-                className="transition-colors hover:text-foreground"
-              >
-                {product.categoryName}
-              </Link>
-              <ChevronRight className="size-3.5" aria-hidden="true" />
-            </>
-          )}
-          <span className="max-w-52 truncate font-medium text-foreground">{product.name}</span>
+      <div className="bg-background">
+        <div className="mx-auto max-w-7xl px-6 pt-6 pb-2">
+          <Breadcrumb>
+            <BreadcrumbList className="text-muted-foreground">
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link href="/">Trang chủ</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link href="/products">Sản phẩm</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              {product.categoryName && (
+                <>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    <BreadcrumbLink asChild>
+                      <Link href={`/products?category=${encodeURIComponent(product.categorySlug ?? product.categoryName)}`}>
+                        {product.categoryName}
+                      </Link>
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                </>
+              )}
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage className="max-w-60 truncate font-medium">
+                  {product.name}
+                </BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
         </div>
       </div>
 
@@ -123,41 +141,13 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
           {/* Product main */}
           <div className="mb-16 grid gap-12 lg:grid-cols-2">
             {/* Images */}
-            <div>
-              <div className="relative mb-4 flex aspect-square items-center justify-center overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
-                {product.thumbnail ? (
-                  <Image
-                    src={cloudinaryImage(product.thumbnail, 'f_auto,q_auto,w_1200')}
-                    alt={product.name}
-                    fill
-                    sizes="(min-width: 1024px) 50vw, 100vw"
-                    className="object-cover"
-                    priority
-                  />
-                ) : (
-                  <ProductImagePlaceholder size="lg" className="w-48" />
-                )}
-              </div>
-              <div className="flex gap-3">
-                {[1, 2, 3, 4].map((i) => (
-                  <Button
-                    key={i}
-                    variant={i === 1 ? 'outline' : 'ghost'}
-                    size="icon"
-                    className="aspect-square flex-1 rounded-2xl"
-                    aria-label={`Ảnh ${i}`}
-                  >
-                    <ProductImagePlaceholder size="sm" />
-                  </Button>
-                ))}
-              </div>
-            </div>
+            <ProductGallery name={product.name} thumbnail={product.thumbnail} images={product.images ?? []} />
 
             {/* Info */}
             <div>
               <div className="mb-3 flex items-center gap-2">
                 {product.badge && (
-                  <Badge className="bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400">
+                  <Badge variant="secondary">
                     {product.badge}
                   </Badge>
                 )}
@@ -241,7 +231,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                 </div>
                 <div className="text-xs text-muted-foreground">{product.reviewCount || 0} đánh giá</div>
               </div>
-              <div className="flex-1 space-y-2">
+              <div className="flex flex-1 flex-col gap-2">
                 {[
                   [5, 80],
                   [4, 15],
@@ -272,7 +262,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                   <div className="mb-3 flex items-start justify-between">
                     <div className="flex items-center gap-3">
                       <div
-                        className="flex size-9 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white"
+                        className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground"
                         aria-hidden="true"
                       >
                         {r.name

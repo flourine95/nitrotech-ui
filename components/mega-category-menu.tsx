@@ -34,7 +34,7 @@ export function MegaCategoryMenu() {
     <NavigationMenu>
       <NavigationMenuList>
         <NavigationMenuItem>
-          <NavigationMenuTrigger className="gap-2 rounded-full px-4 py-2 text-sm text-slate-500 hover:bg-slate-100 hover:text-slate-900 data-[state=open]:bg-slate-100 data-[state=open]:text-slate-900">
+          <NavigationMenuTrigger className="gap-2 rounded-full px-4 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground data-[state=open]:bg-muted data-[state=open]:text-foreground">
             <Menu data-icon="inline-start" />
             Danh mục
           </NavigationMenuTrigger>
