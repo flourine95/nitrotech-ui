@@ -102,7 +102,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
       <div className="bg-background">
         <div className="mx-auto max-w-7xl px-6 pt-6 pb-2">
           <Breadcrumb>
-            <BreadcrumbList className="text-muted-foreground">
+            <BreadcrumbList className="flex-wrap gap-y-1 text-muted-foreground">
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
                   <Link href="/">Trang chủ</Link>
@@ -139,21 +139,21 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
         <div className="mx-auto max-w-7xl px-6 py-10">
           {/* Product main */}
-          <div className="mb-16 grid gap-12 lg:grid-cols-2">
+          <div className="mb-16 grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
             {/* Images */}
             <ProductGallery name={product.name} thumbnail={product.thumbnail} images={product.images ?? []} />
 
             {/* Info */}
-            <div>
-              <div className="mb-3 flex items-center gap-2">
+            <div className="min-w-0">
+              <div className="mb-3 flex min-w-0 items-center gap-2">
                 {product.badge && (
                   <Badge variant="secondary">
                     {product.badge}
                   </Badge>
                 )}
-                <span className="text-xs text-muted-foreground">SKU: {product.slug}</span>
+                <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">SKU: {product.slug}</span>
               </div>
-              <h1 className="mb-2 text-2xl font-bold text-foreground sm:text-3xl">
+              <h1 className="mb-2 text-2xl font-bold text-foreground break-words sm:text-3xl">
                 {product.name}
               </h1>
               {product.description && (
@@ -163,24 +163,23 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
               )}
 
               {/* Rating */}
-              <div className="mb-5 flex items-center gap-3">
+              <div className="mb-5 flex flex-wrap items-center gap-3">
                 <ProductRating rating={product.rating || 0} showReviews={false} />
                 <span className="text-sm font-semibold text-foreground">{product.rating || 0}</span>
                 <span className="text-sm text-muted-foreground">{product.reviewCount || 0} đánh giá</span>
-                <span className="text-sm font-medium text-green-600">
+                <Badge variant={product.active ? 'secondary' : 'destructive'} className="rounded-full">
                   {product.active ? 'Còn hàng' : 'Hết hàng'}
-                </span>
+                </Badge>
               </div>
 
               {/* Price + Variants + Colors + Qty + CTAs + Trust — client */}
               <ProductActions
                 slug={product.slug}
-                price={product.priceMin ? `${product.priceMin.toLocaleString()}₫` : 'Liên hệ'}
-                old={product.priceMax && product.priceMax > (product.priceMin || 0) ? `${product.priceMax.toLocaleString()}₫` : ''}
-                discount={product.priceMax && product.priceMin && product.priceMax > product.priceMin ? `-${Math.round((1 - product.priceMin / product.priceMax) * 100)}%` : ''}
-                variants={product.variants?.map(v => v.name) || []}
+                priceMin={product.priceMin}
+                priceMax={product.priceMax}
+                variants={product.variants ?? []}
                 colors={[]}
-                stockCount={product.variantCount || 0}
+                variantCount={product.variantCount || 0}
                 warranty="12 tháng chính hãng"
               />
             </div>

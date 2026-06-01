@@ -37,7 +37,7 @@ export function ProductGallery({ name, thumbnail, images }: ProductGalleryProps)
   }
 
   return (
-    <div>
+    <div className="min-w-0">
       <div className="group/gallery relative mb-4 flex aspect-square items-center justify-center overflow-hidden rounded-3xl border border-border bg-muted/30 shadow-sm">
         {selectedImage ? (
           <Image
