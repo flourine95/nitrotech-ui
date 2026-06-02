@@ -1,8 +1,8 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
-import { ChevronLeft, ChevronRight, Maximize2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Loader2, Maximize2 } from 'lucide-react';
 import { ProductImagePlaceholder } from '@/components/product-image-placeholder';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
@@ -13,43 +13,109 @@ interface ProductGalleryProps {
   name: string;
   thumbnail: string | null;
   images: string[];
+  preferredImage?: string | null;
 }
 
-export function ProductGallery({ name, thumbnail, images }: ProductGalleryProps) {
+export function ProductGallery({ name, thumbnail, images, preferredImage }: ProductGalleryProps) {
   const galleryImages = useMemo(() => {
-    return Array.from(new Set([thumbnail, ...images].filter((image): image is string => !!image)));
-  }, [images, thumbnail]);
+    return Array.from(new Set([thumbnail, ...images, preferredImage].filter((image): image is string => !!image)));
+  }, [images, preferredImage, thumbnail]);
 
-  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [selectedIndex, setSelectedIndex] = useState(() => {
+    if (!preferredImage) return 0;
+    const preferredIndex = galleryImages.indexOf(preferredImage);
+    return preferredIndex >= 0 ? preferredIndex : 0;
+  });
   const [viewerOpen, setViewerOpen] = useState(false);
+  const [imageLoading, setImageLoading] = useState(false);
+  const [viewerImageLoading, setViewerImageLoading] = useState(false);
+  const thumbnailRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const loadedMainImages = useRef(new Set<string>());
+  const loadedViewerImages = useRef(new Set<string>());
   const activeIndex = galleryImages[selectedIndex] ? selectedIndex : 0;
   const selectedImage = galleryImages[activeIndex] ?? null;
   const hasMultipleImages = galleryImages.length > 1;
+  const nextImage = hasMultipleImages ? galleryImages[(activeIndex + 1) % galleryImages.length] : null;
+  const previousImage = hasMultipleImages
+    ? galleryImages[activeIndex === 0 ? galleryImages.length - 1 : activeIndex - 1]
+    : null;
+
+  function selectImage(index: number) {
+    if (index === activeIndex) return;
+    const next = galleryImages[index];
+    setImageLoading(next ? !loadedMainImages.current.has(mainImageSrc(next)) : false);
+    if (viewerOpen) {
+      setViewerImageLoading(next ? !loadedViewerImages.current.has(viewerImageSrc(next)) : false);
+    }
+    setSelectedIndex(index);
+  }
 
   function goToPrevious() {
     if (!hasMultipleImages) return;
-    setSelectedIndex((current) => (current === 0 ? galleryImages.length - 1 : current - 1));
+    selectImage(activeIndex === 0 ? galleryImages.length - 1 : activeIndex - 1);
   }
 
   function goToNext() {
     if (!hasMultipleImages) return;
-    setSelectedIndex((current) => (current + 1) % galleryImages.length);
+    selectImage((activeIndex + 1) % galleryImages.length);
   }
+
+  useEffect(() => {
+    thumbnailRefs.current[activeIndex]?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'nearest',
+      inline: 'center',
+    });
+  }, [activeIndex]);
 
   return (
     <div className="min-w-0">
       <div className="group/gallery relative mb-4 flex aspect-square items-center justify-center overflow-hidden rounded-3xl border border-border bg-muted/30 shadow-sm">
         {selectedImage ? (
           <Image
-            src={cloudinaryImage(selectedImage, 'f_auto,q_auto,w_1200')}
+            key={selectedImage}
+            src={mainImageSrc(selectedImage)}
             alt={name}
             fill
             sizes="(min-width: 1024px) 50vw, 100vw"
-            className="object-contain"
+            className={cn('object-contain transition-opacity duration-200', imageLoading && 'opacity-40')}
             priority
+            onLoad={() => {
+              loadedMainImages.current.add(mainImageSrc(selectedImage));
+              setImageLoading(false);
+            }}
           />
         ) : (
           <ProductImagePlaceholder size="lg" className="w-48" />
+        )}
+
+        {imageLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-background/35 backdrop-blur-[1px]">
+            <Loader2 className="size-5 animate-spin text-muted-foreground" aria-hidden="true" />
+          </div>
+        )}
+
+        {nextImage && (
+          <Image
+            src={mainImageSrc(nextImage)}
+            alt=""
+            width={1}
+            height={1}
+            className="pointer-events-none absolute size-px opacity-0"
+            aria-hidden="true"
+            onLoad={() => loadedMainImages.current.add(mainImageSrc(nextImage))}
+          />
+        )}
+        {previousImage && previousImage !== nextImage && (
+          <Image
+            src={mainImageSrc(previousImage)}
+            alt=""
+            width={1}
+            height={1}
+            className="pointer-events-none absolute size-px opacity-0"
+            aria-hidden="true"
+            onLoad={() => loadedMainImages.current.add(mainImageSrc(previousImage))}
+          />
         )}
 
         {selectedImage && (
@@ -101,6 +167,9 @@ export function ProductGallery({ name, thumbnail, images }: ProductGalleryProps)
           {galleryImages.map((image, index) => (
             <Button
               key={image}
+              ref={(node) => {
+                thumbnailRefs.current[index] = node;
+              }}
               type="button"
               variant="ghost"
               className={cn(
@@ -109,7 +178,7 @@ export function ProductGallery({ name, thumbnail, images }: ProductGalleryProps)
               )}
               aria-label={`Ảnh ${index + 1}`}
               aria-pressed={index === activeIndex}
-              onClick={() => setSelectedIndex(index)}
+              onClick={() => selectImage(index)}
             >
               <Image
                 src={cloudinaryImage(image, 'f_auto,q_auto,w_240,c_fill,ar_1:1')}
@@ -129,11 +198,45 @@ export function ProductGallery({ name, thumbnail, images }: ProductGalleryProps)
           <div className="relative flex h-[75vh] min-h-80 items-center justify-center overflow-hidden rounded-lg bg-muted/30">
             {selectedImage && (
               <Image
-                src={cloudinaryImage(selectedImage, 'f_auto,q_auto,w_1600')}
+                key={selectedImage}
+                src={viewerImageSrc(selectedImage)}
                 alt={name}
                 fill
                 sizes="90vw"
-                className="object-contain"
+                className={cn('object-contain transition-opacity duration-200', viewerImageLoading && 'opacity-40')}
+                onLoad={() => {
+                  loadedViewerImages.current.add(viewerImageSrc(selectedImage));
+                  setViewerImageLoading(false);
+                }}
+              />
+            )}
+
+            {viewerImageLoading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-background/35 backdrop-blur-[1px]">
+                <Loader2 className="size-5 animate-spin text-muted-foreground" aria-hidden="true" />
+              </div>
+            )}
+
+            {nextImage && (
+              <Image
+                src={viewerImageSrc(nextImage)}
+                alt=""
+                width={1}
+                height={1}
+                className="pointer-events-none absolute size-px opacity-0"
+                aria-hidden="true"
+                onLoad={() => loadedViewerImages.current.add(viewerImageSrc(nextImage))}
+              />
+            )}
+            {previousImage && previousImage !== nextImage && (
+              <Image
+                src={viewerImageSrc(previousImage)}
+                alt=""
+                width={1}
+                height={1}
+                className="pointer-events-none absolute size-px opacity-0"
+                aria-hidden="true"
+                onLoad={() => loadedViewerImages.current.add(viewerImageSrc(previousImage))}
               />
             )}
 
@@ -172,4 +275,12 @@ export function ProductGallery({ name, thumbnail, images }: ProductGalleryProps)
       </Dialog>
     </div>
   );
+}
+
+function mainImageSrc(image: string) {
+  return cloudinaryImage(image, 'f_auto,q_auto,w_1200');
+}
+
+function viewerImageSrc(image: string) {
+  return cloudinaryImage(image, 'f_auto,q_auto,w_1600');
 }

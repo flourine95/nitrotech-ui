@@ -9,6 +9,12 @@ export interface ProductVariant {
   price: number;
   attributes: Record<string, string>;
   active: boolean;
+  imageId: number | null;
+  imageUrl: string | null;
+  stockQuantity: number | null;
+  lowStockThreshold: number | null;
+  inStock: boolean | null;
+  lowStock: boolean | null;
   createdAt: string;
   updatedAt: string;
 }

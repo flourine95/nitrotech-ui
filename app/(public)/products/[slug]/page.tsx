@@ -4,11 +4,9 @@ import { notFound } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { backendFetch } from '@/lib/api/server';
 import type { Product } from '@/lib/api/public/products';
-import { ProductActions } from './product-actions';
-import { ProductGallery } from './product-gallery';
+import { ProductDetailMain } from './product-detail-main';
 import { ProductRating } from '@/components/product-rating';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -138,52 +136,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
       </div>
 
         <div className="mx-auto max-w-7xl px-6 py-10">
-          {/* Product main */}
-          <div className="mb-16 grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-            {/* Images */}
-            <ProductGallery name={product.name} thumbnail={product.thumbnail} images={product.images ?? []} />
-
-            {/* Info */}
-            <div className="min-w-0">
-              <div className="mb-3 flex min-w-0 items-center gap-2">
-                {product.badge && (
-                  <Badge variant="secondary">
-                    {product.badge}
-                  </Badge>
-                )}
-                <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">SKU: {product.slug}</span>
-              </div>
-              <h1 className="mb-2 text-2xl font-bold text-foreground break-words sm:text-3xl">
-                {product.name}
-              </h1>
-              {product.description && (
-                <p className="mb-4 text-sm leading-relaxed text-muted-foreground">
-                  {product.description}
-                </p>
-              )}
-
-              {/* Rating */}
-              <div className="mb-5 flex flex-wrap items-center gap-3">
-                <ProductRating rating={product.rating || 0} showReviews={false} />
-                <span className="text-sm font-semibold text-foreground">{product.rating || 0}</span>
-                <span className="text-sm text-muted-foreground">{product.reviewCount || 0} đánh giá</span>
-                <Badge variant={product.active ? 'secondary' : 'destructive'} className="rounded-full">
-                  {product.active ? 'Còn hàng' : 'Hết hàng'}
-                </Badge>
-              </div>
-
-              {/* Price + Variants + Colors + Qty + CTAs + Trust — client */}
-              <ProductActions
-                slug={product.slug}
-                priceMin={product.priceMin}
-                priceMax={product.priceMax}
-                variants={product.variants ?? []}
-                colors={[]}
-                variantCount={product.variantCount || 0}
-                warranty="12 tháng chính hãng"
-              />
-            </div>
-          </div>
+          <ProductDetailMain product={product} />
           {/* Specs */}
           <div className="mb-16">
             <div className="mb-8 flex gap-1 border-b border-border">

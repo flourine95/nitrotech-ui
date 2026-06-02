@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { ProductImagePlaceholder } from '@/components/product-image-placeholder';
 import { ProductRating } from '@/components/product-rating';
+import { getProductBadgeLabel } from '@/lib/product-badges';
 import { cn } from '@/lib/utils';
 import { cloudinaryImage } from '@/lib/utils/cloudinary';
 
@@ -88,7 +89,7 @@ export function ProductCard({
               badgeColor || 'bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400'
             )}
           >
-            {badge}
+            {getProductBadgeLabel(badge)}
           </span>
         )}
         <div className="absolute top-3 right-3 flex items-center gap-1">

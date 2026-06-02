@@ -1,45 +1,62 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { toast } from 'sonner';
-import { Loader2, GitCompare, Heart, Shield, Zap, Package, CreditCard } from 'lucide-react';
+import { Loader2, Shield, Zap, Package, CreditCard } from 'lucide-react';
 import { useCartStore } from '@/stores/cart.store';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import type { ProductVariant } from '@/lib/api/public/products';
 
+const ATTRIBUTE_LABELS: Record<string, string> = {
+  configuration: 'Cấu hình',
+  color: 'Màu sắc',
+  capacity: 'Dung lượng',
+  speed: 'Tốc độ',
+  interface: 'Chuẩn kết nối',
+  size: 'Kích thước',
+  refreshRate: 'Tần số quét',
+  resolution: 'Độ phân giải',
+  layout: 'Layout',
+  switch: 'Switch',
+  connection: 'Kết nối',
+  memory: 'Bộ nhớ',
+  cooling: 'Tản nhiệt',
+  edition: 'Phiên bản',
+  warranty: 'Bảo hành',
+  option: 'Tùy chọn',
+};
+
 interface ProductActionsProps {
-  slug: string;
   priceMin: number | null;
   priceMax: number | null;
   variants: ProductVariant[];
-  colors: { name: string; color: string; ring: string }[];
   variantCount: number;
   warranty: string;
+  onVariantChange?: (variant: ProductVariant | null) => void;
 }
 
 export function ProductActions({
-  slug,
   priceMin,
-  priceMax,
   variants,
-  colors,
-  variantCount,
   warranty,
+  onVariantChange,
 }: ProductActionsProps) {
   const router = useRouter();
   const { addItem, isLoading } = useCartStore();
   const [qty, setQty] = useState(1);
-  const [activeVariant, setActiveVariant] = useState(0);
-  const [activeColor, setActiveColor] = useState(0);
-  const selectedVariant = variants[activeVariant] ?? null;
-  const stockCount = selectedVariant ? ((selectedVariant.id * 7) % 24) + 3 : 0;
+  const variantOptions = buildVariantOptions(variants);
+  const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>(() => {
+    const firstVariant = variants[0]?.attributes ?? {};
+    return Object.fromEntries(variantOptions.map((option) => [option.key, firstVariant[option.key]]).filter(([, value]) => value));
+  });
+  const selectedVariant = findVariantByAttributes(variants, selectedAttributes);
   const selectedPrice = selectedVariant?.price ?? priceMin;
-  const discountPercent = priceMax && selectedPrice && priceMax > selectedPrice
-    ? Math.round((1 - selectedPrice / priceMax) * 100)
-    : null;
-  const canPurchase = Boolean(selectedVariant?.id) && variantCount > 0;
+  const selectedStock = selectedVariant?.stockQuantity;
+  const canPurchase = Boolean(selectedVariant?.id && selectedVariant.active && (selectedStock == null || selectedStock > 0));
+
+  useEffect(() => {
+    onVariantChange?.(selectedVariant);
+  }, [onVariantChange, selectedVariant]);
 
   function formatPrice(value: number | null) {
     if (!value) return 'Liên hệ';
@@ -49,6 +66,15 @@ export function ProductActions({
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(value);
+  }
+
+  function handleAttributeChange(key: string, value: string) {
+    const nextAttributes = { ...selectedAttributes, [key]: value };
+    const nextVariant = findVariantByAttributes(variants, nextAttributes);
+    setSelectedAttributes(nextVariant?.attributes ?? nextAttributes);
+    if (typeof nextVariant?.stockQuantity === 'number') {
+      setQty((current) => Math.min(current, Math.max(1, nextVariant.stockQuantity ?? 0)));
+    }
   }
 
   const handleAddToCart = async () => {
@@ -111,73 +137,31 @@ export function ProductActions({
   return (
     <div className="flex flex-col gap-6">
       {/* Price */}
-      <div className="flex flex-wrap items-end gap-x-3 gap-y-2">
+      <div>
         <span className="text-3xl font-bold tracking-tight text-foreground">{formatPrice(selectedPrice)}</span>
-        {priceMax && selectedPrice && priceMax > selectedPrice && (
-          <span className="pb-0.5 text-base text-muted-foreground line-through">
-            {formatPrice(priceMax)}
-          </span>
-        )}
-        {discountPercent && (
-          <Badge variant="destructive" className="mb-1 rounded-full">
-            -{discountPercent}%
-          </Badge>
-        )}
       </div>
 
-      {/* Variants */}
-      {variants.length > 0 && (
-        <div>
-          <p className="mb-2 text-sm font-semibold text-foreground">Tùy chọn</p>
+      {variantOptions.map((option) => (
+        <div key={option.key}>
+          <p className="mb-2 text-sm font-semibold text-foreground">
+            {ATTRIBUTE_LABELS[option.key] ?? option.key}
+          </p>
           <div className="flex flex-wrap gap-2">
-            {variants.map((v, i) => {
-              // Use name if available, otherwise build from attributes
-              const variantLabel = v.name || 
-                (v.attributes && Object.keys(v.attributes).length > 0
-                  ? Object.values(v.attributes).filter(Boolean).join(' • ')
-                  : `Phiên bản ${i + 1}`);
-              
-              return (
-                <Button
-                  key={v.id}
-                  onClick={() => setActiveVariant(i)}
-                  variant={i === activeVariant ? 'default' : 'outline'}
-                  size="default"
-                  className="h-10 rounded-full px-5"
-                  title={`${variantLabel} - ${formatPrice(v.price)}`}
-                >
-                  {variantLabel}
-                </Button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Colors */}
-      {colors.length > 0 && (
-        <div>
-          <p className="mb-2 text-sm font-semibold text-foreground">Màu sắc</p>
-          <div className="flex gap-2">
-            {colors.map((c, i) => (
-              <button
-                key={c.name}
+            {option.values.map((value) => (
+              <Button
+                key={value}
                 type="button"
-                onClick={() => setActiveColor(i)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    setActiveColor(i);
-                  }
-                }}
-                className={`size-8 rounded-full ${c.color} transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${i === activeColor ? `ring-2 ring-offset-2 ${c.ring}` : 'hover:ring-2 hover:ring-muted hover:ring-offset-2'}`}
-                aria-label={c.name}
-                title={c.name}
-              />
+                onClick={() => handleAttributeChange(option.key, value)}
+                variant={value === selectedAttributes[option.key] ? 'default' : 'outline'}
+                size="default"
+                className="h-auto rounded-full px-4 py-3 font-semibold data-[variant=default]:bg-blue-600 data-[variant=default]:text-white data-[variant=default]:hover:bg-blue-500"
+              >
+                {value}
+              </Button>
             ))}
           </div>
         </div>
-      )}
+      ))}
 
       {/* Quantity */}
       <div>
@@ -202,7 +186,7 @@ export function ProductActions({
             </span>
             <Button
               onClick={() => setQty((q) => q + 1)}
-              disabled={!canPurchase || isLoading}
+              disabled={!canPurchase || isLoading || (typeof selectedStock === 'number' && qty >= selectedStock)}
               variant="ghost"
               size="default"
               className="h-10 rounded-none px-4"
@@ -212,79 +196,77 @@ export function ProductActions({
             </Button>
           </div>
           <span className="text-xs text-muted-foreground font-medium">
-            {canPurchase ? `Còn lại ${stockCount} sản phẩm` : 'Tạm hết hàng'}
+            {stockLabel(selectedVariant)}
           </span>
         </div>
       </div>
 
       {/* CTAs */}
       <div className="flex flex-col gap-3 sm:flex-row">
-        <div className="flex flex-1 gap-3">
-          <Button
-            onClick={handleAddToCart}
-            disabled={isLoading || !canPurchase}
-            variant="outline"
-            size="lg"
-            className="flex-1 h-12 rounded-full touch-manipulation text-sm font-semibold"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 data-icon="inline-start" className="animate-spin" />
-                Đang thêm…
-              </>
-            ) : (
-              'Thêm vào giỏ'
-            )}
-          </Button>
-          <Button
-            onClick={handleBuyNow}
-            disabled={isLoading || !canPurchase}
-            size="lg"
-            className="flex-1 h-12 rounded-full touch-manipulation text-sm font-semibold"
-          >
-            Mua ngay
-          </Button>
-        </div>
-        <div className="flex gap-3 sm:w-auto">
-          <Button
-            asChild
-            variant="outline"
-            size="icon"
-            className="h-12 w-12 rounded-full touch-manipulation"
-            aria-label="So sánh"
-            title="So sánh"
-          >
-            <Link href={`/compare?add=${slug}`} className="flex items-center justify-center size-full">
-              <GitCompare className="size-5" />
-            </Link>
-          </Button>
-          <Button
-            onClick={() => toast.success('Đã thêm vào yêu thích')}
-            variant="outline"
-            size="icon"
-            className="h-12 w-12 rounded-full touch-manipulation hover:text-destructive"
-            aria-label="Yêu thích"
-          >
-            <Heart className="size-5" />
-          </Button>
-        </div>
+        <Button
+          onClick={handleAddToCart}
+          disabled={isLoading || !canPurchase}
+          variant="outline"
+          size="lg"
+          className="h-auto flex-1 rounded-full border-blue-600/20 px-4 py-3 font-semibold text-blue-600 hover:border-blue-600/40 hover:bg-blue-50"
+        >
+          {isLoading ? (
+            <>
+              <Loader2 data-icon="inline-start" className="animate-spin" />
+              Đang thêm...
+            </>
+          ) : (
+            'Thêm vào giỏ'
+          )}
+        </Button>
+        <Button
+          onClick={handleBuyNow}
+          disabled={isLoading || !canPurchase}
+          size="lg"
+          className="h-auto flex-1 rounded-full bg-blue-600 px-4 py-3 font-semibold text-white hover:bg-blue-500"
+        >
+          Mua ngay
+        </Button>
       </div>
 
       {/* Trust badges */}
-      <div className="grid grid-cols-2 gap-3">
-        {trustBadges.map((b) => {
-          const Icon = b.icon;
-          return (
-            <div
-              key={b.text}
-              className="flex items-center gap-2 rounded-xl border border-border bg-muted/30 p-3 text-xs text-muted-foreground"
-            >
-              <Icon className="size-4 shrink-0 text-primary" aria-hidden="true" />
-              {b.text}
-            </div>
-          );
-        })}
+      <div className="rounded-2xl border border-border bg-muted/25 p-4">
+        <div className="grid gap-3 sm:grid-cols-2">
+          {trustBadges.map((b) => {
+            const Icon = b.icon;
+            return (
+              <div key={b.text} className="flex items-center gap-3">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-background text-blue-600 ring-1 ring-border">
+                  <Icon className="size-4" aria-hidden="true" />
+                </span>
+                <span className="text-sm font-medium leading-snug text-foreground">{b.text}</span>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
+}
+
+function buildVariantOptions(variants: ProductVariant[]) {
+  const keys = Array.from(new Set(variants.flatMap((variant) => Object.keys(variant.attributes ?? {}))));
+  return keys.map((key) => ({
+    key,
+    values: Array.from(new Set(variants.map((variant) => variant.attributes?.[key]).filter(Boolean))),
+  }));
+}
+
+function findVariantByAttributes(variants: ProductVariant[], selectedAttributes: Record<string, string>) {
+  return variants.find((variant) =>
+    Object.entries(selectedAttributes).every(([key, value]) => variant.attributes?.[key] === value)
+  ) ?? null;
+}
+
+function stockLabel(variant: ProductVariant | null) {
+  if (!variant) return 'Vui lòng chọn cấu hình';
+  if (variant.stockQuantity == null) return 'Đang cập nhật tồn kho';
+  if (variant.stockQuantity <= 0) return 'Tạm hết hàng';
+  if (variant.lowStock) return `Chỉ còn ${variant.stockQuantity} sản phẩm`;
+  return `Còn ${variant.stockQuantity} sản phẩm`;
 }
