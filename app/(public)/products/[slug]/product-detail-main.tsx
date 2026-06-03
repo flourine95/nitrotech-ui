@@ -23,11 +23,12 @@ export function ProductDetailMain({ product }: ProductDetailMainProps) {
   return (
     <div className="mb-16 grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
       <ProductGallery
-        key={selectedVariantImage ?? 'product-gallery'}
         name={product.name}
         thumbnail={product.thumbnail}
         images={product.images ?? []}
-        preferredImage={selectedVariantImage}
+        selectedImage={selectedVariantImage}
+        onSelectedImageChange={setSelectedVariantImage}
+        priority
       />
 
       <div className="relative min-w-0">
@@ -72,9 +73,7 @@ export function ProductDetailMain({ product }: ProductDetailMainProps) {
 
         <ProductActions
           priceMin={product.priceMin}
-          priceMax={product.priceMax}
           variants={product.variants ?? []}
-          variantCount={product.variantCount || 0}
           warranty="12 tháng chính hãng"
           onVariantChange={handleVariantChange}
         />

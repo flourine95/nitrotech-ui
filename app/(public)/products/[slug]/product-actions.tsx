@@ -6,6 +6,7 @@ import { Loader2, Shield, Zap, Package, CreditCard } from 'lucide-react';
 import { useCartStore } from '@/stores/cart.store';
 import { Button } from '@/components/ui/button';
 import type { ProductVariant } from '@/lib/api/public/products';
+import { formatCurrency } from '@/lib/utils/formatting';
 
 const ATTRIBUTE_LABELS: Record<string, string> = {
   configuration: 'Cấu hình',
@@ -28,9 +29,7 @@ const ATTRIBUTE_LABELS: Record<string, string> = {
 
 interface ProductActionsProps {
   priceMin: number | null;
-  priceMax: number | null;
   variants: ProductVariant[];
-  variantCount: number;
   warranty: string;
   onVariantChange?: (variant: ProductVariant | null) => void;
 }
@@ -58,16 +57,6 @@ export function ProductActions({
     onVariantChange?.(selectedVariant);
   }, [onVariantChange, selectedVariant]);
 
-  function formatPrice(value: number | null) {
-    if (!value) return 'Liên hệ';
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
-  }
-
   function handleAttributeChange(key: string, value: string) {
     const nextAttributes = { ...selectedAttributes, [key]: value };
     const nextVariant = findVariantByAttributes(variants, nextAttributes);
@@ -78,7 +67,7 @@ export function ProductActions({
   }
 
   const handleAddToCart = async () => {
-    if (!selectedVariant) {
+    if (!canPurchase || !selectedVariant) {
       toast.error('Sản phẩm chưa có cấu hình để thêm vào giỏ');
       return;
     }
@@ -113,7 +102,7 @@ export function ProductActions({
   };
 
   const handleBuyNow = async () => {
-    if (!selectedVariant) {
+    if (!canPurchase || !selectedVariant) {
       toast.error('Sản phẩm chưa có cấu hình để mua');
       return;
     }
@@ -138,7 +127,9 @@ export function ProductActions({
     <div className="flex flex-col gap-6">
       {/* Price */}
       <div>
-        <span className="text-3xl font-bold tracking-tight text-foreground">{formatPrice(selectedPrice)}</span>
+        <span className="text-3xl font-bold tracking-tight text-foreground">
+          {selectedPrice === null ? 'Liên hệ' : formatCurrency(selectedPrice)}
+        </span>
       </div>
 
       {variantOptions.map((option) => (

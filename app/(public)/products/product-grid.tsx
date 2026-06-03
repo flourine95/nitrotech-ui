@@ -3,13 +3,15 @@ import { ProductCard } from '@/components/product-card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Empty, EmptyHeader, EmptyTitle, EmptyDescription } from '@/components/ui/empty';
 import type { Product } from '@/lib/api/public/products';
+import { formatCurrency } from '@/lib/utils/formatting';
 
 interface ProductGridProps {
   products: Product[];
   isLoading: boolean;
+  isError?: boolean;
 }
 
-export function ProductGrid({ products, isLoading }: ProductGridProps) {
+export function ProductGrid({ products, isLoading, isError = false }: ProductGridProps) {
   if (isLoading) {
     return (
       <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
@@ -17,6 +19,17 @@ export function ProductGrid({ products, isLoading }: ProductGridProps) {
           <Skeleton key={i} className="h-96" />
         ))}
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Empty>
+        <EmptyHeader>
+          <EmptyTitle>Không tải được sản phẩm</EmptyTitle>
+          <EmptyDescription>Vui lòng thử lại sau hoặc điều chỉnh bộ lọc hiện tại</EmptyDescription>
+        </EmptyHeader>
+      </Empty>
     );
   }
 
@@ -41,7 +54,7 @@ export function ProductGrid({ products, isLoading }: ProductGridProps) {
           slug={p.slug}
           name={p.name}
           cat={p.categoryName || ''}
-          price={`${p.priceMin?.toLocaleString()}₫`}
+          price={p.priceMin === null ? 'Liên hệ' : formatCurrency(p.priceMin)}
           badge={p.badge || undefined}
           rating={p.rating || 0}
           thumbnail={p.thumbnail}

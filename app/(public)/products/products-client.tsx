@@ -12,7 +12,7 @@ export function ProductsClient() {
   const filters = useProductFilters();
 
   // Fetch products
-  const { data: productsData, isLoading: productsLoading } = useQuery({
+  const { data: productsData, isLoading: productsLoading, isError: productsError } = useQuery({
     queryKey: [
       'products',
       {
@@ -101,7 +101,7 @@ export function ProductsClient() {
           onPageReset={handlePageReset}
         />
 
-        <ProductGrid products={products} isLoading={productsLoading} />
+        <ProductGrid products={products} isLoading={productsLoading} isError={productsError} />
 
         <Pagination page={filters.page} totalPages={totalPages} onPageChange={filters.setPage} />
       </div>

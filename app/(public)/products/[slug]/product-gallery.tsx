@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import { ChevronLeft, ChevronRight, Loader2, Maximize2 } from 'lucide-react';
 import { ProductImagePlaceholder } from '@/components/product-image-placeholder';
@@ -13,52 +13,75 @@ interface ProductGalleryProps {
   name: string;
   thumbnail: string | null;
   images: string[];
-  preferredImage?: string | null;
+  selectedImage?: string | null;
+  defaultImage?: string | null;
+  onSelectedImageChange?: (image: string) => void;
+  priority?: boolean;
 }
 
-export function ProductGallery({ name, thumbnail, images, preferredImage }: ProductGalleryProps) {
+export function ProductGallery({
+  name,
+  thumbnail,
+  images,
+  selectedImage,
+  defaultImage,
+  onSelectedImageChange,
+  priority = false,
+}: ProductGalleryProps) {
+  const initialImage = defaultImage ?? thumbnail ?? images[0] ?? null;
+  const isControlled = selectedImage !== undefined;
+  const [uncontrolledImage, setUncontrolledImage] = useState<string | null>(initialImage);
+  const currentImage = isControlled ? selectedImage : uncontrolledImage;
   const galleryImages = useMemo(() => {
-    return Array.from(new Set([thumbnail, ...images, preferredImage].filter((image): image is string => !!image)));
-  }, [images, preferredImage, thumbnail]);
+    return Array.from(new Set([thumbnail, ...images, currentImage].filter((image): image is string => !!image)));
+  }, [currentImage, images, thumbnail]);
 
-  const [selectedIndex, setSelectedIndex] = useState(() => {
-    if (!preferredImage) return 0;
-    const preferredIndex = galleryImages.indexOf(preferredImage);
-    return preferredIndex >= 0 ? preferredIndex : 0;
-  });
   const [viewerOpen, setViewerOpen] = useState(false);
   const [imageLoading, setImageLoading] = useState(false);
   const [viewerImageLoading, setViewerImageLoading] = useState(false);
   const thumbnailRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const loadedMainImages = useRef(new Set<string>());
   const loadedViewerImages = useRef(new Set<string>());
-  const activeIndex = galleryImages[selectedIndex] ? selectedIndex : 0;
-  const selectedImage = galleryImages[activeIndex] ?? null;
+  const requestedIndex = currentImage ? galleryImages.indexOf(currentImage) : 0;
+  const activeIndex = requestedIndex >= 0 ? requestedIndex : 0;
+  const activeImage = galleryImages[activeIndex] ?? null;
   const hasMultipleImages = galleryImages.length > 1;
   const nextImage = hasMultipleImages ? galleryImages[(activeIndex + 1) % galleryImages.length] : null;
   const previousImage = hasMultipleImages
     ? galleryImages[activeIndex === 0 ? galleryImages.length - 1 : activeIndex - 1]
     : null;
 
-  function selectImage(index: number) {
-    if (index === activeIndex) return;
-    const next = galleryImages[index];
-    setImageLoading(next ? !loadedMainImages.current.has(mainImageSrc(next)) : false);
+  const setCurrentImage = useCallback((image: string) => {
+    const mainSrc = mainImageSrc(image);
+    const viewerSrc = viewerImageSrc(image);
+    setImageLoading(!loadedMainImages.current.has(mainSrc));
     if (viewerOpen) {
-      setViewerImageLoading(next ? !loadedViewerImages.current.has(viewerImageSrc(next)) : false);
+      setViewerImageLoading(!loadedViewerImages.current.has(viewerSrc));
     }
-    setSelectedIndex(index);
-  }
 
-  function goToPrevious() {
+    if (isControlled) {
+      onSelectedImageChange?.(image);
+    } else {
+      setUncontrolledImage(image);
+    }
+  }, [isControlled, onSelectedImageChange, viewerOpen]);
+
+  const selectImage = useCallback((index: number) => {
+    if (index === activeIndex) return;
+    const image = galleryImages[index];
+    if (!image) return;
+    setCurrentImage(image);
+  }, [activeIndex, galleryImages, setCurrentImage]);
+
+  const goToPrevious = useCallback(() => {
     if (!hasMultipleImages) return;
     selectImage(activeIndex === 0 ? galleryImages.length - 1 : activeIndex - 1);
-  }
+  }, [activeIndex, galleryImages.length, hasMultipleImages, selectImage]);
 
-  function goToNext() {
+  const goToNext = useCallback(() => {
     if (!hasMultipleImages) return;
     selectImage((activeIndex + 1) % galleryImages.length);
-  }
+  }, [activeIndex, galleryImages.length, hasMultipleImages, selectImage]);
 
   useEffect(() => {
     thumbnailRefs.current[activeIndex]?.scrollIntoView({
@@ -68,20 +91,43 @@ export function ProductGallery({ name, thumbnail, images, preferredImage }: Prod
     });
   }, [activeIndex]);
 
+  useEffect(() => {
+    if (!viewerOpen) return;
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        goToPrevious();
+      }
+      if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        goToNext();
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [goToNext, goToPrevious, viewerOpen]);
+
+  useEffect(() => {
+    if (!viewerOpen || !activeImage) return;
+    setViewerImageLoading(!loadedViewerImages.current.has(viewerImageSrc(activeImage)));
+  }, [activeImage, viewerOpen]);
+
   return (
     <div className="min-w-0">
       <div className="group/gallery relative mb-4 flex aspect-square items-center justify-center overflow-hidden rounded-3xl border border-border bg-muted/30 shadow-sm">
-        {selectedImage ? (
+        {activeImage ? (
           <Image
-            key={selectedImage}
-            src={mainImageSrc(selectedImage)}
+            key={activeImage}
+            src={mainImageSrc(activeImage)}
             alt={name}
             fill
             sizes="(min-width: 1024px) 50vw, 100vw"
             className={cn('object-contain transition-opacity duration-200', imageLoading && 'opacity-40')}
-            priority
+            priority={priority}
             onLoad={() => {
-              loadedMainImages.current.add(mainImageSrc(selectedImage));
+              loadedMainImages.current.add(mainImageSrc(activeImage));
               setImageLoading(false);
             }}
           />
@@ -96,29 +142,16 @@ export function ProductGallery({ name, thumbnail, images, preferredImage }: Prod
         )}
 
         {nextImage && (
-          <Image
-            src={mainImageSrc(nextImage)}
-            alt=""
-            width={1}
-            height={1}
-            className="pointer-events-none absolute size-px opacity-0"
-            aria-hidden="true"
-            onLoad={() => loadedMainImages.current.add(mainImageSrc(nextImage))}
-          />
+          <PreloadImage src={mainImageSrc(nextImage)} onLoad={() => loadedMainImages.current.add(mainImageSrc(nextImage))} />
         )}
         {previousImage && previousImage !== nextImage && (
-          <Image
+          <PreloadImage
             src={mainImageSrc(previousImage)}
-            alt=""
-            width={1}
-            height={1}
-            className="pointer-events-none absolute size-px opacity-0"
-            aria-hidden="true"
             onLoad={() => loadedMainImages.current.add(mainImageSrc(previousImage))}
           />
         )}
 
-        {selectedImage && (
+        {activeImage && (
           <div className="absolute inset-x-4 top-4 flex items-center justify-between gap-3">
             <span className="rounded-full bg-background/90 px-3 py-1 text-xs font-medium text-foreground shadow-sm backdrop-blur">
               {activeIndex + 1} / {galleryImages.length}
@@ -196,16 +229,16 @@ export function ProductGallery({ name, thumbnail, images, preferredImage }: Prod
         <DialogContent className="w-[calc(100vw-2rem)] max-w-6xl gap-3 p-3 sm:max-w-6xl" showCloseButton>
           <DialogTitle className="sr-only">{name}</DialogTitle>
           <div className="relative flex h-[75vh] min-h-80 items-center justify-center overflow-hidden rounded-lg bg-muted/30">
-            {selectedImage && (
+            {activeImage && (
               <Image
-                key={selectedImage}
-                src={viewerImageSrc(selectedImage)}
+                key={activeImage}
+                src={viewerImageSrc(activeImage)}
                 alt={name}
                 fill
                 sizes="90vw"
                 className={cn('object-contain transition-opacity duration-200', viewerImageLoading && 'opacity-40')}
                 onLoad={() => {
-                  loadedViewerImages.current.add(viewerImageSrc(selectedImage));
+                  loadedViewerImages.current.add(viewerImageSrc(activeImage));
                   setViewerImageLoading(false);
                 }}
               />
@@ -218,24 +251,14 @@ export function ProductGallery({ name, thumbnail, images, preferredImage }: Prod
             )}
 
             {nextImage && (
-              <Image
+              <PreloadImage
                 src={viewerImageSrc(nextImage)}
-                alt=""
-                width={1}
-                height={1}
-                className="pointer-events-none absolute size-px opacity-0"
-                aria-hidden="true"
                 onLoad={() => loadedViewerImages.current.add(viewerImageSrc(nextImage))}
               />
             )}
             {previousImage && previousImage !== nextImage && (
-              <Image
+              <PreloadImage
                 src={viewerImageSrc(previousImage)}
-                alt=""
-                width={1}
-                height={1}
-                className="pointer-events-none absolute size-px opacity-0"
-                aria-hidden="true"
                 onLoad={() => loadedViewerImages.current.add(viewerImageSrc(previousImage))}
               />
             )}
@@ -283,4 +306,18 @@ function mainImageSrc(image: string) {
 
 function viewerImageSrc(image: string) {
   return cloudinaryImage(image, 'f_auto,q_auto,w_1600');
+}
+
+function PreloadImage({ src, onLoad }: { src: string; onLoad: () => void }) {
+  return (
+    <Image
+      src={src}
+      alt=""
+      width={1}
+      height={1}
+      className="pointer-events-none absolute size-px opacity-0"
+      aria-hidden="true"
+      onLoad={onLoad}
+    />
+  );
 }
