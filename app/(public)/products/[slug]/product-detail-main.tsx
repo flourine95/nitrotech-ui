@@ -59,12 +59,11 @@ export function ProductDetailMain({ product }: ProductDetailMainProps) {
         <h1 className="mb-2 text-2xl font-bold text-foreground break-words sm:text-3xl">
           {product.name}
         </h1>
-        {product.description && (
+        {product.shortDescription && (
           <p className="mb-4 text-sm leading-relaxed text-muted-foreground">
-            {product.description}
+            {product.shortDescription}
           </p>
         )}
-
         <div className="mb-5 flex flex-wrap items-center gap-3">
           <ProductRating rating={product.rating || 0} showReviews={false} />
           <span className="text-sm font-semibold text-foreground">{product.rating || 0}</span>

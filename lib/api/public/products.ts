@@ -29,6 +29,7 @@ export interface Product {
   name: string;
   slug: string;
   description: string | null;
+  shortDescription?: string | null;
   thumbnail: string | null;
   specs: Record<string, string> | null;
   active: boolean;
@@ -178,6 +179,13 @@ export async function getProductFacets(query?: ProductFacetsQuery): Promise<Prod
   if (query?.active !== undefined) q.set('active', String(query.active));
   const qs = q.toString() ? `?${q}` : '';
   const res = await apiFetch<{ data: ProductFacets }>(`/api/products/facets${qs}`);
+  return res.data;
+}
+
+export async function getRelatedProducts(productId: number, limit = 4): Promise<Product[]> {
+  const q = new URLSearchParams();
+  q.set('limit', String(limit));
+  const res = await apiFetch<{ data: Product[] }>(`/api/products/${productId}/related?${q}`);
   return res.data;
 }
 

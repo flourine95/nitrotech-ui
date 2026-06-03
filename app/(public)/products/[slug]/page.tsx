@@ -5,8 +5,8 @@ import { cookies } from 'next/headers';
 import { backendFetch } from '@/lib/api/server';
 import type { Product } from '@/lib/api/public/products';
 import { ProductDetailMain } from './product-detail-main';
-import { ProductRating } from '@/components/product-rating';
-import { Button } from '@/components/ui/button';
+import { ProductDetailTabs } from './product-detail-tabs';
+import { RelatedProducts } from './related-products';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -82,17 +82,25 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     notFound();
   }
 
-  // Mock data for now (will be replaced with API later)
-  const mockSpecs = [
-    { label: 'Thương hiệu', value: product.brandName || 'N/A' },
-    { label: 'Danh mục', value: product.categoryName || 'N/A' },
-    { label: 'SKU', value: product.slug },
+  const specs = [
+    { label: 'Thương hiệu', value: product.brandName || 'Đang cập nhật' },
+    { label: 'Danh mục', value: product.categoryName || 'Đang cập nhật' },
+    ...Object.entries(product.specs ?? {}).map(([label, value]) => ({
+      label,
+      value: String(value),
+    })),
   ];
-  
-  // Add specs from product.specs if available
-  const specs = product.specs 
-    ? [...mockSpecs, ...Object.entries(product.specs).map(([label, value]) => ({ label, value }))]
-    : mockSpecs;
+
+  let relatedProducts: Product[] = [];
+  try {
+    const relatedRes = await backendFetch(`/api/products/${product.id}/related?limit=4`, { cookieHeader });
+    if (relatedRes.ok) {
+      const relatedJson = await relatedRes.json() as { data: Product[] };
+      relatedProducts = relatedJson.data;
+    }
+  } catch {
+    relatedProducts = [];
+  }
 
   return (
     <main className="min-h-screen bg-background">
@@ -137,109 +145,15 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
         <div className="mx-auto max-w-7xl px-6 py-10">
           <ProductDetailMain product={product} />
-          {/* Specs */}
-          <div className="mb-16">
-            <div className="mb-8 flex gap-1 border-b border-border">
-              {['Thông số kỹ thuật', `Đánh giá (${product.reviewCount || 0})`, 'Mô tả'].map((tab, i) => (
-                <Button
-                  key={tab}
-                  variant="ghost"
-                  className={`-mb-px rounded-none border-b-2 px-5 py-3 ${i === 0 ? 'border-foreground text-foreground' : 'border-transparent text-muted-foreground'}`}
-                >
-                  {tab}
-                </Button>
-              ))}
-            </div>
-            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-              <table className="w-full text-sm">
-                <caption className="sr-only">Thông số kỹ thuật {product.name}</caption>
-                <tbody>
-                  {specs.map((s, i) => (
-                    <tr key={s.label} className={i % 2 === 0 ? 'bg-card' : 'bg-muted/30'}>
-                      <td className="w-44 border-r border-border px-6 py-3.5 font-medium text-muted-foreground">
-                        {s.label}
-                      </td>
-                      <td className="px-6 py-3.5 text-foreground">{s.value}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Reviews */}
-          <div className="mb-16">
-            <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-foreground">Đánh giá từ khách hàng</h2>
-              <Button variant="outline" className="rounded-full">
-                Viết đánh giá
-              </Button>
-            </div>
-            <div className="mb-6 flex items-center gap-8 rounded-2xl border border-border bg-card p-6 shadow-sm">
-              <div className="text-center">
-                <div className="text-5xl font-bold text-foreground">{product.rating || 0}</div>
-                <div className="my-2 flex justify-center">
-                  <ProductRating rating={product.rating || 0} showReviews={false} />
-                </div>
-                <div className="text-xs text-muted-foreground">{product.reviewCount || 0} đánh giá</div>
-              </div>
-              <div className="flex flex-1 flex-col gap-2">
-                {[
-                  [5, 80],
-                  [4, 15],
-                  [3, 3],
-                  [2, 1],
-                  [1, 1],
-                ].map(([star, pct]) => (
-                  <div key={star} className="flex items-center gap-3">
-                    <span className="w-4 text-xs text-muted-foreground">{star}</span>
-                    <ProductRating rating={1} showReviews={false} size="sm" />
-                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
-                      <div
-                        className="h-full rounded-full bg-yellow-500"
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
-                    <span className="w-8 text-xs text-muted-foreground">{pct}%</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="flex flex-col gap-4">
-              {reviewsData.map((r) => (
-                <article
-                  key={r.name}
-                  className="rounded-2xl border border-border bg-card p-6 shadow-sm"
-                >
-                  <div className="mb-3 flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground"
-                        aria-hidden="true"
-                      >
-                        {r.name
-                          .split(' ')
-                          .map((n) => n[0])
-                          .slice(-2)
-                          .join('')}
-                      </div>
-                      <div>
-                        <div className="text-sm font-semibold text-foreground">{r.name}</div>
-                        <div className="text-xs text-muted-foreground">{r.role}</div>
-                      </div>
-                    </div>
-                    <span className="text-xs text-muted-foreground">{r.date}</span>
-                  </div>
-                  <div className="mb-2">
-                    <ProductRating rating={r.rating} showReviews={false} size="sm" />
-                  </div>
-                  <p className="text-sm leading-relaxed text-muted-foreground">{r.text}</p>
-                </article>
-              ))}
-            </div>
-          </div>
-
-          {/* Related - Hidden for now since we don't have related products from API */}
+          <ProductDetailTabs
+            productName={product.name}
+            description={product.description}
+            specs={specs}
+            rating={product.rating}
+            reviewCount={product.reviewCount || 0}
+            reviews={reviewsData}
+          />
+          <RelatedProducts products={relatedProducts} />
         </div>
       </main>
   );

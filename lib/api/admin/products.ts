@@ -32,6 +32,7 @@ export interface CreateProductBody {
   name: string;
   slug: string;
   description?: string | null;
+  shortDescription?: string | null;
   thumbnail?: string | null;
   specs?: Record<string, string> | null;
   active: boolean;
@@ -45,6 +46,7 @@ export interface UpdateProductBody {
   name?: string;
   slug?: string;
   description?: string | null;
+  shortDescription?: string | null;
   thumbnail?: string | null;
   specs?: Record<string, string> | null;
   active?: boolean;
