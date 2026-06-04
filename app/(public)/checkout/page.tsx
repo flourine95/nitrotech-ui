@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCartStore } from '@/stores/cart.store';
 import { createOrder } from '@/lib/api/orders';
+import { createAddress, getAddresses } from '@/lib/api/addresses';
 import type { CreateOrderData } from '@/schemas/order';
 import type { ShippingAddress } from '@/types/order';
 import type { PaymentMethod } from '@/schemas/order';
@@ -32,6 +33,33 @@ export default function CheckoutPage() {
   useEffect(() => {
     void fetchCart();
   }, [fetchCart]);
+
+  useEffect(() => {
+    async function loadSavedAddress() {
+      try {
+        const addresses = await getAddresses();
+        const address = addresses.find((item) => item.isDefault) ?? addresses[0];
+        if (!address) return;
+
+        setShippingAddress({
+          name: address.name,
+          phone: address.phone,
+          address: address.address,
+          ward: address.ward,
+          wardCode: address.wardCode,
+          district: address.district,
+          districtCode: address.districtCode,
+          city: address.city,
+          cityCode: address.cityCode,
+          country: address.country,
+        });
+      } catch {
+        // Checkout still works with a freshly entered address.
+      }
+    }
+
+    void loadSavedAddress();
+  }, []);
 
   // Redirect if cart is empty
   useEffect(() => {
@@ -69,6 +97,10 @@ export default function CheckoutPage() {
         note: note || undefined,
         saveAddress,
       };
+
+      if (saveAddress) {
+        await createAddress({ ...shippingAddress, isDefault: true });
+      }
 
       const order = await createOrder(orderData);
 
@@ -201,8 +233,9 @@ export default function CheckoutPage() {
                     <p className="font-medium">{shippingAddress.name}</p>
                     <p className="text-muted-foreground">{shippingAddress.phone}</p>
                     <p className="text-muted-foreground">
-                      {shippingAddress.address}, {shippingAddress.ward}, {shippingAddress.district},{' '}
-                      {shippingAddress.city}
+                      {[shippingAddress.address, shippingAddress.ward, shippingAddress.district, shippingAddress.city]
+                        .filter(Boolean)
+                        .join(', ')}
                     </p>
                   </div>
                 )}

@@ -6,8 +6,11 @@ export interface ShippingAddress {
   phone: string;
   address: string;
   ward: string;
-  district: string;
+  wardCode?: string;
+  district?: string;
+  districtCode?: string;
   city: string;
+  cityCode?: string;
   country: string;
 }
 

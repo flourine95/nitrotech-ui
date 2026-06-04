@@ -33,7 +33,9 @@ const timeline = [
   { label: 'Giao hàng thành công', time: '12/03/2025 15:10', done: true },
 ];
 
-export default function OrderDetailPage({ params }: { params: { id: string } }) {
+export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+
   return (
     <div className="space-y-5">
       {/* Header */}
@@ -55,7 +57,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
                 <path d="M19 12H5M12 5l-7 7 7 7" />
               </svg>
             </Link>
-            <h1 className="text-xl font-bold text-slate-900">Đơn hàng {params.id}</h1>
+            <h1 className="text-xl font-bold text-slate-900">Đơn hàng {id}</h1>
           </div>
           <p className="text-sm text-slate-400">Đặt ngày 12/03/2025 lúc 09:14</p>
         </div>

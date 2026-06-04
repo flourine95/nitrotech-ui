@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Loader2, Shield, Zap, Package, CreditCard } from 'lucide-react';
 import { useCartStore } from '@/stores/cart.store';
@@ -41,7 +41,8 @@ export function ProductActions({
   onVariantChange,
 }: ProductActionsProps) {
   const router = useRouter();
-  const { addItem, isLoading } = useCartStore();
+  const pathname = usePathname();
+  const { cart, addItem, fetchCart, isLoading } = useCartStore();
   const [qty, setQty] = useState(1);
   const variantOptions = buildVariantOptions(variants);
   const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>(() => {
@@ -51,18 +52,40 @@ export function ProductActions({
   const selectedVariant = findVariantByAttributes(variants, selectedAttributes);
   const selectedPrice = selectedVariant?.price ?? priceMin;
   const selectedStock = selectedVariant?.stockQuantity;
-  const canPurchase = Boolean(selectedVariant?.id && selectedVariant.active && (selectedStock == null || selectedStock > 0));
+  const quantityInCart = selectedVariant
+    ? cart?.items.find((item) => item.variantId === selectedVariant.id)?.quantity ?? 0
+    : 0;
+  const availableToAdd = typeof selectedStock === 'number'
+    ? Math.max(0, selectedStock - quantityInCart)
+    : null;
+  const canPurchase = Boolean(
+    selectedVariant?.id &&
+    selectedVariant.active &&
+    (availableToAdd == null || availableToAdd > 0)
+  );
+
+  useEffect(() => {
+    void fetchCart();
+  }, [fetchCart]);
 
   useEffect(() => {
     onVariantChange?.(selectedVariant);
   }, [onVariantChange, selectedVariant]);
+
+  useEffect(() => {
+    if (availableToAdd !== null) {
+      setQty((current) => Math.min(Math.max(1, current), Math.max(1, availableToAdd)));
+    }
+  }, [availableToAdd]);
 
   function handleAttributeChange(key: string, value: string) {
     const nextAttributes = { ...selectedAttributes, [key]: value };
     const nextVariant = findVariantByAttributes(variants, nextAttributes);
     setSelectedAttributes(nextVariant?.attributes ?? nextAttributes);
     if (typeof nextVariant?.stockQuantity === 'number') {
-      setQty((current) => Math.min(current, Math.max(1, nextVariant.stockQuantity ?? 0)));
+      const nextQuantityInCart = cart?.items.find((item) => item.variantId === nextVariant.id)?.quantity ?? 0;
+      const nextAvailableToAdd = Math.max(0, nextVariant.stockQuantity - nextQuantityInCart);
+      setQty((current) => Math.min(current, Math.max(1, nextAvailableToAdd)));
     }
   }
 
@@ -86,6 +109,10 @@ export function ProductActions({
       const code = err?.error?.code;
 
       switch (code) {
+        case 'AUTH_REQUIRED':
+          toast.error('Vui lòng đăng nhập để thêm sản phẩm vào giỏ');
+          router.push(`/login?from=${encodeURIComponent(pathname)}`);
+          break;
         case 'VARIANT_NOT_FOUND':
           toast.error('Sản phẩm không tồn tại');
           break;
@@ -112,6 +139,11 @@ export function ProductActions({
       router.push('/checkout');
     } catch (error) {
       const err = error as { error?: { code?: string; message?: string } };
+      if (err?.error?.code === 'AUTH_REQUIRED') {
+        toast.error('Vui lòng đăng nhập để mua hàng');
+        router.push(`/login?from=${encodeURIComponent(pathname)}`);
+        return;
+      }
       toast.error(err?.error?.message || 'Có lỗi xảy ra');
     }
   };
@@ -177,7 +209,7 @@ export function ProductActions({
             </span>
             <Button
               onClick={() => setQty((q) => q + 1)}
-              disabled={!canPurchase || isLoading || (typeof selectedStock === 'number' && qty >= selectedStock)}
+              disabled={!canPurchase || isLoading || (availableToAdd !== null && qty >= availableToAdd)}
               variant="ghost"
               size="default"
               className="h-10 rounded-none px-4"
@@ -187,7 +219,7 @@ export function ProductActions({
             </Button>
           </div>
           <span className="text-xs text-muted-foreground font-medium">
-            {stockLabel(selectedVariant)}
+            {stockLabel(selectedVariant, quantityInCart, availableToAdd)}
           </span>
         </div>
       </div>
@@ -254,10 +286,14 @@ function findVariantByAttributes(variants: ProductVariant[], selectedAttributes:
   ) ?? null;
 }
 
-function stockLabel(variant: ProductVariant | null) {
+function stockLabel(variant: ProductVariant | null, quantityInCart: number, availableToAdd: number | null) {
   if (!variant) return 'Vui lòng chọn cấu hình';
   if (variant.stockQuantity == null) return 'Đang cập nhật tồn kho';
   if (variant.stockQuantity <= 0) return 'Tạm hết hàng';
+  if (availableToAdd === 0) return `Bạn đã có ${quantityInCart} sản phẩm trong giỏ`;
+  if (quantityInCart > 0 && availableToAdd !== null) {
+    return `Còn có thể thêm ${availableToAdd} sản phẩm`;
+  }
   if (variant.lowStock) return `Chỉ còn ${variant.stockQuantity} sản phẩm`;
   return `Còn ${variant.stockQuantity} sản phẩm`;
 }
