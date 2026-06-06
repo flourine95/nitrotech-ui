@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { ChevronLeft, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCartStore } from '@/stores/cart.store';
 import { createOrder } from '@/lib/api/orders';
@@ -11,6 +11,7 @@ import { createAddress, getAddresses } from '@/lib/api/addresses';
 import type { CreateOrderData } from '@/schemas/order';
 import type { ShippingAddress } from '@/types/order';
 import type { PaymentMethod } from '@/schemas/order';
+import type { Address } from '@/types/address';
 import ShippingForm from './shipping-form';
 import PaymentMethodSelector from './payment-method';
 import OrderSummary from './order-summary';
@@ -22,13 +23,16 @@ export default function CheckoutPage() {
   const { cart, isLoading: cartLoading, fetchCart, clearCart } = useCartStore();
   const [currentStep, setCurrentStep] = useState<CheckoutStep>('shipping');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [orderCompleted, setOrderCompleted] = useState(false);
 
   // Form data
   const [shippingAddress, setShippingAddress] = useState<ShippingAddress | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cod');
   const [promotionCode, setPromotionCode] = useState('');
   const [note, setNote] = useState('');
-  const [saveAddress, setSaveAddress] = useState(false);
+  const [defaultAddress, setDefaultAddress] = useState(false);
+  const [shouldSaveAddress, setShouldSaveAddress] = useState(false);
+  const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
 
   useEffect(() => {
     void fetchCart();
@@ -38,8 +42,10 @@ export default function CheckoutPage() {
     async function loadSavedAddress() {
       try {
         const addresses = await getAddresses();
+        setSavedAddresses(addresses);
         const address = addresses.find((item) => item.isDefault) ?? addresses[0];
         if (!address) return;
+        if (!address.district || !address.districtCode) return;
 
         setShippingAddress({
           name: address.name,
@@ -47,8 +53,8 @@ export default function CheckoutPage() {
           address: address.address,
           ward: address.ward,
           wardCode: address.wardCode,
-          district: address.district,
-          districtCode: address.districtCode,
+          district: address.district || '',
+          districtCode: address.districtCode || '',
           city: address.city,
           cityCode: address.cityCode,
           country: address.country,
@@ -63,15 +69,21 @@ export default function CheckoutPage() {
 
   // Redirect if cart is empty
   useEffect(() => {
+    if (orderCompleted) return;
     if (!cartLoading && (!cart || cart.items.length === 0)) {
       toast.error('Giỏ hàng trống');
       router.push('/cart');
     }
-  }, [cart, cartLoading, router]);
+  }, [cart, cartLoading, orderCompleted, router]);
 
-  const handleShippingSubmit = (address: ShippingAddress, save: boolean) => {
+  const handleShippingSubmit = (
+    address: ShippingAddress,
+    defaultAddress: boolean,
+    shouldSaveAddress: boolean,
+  ) => {
     setShippingAddress(address);
-    setSaveAddress(save);
+    setDefaultAddress(defaultAddress);
+    setShouldSaveAddress(shouldSaveAddress);
     setCurrentStep('payment');
   };
 
@@ -95,14 +107,14 @@ export default function CheckoutPage() {
         paymentMethod,
         promotionCode: promotionCode || undefined,
         note: note || undefined,
-        saveAddress,
       };
 
-      if (saveAddress) {
-        await createAddress({ ...shippingAddress, isDefault: true });
+      if (shouldSaveAddress) {
+        await createAddress({ ...shippingAddress, isDefault: defaultAddress });
       }
 
       const order = await createOrder(orderData);
+      setOrderCompleted(true);
 
       // Clear cart after successful order
       await clearCart();
@@ -125,7 +137,7 @@ export default function CheckoutPage() {
         case 'PROMOTION_NOT_APPLICABLE': {
           const data = err.error?.data as { minAmount?: number; currentAmount?: number };
           toast.error(
-            `Đơn hàng chưa đủ điều kiện. Tối thiểu: ${data?.minAmount?.toLocaleString('vi-VN')} ₫`
+            `Đơn hàng chưa đủ điều kiện. Tối thiểu: ${data?.minAmount?.toLocaleString('vi-VN')} ₫`,
           );
           setPromotionCode('');
           break;
@@ -137,7 +149,7 @@ export default function CheckoutPage() {
           const items = data?.outOfStockItems || [];
           if (items.length > 0) {
             toast.error(
-              `Sản phẩm hết hàng: ${items.map((i) => `${i.productName} (${i.variantName})`).join(', ')}`
+              `Sản phẩm hết hàng: ${items.map((i) => `${i.productName} (${i.variantName})`).join(', ')}`,
             );
           } else {
             toast.error('Một số sản phẩm đã hết hàng');
@@ -165,157 +177,213 @@ export default function CheckoutPage() {
 
   if (cartLoading || !cart) {
     return (
-      <div className="container mx-auto flex min-h-[60vh] items-center justify-center px-4 py-8">
-        <Loader2 className="size-8 animate-spin text-muted-foreground" />
-      </div>
+      <main className="bg-muted/30">
+        <div className="mx-auto flex min-h-[70vh] max-w-7xl items-center justify-center px-6 py-8">
+          <Loader2 className="size-8 animate-spin text-muted-foreground" />
+        </div>
+      </main>
     );
   }
 
+  const currentStepNumber = currentStep === 'shipping' ? 1 : currentStep === 'payment' ? 2 : 3;
+
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">Thanh toán</h1>
-        <p className="mt-2 text-muted-foreground">
-          Hoàn tất đơn hàng của bạn trong {currentStep === 'shipping' ? '3' : currentStep === 'payment' ? '2' : '1'} bước
-        </p>
-      </div>
+    <main className="bg-muted/30">
+      <div className="mx-auto min-h-[calc(100vh-96px)] max-w-7xl px-6 py-8 lg:py-10">
+        <div className="mb-6 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-slate-950">Thanh toán</h1>
+            <p className="mt-2 text-sm text-slate-500">
+              Bước {currentStepNumber}/3 để hoàn tất đơn hàng của bạn.
+            </p>
+          </div>
 
-      {/* Progress Steps */}
-      <div className="mb-8 flex items-center justify-center gap-4">
-        <StepIndicator
-          step={1}
-          label="Giao hàng"
-          active={currentStep === 'shipping'}
-          completed={currentStep === 'payment' || currentStep === 'review'}
-        />
-        <div className="h-px w-16 bg-border" />
-        <StepIndicator
-          step={2}
-          label="Thanh toán"
-          active={currentStep === 'payment'}
-          completed={currentStep === 'review'}
-        />
-        <div className="h-px w-16 bg-border" />
-        <StepIndicator step={3} label="Xác nhận" active={currentStep === 'review'} completed={false} />
-      </div>
+          {/* Progress Steps */}
+          <CheckoutStepper currentStep={currentStep} />
+        </div>
 
-      <div className="grid gap-8 lg:grid-cols-3">
-        {/* Main Content */}
-        <div className="lg:col-span-2">
-          {currentStep === 'shipping' && (
-            <ShippingForm
-              initialData={shippingAddress}
-              initialSaveAddress={saveAddress}
-              onSubmit={handleShippingSubmit}
-            />
-          )}
+        <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
+          {/* Main Content */}
+          <div className="min-w-0">
+            {currentStep === 'shipping' && (
+              <ShippingForm
+                initialData={shippingAddress}
+                initialSaveAddress={defaultAddress}
+                savedAddresses={savedAddresses}
+                onSubmit={handleShippingSubmit}
+              />
+            )}
 
-          {currentStep === 'payment' && (
-            <PaymentMethodSelector
-              selectedMethod={paymentMethod}
-              onSubmit={handlePaymentSubmit}
-              onBack={handleBack}
-            />
-          )}
+            {currentStep === 'payment' && (
+              <PaymentMethodSelector
+                selectedMethod={paymentMethod}
+                onSubmit={handlePaymentSubmit}
+                onBack={handleBack}
+              />
+            )}
 
-          {currentStep === 'review' && (
-            <div className="space-y-6">
-              {/* Shipping Address Review */}
-              <div className="rounded-lg border bg-card p-6">
-                <div className="mb-4 flex items-center justify-between">
-                  <h2 className="text-lg font-semibold">Địa chỉ giao hàng</h2>
-                  <Button variant="ghost" size="sm" onClick={() => setCurrentStep('shipping')}>
-                    Sửa
-                  </Button>
-                </div>
-                {shippingAddress && (
-                  <div className="space-y-1 text-sm">
-                    <p className="font-medium">{shippingAddress.name}</p>
-                    <p className="text-muted-foreground">{shippingAddress.phone}</p>
-                    <p className="text-muted-foreground">
-                      {[shippingAddress.address, shippingAddress.ward, shippingAddress.district, shippingAddress.city]
-                        .filter(Boolean)
-                        .join(', ')}
-                    </p>
+            {currentStep === 'review' && (
+              <div className="space-y-6">
+                {/* Shipping Address Review */}
+                <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                  <div className="mb-4 flex items-center justify-between gap-4">
+                    <h2 className="text-lg font-semibold text-slate-950">Địa chỉ giao hàng</h2>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-full"
+                      onClick={() => setCurrentStep('shipping')}
+                    >
+                      Sửa
+                    </Button>
                   </div>
-                )}
-              </div>
+                  {shippingAddress && (
+                    <div className="space-y-1 text-sm leading-6">
+                      <p className="font-semibold text-slate-950">{shippingAddress.name}</p>
+                      <p className="text-slate-500">{shippingAddress.phone}</p>
+                      <p className="text-slate-500">
+                        {[
+                          shippingAddress.address,
+                          shippingAddress.ward,
+                          shippingAddress.district,
+                          shippingAddress.city,
+                        ]
+                          .filter(Boolean)
+                          .join(', ')}
+                      </p>
+                    </div>
+                  )}
+                </div>
 
-              {/* Payment Method Review */}
-              <div className="rounded-lg border bg-card p-6">
-                <div className="mb-4 flex items-center justify-between">
-                  <h2 className="text-lg font-semibold">Phương thức thanh toán</h2>
-                  <Button variant="ghost" size="sm" onClick={() => setCurrentStep('payment')}>
-                    Sửa
+                {/* Payment Method Review */}
+                <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                  <div className="mb-4 flex items-center justify-between gap-4">
+                    <h2 className="text-lg font-semibold text-slate-950">Phương thức thanh toán</h2>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-full"
+                      onClick={() => setCurrentStep('payment')}
+                    >
+                      Sửa
+                    </Button>
+                  </div>
+                  <p className="text-sm text-slate-600">
+                    {paymentMethod === 'cod' && 'Thanh toán khi nhận hàng (COD)'}
+                    {paymentMethod === 'vnpay' && 'VNPay'}
+                    {paymentMethod === 'momo' && 'Momo'}
+                  </p>
+                </div>
+
+                {/* Note */}
+                <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                  <h2 className="mb-4 text-lg font-semibold text-slate-950">Ghi chú đơn hàng</h2>
+                  <textarea
+                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-ring focus:outline-none"
+                    rows={3}
+                    placeholder="Ghi chú cho người bán (tùy chọn)"
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    maxLength={500}
+                  />
+                  <p className="mt-2 text-xs text-slate-500">{note.length}/500 ký tự</p>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-col gap-3 sm:flex-row sm:justify-between">
+                  <Button
+                    variant="outline"
+                    className="rounded-full sm:w-auto"
+                    onClick={handleBack}
+                    disabled={isSubmitting}
+                  >
+                    <ChevronLeft />
+                    Quay lại
+                  </Button>
+                  <Button
+                    className="w-full rounded-full sm:w-48"
+                    size="lg"
+                    onClick={handlePlaceOrder}
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="animate-spin" />
+                        Đang xử lý...
+                      </>
+                    ) : (
+                      'Đặt hàng'
+                    )}
                   </Button>
                 </div>
-                <p className="text-sm">
-                  {paymentMethod === 'cod' && 'Thanh toán khi nhận hàng (COD)'}
-                  {paymentMethod === 'vnpay' && 'VNPay'}
-                  {paymentMethod === 'momo' && 'Momo'}
-                </p>
               </div>
+            )}
+          </div>
 
-              {/* Note */}
-              <div className="rounded-lg border bg-card p-6">
-                <h2 className="mb-4 text-lg font-semibold">Ghi chú đơn hàng</h2>
-                <textarea
-                  className="w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                  rows={3}
-                  placeholder="Ghi chú cho người bán (tùy chọn)"
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  maxLength={500}
-                />
-                <p className="mt-1 text-xs text-muted-foreground">{note.length}/500 ký tự</p>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-3">
-                <Button variant="outline" onClick={handleBack} disabled={isSubmitting}>
-                  <ChevronLeft />
-                  Quay lại
-                </Button>
-                <Button className="flex-1" size="lg" onClick={handlePlaceOrder} disabled={isSubmitting}>
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="animate-spin" />
-                      Đang xử lý...
-                    </>
-                  ) : (
-                    'Đặt hàng'
-                  )}
-                </Button>
-              </div>
-            </div>
-          )}
+          {/* Order Summary Sidebar */}
+          <div className="w-full lg:max-w-[360px]">
+            <OrderSummary
+              cart={cart}
+              promotionCode={promotionCode}
+              onPromotionCodeChange={setPromotionCode}
+            />
+          </div>
         </div>
+      </div>
+    </main>
+  );
+}
 
-        {/* Order Summary Sidebar */}
-        <div className="lg:col-span-1">
-          <OrderSummary
-            cart={cart}
-            promotionCode={promotionCode}
-            onPromotionCodeChange={setPromotionCode}
-          />
-        </div>
+function CheckoutStepper({ currentStep }: { currentStep: CheckoutStep }) {
+  const steps = [
+    {
+      step: 1,
+      label: 'Giao hàng',
+      active: currentStep === 'shipping',
+      completed: currentStep === 'payment' || currentStep === 'review',
+    },
+    {
+      step: 2,
+      label: 'Thanh toán',
+      active: currentStep === 'payment',
+      completed: currentStep === 'review',
+    },
+    {
+      step: 3,
+      label: 'Xác nhận',
+      active: currentStep === 'review',
+      completed: false,
+    },
+  ];
+
+  return (
+    <div className="rounded-full border border-slate-200 bg-white px-5 py-3 shadow-sm">
+      <div className="grid grid-cols-[auto_48px_auto_48px_auto] items-start gap-x-3">
+        <StepIndicator {...steps[0]} />
+        <div className="mt-4 h-px bg-slate-200" />
+        <StepIndicator {...steps[1]} />
+        <div className="mt-4 h-px bg-slate-200" />
+        <StepIndicator {...steps[2]} />
       </div>
     </div>
   );
 }
 
-interface StepIndicatorProps {
+function StepIndicator({
+  step,
+  label,
+  active,
+  completed,
+}: {
   step: number;
   label: string;
   active: boolean;
   completed: boolean;
-}
-
-function StepIndicator({ step, label, active, completed }: StepIndicatorProps) {
+}) {
   return (
-    <div className="flex flex-col items-center gap-2">
+    <div className="flex flex-col items-center gap-1.5">
       <div
-        className={`flex size-10 items-center justify-center rounded-full border-2 font-semibold transition-colors ${
+        className={`flex size-8 items-center justify-center rounded-full border text-sm font-semibold transition-colors ${
           completed
             ? 'border-primary bg-primary text-primary-foreground'
             : active
@@ -326,7 +394,7 @@ function StepIndicator({ step, label, active, completed }: StepIndicatorProps) {
         {step}
       </div>
       <span
-        className={`text-sm font-medium ${active ? 'text-foreground' : 'text-muted-foreground'}`}
+        className={`text-xs font-medium ${active ? 'text-foreground' : 'text-muted-foreground'}`}
       >
         {label}
       </span>

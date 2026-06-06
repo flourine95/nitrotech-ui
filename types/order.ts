@@ -7,8 +7,8 @@ export interface ShippingAddress {
   address: string;
   ward: string;
   wardCode?: string;
-  district?: string;
-  districtCode?: string;
+  district: string;
+  districtCode: string;
   city: string;
   cityCode?: string;
   country: string;
