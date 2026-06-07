@@ -444,7 +444,9 @@ export default function MediaPickerDialog({
   type CacheEntry = { assets: MediaAsset[]; nextCursor: string | undefined; loading: boolean };
   const [cache, setCache] = useState<Map<string, CacheEntry>>(new Map());
   const cacheRef = useRef(cache);
-  cacheRef.current = cache;
+  useEffect(() => {
+    cacheRef.current = cache;
+  }, [cache]);
 
   // Date filter lives here so loadFolder can use it
   const [datePreset, setDatePreset] = useState<'all' | 'today' | 'week' | 'month' | 'custom'>(
@@ -483,7 +485,10 @@ export default function MediaPickerDialog({
   );
 
   useEffect(() => {
-    loadFolder(activeFolder, startAt);
+    const timer = setTimeout(() => {
+      loadFolder(activeFolder, startAt);
+    }, 0);
+    return () => clearTimeout(timer);
   }, [activeFolder, startAt, loadFolder]);
 
   useEffect(() => {

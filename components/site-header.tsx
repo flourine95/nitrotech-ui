@@ -8,6 +8,7 @@ import { getMe } from '@/lib/api/auth';
 import { BrandLogo } from '@/components/icons';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useCartStore } from '@/stores/cart.store';
+import { MegaCategoryMenu } from '@/components/mega-category-menu';
 
 const navLinks = [
   { label: 'Laptop', href: '/products?cat=laptop' },
@@ -16,19 +17,6 @@ const navLinks = [
   { label: 'Phụ kiện', href: '/products?cat=accessories' },
   { label: 'Khuyến mãi', href: '/products?sale=true' },
   { label: 'Blog', href: '/blog' },
-];
-
-const categories = [
-  { label: 'Tất cả', href: '/products' },
-  { label: 'Laptop Gaming', href: '/products?cat=laptop-gaming' },
-  { label: 'Laptop Văn phòng', href: '/products?cat=laptop-office' },
-  { label: 'PC Desktop', href: '/products?cat=desktop' },
-  { label: 'CPU & Bo mạch', href: '/products?cat=cpu' },
-  { label: 'Card đồ họa', href: '/products?cat=gpu' },
-  { label: 'RAM & SSD', href: '/products?cat=storage' },
-  { label: 'Màn hình', href: '/products?cat=monitors' },
-  { label: 'Bàn phím & Chuột', href: '/products?cat=peripherals' },
-  { label: 'Tai nghe', href: '/products?cat=audio' },
 ];
 
 const announcements = [
@@ -85,15 +73,15 @@ export function SiteHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur-md">
+    <header className="sticky top-0 z-40 border-b border-border bg-background/95 shadow-sm backdrop-blur-md">
       {/* Top bar — marquee */}
-      <div className="relative overflow-hidden bg-slate-800 py-2 text-xs text-slate-200">
+      <div className="relative overflow-hidden bg-primary py-2 text-xs text-primary-foreground/80">
         <div
-          className="pointer-events-none absolute top-0 bottom-0 left-0 z-10 w-12 bg-linear-to-r from-slate-800 to-transparent"
+          className="pointer-events-none absolute top-0 bottom-0 left-0 z-10 w-12 bg-linear-to-r from-primary to-transparent"
           aria-hidden="true"
         />
         <div
-          className="pointer-events-none absolute top-0 right-0 bottom-0 z-10 w-12 bg-linear-to-l from-slate-800 to-transparent"
+          className="pointer-events-none absolute top-0 right-0 bottom-0 z-10 w-12 bg-linear-to-l from-primary to-transparent"
           aria-hidden="true"
         />
 
@@ -108,9 +96,9 @@ export function SiteHeader() {
             <Link
               key={i}
               href={a.href}
-              className="inline-flex shrink-0 cursor-pointer items-center gap-3 px-8 transition-colors duration-150 hover:text-white"
+              className="inline-flex shrink-0 cursor-pointer items-center gap-3 px-8 transition-colors duration-150 hover:text-primary-foreground"
             >
-              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" aria-hidden="true" />
+              <span className="size-1.5 shrink-0 rounded-full bg-primary-foreground/70" aria-hidden="true" />
               {a.text}
             </Link>
           ))}
@@ -124,14 +112,17 @@ export function SiteHeader() {
 
         {/* Desktop nav */}
         <div className="hidden items-center gap-1 md:flex">
+          {/* Mega Category Menu */}
+          <MegaCategoryMenu />
+          
           {navLinks.map((l) => (
             <Link
               key={l.href}
               href={l.href}
               className={`cursor-pointer rounded-full px-4 py-2 text-sm transition-colors duration-200 ${
                 pathname === l.href
-                  ? 'bg-slate-100 font-medium text-slate-900'
-                  : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
+                  ? 'bg-muted font-medium text-foreground'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
               }`}
             >
               {l.label}
@@ -144,12 +135,12 @@ export function SiteHeader() {
           {/* Search */}
           <Link
             href="/search"
-            className="hidden cursor-pointer items-center gap-2 rounded-full bg-slate-100 px-3 py-2 text-sm text-slate-400 transition-colors duration-200 hover:bg-slate-200 sm:flex"
+            className="hidden cursor-pointer items-center gap-2 rounded-full bg-muted px-3 py-2 text-sm text-muted-foreground transition-colors duration-200 hover:bg-accent hover:text-foreground sm:flex"
             aria-label="Tìm kiếm"
           >
             <svg
               viewBox="0 0 24 24"
-              className="h-4 w-4"
+              className="size-4"
               fill="none"
               stroke="currentColor"
               strokeWidth="2"
@@ -165,12 +156,12 @@ export function SiteHeader() {
             <TooltipTrigger asChild>
               <Link
                 href="/cart"
-                className="relative cursor-pointer rounded-full p-2 text-slate-500 transition-colors duration-200 hover:bg-slate-100 hover:text-slate-900"
+                className="relative cursor-pointer rounded-full p-2 text-muted-foreground transition-colors duration-200 hover:bg-muted hover:text-foreground"
                 aria-label={`Giỏ hàng (${totalItems} sản phẩm)`}
               >
                 <svg
                   viewBox="0 0 24 24"
-                  className="h-5 w-5"
+                  className="size-5"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="2"
@@ -181,7 +172,7 @@ export function SiteHeader() {
                   <path d="M16 10a4 4 0 01-8 0" />
                 </svg>
                 {totalItems > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white">
+                  <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
                     {totalItems}
                   </span>
                 )}
@@ -194,12 +185,12 @@ export function SiteHeader() {
             <div className="relative hidden sm:block">
               <button
                 onClick={() => setAccountOpen(!accountOpen)}
-                className="flex cursor-pointer items-center gap-2 rounded-full bg-slate-800 px-3 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:bg-slate-700"
+                className="flex cursor-pointer items-center gap-2 rounded-full bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground transition-colors duration-200 hover:bg-primary/90"
                 aria-expanded={accountOpen}
                 aria-haspopup="true"
               >
                 <div
-                  className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-500 text-[10px] font-bold"
+                  className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary-foreground/15 text-[10px] font-bold"
                   aria-hidden="true"
                 >
                   {userName.split(' ').pop()?.[0]}
@@ -207,7 +198,7 @@ export function SiteHeader() {
                 <span className="max-w-20 truncate">{userName.split(' ').pop()}</span>
                 <svg
                   viewBox="0 0 24 24"
-                  className={`h-3.5 w-3.5 transition-transform duration-200 ${accountOpen ? 'rotate-180' : ''}`}
+                  className={`size-3.5 transition-transform duration-200 ${accountOpen ? 'rotate-180' : ''}`}
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="2.5"
@@ -226,12 +217,12 @@ export function SiteHeader() {
                     aria-hidden="true"
                   />
                   {/* Dropdown */}
-                  <div className="absolute top-full right-0 z-50 mt-2 w-52 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
-                    <div className="border-b border-slate-100 px-4 py-3">
-                      <div className="truncate text-sm font-semibold text-slate-900">
+                  <div className="absolute top-full right-0 z-50 mt-2 w-52 overflow-hidden rounded-2xl border border-border bg-popover text-popover-foreground shadow-xl">
+                    <div className="border-b border-border px-4 py-3">
+                      <div className="truncate text-sm font-semibold text-foreground">
                         {userName}
                       </div>
-                      <div className="truncate text-xs text-slate-400">{user?.email ?? 'email@example.com'}</div>
+                      <div className="truncate text-xs text-muted-foreground">{user?.email ?? 'email@example.com'}</div>
                     </div>
                     <div className="py-1.5">
                       {[
@@ -241,7 +232,7 @@ export function SiteHeader() {
                           icon: (
                             <svg
                               viewBox="0 0 24 24"
-                              className="h-4 w-4"
+                              className="size-4"
                               fill="none"
                               stroke="currentColor"
                               strokeWidth="2"
@@ -257,7 +248,7 @@ export function SiteHeader() {
                           icon: (
                             <svg
                               viewBox="0 0 24 24"
-                              className="h-4 w-4"
+                              className="size-4"
                               fill="none"
                               stroke="currentColor"
                               strokeWidth="2"
@@ -274,7 +265,7 @@ export function SiteHeader() {
                           icon: (
                             <svg
                               viewBox="0 0 24 24"
-                              className="h-4 w-4"
+                              className="size-4"
                               fill="none"
                               stroke="currentColor"
                               strokeWidth="2"
@@ -289,7 +280,7 @@ export function SiteHeader() {
                           icon: (
                             <svg
                               viewBox="0 0 24 24"
-                              className="h-4 w-4"
+                              className="size-4"
                               fill="none"
                               stroke="currentColor"
                               strokeWidth="2"
@@ -305,7 +296,7 @@ export function SiteHeader() {
                           icon: (
                             <svg
                               viewBox="0 0 24 24"
-                              className="h-4 w-4"
+                              className="size-4"
                               fill="none"
                               stroke="currentColor"
                               strokeWidth="2"
@@ -320,22 +311,22 @@ export function SiteHeader() {
                           key={item.href}
                           href={item.href}
                           onClick={() => setAccountOpen(false)}
-                          className="flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm text-slate-600 transition-colors duration-150 hover:bg-slate-50 hover:text-slate-900"
+                          className="flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground"
                         >
-                          <span className="text-slate-400">{item.icon}</span>
+                          <span className="text-muted-foreground/70">{item.icon}</span>
                           {item.label}
                         </Link>
                       ))}
                     </div>
-                    <div className="border-t border-slate-100 py-1.5">
+                    <div className="border-t border-border py-1.5">
                       <Link
                         href="/about"
                         onClick={() => setAccountOpen(false)}
-                        className="flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm text-slate-600 transition-colors duration-150 hover:bg-slate-50 hover:text-slate-900"
+                        className="flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground"
                       >
                         <svg
                           viewBox="0 0 24 24"
-                          className="h-4 w-4 text-slate-400"
+                          className="size-4 text-muted-foreground/70"
                           fill="none"
                           stroke="currentColor"
                           strokeWidth="2"
@@ -349,11 +340,11 @@ export function SiteHeader() {
                       <Link
                         href="/contact"
                         onClick={() => setAccountOpen(false)}
-                        className="flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm text-slate-600 transition-colors duration-150 hover:bg-slate-50 hover:text-slate-900"
+                        className="flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground"
                       >
                         <svg
                           viewBox="0 0 24 24"
-                          className="h-4 w-4 text-slate-400"
+                          className="size-4 text-muted-foreground/70"
                           fill="none"
                           stroke="currentColor"
                           strokeWidth="2"
@@ -364,17 +355,17 @@ export function SiteHeader() {
                         Liên hệ
                       </Link>
                     </div>
-                    <div className="border-t border-slate-100 py-1.5">
+                    <div className="border-t border-border py-1.5">
                       <button
                         onClick={() => {
                           setAccountOpen(false);
                           handleLogout();
                         }}
-                        className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-sm text-rose-500 transition-colors duration-150 hover:bg-rose-50"
+                        className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-sm text-destructive transition-colors duration-150 hover:bg-destructive/10"
                       >
                         <svg
                           viewBox="0 0 24 24"
-                          className="h-4 w-4"
+                          className="size-4"
                           fill="none"
                           stroke="currentColor"
                           strokeWidth="2"
@@ -392,21 +383,21 @@ export function SiteHeader() {
           ) : (
             <Link
               href="/login"
-              className="hidden cursor-pointer rounded-full bg-slate-800 px-5 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:bg-slate-700 sm:block"
+              className="hidden cursor-pointer rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition-colors duration-200 hover:bg-primary/90 sm:block"
             >
               Đăng nhập
             </Link>
           )}
           {/* Mobile menu toggle */}
           <button
-            className="cursor-pointer rounded-full p-2 text-slate-500 transition-colors duration-200 hover:bg-slate-100 md:hidden"
+            className="cursor-pointer rounded-full p-2 text-muted-foreground transition-colors duration-200 hover:bg-muted hover:text-foreground md:hidden"
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label="Menu"
             aria-expanded={mobileOpen}
           >
             <svg
               viewBox="0 0 24 24"
-              className="h-5 w-5"
+              className="size-5"
               fill="none"
               stroke="currentColor"
               strokeWidth="2"
@@ -422,35 +413,16 @@ export function SiteHeader() {
         </div>
       </nav>
 
-      {/* Category bar */}
-      <div className="hidden border-t border-slate-100 md:block">
-        <div className="mx-auto flex max-w-7xl items-center gap-1 overflow-x-auto px-6 py-2">
-          {categories.map((c) => (
-            <Link
-              key={c.href}
-              href={c.href}
-              className={`cursor-pointer rounded-full px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors duration-200 ${
-                pathname === c.href
-                  ? 'bg-slate-800 text-white'
-                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-              }`}
-            >
-              {c.label}
-            </Link>
-          ))}
-        </div>
-      </div>
-
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className="border-t border-slate-100 bg-white px-4 py-3 md:hidden">
+        <div className="border-t border-border bg-background px-4 py-3 md:hidden">
           <div className="mb-3 flex flex-col gap-1">
             {navLinks.map((l) => (
               <Link
                 key={l.href}
                 href={l.href}
                 onClick={() => setMobileOpen(false)}
-                className="cursor-pointer rounded-xl px-4 py-2.5 text-sm text-slate-600 transition-colors duration-200 hover:bg-slate-100 hover:text-slate-900"
+                className="cursor-pointer rounded-xl px-4 py-2.5 text-sm text-muted-foreground transition-colors duration-200 hover:bg-muted hover:text-foreground"
               >
                 {l.label}
               </Link>
@@ -467,7 +439,7 @@ export function SiteHeader() {
                   key={l.href}
                   href={l.href}
                   onClick={() => setMobileOpen(false)}
-                  className="cursor-pointer rounded-xl px-4 py-2.5 text-sm text-slate-600 transition-colors duration-200 hover:bg-slate-100"
+                  className="cursor-pointer rounded-xl px-4 py-2.5 text-sm text-muted-foreground transition-colors duration-200 hover:bg-muted hover:text-foreground"
                 >
                   {l.label}
                 </Link>
@@ -477,7 +449,7 @@ export function SiteHeader() {
                   setMobileOpen(false);
                   handleLogout();
                 }}
-                className="mt-1 w-full cursor-pointer rounded-full border border-rose-200 py-2.5 text-center text-sm font-semibold text-rose-500"
+                className="mt-1 w-full cursor-pointer rounded-full border border-destructive/30 py-2.5 text-center text-sm font-semibold text-destructive"
               >
                 Đăng xuất
               </button>
@@ -486,7 +458,7 @@ export function SiteHeader() {
             <Link
               href="/login"
               onClick={() => setMobileOpen(false)}
-              className="block w-full cursor-pointer rounded-full bg-slate-800 py-2.5 text-center text-sm font-semibold text-white"
+              className="block w-full cursor-pointer rounded-full bg-primary py-2.5 text-center text-sm font-semibold text-primary-foreground"
             >
               Đăng nhập
             </Link>

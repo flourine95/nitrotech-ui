@@ -11,10 +11,9 @@ import {
   moveCategoryDown,
   restoreCategory,
   updateCategory,
-} from '@/lib/api/categories';
+} from '@/lib/api/admin/categories';
 import { ApiException } from '@/lib/api/client';
 import { flattenTree, type TreeNode } from '@/types/categories';
-import type { Page } from '@/types/pagination';
 
 type FilterStatus = 'all' | 'active' | 'inactive' | 'deleted';
 
@@ -119,10 +118,20 @@ export function useCategories() {
   const toggleExpand = useCallback((id: number) => {
     setExpandedIds((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
       return next;
     });
   }, []);
+
+  function getErrorMessage(error: unknown) {
+    if (error instanceof ApiException) return error.error.message;
+    if (error instanceof Error) return error.message;
+    return '';
+  }
 
   const expandAll = useCallback(() => {
     // Expand all nodes that have children
@@ -229,10 +238,10 @@ export function useCategories() {
       try {
         await moveCategoryUp(id);
         toast.success('Đã di chuyển lên');
-      } catch (error: any) {
+      } catch (error: unknown) {
         setFlatList(snapshot.flatList);
         setTree(snapshot.tree);
-        const message = error?.error?.message || error?.message || '';
+        const message = getErrorMessage(error);
         if (message.includes('already at the first position')) {
           toast.error('Danh mục đã ở vị trí đầu tiên');
         } else {
@@ -257,10 +266,10 @@ export function useCategories() {
       try {
         await moveCategoryDown(id);
         toast.success('Đã di chuyển xuống');
-      } catch (error: any) {
+      } catch (error: unknown) {
         setFlatList(snapshot.flatList);
         setTree(snapshot.tree);
-        const message = error?.error?.message || error?.message || '';
+        const message = getErrorMessage(error);
         if (message.includes('already at the last position')) {
           toast.error('Danh mục đã ở vị trí cuối cùng');
         } else {
@@ -282,10 +291,10 @@ export function useCategories() {
         await updateCategory(id, { parentId: newParentId });
         await load(); // Reload to get correct sortOrder from backend
         toast.success('Đã đổi danh mục cha');
-      } catch (error: any) {
+      } catch (error: unknown) {
         setFlatList(snapshot.flatList);
         setTree(snapshot.tree);
-        if (error?.error?.code === 'CIRCULAR_REFERENCE') {
+        if (error instanceof ApiException && error.error.code === 'CIRCULAR_REFERENCE') {
           toast.error('Không thể di chuyển vào danh mục con của chính nó');
         } else {
           toast.error('Không thể di chuyển danh mục');

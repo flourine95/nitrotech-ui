@@ -10,13 +10,16 @@ export const PROTECTED_PATHS = ['/dashboard', '/account'];
  */
 export const PUBLIC_API_PATHS = [
   '/api/auth/register',
+  '/api/auth/login',
   '/api/auth/forgot-password',
   '/api/auth/reset-password',
   '/api/auth/verify-email',
   '/api/auth/resend-verification',
+  '/api/auth/me',
   '/api/products',
   '/api/categories',
   '/api/brands',
+  '/api/banners',
 ];
 
 /**

@@ -23,7 +23,7 @@ export function KeyValueEditor({
   keyPlaceholder = 'Thuộc tính',
   valuePlaceholder = 'Giá trị',
 }: KeyValueEditorProps) {
-  const idRef = useRef(0);
+  const idRef = useRef(Object.keys(value).length);
   function nextId() {
     return idRef.current++;
   }
@@ -33,7 +33,7 @@ export function KeyValueEditor({
   }
 
   const [rows, setRows] = useState<Row[]>(() =>
-    Object.entries(value).map(([k, v]) => makeRow(k, v)),
+    Object.entries(value).map(([k, v], index) => ({ id: index, key: k, value: v })),
   );
 
   function emit(updated: Row[]) {

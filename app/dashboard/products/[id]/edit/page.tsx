@@ -1,8 +1,8 @@
 import { notFound } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { backendFetch } from '@/lib/api/server';
-import type { Category } from '@/lib/api/categories';
-import type { Brand } from '@/lib/api/brands';
+import type { Category } from '@/lib/api/admin/categories';
+import type { Brand } from '@/lib/api/admin/brands';
 import type { Page } from '@/types/pagination';
 import { ProductForm } from '@/app/dashboard/products/product-form';
 
@@ -12,9 +12,9 @@ async function fetchPageData(id: number) {
 
   // Fetch product, categories, brands in parallel — no waterfall
   const [productRes, catsRes, brandsRes] = await Promise.all([
-    backendFetch(`/api/products/${id}`, { cookieHeader }),
-    backendFetch('/api/categories?tree=false&size=200', { cookieHeader }),
-    backendFetch('/api/brands?size=100', { cookieHeader }),
+    backendFetch(`/api/admin/products/${id}`, { cookieHeader }),
+    backendFetch('/api/admin/categories?deleted=false', { cookieHeader }),
+    backendFetch('/api/admin/brands?size=100&deleted=false', { cookieHeader }),
   ]);
 
   if (productRes.status === 404) return null;

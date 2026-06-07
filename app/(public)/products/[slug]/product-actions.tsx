@@ -1,53 +1,102 @@
 'use client';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { Loader2, GitCompare, Heart, Shield, Zap, Package, CreditCard } from 'lucide-react';
+import { Loader2, Shield, Zap, Package, CreditCard } from 'lucide-react';
 import { useCartStore } from '@/stores/cart.store';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import type { ProductVariant } from '@/lib/api/public/products';
+import { formatCurrency } from '@/lib/utils/formatting';
+
+const ATTRIBUTE_LABELS: Record<string, string> = {
+  configuration: 'Cấu hình',
+  color: 'Màu sắc',
+  capacity: 'Dung lượng',
+  speed: 'Tốc độ',
+  interface: 'Chuẩn kết nối',
+  size: 'Kích thước',
+  refreshRate: 'Tần số quét',
+  resolution: 'Độ phân giải',
+  layout: 'Layout',
+  switch: 'Switch',
+  connection: 'Kết nối',
+  memory: 'Bộ nhớ',
+  cooling: 'Tản nhiệt',
+  edition: 'Phiên bản',
+  warranty: 'Bảo hành',
+  option: 'Tùy chọn',
+};
 
 interface ProductActionsProps {
-  slug: string;
-  price: string;
-  old: string;
-  discount: string;
-  variants: string[];
-  colors: { name: string; color: string; ring: string }[];
-  stockCount: number;
+  priceMin: number | null;
+  variants: ProductVariant[];
   warranty: string;
+  onVariantChange?: (variant: ProductVariant | null) => void;
 }
 
 export function ProductActions({
-  slug,
-  price,
-  old,
-  discount,
+  priceMin,
   variants,
-  colors,
-  stockCount,
   warranty,
+  onVariantChange,
 }: ProductActionsProps) {
   const router = useRouter();
-  const { addItem, isLoading } = useCartStore();
+  const pathname = usePathname();
+  const { cart, addItem, fetchCart, isLoading } = useCartStore();
   const [qty, setQty] = useState(1);
-  const [activeVariant, setActiveVariant] = useState(0);
-  const [activeColor, setActiveColor] = useState(0);
+  const variantOptions = buildVariantOptions(variants);
+  const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>(() => {
+    const firstVariant = variants[0]?.attributes ?? {};
+    return Object.fromEntries(variantOptions.map((option) => [option.key, firstVariant[option.key]]).filter(([, value]) => value));
+  });
+  const selectedVariant = findVariantByAttributes(variants, selectedAttributes);
+  const selectedPrice = selectedVariant?.price ?? priceMin;
+  const selectedStock = selectedVariant?.stockQuantity;
+  const quantityInCart = selectedVariant
+    ? cart?.items.find((item) => item.variantId === selectedVariant.id)?.quantity ?? 0
+    : 0;
+  const availableToAdd = typeof selectedStock === 'number'
+    ? Math.max(0, selectedStock - quantityInCart)
+    : null;
+  const canPurchase = Boolean(
+    selectedVariant?.id &&
+    selectedVariant.active &&
+    (availableToAdd == null || availableToAdd > 0)
+  );
 
-  // TODO: Replace with real variantId from API
-  // For now, generate a mock variantId based on slug and variant index
-  const getVariantId = () => {
-    // This is a temporary solution until backend is ready
-    // In production, this should come from the product API
-    const baseId = slug.split('-').reduce((acc, part) => acc + part.charCodeAt(0), 0);
-    return baseId + activeVariant + activeColor;
-  };
+  useEffect(() => {
+    void fetchCart();
+  }, [fetchCart]);
+
+  useEffect(() => {
+    onVariantChange?.(selectedVariant);
+  }, [onVariantChange, selectedVariant]);
+
+  useEffect(() => {
+    if (availableToAdd !== null) {
+      setQty((current) => Math.min(Math.max(1, current), Math.max(1, availableToAdd)));
+    }
+  }, [availableToAdd]);
+
+  function handleAttributeChange(key: string, value: string) {
+    const nextAttributes = { ...selectedAttributes, [key]: value };
+    const nextVariant = findVariantByAttributes(variants, nextAttributes);
+    setSelectedAttributes(nextVariant?.attributes ?? nextAttributes);
+    if (typeof nextVariant?.stockQuantity === 'number') {
+      const nextQuantityInCart = cart?.items.find((item) => item.variantId === nextVariant.id)?.quantity ?? 0;
+      const nextAvailableToAdd = Math.max(0, nextVariant.stockQuantity - nextQuantityInCart);
+      setQty((current) => Math.min(current, Math.max(1, nextAvailableToAdd)));
+    }
+  }
 
   const handleAddToCart = async () => {
+    if (!canPurchase || !selectedVariant) {
+      toast.error('Sản phẩm chưa có cấu hình để thêm vào giỏ');
+      return;
+    }
+
     try {
-      const variantId = getVariantId();
-      await addItem(variantId, qty);
+      await addItem(selectedVariant.id, qty);
       toast.success('Đã thêm vào giỏ hàng', {
         description: `${qty} × sản phẩm`,
         action: {
@@ -60,6 +109,10 @@ export function ProductActions({
       const code = err?.error?.code;
 
       switch (code) {
+        case 'AUTH_REQUIRED':
+          toast.error('Vui lòng đăng nhập để thêm sản phẩm vào giỏ');
+          router.push(`/login?from=${encodeURIComponent(pathname)}`);
+          break;
         case 'VARIANT_NOT_FOUND':
           toast.error('Sản phẩm không tồn tại');
           break;
@@ -76,12 +129,21 @@ export function ProductActions({
   };
 
   const handleBuyNow = async () => {
+    if (!canPurchase || !selectedVariant) {
+      toast.error('Sản phẩm chưa có cấu hình để mua');
+      return;
+    }
+
     try {
-      const variantId = getVariantId();
-      await addItem(variantId, qty);
+      await addItem(selectedVariant.id, qty);
       router.push('/checkout');
     } catch (error) {
       const err = error as { error?: { code?: string; message?: string } };
+      if (err?.error?.code === 'AUTH_REQUIRED') {
+        toast.error('Vui lòng đăng nhập để mua hàng');
+        router.push(`/login?from=${encodeURIComponent(pathname)}`);
+        return;
+      }
       toast.error(err?.error?.message || 'Có lỗi xảy ra');
     }
   };
@@ -94,95 +156,82 @@ export function ProductActions({
   ];
 
   return (
-    <>
+    <div className="flex flex-col gap-6">
       {/* Price */}
-      <div className="mb-6 flex items-baseline gap-3 rounded-2xl border border-border bg-muted/30 p-4">
-        <span className="text-3xl font-bold text-foreground">{price}</span>
-        <span className="text-lg text-muted-foreground line-through">{old}</span>
-        <Badge variant="destructive" className="rounded-full">
-          {discount}
-        </Badge>
+      <div>
+        <span className="text-3xl font-bold tracking-tight text-foreground">
+          {selectedPrice === null ? 'Liên hệ' : formatCurrency(selectedPrice)}
+        </span>
       </div>
 
-      {/* Variants */}
-      {variants.length > 0 && (
-        <div className="mb-6">
-          <p className="mb-2 text-sm font-semibold text-foreground">Cấu hình</p>
+      {variantOptions.map((option) => (
+        <div key={option.key}>
+          <p className="mb-2 text-sm font-semibold text-foreground">
+            {ATTRIBUTE_LABELS[option.key] ?? option.key}
+          </p>
           <div className="flex flex-wrap gap-2">
-            {variants.map((v, i) => (
+            {option.values.map((value) => (
               <Button
-                key={v}
-                onClick={() => setActiveVariant(i)}
-                variant={i === activeVariant ? 'default' : 'outline'}
-                size="sm"
-                className="rounded-full"
+                key={value}
+                type="button"
+                onClick={() => handleAttributeChange(option.key, value)}
+                variant={value === selectedAttributes[option.key] ? 'default' : 'outline'}
+                size="default"
+                className="h-auto rounded-full px-4 py-3 font-semibold data-[variant=default]:bg-primary data-[variant=default]:text-primary-foreground data-[variant=default]:hover:bg-primary/90"
               >
-                {v}
+                {value}
               </Button>
             ))}
           </div>
         </div>
-      )}
-
-      {/* Colors */}
-      {colors.length > 0 && (
-        <div className="mb-6">
-          <p className="mb-2 text-sm font-semibold text-foreground">Màu sắc</p>
-          <div className="flex gap-2">
-            {colors.map((c, i) => (
-              <button
-                key={c.name}
-                onClick={() => setActiveColor(i)}
-                className={`size-8 rounded-full ${c.color} transition-all ${i === activeColor ? `ring-2 ring-offset-2 ${c.ring}` : 'hover:ring-2 hover:ring-muted hover:ring-offset-2'}`}
-                aria-label={c.name}
-                title={c.name}
-              />
-            ))}
-          </div>
-        </div>
-      )}
+      ))}
 
       {/* Quantity */}
-      <div className="mb-6">
+      <div>
         <p className="mb-2 text-sm font-semibold text-foreground">Số lượng</p>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center overflow-hidden rounded-full border border-border">
             <Button
               onClick={() => setQty((q) => Math.max(1, q - 1))}
+              disabled={qty <= 1 || isLoading}
               variant="ghost"
-              size="sm"
-              className="rounded-none px-4"
+              size="default"
+              className="h-10 rounded-none px-4"
               aria-label="Giảm"
             >
               −
             </Button>
             <span
-              className="min-w-12 px-4 text-center text-sm font-semibold text-foreground"
+              className="flex h-10 min-w-16 items-center justify-center px-4 text-sm font-semibold text-foreground"
               aria-live="polite"
             >
               {qty}
             </span>
             <Button
-              onClick={() => setQty((q) => Math.min(stockCount, q + 1))}
+              onClick={() => setQty((q) => q + 1)}
+              disabled={!canPurchase || isLoading || (availableToAdd !== null && qty >= availableToAdd)}
               variant="ghost"
-              size="sm"
-              className="rounded-none px-4"
+              size="default"
+              className="h-10 rounded-none px-4"
               aria-label="Tăng"
             >
               +
             </Button>
           </div>
-          <span className="text-xs text-muted-foreground">Còn {stockCount} sản phẩm</span>
+          <span className="text-xs text-muted-foreground font-medium">
+            {stockLabel(selectedVariant, quantityInCart, availableToAdd)}
+          </span>
         </div>
       </div>
 
       {/* CTAs */}
-      <div className="mb-6 flex gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row">
         <Button
           onClick={handleAddToCart}
-          disabled={isLoading}
-          variant="secondary"
-          className="flex-1 rounded-full"
+          disabled={isLoading || !canPurchase}
+          variant="outline"
+          size="lg"
+          className="h-auto flex-1 rounded-full border-primary/25 px-4 py-3 font-semibold text-primary hover:border-primary/40 hover:bg-primary/5"
         >
           {isLoading ? (
             <>
@@ -195,49 +244,56 @@ export function ProductActions({
         </Button>
         <Button
           onClick={handleBuyNow}
-          disabled={isLoading}
-          className="flex-1 rounded-full bg-blue-600 hover:bg-blue-500"
+          disabled={isLoading || !canPurchase}
+          size="lg"
+          className="h-auto flex-1 rounded-full bg-primary px-4 py-3 font-semibold text-primary-foreground hover:bg-primary/90"
         >
           Mua ngay
-        </Button>
-        <Button
-          asChild
-          variant="outline"
-          size="icon"
-          className="rounded-full"
-          aria-label="So sánh"
-          title="So sánh"
-        >
-          <Link href={`/compare?add=${slug}`}>
-            <GitCompare className="size-5" />
-          </Link>
-        </Button>
-        <Button
-          onClick={() => toast.success('Đã thêm vào yêu thích')}
-          variant="outline"
-          size="icon"
-          className="rounded-full hover:text-rose-500"
-          aria-label="Yêu thích"
-        >
-          <Heart className="size-5" />
         </Button>
       </div>
 
       {/* Trust badges */}
-      <div className="grid grid-cols-2 gap-3">
-        {trustBadges.map((b) => {
-          const Icon = b.icon;
-          return (
-            <div
-              key={b.text}
-              className="flex items-center gap-2 rounded-xl border border-border bg-muted/30 p-3 text-xs text-muted-foreground"
-            >
-              <Icon className="size-4 shrink-0 text-blue-600" />
-              {b.text}
-            </div>
-          );
-        })}
+      <div className="rounded-2xl border border-border bg-muted/25 p-4">
+        <div className="grid gap-3 sm:grid-cols-2">
+          {trustBadges.map((b) => {
+            const Icon = b.icon;
+            return (
+              <div key={b.text} className="flex items-center gap-3">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-background text-primary ring-1 ring-border">
+                  <Icon className="size-4" aria-hidden="true" />
+                </span>
+                <span className="text-sm font-medium leading-snug text-foreground">{b.text}</span>
+              </div>
+            );
+          })}
+        </div>
       </div>
-    </>
+    </div>
   );
+}
+
+function buildVariantOptions(variants: ProductVariant[]) {
+  const keys = Array.from(new Set(variants.flatMap((variant) => Object.keys(variant.attributes ?? {}))));
+  return keys.map((key) => ({
+    key,
+    values: Array.from(new Set(variants.map((variant) => variant.attributes?.[key]).filter(Boolean))),
+  }));
+}
+
+function findVariantByAttributes(variants: ProductVariant[], selectedAttributes: Record<string, string>) {
+  return variants.find((variant) =>
+    Object.entries(selectedAttributes).every(([key, value]) => variant.attributes?.[key] === value)
+  ) ?? null;
+}
+
+function stockLabel(variant: ProductVariant | null, quantityInCart: number, availableToAdd: number | null) {
+  if (!variant) return 'Vui lòng chọn cấu hình';
+  if (variant.stockQuantity == null) return 'Đang cập nhật tồn kho';
+  if (variant.stockQuantity <= 0) return 'Tạm hết hàng';
+  if (availableToAdd === 0) return `Bạn đã có ${quantityInCart} sản phẩm trong giỏ`;
+  if (quantityInCart > 0 && availableToAdd !== null) {
+    return `Còn có thể thêm ${availableToAdd} sản phẩm`;
+  }
+  if (variant.lowStock) return `Chỉ còn ${variant.stockQuantity} sản phẩm`;
+  return `Còn ${variant.stockQuantity} sản phẩm`;
 }

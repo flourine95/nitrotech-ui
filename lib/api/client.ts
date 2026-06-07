@@ -31,8 +31,11 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
   }
 
   if (res.status === 401) {
-    window.location.href = '/login';
-    return undefined as T;
+    throw new ApiException({
+      status: 401,
+      code: 'AUTH_REQUIRED',
+      message: 'Vui lòng đăng nhập để tiếp tục.',
+    });
   }
 
   if (!res.ok) {

@@ -3,9 +3,8 @@
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
 import type { PaymentMethod } from '@/schemas/order';
+import { cn } from '@/lib/utils';
 
 interface PaymentMethodSelectorProps {
   selectedMethod: PaymentMethod;
@@ -26,62 +25,92 @@ export default function PaymentMethodSelector({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-lg border bg-card p-6">
-      <h2 className="mb-6 text-lg font-semibold">Phương thức thanh toán</h2>
+    <form
+      onSubmit={handleSubmit}
+      className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"
+    >
+      <div className="mb-5">
+        <h2 className="text-lg font-semibold text-slate-950">Phương thức thanh toán</h2>
+        <p className="mt-1 text-sm text-slate-500">Chọn cách thanh toán phù hợp với bạn.</p>
+      </div>
 
-      <RadioGroup value={method} onValueChange={(value) => setMethod(value as PaymentMethod)}>
-        <div className="space-y-3">
-          {/* COD */}
-          <div className="flex items-start gap-3 rounded-lg border p-4 transition-colors hover:bg-muted/50">
-            <RadioGroupItem value="cod" id="cod" className="mt-0.5" />
-            <div className="flex-1">
-              <Label htmlFor="cod" className="cursor-pointer font-medium">
-                Thanh toán khi nhận hàng (COD)
-              </Label>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Thanh toán bằng tiền mặt khi nhận hàng
-              </p>
-            </div>
-          </div>
+      <div className="space-y-3" role="radiogroup" aria-label="Phương thức thanh toán">
+        <PaymentOption
+          value="cod"
+          selected={method === 'cod'}
+          title="Thanh toán khi nhận hàng (COD)"
+          description="Thanh toán bằng tiền mặt khi nhận hàng"
+          onSelect={setMethod}
+        />
+        <PaymentOption
+          value="vnpay"
+          selected={method === 'vnpay'}
+          title="VNPay"
+          description="Thanh toán qua ví điện tử VNPay, thẻ ATM, thẻ tín dụng"
+          onSelect={setMethod}
+        />
+        <PaymentOption
+          value="momo"
+          selected={method === 'momo'}
+          title="Momo"
+          description="Thanh toán qua ví điện tử Momo"
+          onSelect={setMethod}
+        />
+      </div>
 
-          {/* VNPay */}
-          <div className="flex items-start gap-3 rounded-lg border p-4 transition-colors hover:bg-muted/50">
-            <RadioGroupItem value="vnpay" id="vnpay" className="mt-0.5" />
-            <div className="flex-1">
-              <Label htmlFor="vnpay" className="cursor-pointer font-medium">
-                VNPay
-              </Label>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Thanh toán qua ví điện tử VNPay, thẻ ATM, thẻ tín dụng
-              </p>
-            </div>
-          </div>
-
-          {/* Momo */}
-          <div className="flex items-start gap-3 rounded-lg border p-4 transition-colors hover:bg-muted/50">
-            <RadioGroupItem value="momo" id="momo" className="mt-0.5" />
-            <div className="flex-1">
-              <Label htmlFor="momo" className="cursor-pointer font-medium">
-                Momo
-              </Label>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Thanh toán qua ví điện tử Momo
-              </p>
-            </div>
-          </div>
-        </div>
-      </RadioGroup>
-
-      <div className="mt-6 flex gap-3">
-        <Button type="button" variant="outline" onClick={onBack}>
+      <div className="mt-5 flex flex-col gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:justify-between">
+        <Button type="button" variant="outline" className="rounded-full sm:w-auto" onClick={onBack}>
           <ChevronLeft />
           Quay lại
         </Button>
-        <Button type="submit" className="flex-1" size="lg">
+        <Button type="submit" className="w-full rounded-full sm:w-48" size="lg">
           Tiếp tục
           <ChevronRight />
         </Button>
       </div>
     </form>
+  );
+}
+
+function PaymentOption({
+  value,
+  selected,
+  title,
+  description,
+  onSelect,
+}: {
+  value: PaymentMethod;
+  selected: boolean;
+  title: string;
+  description: string;
+  onSelect: (value: PaymentMethod) => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="radio"
+      aria-checked={selected}
+      className={cn(
+        'flex w-full cursor-pointer items-start gap-3 rounded-2xl border bg-white p-4 text-left transition-colors hover:bg-slate-50 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none',
+        selected
+          ? 'border-primary/25 bg-primary/[0.03] ring-1 ring-primary/10'
+          : 'border-slate-200',
+      )}
+      onClick={() => onSelect(value)}
+    >
+      <span
+        className={cn(
+          'mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full border transition-colors',
+          selected ? 'border-primary bg-primary' : 'border-slate-300 bg-white',
+        )}
+        aria-hidden="true"
+      >
+        {selected && <span className="size-2 rounded-full bg-primary-foreground" />}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block font-medium text-slate-950">{title}</span>
+        <span className="mt-1 block text-sm text-slate-500">{description}</span>
+      </span>
+    </button>
   );
 }

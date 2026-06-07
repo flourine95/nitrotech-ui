@@ -1,8 +1,8 @@
 import { cookies } from 'next/headers';
 import { backendFetch } from '@/lib/api/server';
 import { ProductForm } from '../product-form';
-import type { Category } from '@/lib/api/categories';
-import type { Brand } from '@/lib/api/brands';
+import type { Category } from '@/lib/api/admin/categories';
+import type { Brand } from '@/lib/api/admin/brands';
 import type { Page } from '@/types/pagination';
 
 async function fetchFormData() {
@@ -10,8 +10,8 @@ async function fetchFormData() {
   const cookieHeader = cookieStore.toString();
 
   const [catsRes, brandsRes] = await Promise.all([
-    backendFetch('/api/categories?tree=false&size=200', { cookieHeader }),
-    backendFetch('/api/brands?size=100', { cookieHeader }),
+    backendFetch('/api/admin/categories?deleted=false', { cookieHeader }),
+    backendFetch('/api/admin/brands?size=100&deleted=false', { cookieHeader }),
   ]);
 
   const [catsJson, brandsJson] = await Promise.all([catsRes.json(), brandsRes.json()]);

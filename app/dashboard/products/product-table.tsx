@@ -39,7 +39,7 @@ import {
 } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import type { Product } from '@/lib/api/products';
+import type { Product } from '@/lib/api/admin/products';
 import { formatPrice, PAGE_SIZE_OPTIONS, type PageSizeOption } from './utils';
 import { formatRelativeDate } from '@/lib/utils/formatting';
 

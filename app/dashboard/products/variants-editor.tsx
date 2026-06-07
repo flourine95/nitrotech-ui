@@ -22,7 +22,7 @@ import {
   createVariant,
   deleteVariant,
   updateVariant,
-} from '@/lib/api/products';
+} from '@/lib/api/admin/products';
 import { ApiException } from '@/lib/api/client';
 import { KeyValueEditor } from '@/components/dashboard/key-value-editor';
 import { formatVariantPrice } from './utils';

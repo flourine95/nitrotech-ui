@@ -1,4 +1,4 @@
-import type { Product } from '@/lib/api/products';
+import type { Product } from '@/lib/api/admin/products';
 import {
   escapeCsv,
   downloadCSV as _downloadCSV,

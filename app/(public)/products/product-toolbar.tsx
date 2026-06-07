@@ -7,6 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { formatCurrency } from '@/lib/utils/formatting';
 import { Filter, X } from 'lucide-react';
 
 const sortOptions = [
@@ -170,10 +171,10 @@ export function ProductToolbar({
             >
               <span>
                 {minPrice !== null && maxPrice !== null
-                  ? `${minPrice.toLocaleString()}₫ - ${maxPrice.toLocaleString()}₫`
+                  ? `${formatCurrency(minPrice)} - ${formatCurrency(maxPrice)}`
                   : minPrice !== null
-                    ? `Trên ${minPrice.toLocaleString()}₫`
-                    : `Dưới ${maxPrice?.toLocaleString()}₫`}
+                    ? `Trên ${formatCurrency(minPrice)}`
+                    : `Dưới ${formatCurrency(maxPrice!)}`}
               </span>
               <X data-icon />
             </Button>

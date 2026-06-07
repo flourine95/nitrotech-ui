@@ -3,7 +3,7 @@ import { type ComponentType, type SyntheticEvent, useState } from 'react';
 import { toast } from 'sonner';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, X } from 'lucide-react';
-import { createVariant, type ProductVariant, updateVariant } from '@/lib/api/products';
+import { createVariant, type ProductVariant, updateVariant } from '@/lib/api/admin/products';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';

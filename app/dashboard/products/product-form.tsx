@@ -21,9 +21,9 @@ import {
   type Product,
   type ProductVariant,
   updateProduct,
-} from '@/lib/api/products';
-import type { Category } from '@/lib/api/categories';
-import type { Brand } from '@/lib/api/brands';
+} from '@/lib/api/admin/products';
+import type { Category } from '@/lib/api/admin/categories';
+import type { Brand } from '@/lib/api/admin/brands';
 import { ApiException } from '@/lib/api/client';
 import { slugify } from '@/lib/utils';
 import { type ProductFormData, productSchema } from '@/schemas/products';
@@ -89,6 +89,7 @@ export function ProductForm({
       ? {
           name: product.name,
           slug: product.slug,
+          shortDescription: product.shortDescription ?? '',
           description: product.description ?? '',
           categoryId: product.categoryId,
           brandId: product.brandId ?? null,
@@ -98,6 +99,7 @@ export function ProductForm({
       : {
           name: '',
           slug: '',
+          shortDescription: '',
           description: '',
           categoryId: undefined,
           brandId: null,
@@ -124,6 +126,7 @@ export function ProductForm({
       if (isEdit) {
         await updateProduct(product!.id, {
           ...data,
+          shortDescription: data.shortDescription || '',
           description: data.description || null,
           thumbnail: data.thumbnail || null,
           brandId: data.brandId ?? null,
@@ -135,6 +138,7 @@ export function ProductForm({
       } else {
         const body: CreateProductBody = {
           ...data,
+          shortDescription: data.shortDescription || null,
           description: data.description || null,
           thumbnail: data.thumbnail || null,
           brandId: data.brandId ?? null,
@@ -226,6 +230,19 @@ export function ProductForm({
                   />
                 </div>
                 <FieldError errors={[errors.slug]} className="mt-1" />
+              </div>
+
+              <div>
+                <Label htmlFor="shortDescription">Mô tả ngắn</Label>
+                <Input
+                  id="shortDescription"
+                  {...register('shortDescription')}
+                  placeholder="Một câu ngắn hiển thị dưới tên sản phẩm"
+                  maxLength={500}
+                  aria-invalid={!!errors.shortDescription}
+                  className="mt-1.5"
+                />
+                <FieldError errors={[errors.shortDescription]} className="mt-1" />
               </div>
 
               <div>

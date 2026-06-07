@@ -6,6 +6,7 @@ export const productSchema = z.object({
     .string()
     .min(1, { message: 'Slug không được để trống' })
     .regex(/^[a-z0-9-]+$/, { message: 'Chỉ chữ thường, số, gạch ngang' }),
+  shortDescription: z.string().max(500, { message: 'Mô tả ngắn tối đa 500 ký tự' }).optional(),
   description: z.string().optional(),
   categoryId: z.number({ message: 'Chọn danh mục' }).min(1, { message: 'Chọn danh mục' }),
   brandId: z.number().nullable().optional(),
