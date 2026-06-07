@@ -177,7 +177,7 @@ export function ProductActions({
                 onClick={() => handleAttributeChange(option.key, value)}
                 variant={value === selectedAttributes[option.key] ? 'default' : 'outline'}
                 size="default"
-                className="h-auto rounded-full px-4 py-3 font-semibold data-[variant=default]:bg-blue-600 data-[variant=default]:text-white data-[variant=default]:hover:bg-blue-500"
+                className="h-auto rounded-full px-4 py-3 font-semibold data-[variant=default]:bg-primary data-[variant=default]:text-primary-foreground data-[variant=default]:hover:bg-primary/90"
               >
                 {value}
               </Button>
@@ -231,7 +231,7 @@ export function ProductActions({
           disabled={isLoading || !canPurchase}
           variant="outline"
           size="lg"
-          className="h-auto flex-1 rounded-full border-blue-600/20 px-4 py-3 font-semibold text-blue-600 hover:border-blue-600/40 hover:bg-blue-50"
+          className="h-auto flex-1 rounded-full border-primary/25 px-4 py-3 font-semibold text-primary hover:border-primary/40 hover:bg-primary/5"
         >
           {isLoading ? (
             <>
@@ -246,7 +246,7 @@ export function ProductActions({
           onClick={handleBuyNow}
           disabled={isLoading || !canPurchase}
           size="lg"
-          className="h-auto flex-1 rounded-full bg-blue-600 px-4 py-3 font-semibold text-white hover:bg-blue-500"
+          className="h-auto flex-1 rounded-full bg-primary px-4 py-3 font-semibold text-primary-foreground hover:bg-primary/90"
         >
           Mua ngay
         </Button>
@@ -259,7 +259,7 @@ export function ProductActions({
             const Icon = b.icon;
             return (
               <div key={b.text} className="flex items-center gap-3">
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-background text-blue-600 ring-1 ring-border">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-background text-primary ring-1 ring-border">
                   <Icon className="size-4" aria-hidden="true" />
                 </span>
                 <span className="text-sm font-medium leading-snug text-foreground">{b.text}</span>
