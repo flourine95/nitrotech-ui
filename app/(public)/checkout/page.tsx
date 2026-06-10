@@ -371,7 +371,7 @@ function SepayPaymentView({
   onRefreshingChange: (refreshing: boolean) => void;
 }) {
   const router = useRouter();
-  const paymentCode = `NT${order.id}`;
+  const paymentCode = `NT${String(order.id).padStart(6, '0')}`;
   const isPaid = order.status === 'confirmed';
   const qrUrl = buildSepayQrUrl(order.finalAmount, paymentCode);
 
