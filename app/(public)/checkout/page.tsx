@@ -23,6 +23,12 @@ const SEPAY_ACCOUNT = process.env.NEXT_PUBLIC_SEPAY_ACCOUNT || '0000000001';
 const SEPAY_ACCOUNT_HOLDER = process.env.NEXT_PUBLIC_SEPAY_ACCOUNT_HOLDER || 'NGUYEN PHI LONG';
 const SEPAY_PAYMENT_WINDOW_MS = 15 * 60 * 1000;
 
+function parseApiDate(value: string) {
+  const normalized = value.replace(/(\.\d{3})\d+/, '$1');
+  const hasTimezone = /(?:Z|[+-]\d{2}:?\d{2})$/.test(normalized);
+  return new Date(hasTimezone ? normalized : `${normalized}Z`);
+}
+
 export default function CheckoutPage() {
   const router = useRouter();
   const { cart, isLoading: cartLoading, fetchCart, clearCart } = useCartStore();
@@ -374,7 +380,7 @@ function SepayPaymentView({
   const router = useRouter();
   const paymentCode = `NT${String(order.id).padStart(6, '0')}`;
   const isPaid = order.status === 'confirmed';
-  const expiresAt = new Date(order.createdAt).getTime() + SEPAY_PAYMENT_WINDOW_MS;
+  const expiresAt = parseApiDate(order.createdAt).getTime() + SEPAY_PAYMENT_WINDOW_MS;
   const [now, setNow] = useState(() => Date.now());
   const remainingMs = Math.max(0, expiresAt - now);
   const isExpired = remainingMs <= 0 && !isPaid;

@@ -311,9 +311,15 @@ function formatCurrency(value: number) {
   return `${value.toLocaleString('vi-VN')} ₫`;
 }
 
+function parseApiDate(value: string) {
+  const normalized = value.replace(/(\.\d{3})\d+/, '$1');
+  const hasTimezone = /(?:Z|[+-]\d{2}:?\d{2})$/.test(normalized);
+  return new Date(hasTimezone ? normalized : `${normalized}Z`);
+}
+
 function formatDateTime(value: string) {
   return new Intl.DateTimeFormat('vi-VN', {
     dateStyle: 'short',
     timeStyle: 'short',
-  }).format(new Date(value));
+  }).format(parseApiDate(value));
 }
