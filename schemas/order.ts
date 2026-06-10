@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { shippingAddressSchema } from './address';
 
 // Payment methods
-export const paymentMethodSchema = z.enum(['cod', 'vnpay', 'momo'], {
+export const paymentMethodSchema = z.enum(['cod', 'vnpay', 'momo', 'sepay'], {
   message: 'Phương thức thanh toán không hợp lệ',
 });
 
