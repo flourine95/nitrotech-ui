@@ -21,6 +21,7 @@ type CheckoutStep = 'shipping' | 'payment' | 'review';
 const SEPAY_BANK = process.env.NEXT_PUBLIC_SEPAY_BANK || 'BIDV';
 const SEPAY_ACCOUNT = process.env.NEXT_PUBLIC_SEPAY_ACCOUNT || '0000000001';
 const SEPAY_ACCOUNT_HOLDER = process.env.NEXT_PUBLIC_SEPAY_ACCOUNT_HOLDER || 'NGUYEN PHI LONG';
+const SEPAY_PAYMENT_WINDOW_MS = 15 * 60 * 1000;
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -373,10 +374,14 @@ function SepayPaymentView({
   const router = useRouter();
   const paymentCode = `NT${String(order.id).padStart(6, '0')}`;
   const isPaid = order.status === 'confirmed';
+  const expiresAt = new Date(order.createdAt).getTime() + SEPAY_PAYMENT_WINDOW_MS;
+  const [now, setNow] = useState(() => Date.now());
+  const remainingMs = Math.max(0, expiresAt - now);
+  const isExpired = remainingMs <= 0 && !isPaid;
   const qrUrl = buildSepayQrUrl(order.finalAmount, paymentCode);
 
   useEffect(() => {
-    if (isPaid) return;
+    if (isPaid || isExpired) return;
 
     let cancelled = false;
     const refresh = async () => {
@@ -397,7 +402,13 @@ function SepayPaymentView({
       cancelled = true;
       window.clearInterval(interval);
     };
-  }, [isPaid, onOrderChange, order.id]);
+  }, [isExpired, isPaid, onOrderChange, order.id]);
+
+  useEffect(() => {
+    if (isPaid || isExpired) return;
+    const interval = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(interval);
+  }, [isExpired, isPaid]);
 
   const handleCopy = async (value: string, label: string) => {
     try {
@@ -415,6 +426,8 @@ function SepayPaymentView({
       onOrderChange(latestOrder);
       if (latestOrder.status === 'confirmed') {
         toast.success('Thanh toán đã được xác nhận');
+      } else if (isExpired) {
+        toast.error('Đã hết thời gian thanh toán');
       } else {
         toast.info('Đơn hàng vẫn đang chờ thanh toán');
       }
@@ -461,11 +474,15 @@ function SepayPaymentView({
                 </div>
                 <span
                   className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium ${
-                    isPaid ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'
+                    isPaid
+                      ? 'bg-green-50 text-green-700'
+                      : isExpired
+                        ? 'bg-rose-50 text-rose-700'
+                        : 'bg-amber-50 text-amber-700'
                   }`}
                 >
                   {isPaid ? <CheckCircle2 className="size-4" /> : <Clock3 className="size-4" />}
-                  {isPaid ? 'Đã thanh toán' : 'Chờ thanh toán'}
+                  {isPaid ? 'Đã thanh toán' : isExpired ? 'Đã hết thời gian' : 'Chờ thanh toán'}
                 </span>
               </div>
 
@@ -489,14 +506,22 @@ function SepayPaymentView({
                   strong
                   onCopy={() => void handleCopy(paymentCode, 'nội dung chuyển khoản')}
                 />
+                {!isPaid && (
+                  <PaymentInfoRow
+                    label="Thời gian còn lại"
+                    value={isExpired ? 'Đã hết hạn' : formatDuration(remainingMs)}
+                    strong
+                  />
+                )}
               </div>
             </div>
 
             <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
               <h2 className="text-lg font-semibold text-slate-950">Sau khi chuyển khoản</h2>
               <p className="mt-2 text-sm leading-6 text-slate-500">
-                Trang này tự kiểm tra trạng thái đơn hàng vài giây một lần. Khi giao dịch khớp
-                mã {paymentCode} và đúng số tiền, trạng thái sẽ chuyển sang đã thanh toán.
+                {isExpired
+                  ? 'Thời gian thanh toán đã hết. Nếu bạn đã chuyển khoản, vui lòng liên hệ hỗ trợ để đối soát.'
+                  : `Trang này tự kiểm tra trạng thái đơn hàng vài giây một lần. Khi giao dịch khớp mã ${paymentCode} và đúng số tiền, trạng thái sẽ chuyển sang đã thanh toán.`}
               </p>
 
               <div className="mt-5 flex flex-col gap-3 sm:flex-row">
@@ -504,7 +529,7 @@ function SepayPaymentView({
                   className="rounded-full"
                   variant="outline"
                   onClick={() => void handleRefresh()}
-                  disabled={isRefreshing}
+                  disabled={isRefreshing || isExpired}
                 >
                   {isRefreshing ? (
                     <Loader2 className="animate-spin" />
@@ -574,6 +599,13 @@ function buildSepayQrUrl(amount: number, description: string) {
   });
 
   return `https://qr.sepay.vn/img?${params.toString()}`;
+}
+
+function formatDuration(ms: number) {
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 }
 
 function CheckoutStepper({ currentStep }: { currentStep: CheckoutStep }) {
