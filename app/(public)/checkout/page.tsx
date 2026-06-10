@@ -122,15 +122,17 @@ export default function CheckoutPage() {
       const order = await createOrder(orderData);
       setOrderCompleted(true);
 
+      if (order.paymentMethod === 'sepay') {
+        setSepayOrder(order);
+        void clearCart();
+        toast.success('Đặt hàng thành công!');
+        return;
+      }
+
       // Clear cart after successful order
       await clearCart();
 
       toast.success('Đặt hàng thành công!');
-      if (order.paymentMethod === 'sepay') {
-        setSepayOrder(order);
-        return;
-      }
-
       router.push(`/account/orders/${order.id}`);
     } catch (error) {
       const err = error as { error?: { code?: string; message?: string; data?: unknown } };
@@ -186,16 +188,6 @@ export default function CheckoutPage() {
     }
   };
 
-  if (cartLoading || !cart) {
-    return (
-      <main className="bg-muted/30">
-        <div className="mx-auto flex min-h-[70vh] max-w-7xl items-center justify-center px-6 py-8">
-          <Loader2 className="size-8 animate-spin text-muted-foreground" />
-        </div>
-      </main>
-    );
-  }
-
   if (sepayOrder) {
     return (
       <SepayPaymentView
@@ -204,6 +196,16 @@ export default function CheckoutPage() {
         onOrderChange={setSepayOrder}
         onRefreshingChange={setIsRefreshingOrder}
       />
+    );
+  }
+
+  if (cartLoading || !cart) {
+    return (
+      <main className="bg-muted/30">
+        <div className="mx-auto flex min-h-[70vh] max-w-7xl items-center justify-center px-6 py-8">
+          <Loader2 className="size-8 animate-spin text-muted-foreground" />
+        </div>
+      </main>
     );
   }
 
