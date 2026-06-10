@@ -56,6 +56,13 @@ export default function PaymentMethodSelector({
           description="Thanh toán qua ví điện tử Momo"
           onSelect={setMethod}
         />
+        <PaymentOption
+          value="sepay"
+          selected={method === 'sepay'}
+          title="Chuyển khoản VietQR qua SePay"
+          description="Quét mã VietQR, hệ thống tự xác nhận khi nhận được tiền"
+          onSelect={setMethod}
+        />
       </div>
 
       <div className="mt-5 flex flex-col gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:justify-between">
