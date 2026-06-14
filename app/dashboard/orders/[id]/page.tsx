@@ -66,6 +66,20 @@ const PROVIDERS = [
 ];
 
 const vnd = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' });
+const dateTimeFormatter = new Intl.DateTimeFormat('vi-VN', {
+  hour: '2-digit',
+  minute: '2-digit',
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+});
+const timelineDateFormatter = new Intl.DateTimeFormat('vi-VN', {
+  hour: '2-digit',
+  minute: '2-digit',
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+});
 
 function errorMessage(error: unknown) {
   return error instanceof ApiException ? error.error.message : 'Có lỗi xảy ra';
@@ -73,7 +87,12 @@ function errorMessage(error: unknown) {
 
 function formatDateTime(value: string | null | undefined) {
   if (!value) return 'Chưa có';
-  return new Date(value).toLocaleString('vi-VN');
+  return dateTimeFormatter.format(new Date(value));
+}
+
+function formatTimelineTime(value: string | null | undefined) {
+  if (!value) return '';
+  return timelineDateFormatter.format(new Date(value)).replace(',', ' ·');
 }
 
 function orderCode(order: AdminOrder) {
@@ -82,6 +101,35 @@ function orderCode(order: AdminOrder) {
 
 function shipmentStatusMeta(status: string) {
   return SHIPMENT_STATUS[status] ?? { label: status, variant: 'outline' as const };
+}
+
+function logSourceLabel(log: ShipmentLogData) {
+  if (log.source === 'ADMIN_CREATE') {
+    return 'Created by admin';
+  }
+  if (log.source === 'WEBHOOK') {
+    const provider = log.note?.match(/Webhook\s+([A-Z0-9]+)/i)?.[1]?.toUpperCase();
+    return provider ? `Updated by ${provider}` : 'Carrier update';
+  }
+  if (log.source === 'SYSTEM') {
+    return 'System';
+  }
+  return log.source;
+}
+
+function rawStatusLabel(log: ShipmentLogData) {
+  if (!log.rawStatus || log.rawStatus === log.status) {
+    return null;
+  }
+  return log.source === 'WEBHOOK' ? `Carrier code ${log.rawStatus}` : null;
+}
+
+function logNoteLabel(log: ShipmentLogData) {
+  if (log.source === 'WEBHOOK') {
+    const reason = log.note?.split(' - ').slice(1).join(' - ').trim();
+    return reason ? `Note: ${reason}` : 'Carrier sent a status update.';
+  }
+  return log.note;
 }
 
 function TimelineIcon({ status }: { status: string }) {
@@ -226,10 +274,12 @@ function ShipmentTimeline({ logs }: { logs: ShipmentLogData[] }) {
 
   return (
     <div>
-      <h3 className="mb-3 text-sm font-semibold">Timeline vận chuyển</h3>
+      <h3 className="mb-3 text-sm font-semibold">Lịch sử vận chuyển</h3>
       <div className="space-y-0">
         {logs.map((log, index) => {
           const meta = shipmentStatusMeta(log.status);
+          const rawLabel = rawStatusLabel(log);
+          const noteLabel = logNoteLabel(log);
           return (
             <div key={log.id} className="flex gap-3">
               <div className="flex flex-col items-center">
@@ -239,12 +289,12 @@ function ShipmentTimeline({ logs }: { logs: ShipmentLogData[] }) {
               <div className="min-w-0 pb-4">
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="text-sm font-medium">{meta.label}</p>
-                  <Badge variant="outline">{log.source}</Badge>
-                  {log.rawStatus ? <span className="font-mono text-xs text-muted-foreground">{log.rawStatus}</span> : null}
+                  <Badge variant="outline">{logSourceLabel(log)}</Badge>
+                  {rawLabel ? <span className="text-xs text-muted-foreground">{rawLabel}</span> : null}
                 </div>
                 {log.location ? <p className="mt-0.5 text-xs text-muted-foreground">{log.location}</p> : null}
-                {log.note ? <p className="mt-1 text-sm text-muted-foreground">{log.note}</p> : null}
-                <p className="mt-1 text-xs text-muted-foreground">{formatDateTime(log.createdAt)}</p>
+                {noteLabel ? <p className="mt-1 text-sm text-muted-foreground">{noteLabel}</p> : null}
+                <p className="mt-1 text-xs text-muted-foreground">{formatTimelineTime(log.createdAt)}</p>
               </div>
             </div>
           );
