@@ -10,6 +10,7 @@ import {
   ImageIcon,
   SettingsIcon,
   FlaskConicalIcon,
+  ShieldCheckIcon,
 } from 'lucide-react';
 
 export type NavItem = {
@@ -35,6 +36,7 @@ export const catalogNavItems: NavItem[] = [
 ];
 
 export const systemNavItems: NavItem[] = [
+  { label: 'Phân quyền', href: '/dashboard/access', icon: ShieldCheckIcon },
   { label: 'Cài đặt', href: '/dashboard/settings', icon: SettingsIcon },
 ];
 
