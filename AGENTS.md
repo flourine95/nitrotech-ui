@@ -60,3 +60,67 @@ For multi-step tasks, state a brief plan:
 ```
 
 These guidelines are working if diffs have fewer unnecessary changes, fewer rewrites happen due to overcomplication, and clarifying questions come before implementation mistakes.
+
+## NitroTech UI project rules
+
+Use these rules for changes under `nitrotech-ui`. Treat this file as the canonical project guidance for coding agents.
+
+### Stack
+
+- Next.js 16 App Router, React 19, TypeScript strict mode, Tailwind CSS v4, shadcn/ui, lucide-react, TanStack Query, nuqs, Zustand, react-hook-form, Zod, and sonner.
+- The backend is a Spring Boot REST API. Authentication is session-based with HTTP-only cookies.
+
+### Project structure
+
+- Keep files co-located in a route folder until they are reused by two or more routes.
+- Move reused UI to `components/`, reused hooks to `hooks/`, API wrappers to `lib/api/`, schemas to `schemas/`, shared types to `types/`, utilities to `lib/utils/`, global state to `stores/`, and providers to `providers/`.
+- Use kebab-case filenames except for Next.js route files such as `page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`, and `route.ts`.
+- Use default exports only for Next.js route files. Use named exports elsewhere.
+
+### Data fetching and state
+
+- Server Components fetch directly with `backendFetch()` from `lib/api/server.ts`.
+- Client Components call domain wrappers that use `apiFetch()` from `lib/api/client.ts`.
+- Do not mix client-only and server-only APIs in the same file.
+- All client requests go through the universal proxy at `app/api/[...path]/route.ts`.
+- Keep route handlers thin: forward requests, cookies, and errors. Do not add business logic there.
+- Use TanStack Query for server data and mutations.
+- Use `nuqs` for filters, pagination, search params, and other URL state.
+- Use Zustand only for cross-route app state such as cart state. Do not use it for server data.
+- Handle loading, error, empty, and success states for data-driven UI.
+
+### UI and design system
+
+- Use shadcn/ui primitives instead of raw HTML controls where a component exists.
+- Use semantic tokens such as `bg-background`, `text-foreground`, `text-muted-foreground`, `border-border`, and `bg-muted`; avoid raw color utilities for product UI.
+- Use `gap-*`, not `space-x-*` or `space-y-*`.
+- Use `size-*` when width and height are equal.
+- Use `truncate`, not the long overflow/text-overflow/whitespace combination.
+- Icons inside buttons use `data-icon="inline-start"` or `data-icon="inline-end"` and should not carry manual size classes.
+- Forms use `FieldGroup` and `Field` when those components are available.
+- `Avatar` needs `AvatarFallback`.
+- Dialog, Sheet, and Drawer need a title. Use `sr-only` when the title should be hidden visually.
+- Use `Separator` instead of `hr`, `Badge` instead of custom status spans, `Skeleton` for loading placeholders, and sonner `toast()` for notifications.
+
+### Component quality
+
+- Prefer Server Components by default. Add `"use client"` only for interactivity, hooks, browser APIs, or client state.
+- Keep components focused on one job. Split components whose names or responsibilities drift into "and".
+- Design props as a clear contract. Avoid vague props such as `data`, `config`, or `options` unless the type makes the purpose obvious.
+- Keep reusable components predictable: pass data in through props and keep fetching/mutations in pages, hooks, or feature-level containers.
+- Expose loading, empty, disabled, and error states through props where a component needs to be testable.
+- Add ARIA labels for icon-only actions and preserve keyboard/focus behavior.
+
+### Performance
+
+- Avoid request waterfalls. Use `Promise.all()` when independent data can load in parallel.
+- Prefer direct imports over barrel imports for UI components.
+- Dynamically import heavy editors, charts, or rarely used panels when they are not needed for first render.
+- Hoist inline component definitions out of parent components.
+- Use primitive dependencies in React hooks when possible.
+- Use `React.cache()` for repeated server-side fetches that should dedupe.
+
+### Verification
+
+- For frontend changes, run `npm run typecheck` and `npm run lint` from `nitrotech-ui` when feasible.
+- Run `npm run build` before deployment or before a demo milestone.

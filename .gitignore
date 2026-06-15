@@ -42,3 +42,7 @@ next-env.d.ts
 
 # local playwright mcp artifacts
 .playwright-mcp/
+
+# local agent/tool artifacts
+.kiro/
+.impeccable/
