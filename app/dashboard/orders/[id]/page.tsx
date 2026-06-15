@@ -1,205 +1,389 @@
 'use client';
+
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { ArrowLeftIcon, PackageIcon, TruckIcon, CheckCircleIcon, XCircleIcon, ClockIcon } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  ArrowLeftIcon,
+  CheckCircleIcon,
+  ClipboardIcon,
+  ClockIcon,
+  Loader2Icon,
+  PackageIcon,
+  RefreshCwIcon,
+  TruckIcon,
+  XCircleIcon,
+} from 'lucide-react';
+import { toast } from 'sonner';
+
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { ApiException } from '@/lib/api/client';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { OrderStatus } from '@/lib/api/orders';
+  createAdminOrderShipment,
+  getAdminOrder,
+  getAdminOrderShipment,
+  type AdminOrder,
+  type AdminOrderStatus,
+  type OrderShipmentData,
+  type ShipmentData,
+  type ShipmentLogData,
+} from '@/lib/api/admin/orders';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-interface OrderDetail {
-  id: number;
-  code: string;
-  status: OrderStatus;
-  createdAt: string;
-  customer: {
-    name: string;
-    email: string;
-    phone: string;
-  };
-  shippingAddress: {
-    street: string;
-    ward: string;
-    district: string;
-    city: string;
-  };
-  items: Array<{
-    id: number;
-    productName: string;
-    variantName: string | null;
-    quantity: number;
-    price: number;
-    thumbnail: string | null;
-  }>;
-  subtotal: number;
-  shippingFee: number;
-  discount: number;
-  totalAmount: number;
-  note: string | null;
-  paymentMethod: string;
-  timeline: Array<{
-    status: OrderStatus;
-    label: string;
-    time: string | null;
-    done: boolean;
-  }>;
-}
-
-// ─── Mock data ────────────────────────────────────────────────────────────────
-
-const MOCK_ORDER: OrderDetail = {
-  id: 1,
-  code: '#ORD-2550',
-  status: 'SHIPPING',
-  createdAt: '2025-04-15T09:23:00Z',
-  customer: {
-    name: 'Nguyễn Văn An',
-    email: 'nguyenvanan@gmail.com',
-    phone: '0901 234 567',
-  },
-  shippingAddress: {
-    street: '123 Nguyễn Huệ',
-    ward: 'Phường Bến Nghé',
-    district: 'Quận 1',
-    city: 'TP. Hồ Chí Minh',
-  },
-  items: [
-    {
-      id: 1,
-      productName: 'MacBook Pro M4 14"',
-      variantName: '16GB / 512GB / Space Black',
-      quantity: 1,
-      price: 42990000,
-      thumbnail: null,
-    },
-    {
-      id: 2,
-      productName: 'Apple Magic Mouse',
-      variantName: 'Space Gray',
-      quantity: 1,
-      price: 1990000,
-      thumbnail: null,
-    },
-  ],
-  subtotal: 44980000,
-  shippingFee: 0,
-  discount: 0,
-  totalAmount: 44980000,
-  note: 'Giao giờ hành chính, gọi trước 30 phút.',
-  paymentMethod: 'Chuyển khoản ngân hàng',
-  timeline: [
-    { status: 'PENDING',   label: 'Chờ xác nhận', time: '2025-04-15T09:23:00Z', done: true },
-    { status: 'CONFIRMED', label: 'Đã xác nhận',  time: '2025-04-15T10:05:00Z', done: true },
-    { status: 'SHIPPING',  label: 'Đang giao',    time: '2025-04-16T08:30:00Z', done: true },
-    { status: 'COMPLETED', label: 'Hoàn thành',   time: null,                   done: false },
-  ],
+const ORDER_STATUS: Record<AdminOrderStatus, { label: string; variant: 'default' | 'secondary' | 'outline' | 'destructive' }> = {
+  pending: { label: 'Chờ xác nhận', variant: 'secondary' },
+  confirmed: { label: 'Đã xác nhận', variant: 'outline' },
+  processing: { label: 'Đang xử lý', variant: 'default' },
+  shipped: { label: 'Đang giao', variant: 'default' },
+  delivered: { label: 'Hoàn thành', variant: 'secondary' },
+  cancelled: { label: 'Đã hủy', variant: 'destructive' },
+  refunded: { label: 'Đã hoàn tiền', variant: 'outline' },
 };
 
-// ─── Config ───────────────────────────────────────────────────────────────────
-
-const statusConfig: Record<OrderStatus, { label: string; variant: 'default' | 'secondary' | 'outline' | 'destructive' }> = {
-  PENDING:   { label: 'Chờ xác nhận', variant: 'secondary' },
-  CONFIRMED: { label: 'Đã xác nhận',  variant: 'outline' },
-  SHIPPING:  { label: 'Đang giao',    variant: 'default' },
-  COMPLETED: { label: 'Hoàn thành',   variant: 'secondary' },
-  CANCELLED: { label: 'Đã hủy',       variant: 'destructive' },
+const SHIPMENT_STATUS: Record<string, { label: string; variant: 'default' | 'secondary' | 'outline' | 'destructive' }> = {
+  ready_to_pick: { label: 'Chờ lấy hàng', variant: 'outline' },
+  picked: { label: 'Đã lấy hàng', variant: 'default' },
+  storing: { label: 'Đang lưu kho', variant: 'default' },
+  transporting: { label: 'Đang trung chuyển', variant: 'default' },
+  sorting: { label: 'Đang phân loại', variant: 'default' },
+  delivering: { label: 'Đang giao', variant: 'default' },
+  delivered: { label: 'Giao thành công', variant: 'secondary' },
+  returning: { label: 'Đang hoàn', variant: 'outline' },
+  returned: { label: 'Đã hoàn', variant: 'outline' },
+  pickup_failed: { label: 'Lấy hàng thất bại', variant: 'destructive' },
+  delivery_failed: { label: 'Giao thất bại', variant: 'destructive' },
+  cancel: { label: 'Đã hủy', variant: 'destructive' },
 };
 
-const NEXT_STATUSES: Partial<Record<OrderStatus, OrderStatus[]>> = {
-  PENDING:   ['CONFIRMED', 'CANCELLED'],
-  CONFIRMED: ['SHIPPING',  'CANCELLED'],
-  SHIPPING:  ['COMPLETED', 'CANCELLED'],
-};
+const PROVIDERS = [
+  { value: 'ghtk', label: 'GHTK' },
+  { value: 'ghn', label: 'GHN' },
+];
 
 const vnd = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' });
+const dateTimeFormatter = new Intl.DateTimeFormat('vi-VN', {
+  hour: '2-digit',
+  minute: '2-digit',
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+});
+const timelineDateFormatter = new Intl.DateTimeFormat('vi-VN', {
+  hour: '2-digit',
+  minute: '2-digit',
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+});
 
-// ─── Timeline icon ────────────────────────────────────────────────────────────
+function errorMessage(error: unknown) {
+  return error instanceof ApiException ? error.error.message : 'Có lỗi xảy ra';
+}
 
-function TimelineIcon({ status, done }: { status: OrderStatus; done: boolean }) {
-  if (!done) return <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-dashed border-border bg-background" />;
-  const icons: Record<OrderStatus, React.ReactNode> = {
-    PENDING:   <ClockIcon className="h-4 w-4" />,
-    CONFIRMED: <CheckCircleIcon className="h-4 w-4" />,
-    SHIPPING:  <TruckIcon className="h-4 w-4" />,
-    COMPLETED: <CheckCircleIcon className="h-4 w-4" />,
-    CANCELLED: <XCircleIcon className="h-4 w-4" />,
-  };
+function formatDateTime(value: string | null | undefined) {
+  if (!value) return 'Chưa có';
+  return dateTimeFormatter.format(new Date(value));
+}
+
+function formatTimelineTime(value: string | null | undefined) {
+  if (!value) return '';
+  return timelineDateFormatter.format(new Date(value)).replace(',', ' ·');
+}
+
+function orderCode(order: AdminOrder) {
+  return `#ORD-${order.id.toString().padStart(4, '0')}`;
+}
+
+function shipmentStatusMeta(status: string) {
+  return SHIPMENT_STATUS[status] ?? { label: status, variant: 'outline' as const };
+}
+
+function logSourceLabel(log: ShipmentLogData) {
+  if (log.source === 'ADMIN_CREATE') {
+    return 'Created by admin';
+  }
+  if (log.source === 'WEBHOOK') {
+    const provider = log.note?.match(/Webhook\s+([A-Z0-9]+)/i)?.[1]?.toUpperCase();
+    return provider ? `Updated by ${provider}` : 'Carrier update';
+  }
+  if (log.source === 'SYSTEM') {
+    return 'System';
+  }
+  return log.source;
+}
+
+function rawStatusLabel(log: ShipmentLogData) {
+  if (!log.rawStatus || log.rawStatus === log.status) {
+    return null;
+  }
+  return log.source === 'WEBHOOK' ? `Carrier code ${log.rawStatus}` : null;
+}
+
+function logNoteLabel(log: ShipmentLogData) {
+  if (log.source === 'WEBHOOK') {
+    const reason = log.note?.split(' - ').slice(1).join(' - ').trim();
+    return reason ? `Note: ${reason}` : 'Carrier sent a status update.';
+  }
+  return log.note;
+}
+
+function TimelineIcon({ status }: { status: string }) {
+  if (status === 'delivered') {
+    return (
+      <div className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
+        <CheckCircleIcon className="size-4" />
+      </div>
+    );
+  }
+  if (status === 'cancel' || status.endsWith('_failed')) {
+    return (
+      <div className="flex size-8 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+        <XCircleIcon className="size-4" />
+      </div>
+    );
+  }
   return (
-    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
-      {icons[status]}
+    <div className="flex size-8 items-center justify-center rounded-full bg-muted text-muted-foreground">
+      <ClockIcon className="size-4" />
     </div>
   );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+function OrderSkeleton() {
+  return (
+    <div className="space-y-6">
+      <Skeleton className="h-8 w-72" />
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+        <Skeleton className="h-96 rounded-md" />
+        <Skeleton className="h-80 rounded-md" />
+      </div>
+    </div>
+  );
+}
 
-export default function OrderDetailPage() {
-  const params = useParams();
-  // In production: fetch order by params.id
-  // const { data: order } = useQuery({ queryKey: ['order', params.id], queryFn: () => getOrder(Number(params.id)) });
-  const order = MOCK_ORDER;
-
-  const cfg = statusConfig[order.status];
-  const nextStatuses = NEXT_STATUSES[order.status] ?? [];
+function ShipmentPanel({
+  order,
+  shipmentData,
+  creating,
+  onCreate,
+  onCopy,
+}: {
+  order: AdminOrder;
+  shipmentData: OrderShipmentData | undefined;
+  creating: boolean;
+  onCreate: (provider: string) => void;
+  onCopy: (text: string) => void;
+}) {
+  const [provider, setProvider] = useState('ghtk');
+  const shipment = shipmentData?.shipment ?? null;
+  const canCreate = order.status === 'confirmed' && !shipment;
+  const disabledReason = shipment
+    ? 'Đơn hàng đã có vận đơn.'
+    : order.status !== 'confirmed'
+      ? 'Chỉ có thể tạo vận đơn khi đơn hàng đã được xác nhận.'
+      : null;
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
-            <Link href="/dashboard/orders" aria-label="Quay lại">
-              <ArrowLeftIcon className="h-4 w-4" />
-            </Link>
-          </Button>
-          <Link href="/dashboard/orders" className="hover:text-foreground">Đơn hàng</Link>
-          <span>/</span>
-          <span className="font-medium text-foreground">{order.code}</span>
+    <div className="rounded-md border bg-card">
+      <div className="flex items-center justify-between gap-3 border-b px-5 py-4">
+        <div>
+          <h2 className="text-sm font-semibold">Vận chuyển</h2>
+          <p className="mt-0.5 text-xs text-muted-foreground">Tạo vận đơn và theo dõi webhook từ đơn vị vận chuyển.</p>
         </div>
+        {shipment ? <ShipmentStatusBadge status={shipment.status} /> : null}
+      </div>
 
-        <div className="flex items-center gap-2">
-          <Badge variant={cfg.variant}>{cfg.label}</Badge>
-          {nextStatuses.length > 0 && (
-            <Select>
-              <SelectTrigger className="h-9 w-44">
-                <SelectValue placeholder="Cập nhật trạng thái" />
+      {shipment ? (
+        <div className="space-y-5 p-5">
+          <ShipmentSnapshot shipment={shipment} onCopy={onCopy} />
+          <ShipmentTimeline logs={shipmentData?.logs ?? []} />
+        </div>
+      ) : (
+        <div className="space-y-3 p-5">
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Select value={provider} onValueChange={setProvider}>
+              <SelectTrigger className="h-9 sm:w-40">
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {nextStatuses.map((s) => (
-                  <SelectItem key={s} value={s}>
-                    {statusConfig[s].label}
+                {PROVIDERS.map((item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    {item.label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-          )}
+            <Button disabled={!canCreate || creating} onClick={() => onCreate(provider)}>
+              {creating ? <Loader2Icon className="animate-spin" /> : <TruckIcon />}
+              Tạo vận đơn
+            </Button>
+          </div>
+          {disabledReason ? <p className="text-xs text-muted-foreground">{disabledReason}</p> : null}
         </div>
+      )}
+    </div>
+  );
+}
+
+function ShipmentStatusBadge({ status }: { status: string }) {
+  const meta = shipmentStatusMeta(status);
+  return <Badge variant={meta.variant}>{meta.label}</Badge>;
+}
+
+function ShipmentSnapshot({ shipment, onCopy }: { shipment: ShipmentData; onCopy: (text: string) => void }) {
+  return (
+    <div className="grid gap-3 text-sm sm:grid-cols-2">
+      <InfoRow label="Đơn vị" value={shipment.provider.toUpperCase()} />
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-muted-foreground">Tracking</span>
+        {shipment.trackingCode ? (
+          <Button variant="ghost" size="sm" onClick={() => onCopy(shipment.trackingCode!)}>
+            <span className="font-mono">{shipment.trackingCode}</span>
+            <ClipboardIcon />
+          </Button>
+        ) : (
+          <span>Chưa có</span>
+        )}
+      </div>
+      <InfoRow label="Phí vận chuyển" value={vnd.format(Number(shipment.fee ?? 0))} />
+      <InfoRow label="Dự kiến giao" value={formatDateTime(shipment.estimatedAt)} />
+      <InfoRow label="Ngày lấy hàng" value={formatDateTime(shipment.shippedAt)} />
+      <InfoRow label="Ngày giao" value={formatDateTime(shipment.deliveredAt)} />
+    </div>
+  );
+}
+
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between gap-3">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="text-right font-medium">{value}</span>
+    </div>
+  );
+}
+
+function ShipmentTimeline({ logs }: { logs: ShipmentLogData[] }) {
+  if (!logs.length) {
+    return <p className="text-sm text-muted-foreground">Chưa có lịch sử vận chuyển.</p>;
+  }
+
+  return (
+    <div>
+      <h3 className="mb-3 text-sm font-semibold">Lịch sử vận chuyển</h3>
+      <div className="space-y-0">
+        {logs.map((log, index) => {
+          const meta = shipmentStatusMeta(log.status);
+          const rawLabel = rawStatusLabel(log);
+          const noteLabel = logNoteLabel(log);
+          return (
+            <div key={log.id} className="flex gap-3">
+              <div className="flex flex-col items-center">
+                <TimelineIcon status={log.status} />
+                {index < logs.length - 1 ? <div className="my-1 w-0.5 flex-1 bg-border" style={{ minHeight: 24 }} /> : null}
+              </div>
+              <div className="min-w-0 pb-4">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-sm font-medium">{meta.label}</p>
+                  <Badge variant="outline">{logSourceLabel(log)}</Badge>
+                  {rawLabel ? <span className="text-xs text-muted-foreground">{rawLabel}</span> : null}
+                </div>
+                {log.location ? <p className="mt-0.5 text-xs text-muted-foreground">{log.location}</p> : null}
+                {noteLabel ? <p className="mt-1 text-sm text-muted-foreground">{noteLabel}</p> : null}
+                <p className="mt-1 text-xs text-muted-foreground">{formatTimelineTime(log.createdAt)}</p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+export default function OrderDetailPage() {
+  const params = useParams<{ id: string }>();
+  const orderId = Number(params.id);
+  const queryClient = useQueryClient();
+
+  const orderQuery = useQuery({
+    queryKey: ['admin-order', orderId],
+    queryFn: () => getAdminOrder(orderId),
+    enabled: Number.isFinite(orderId),
+  });
+
+  const shipmentQuery = useQuery({
+    queryKey: ['admin-order-shipment', orderId],
+    queryFn: () => getAdminOrderShipment(orderId),
+    enabled: Number.isFinite(orderId),
+  });
+
+  const createShipmentMutation = useMutation({
+    mutationFn: (provider: string) => createAdminOrderShipment(orderId, provider),
+    onSuccess: async () => {
+      toast.success('Đã tạo vận đơn');
+      await shipmentQuery.refetch();
+      await queryClient.invalidateQueries({ queryKey: ['admin-order', orderId] });
+    },
+    onError: (error) => toast.error(errorMessage(error)),
+  });
+
+  const order = orderQuery.data;
+  const totals = useMemo(() => {
+    if (!order) return { subtotal: 0, shippingFee: 0, discount: 0, final: 0 };
+    return {
+      subtotal: Number(order.totalAmount ?? 0),
+      shippingFee: Number(order.shippingFee ?? 0),
+      discount: Number(order.discountAmount ?? 0),
+      final: Number(order.finalAmount ?? 0),
+    };
+  }, [order]);
+
+  async function copyTracking(text: string) {
+    await navigator.clipboard.writeText(text);
+    toast.success('Đã copy mã vận đơn');
+  }
+
+  if (orderQuery.isLoading) {
+    return <OrderSkeleton />;
+  }
+
+  if (orderQuery.isError || !order) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-3 rounded-md border bg-card py-16">
+        <XCircleIcon className="size-10 text-destructive/60" />
+        <p className="text-sm font-medium">Không thể tải đơn hàng</p>
+        <Button variant="outline" onClick={() => orderQuery.refetch()}>
+          <RefreshCwIcon />
+          Thử lại
+        </Button>
+      </div>
+    );
+  }
+
+  const orderStatus = ORDER_STATUS[order.status];
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Button variant="ghost" size="icon-sm" asChild>
+            <Link href="/dashboard/orders" aria-label="Quay lại">
+              <ArrowLeftIcon />
+            </Link>
+          </Button>
+          <Link href="/dashboard/orders" className="hover:text-foreground">Đơn hàng</Link>
+          <span>/</span>
+          <span className="font-medium text-foreground">{orderCode(order)}</span>
+        </div>
+        <Badge variant={orderStatus.variant}>{orderStatus.label}</Badge>
       </div>
 
-      {/* Body — 2 columns on large screens */}
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-
-        {/* Left column */}
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
         <div className="flex flex-col gap-6">
-
-          {/* Items */}
           <div className="rounded-md border bg-card">
             <div className="border-b px-5 py-4">
               <h2 className="text-sm font-semibold">Sản phẩm</h2>
@@ -218,128 +402,76 @@ export default function OrderDetailPage() {
                   <TableRow key={item.id}>
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-muted">
-                          <PackageIcon className="h-5 w-5 text-muted-foreground/50" />
+                        <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-muted">
+                          <PackageIcon className="size-5 text-muted-foreground/50" />
                         </div>
                         <div>
-                          <p className="text-sm font-medium">{item.productName}</p>
-                          {item.variantName && (
-                            <p className="text-xs text-muted-foreground">{item.variantName}</p>
-                          )}
+                          <p className="text-sm font-medium">{item.name}</p>
+                          {item.sku ? <p className="text-xs text-muted-foreground">{item.sku}</p> : null}
                         </div>
                       </div>
                     </TableCell>
                     <TableCell className="text-center text-muted-foreground">{item.quantity}</TableCell>
-                    <TableCell className="text-right text-muted-foreground">{vnd.format(item.price)}</TableCell>
-                    <TableCell className="text-right font-medium">{vnd.format(item.price * item.quantity)}</TableCell>
+                    <TableCell className="text-right text-muted-foreground">{vnd.format(Number(item.unitPrice))}</TableCell>
+                    <TableCell className="text-right font-medium">{vnd.format(Number(item.subtotal))}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
 
-            {/* Totals */}
             <div className="border-t px-5 py-4">
               <div className="ml-auto max-w-xs space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Tạm tính</span>
-                  <span>{vnd.format(order.subtotal)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Phí vận chuyển</span>
-                  <span>{order.shippingFee === 0 ? 'Miễn phí' : vnd.format(order.shippingFee)}</span>
-                </div>
-                {order.discount > 0 && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Giảm giá</span>
-                    <span className="text-destructive">-{vnd.format(order.discount)}</span>
-                  </div>
-                )}
+                <InfoRow label="Tạm tính" value={vnd.format(totals.subtotal)} />
+                <InfoRow label="Phí vận chuyển" value={totals.shippingFee === 0 ? 'Miễn phí' : vnd.format(totals.shippingFee)} />
+                {totals.discount > 0 ? <InfoRow label="Giảm giá" value={`-${vnd.format(totals.discount)}`} /> : null}
                 <Separator />
-                <div className="flex justify-between font-semibold">
-                  <span>Tổng cộng</span>
-                  <span>{vnd.format(order.totalAmount)}</span>
-                </div>
+                <InfoRow label="Tổng cộng" value={vnd.format(totals.final)} />
               </div>
             </div>
           </div>
 
-          {/* Timeline */}
-          <div className="rounded-md border bg-card px-5 py-4">
-            <h2 className="mb-4 text-sm font-semibold">Lịch sử đơn hàng</h2>
-            <div className="space-y-0">
-              {order.timeline.map((step, i) => (
-                <div key={step.status} className="flex gap-3">
-                  <div className="flex flex-col items-center">
-                    <TimelineIcon status={step.status} done={step.done} />
-                    {i < order.timeline.length - 1 && (
-                      <div className={`mt-1 mb-1 w-0.5 flex-1 ${step.done ? 'bg-primary' : 'bg-border'}`} style={{ minHeight: 24 }} />
-                    )}
-                  </div>
-                  <div className="pb-4">
-                    <p className={`text-sm font-medium ${step.done ? 'text-foreground' : 'text-muted-foreground'}`}>
-                      {step.label}
-                    </p>
-                    {step.time && (
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(step.time).toLocaleString('vi-VN')}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <ShipmentPanel
+            order={order}
+            shipmentData={shipmentQuery.data}
+            creating={createShipmentMutation.isPending}
+            onCreate={(provider) => createShipmentMutation.mutate(provider)}
+            onCopy={copyTracking}
+          />
         </div>
 
-        {/* Right column */}
         <div className="flex flex-col gap-4">
-
-          {/* Order info */}
           <div className="rounded-md border bg-card px-5 py-4">
             <h2 className="mb-3 text-sm font-semibold">Thông tin đơn hàng</h2>
             <div className="space-y-2 text-sm">
-              <div className="flex justify-between gap-2">
-                <span className="text-muted-foreground">Mã đơn</span>
-                <span className="font-mono font-medium">{order.code}</span>
-              </div>
-              <div className="flex justify-between gap-2">
-                <span className="text-muted-foreground">Ngày đặt</span>
-                <span>{new Date(order.createdAt).toLocaleDateString('vi-VN')}</span>
-              </div>
-              <div className="flex justify-between gap-2">
-                <span className="text-muted-foreground">Thanh toán</span>
-                <span>{order.paymentMethod}</span>
-              </div>
+              <InfoRow label="Mã đơn" value={orderCode(order)} />
+              <InfoRow label="Ngày đặt" value={formatDateTime(order.createdAt)} />
+              <InfoRow label="Thanh toán" value={order.paymentMethod.toUpperCase()} />
             </div>
           </div>
 
-          {/* Customer */}
           <div className="rounded-md border bg-card px-5 py-4">
-            <h2 className="mb-3 text-sm font-semibold">Khách hàng</h2>
+            <h2 className="mb-3 text-sm font-semibold">Người nhận</h2>
             <div className="space-y-1 text-sm">
-              <p className="font-medium">{order.customer.name}</p>
-              <p className="text-muted-foreground">{order.customer.email}</p>
-              <p className="text-muted-foreground">{order.customer.phone}</p>
+              <p className="font-medium">{order.shippingAddress.receiver}</p>
+              <p className="text-muted-foreground">{order.shippingAddress.phone}</p>
             </div>
           </div>
 
-          {/* Shipping address */}
           <div className="rounded-md border bg-card px-5 py-4">
             <h2 className="mb-3 text-sm font-semibold">Địa chỉ giao hàng</h2>
             <div className="space-y-0.5 text-sm text-muted-foreground">
               <p>{order.shippingAddress.street}</p>
               <p>{order.shippingAddress.ward}, {order.shippingAddress.district}</p>
-              <p>{order.shippingAddress.city}</p>
+              <p>{order.shippingAddress.province}</p>
             </div>
           </div>
 
-          {/* Note */}
-          {order.note && (
+          {order.note ? (
             <div className="rounded-md border bg-card px-5 py-4">
               <h2 className="mb-2 text-sm font-semibold">Ghi chú</h2>
               <p className="text-sm text-muted-foreground">{order.note}</p>
             </div>
-          )}
+          ) : null}
         </div>
       </div>
     </div>
