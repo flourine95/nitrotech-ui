@@ -1,125 +1,121 @@
 # NitroTech UI
 
-Frontend cho hệ thống quản lý e-commerce NitroTech — linh kiện điện tử, laptop, PC.
+NitroTech UI is the Next.js frontend for the NitroTech e-commerce platform. It includes public shopping flows, customer account pages, checkout, and an admin dashboard.
 
-## Tech Stack
-
-| Layer | Tool |
-|-------|------|
-| Framework | Next.js 16 (App Router) |
-| Language | TypeScript |
-| Styling | Tailwind CSS v4 + shadcn/ui |
-| Icons | lucide-react |
-| Forms | react-hook-form + zod |
-| Server state | TanStack Query |
-| URL state | nuqs |
-| Global state | Zustand |
-| Toast | sonner |
-| Drag & drop | @dnd-kit/react |
-
-## Yêu cầu
+## Requirements
 
 - Node.js 20+
-- Backend Spring Boot chạy tại `http://localhost:8080` (hoặc cấu hình lại trong `.env.local`)
+- NitroTech API running at `http://localhost:8080`, or another URL configured through `.env.local`
 
-## Cài đặt
+## Quick start
+
+Install dependencies:
 
 ```bash
 npm install
 ```
 
-## Biến môi trường
-
-Tạo file `.env.local` ở root:
+Create `.env.local` in the project root:
 
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:8080
 BACKEND_URL=http://localhost:8080
 ```
 
-- `NEXT_PUBLIC_API_URL` — URL backend dùng phía client (BFF proxy)
-- `BACKEND_URL` — URL backend dùng phía server (Server Components, Route Handlers)
-
-## Chạy development
+Run the development server:
 
 ```bash
 npm run dev
 ```
 
-Mở [http://localhost:3000](http://localhost:3000).
+Open `http://localhost:3000`.
 
-## Build
+## Scripts
 
-```bash
-npm run build
-npm run start
-```
+| Script | Purpose |
+|--------|---------|
+| `npm run dev` | Start the Next.js development server |
+| `npm run build` | Build the production app |
+| `npm run start` | Start the production server after build |
+| `npm run lint` | Run ESLint |
+| `npm run typecheck` | Run TypeScript without emitting files |
+| `npm run format` | Format TypeScript and TSX files with Prettier |
 
-## Cấu trúc thư mục
+## Environment variables
 
-```
-app/                        Route segments
-  (auth)/                   Login, register, forgot password
-  account/                  Trang tài khoản người dùng
-  api/                      Route Handlers (BFF proxy + upload)
-  dashboard/                Admin dashboard
-    brands/
-    categories/
-    media/
-    orders/
-    products/
-  products/                 Trang sản phẩm public
+- `NEXT_PUBLIC_API_URL`: API URL used by browser-side requests through the BFF proxy
+- `BACKEND_URL`: API URL used by Server Components and Route Handlers
+
+## Stack
+
+| Layer | Tool |
+|-------|------|
+| Framework | Next.js 16 App Router |
+| Language | TypeScript |
+| Styling | Tailwind CSS v4 and shadcn/ui |
+| Icons | lucide-react |
+| Forms | react-hook-form and Zod |
+| Server state | TanStack Query |
+| URL state | nuqs |
+| Global state | Zustand |
+| Toasts | sonner |
+| Drag and drop | @dnd-kit/react |
+
+## Project structure
+
+```text
+app/
+  (auth)/                 # Login, register, forgot password, reset password
+  (public)/               # Storefront, product, cart, checkout, account pages
+  api/                    # BFF route handlers
+  dashboard/              # Admin dashboard modules
 
 components/
-  dashboard/                Shared components cho dashboard
-    gallery-editor.tsx      Drag-drop image gallery
-    key-value-editor.tsx    Dynamic key-value pairs
-    filter-chip.tsx         Dismissible filter chip
-  ui/                       shadcn/ui primitives
+  dashboard/              # Shared dashboard components
+  icons/                  # Project and brand icons
+  ui/                     # shadcn/ui primitives
 
-hooks/
-  use-table-selection.ts    Multi-row selection state
-  use-dialog-state.ts       Delete/restore/hard-delete dialog state
-  use-media-assets.ts
-  use-pagination.ts
-
+hooks/                    # Shared React hooks
 lib/
-  api/                      Domain API wrappers (một file per domain)
-  schemas/                  Zod validation schemas
-  types/                    Shared TypeScript types
-  utils/
-    formatting.ts           formatCurrency, formatPriceRange, formatRelativeDate, downloadCSV
-  auth.ts                   Server-side getSession()
-  client.ts                 apiFetch() — client-side BFF transport
-  server.ts                 backendFetch() — server-side Spring transport
-  utils.ts                  slugify, cn, ...
-
-store/                      Zustand stores
+  api/                    # Domain API wrappers
+  auth/                   # Session and route helpers
+  data/                   # Static data
+  mocks/                  # Mock data
+  utils/                  # Formatting and utility helpers
+providers/                # App-level providers
+schemas/                  # Zod schemas
+stores/                   # Zustand stores
+types/                    # Shared TypeScript types
 ```
 
-## API Architecture
+Keep route-specific files co-located under their route folder until they are reused by at least two routes.
 
-Tất cả API call từ client đi qua BFF tại `app/api/[...path]/route.ts`:
+## API architecture
 
+Client Components call the local BFF proxy:
+
+```text
+Client Component
+  -> apiFetch('/api/products')        lib/api/client.ts
+  -> app/api/[...path]/route.ts       BFF proxy
+  -> backendFetch('/api/products')    lib/api/server.ts
+  -> Spring Boot API
 ```
-Client component
-  → apiFetch('/api/products')       lib/client.ts
-  → app/api/[...path]/route.ts      BFF proxy
-  → backendFetch('/api/products')   lib/server.ts
-  → Spring backend
-```
 
-Server Components fetch trực tiếp qua `backendFetch()`.
+Server Components use `backendFetch()` directly.
 
-## Thêm shadcn component
+## Design guidance
+
+- [DESIGN.md](./DESIGN.md) contains the NitroTech UI design system and visual rules.
+- [AGENTS.md](./AGENTS.md) contains project guidance for coding agents.
+- [.docs](./.docs) contains longer-lived technical notes and decisions.
+
+## shadcn/ui
+
+Add components with:
 
 ```bash
 npx shadcn@latest add <component>
 ```
 
-## Lint & Format
-
-```bash
-npm run lint
-npm run format
-```
+Use existing shadcn/ui primitives before building custom controls.
