@@ -66,6 +66,7 @@ import {
   getAdminOrderFacets,
   getAdminOrders,
   updateAdminOrderStatus,
+  type AdminOrderAction,
   type AdminOrderListItem,
   type AdminOrderStatus,
   type AdminPaymentMethod,
@@ -537,7 +538,7 @@ function MoreActions({
   onCreateShipment: (order: AdminOrderListItem) => void;
   onStatusChange: (order: AdminOrderListItem, status: NextOrderStatus) => void;
 }) {
-  const canCreateShipment = !order.hasShipment && ['confirmed', 'processing'].includes(order.status);
+  const actions = new Set<AdminOrderAction>(order.availableActions);
 
   return (
     <DropdownMenu modal={false}>
@@ -557,53 +558,44 @@ function MoreActions({
           <DropdownMenuItem asChild>
             <Link href={`/dashboard/orders/${order.id}`}>Xem chi tiết</Link>
           </DropdownMenuItem>
-          {order.status === 'pending' ? (
-            <>
-              <DropdownMenuItem onClick={() => onStatusChange(order, 'confirmed')}>Xác nhận đơn</DropdownMenuItem>
-              <DropdownMenuItem variant="destructive" onClick={() => onStatusChange(order, 'cancelled')}>
-                Hủy đơn
-              </DropdownMenuItem>
-            </>
+          {actions.has('confirm') ? (
+            <DropdownMenuItem onClick={() => onStatusChange(order, 'confirmed')}>Xác nhận đơn</DropdownMenuItem>
           ) : null}
-          {order.status === 'confirmed' ? (
-            <>
-              {canCreateShipment ? (
-                <DropdownMenuItem onClick={() => onCreateShipment(order)}>Tạo vận đơn</DropdownMenuItem>
-              ) : null}
-              <DropdownMenuItem onClick={() => onStatusChange(order, 'processing')}>
-                Chuyển sang xử lý
-              </DropdownMenuItem>
-              <DropdownMenuItem variant="destructive" onClick={() => onStatusChange(order, 'cancelled')}>
-                Hủy đơn
-              </DropdownMenuItem>
-            </>
+          {actions.has('create_shipment') ? (
+            <DropdownMenuItem onClick={() => onCreateShipment(order)}>Tạo vận đơn</DropdownMenuItem>
           ) : null}
-          {order.status === 'processing' ? (
-            <>
-              {canCreateShipment ? (
-                <DropdownMenuItem onClick={() => onCreateShipment(order)}>Tạo vận đơn</DropdownMenuItem>
-              ) : (
-                <DropdownMenuItem asChild>
-                  <Link href={`/dashboard/orders/${order.id}`}>Xem vận đơn</Link>
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuItem onClick={() => onStatusChange(order, 'shipped')}>
-                Đánh dấu đang giao
-              </DropdownMenuItem>
-            </>
+          {actions.has('view_shipment') ? (
+            <DropdownMenuItem asChild>
+              <Link href={`/dashboard/orders/${order.id}`}>Xem vận đơn</Link>
+            </DropdownMenuItem>
           ) : null}
-          {order.status === 'shipped' ? (
-            <>
-              <DropdownMenuItem asChild>
-                <Link href={`/dashboard/orders/${order.id}`}>Theo dõi giao hàng</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onStatusChange(order, 'delivered')}>
-                Đánh dấu đã giao
-              </DropdownMenuItem>
-            </>
+          {actions.has('track_shipment') ? (
+            <DropdownMenuItem asChild>
+              <Link href={`/dashboard/orders/${order.id}`}>Theo dõi giao hàng</Link>
+            </DropdownMenuItem>
           ) : null}
-          {order.status === 'delivered' ? (
+          {actions.has('mark_processing') ? (
+            <DropdownMenuItem onClick={() => onStatusChange(order, 'processing')}>
+              Chuyển sang xử lý
+            </DropdownMenuItem>
+          ) : null}
+          {actions.has('mark_shipped') ? (
+            <DropdownMenuItem onClick={() => onStatusChange(order, 'shipped')}>
+              Đánh dấu đang giao
+            </DropdownMenuItem>
+          ) : null}
+          {actions.has('mark_delivered') ? (
+            <DropdownMenuItem onClick={() => onStatusChange(order, 'delivered')}>
+              Đánh dấu đã giao
+            </DropdownMenuItem>
+          ) : null}
+          {actions.has('refund') ? (
             <DropdownMenuItem onClick={() => onStatusChange(order, 'refunded')}>Hoàn tiền</DropdownMenuItem>
+          ) : null}
+          {actions.has('cancel') ? (
+            <DropdownMenuItem variant="destructive" onClick={() => onStatusChange(order, 'cancelled')}>
+              Hủy đơn
+            </DropdownMenuItem>
           ) : null}
         </DropdownMenuGroup>
       </DropdownMenuContent>

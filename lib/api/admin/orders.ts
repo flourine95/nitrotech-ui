@@ -11,6 +11,17 @@ export type AdminOrderStatus =
   | 'expired';
 
 export type AdminPaymentMethod = 'cod' | 'vnpay' | 'momo' | 'sepay';
+export type AdminOrderAction =
+  | 'view_detail'
+  | 'confirm'
+  | 'cancel'
+  | 'create_shipment'
+  | 'view_shipment'
+  | 'track_shipment'
+  | 'mark_processing'
+  | 'mark_shipped'
+  | 'mark_delivered'
+  | 'refund';
 
 export interface OrderOption<T extends string = string> {
   value: T;
@@ -40,6 +51,7 @@ export interface AdminOrderListItem {
   hasShipment: boolean;
   shipmentStatus: string | null;
   trackingCode: string | null;
+  availableActions: AdminOrderAction[];
   finalAmount: number;
   itemCount: number;
   createdAt: string;
