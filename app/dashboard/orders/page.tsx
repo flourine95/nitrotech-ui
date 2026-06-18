@@ -858,8 +858,17 @@ export default function DashboardOrdersPage() {
   };
 
   const updateStatusMutation = useMutation({
-    mutationFn: ({ orderId, status }: { orderId: number; status: NextOrderStatus }) =>
-      updateAdminOrderStatus(orderId, status),
+    mutationFn: ({
+      orderId,
+      status,
+      reason,
+      note,
+    }: {
+      orderId: number;
+      status: NextOrderStatus;
+      reason?: string;
+      note?: string;
+    }) => updateAdminOrderStatus(orderId, status, { reason, note }),
     onMutate: ({ orderId }) => setPendingActionOrderId(orderId),
     onSuccess: async () => {
       toast.success('Đã cập nhật trạng thái đơn');
@@ -978,6 +987,15 @@ export default function DashboardOrdersPage() {
   }
 
   function handleStatusChange(order: AdminOrderListItem, status: NextOrderStatus) {
+    if (status === 'cancelled' || status === 'refunded') {
+      const reason = window.prompt(
+        status === 'cancelled' ? 'Lý do hủy đơn?' : 'Lý do hoàn tiền?',
+      );
+      if (!reason) return;
+      updateStatusMutation.mutate({ orderId: order.id, status, reason });
+      return;
+    }
+
     updateStatusMutation.mutate({ orderId: order.id, status });
   }
 

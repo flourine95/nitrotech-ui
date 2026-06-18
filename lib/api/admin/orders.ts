@@ -236,10 +236,11 @@ export async function getAdminOrder(id: number): Promise<AdminOrder> {
 export async function updateAdminOrderStatus(
   orderId: number,
   status: Exclude<AdminOrderStatus, 'pending' | 'expired'>,
+  details?: { reason?: string; note?: string },
 ): Promise<AdminOrder> {
   const res = await apiFetch<ApiResult<AdminOrder>>(`/api/admin/orders/${orderId}/status`, {
     method: 'PATCH',
-    body: JSON.stringify({ status }),
+    body: JSON.stringify({ status, ...details }),
   });
   return res.data;
 }
