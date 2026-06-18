@@ -30,6 +30,7 @@ export interface AdminOrderFacets {
 export interface AdminOrderListItem {
   id: number;
   userId: number;
+  orderCode: string;
   receiver: string | null;
   phone: string | null;
   status: AdminOrderStatus;
@@ -65,6 +66,7 @@ export interface AdminShippingAddress {
 export interface AdminOrder {
   id: number;
   userId: number;
+  orderCode: string;
   shippingAddress: AdminShippingAddress;
   status: AdminOrderStatus;
   paymentMethod: string;

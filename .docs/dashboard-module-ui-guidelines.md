@@ -100,6 +100,7 @@ Use this guide when building or editing dense admin modules in NitroTech UI, suc
 - Icon-only buttons must have `aria-label`.
 - Icons inside `Button` should use `data-icon="inline-start"` or `data-icon="inline-end"` instead of manual icon sizing.
 - Use `Separator` instead of raw `hr`.
+- Do not use `top-1/2 -translate-y-1/2` to position absolute custom `Button` components vertically. The component's base `active` class has a press offset (`translate-y-px`) which overrides the negative translate, causing a click jump. Position absolute buttons with `inset-y-0 my-auto` instead.
 
 ## Dropdown Rules
 
@@ -173,4 +174,5 @@ Use this guide when building or editing dense admin modules in NitroTech UI, suc
 - Are Tailwind classes canonical where possible?
 - Are labels, dates, and money formatted consistently?
 - Does the screen show enough records on a laptop viewport?
+- Do absolute buttons inside inputs or containers avoid `top-1/2 -translate-y-1/2` to prevent translation jumps on click?
 - Did you run `npm run typecheck` and lint the touched file or route?
