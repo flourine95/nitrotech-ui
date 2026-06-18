@@ -39,6 +39,34 @@ export function formatRelativeDate(dateStr: string): string {
   return date.toLocaleDateString('vi-VN');
 }
 
+export function formatRelativeTime(dateStr: string): string {
+  const date = new Date(dateStr);
+  const diffSeconds = Math.round((date.getTime() - Date.now()) / 1000);
+  const absoluteSeconds = Math.abs(diffSeconds);
+  const formatter = new Intl.RelativeTimeFormat('vi-VN', { numeric: 'auto' });
+
+  if (absoluteSeconds < 60) {
+    return formatter.format(diffSeconds, 'second');
+  }
+
+  const diffMinutes = Math.round(diffSeconds / 60);
+  if (Math.abs(diffMinutes) < 60) {
+    return formatter.format(diffMinutes, 'minute');
+  }
+
+  const diffHours = Math.round(diffMinutes / 60);
+  if (Math.abs(diffHours) < 24) {
+    return formatter.format(diffHours, 'hour');
+  }
+
+  const diffDays = Math.round(diffHours / 24);
+  if (Math.abs(diffDays) < 30) {
+    return formatter.format(diffDays, 'day');
+  }
+
+  return date.toLocaleDateString('vi-VN');
+}
+
 export function escapeCsv(val: string | number | null | undefined): string {
   if (val === null || val === undefined) return '';
   const s = String(val);

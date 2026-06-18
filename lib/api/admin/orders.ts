@@ -16,8 +16,6 @@ export type AdminOrderAction =
   | 'confirm'
   | 'cancel'
   | 'create_shipment'
-  | 'view_shipment'
-  | 'track_shipment'
   | 'mark_processing'
   | 'mark_shipped'
   | 'mark_delivered'

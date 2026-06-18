@@ -34,6 +34,16 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
@@ -72,7 +82,7 @@ import {
   type AdminPaymentMethod,
 } from '@/lib/api/admin/orders';
 import { cn } from '@/lib/utils';
-import { downloadCSV, escapeCsv } from '@/lib/utils/formatting';
+import { downloadCSV, escapeCsv, formatRelativeTime } from '@/lib/utils/formatting';
 import { DateRangePicker, formatDateKey, parseLocalDate } from './date-range-picker';
 
 const PAGE_SIZES = [5, 10, 20, 50];
@@ -185,8 +195,8 @@ const shipmentStatusLabels: Record<string, { label: string; tone: 'default' | 'd
 };
 
 const slaStatusLabels: Record<'warning' | 'critical', { label: string; tone: 'warning' | 'danger' }> = {
-  warning: { label: 'Sắp quá SLA', tone: 'warning' },
-  critical: { label: 'Quá SLA', tone: 'danger' },
+  warning: { label: 'Sắp quá hạn', tone: 'warning' },
+  critical: { label: 'Quá hạn xử lý', tone: 'danger' },
 };
 
 const sortFields = [
@@ -569,16 +579,6 @@ function MoreActions({
           {actions.has('create_shipment') ? (
             <DropdownMenuItem onClick={() => onCreateShipment(order)}>Tạo vận đơn</DropdownMenuItem>
           ) : null}
-          {actions.has('view_shipment') ? (
-            <DropdownMenuItem asChild>
-              <Link href={`/dashboard/orders/${order.id}`}>Xem vận đơn</Link>
-            </DropdownMenuItem>
-          ) : null}
-          {actions.has('track_shipment') ? (
-            <DropdownMenuItem asChild>
-              <Link href={`/dashboard/orders/${order.id}`}>Theo dõi giao hàng</Link>
-            </DropdownMenuItem>
-          ) : null}
           {actions.has('mark_processing') ? (
             <DropdownMenuItem onClick={() => onStatusChange(order, 'processing')}>
               Chuyển sang xử lý
@@ -661,8 +661,6 @@ function OrderCard({
   onStatusChange: (order: AdminOrderListItem, status: NextOrderStatus) => void;
 }) {
   const status = statusConfig[order.status];
-  const paymentStatus = order.paymentStatus ? paymentStatusLabels[order.paymentStatus] : null;
-  const shipmentStatus = order.shipmentStatus ? shipmentStatusLabels[order.shipmentStatus] : null;
   const slaStatus = order.slaStatus === 'warning' || order.slaStatus === 'critical'
     ? slaStatusLabels[order.slaStatus]
     : null;
@@ -671,7 +669,7 @@ function OrderCard({
   const metaItems = [
     phone,
     order.email,
-    `Cập nhật ${viDate.format(new Date(order.updatedAt))}`,
+    `Cập nhật ${formatRelativeTime(order.updatedAt)}`,
   ].filter((item): item is string => Boolean(item));
 
   return (
@@ -687,8 +685,6 @@ function OrderCard({
             </Link>
             <StatusChip tone={status.tone}>{status.label}</StatusChip>
             <StatusChip>{paymentLabels[order.paymentMethod] ?? order.paymentMethod}</StatusChip>
-            {paymentStatus ? <StatusChip tone={paymentStatus.tone}>{paymentStatus.label}</StatusChip> : null}
-            {shipmentStatus ? <StatusChip tone={shipmentStatus.tone}>{shipmentStatus.label}</StatusChip> : null}
             {slaStatus ? (
               <StatusChip tone={slaStatus.tone}>
                 {order.slaLabel ? `${slaStatus.label}: ${order.slaLabel}` : slaStatus.label}
@@ -708,10 +704,7 @@ function OrderCard({
           </div>
         </div>
 
-        <div className="flex items-start justify-between gap-3 xl:min-w-40 xl:justify-end 2xl:min-w-44">
-          <div className="flex size-12 shrink-0 items-center justify-center rounded-full border bg-muted/40 text-muted-foreground">
-            <PackageIcon className="size-5" />
-          </div>
+        <div className="flex items-start justify-end gap-3 xl:min-w-40 2xl:min-w-44">
           <div className="text-right">
             <p className="text-lg font-semibold 2xl:text-xl">{vnd.format(Number(order.finalAmount))}</p>
             <p className="text-sm text-muted-foreground">{viDate.format(new Date(order.createdAt))}</p>
@@ -760,8 +753,7 @@ function OrderCardSkeleton({ count }: { count: number }) {
           <Skeleton className="mt-3 h-5 w-64" />
           <Skeleton className="mt-2 h-4 w-80 max-w-full" />
         </div>
-        <div className="flex items-start justify-between gap-3 xl:min-w-40">
-          <Skeleton className="size-12 rounded-full" />
+        <div className="flex items-start justify-end gap-3 xl:min-w-40">
           <div className="flex flex-col items-end gap-2">
             <Skeleton className="h-6 w-28" />
             <Skeleton className="h-4 w-20" />
@@ -791,6 +783,11 @@ export default function DashboardOrdersPage() {
   const [searchInput, setSearchInput] = useState(search);
   const [amountRange, setAmountRange] = useState([toMillion(amountMin), toMillion(amountMax)]);
   const [pendingActionOrderId, setPendingActionOrderId] = useState<number | null>(null);
+  const [reasonAction, setReasonAction] = useState<{
+    order: AdminOrderListItem;
+    status: Extract<NextOrderStatus, 'cancelled' | 'refunded'>;
+  } | null>(null);
+  const [reasonText, setReasonText] = useState('');
   const [isPending, startTransition] = useTransition();
   const [debouncedSearch] = useDebounce(searchInput, 350);
   const [debouncedAmountRange] = useDebounce(amountRange, 350);
@@ -1001,15 +998,23 @@ export default function DashboardOrdersPage() {
 
   function handleStatusChange(order: AdminOrderListItem, status: NextOrderStatus) {
     if (status === 'cancelled' || status === 'refunded') {
-      const reason = window.prompt(
-        status === 'cancelled' ? 'Lý do hủy đơn?' : 'Lý do hoàn tiền?',
-      );
-      if (!reason) return;
-      updateStatusMutation.mutate({ orderId: order.id, status, reason });
+      setReasonAction({ order, status });
+      setReasonText('');
       return;
     }
 
     updateStatusMutation.mutate({ orderId: order.id, status });
+  }
+
+  function submitReasonAction() {
+    if (!reasonAction || !reasonText.trim()) return;
+    updateStatusMutation.mutate({
+      orderId: reasonAction.order.id,
+      status: reasonAction.status,
+      reason: reasonText.trim(),
+    });
+    setReasonAction(null);
+    setReasonText('');
   }
 
   function handleCreateShipment(order: AdminOrderListItem) {
@@ -1048,6 +1053,7 @@ export default function DashboardOrdersPage() {
   }, [debouncedAmountRange]);
 
   return (
+    <>
     <div className="flex h-[calc(100dvh-6.5rem)] w-full max-w-none flex-col gap-3 overflow-hidden">
       <section className="flex flex-col gap-3 border-b border-dashed border-border/70 pb-2.5 lg:flex-row lg:items-center lg:justify-between 2xl:pb-3">
         <div className="flex items-start gap-3">
@@ -1365,5 +1371,50 @@ export default function DashboardOrdersPage() {
         </main>
       </div>
     </div>
+    <Dialog open={reasonAction !== null} onOpenChange={(open) => {
+      if (!open) {
+        setReasonAction(null);
+        setReasonText('');
+      }
+    }}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>
+            {reasonAction?.status === 'cancelled' ? 'Hủy đơn hàng' : 'Hoàn tiền đơn hàng'}
+          </DialogTitle>
+          <DialogDescription>
+            Nhập lý do để lưu vào lịch sử thao tác và hỗ trợ tra soát sau này.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-2">
+          <Label htmlFor="order-action-reason">Lý do</Label>
+          <Textarea
+            id="order-action-reason"
+            value={reasonText}
+            onChange={(event) => setReasonText(event.target.value)}
+            placeholder={reasonAction?.status === 'cancelled' ? 'Ví dụ: Khách yêu cầu hủy đơn' : 'Ví dụ: Khách trả hàng và cần hoàn tiền'}
+          />
+        </div>
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setReasonAction(null);
+              setReasonText('');
+            }}
+          >
+            Đóng
+          </Button>
+          <Button
+            variant={reasonAction?.status === 'cancelled' ? 'destructive' : 'default'}
+            disabled={!reasonText.trim() || updateStatusMutation.isPending}
+            onClick={submitReasonAction}
+          >
+            {reasonAction?.status === 'cancelled' ? 'Hủy đơn' : 'Xác nhận hoàn tiền'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
