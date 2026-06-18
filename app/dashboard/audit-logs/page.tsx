@@ -328,7 +328,7 @@ export default function AuditLogsPage() {
                     void setCurrentPage(0);
                   });
                 }}
-                className="absolute top-1/2 right-1 size-7 -translate-y-1/2"
+                className="absolute inset-y-0 right-1 my-auto size-7"
               >
                 <X className="size-4" />
               </Button>
@@ -362,7 +362,7 @@ export default function AuditLogsPage() {
                     void setCurrentPage(0);
                   });
                 }}
-                className="absolute top-1/2 right-1 size-7 -translate-y-1/2"
+                className="absolute inset-y-0 right-1 my-auto size-7"
               >
                 <X className="size-4" />
               </Button>
@@ -396,7 +396,7 @@ export default function AuditLogsPage() {
                     void setCurrentPage(0);
                   });
                 }}
-                className="absolute top-1/2 right-1 size-7 -translate-y-1/2"
+                className="absolute inset-y-0 right-1 my-auto size-7"
               >
                 <X className="size-4" />
               </Button>
