@@ -3,12 +3,21 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { BoltIcon, BellIcon, SearchIcon, LogOutIcon, UserIcon, SettingsIcon } from 'lucide-react';
-import { memo } from 'react';
+import {
+  BellIcon,
+  BoltIcon,
+  ChevronsUpDownIcon,
+  LogOutIcon,
+  SearchIcon,
+  SettingsIcon,
+  UserIcon,
+} from 'lucide-react';
+import { memo, type CSSProperties } from 'react';
 
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -106,18 +115,28 @@ export function DashboardShell({
   }
 
   return (
-    <SidebarProvider>
+    <SidebarProvider
+      style={
+        {
+          '--sidebar-width': '15rem',
+          '--sidebar-width-icon': '3rem',
+        } as CSSProperties
+      }
+    >
       <Sidebar collapsible="icon">
         {/* Logo */}
-        <SidebarHeader>
-          <SidebarMenu>
+        <SidebarHeader className="p-2">
+          <SidebarMenu className="gap-1">
             <SidebarMenuItem>
-              <SidebarMenuButton size="lg" asChild tooltip="NitroTech">
+              <SidebarMenuButton size="lg" className="h-12 px-2" asChild tooltip="NitroTech">
                 <Link href="/dashboard">
-                  <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-foreground text-background">
-                    <BoltIcon className="size-4" />
+                  <div className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-muted-foreground/25 bg-transparent text-foreground">
+                    <BoltIcon className="size-4.5" />
                   </div>
-                  <span className="text-base font-bold tracking-tight">NitroTech</span>
+                  <div className="grid flex-1 text-left leading-tight">
+                    <span className="truncate text-sm font-semibold">NitroTech</span>
+                    <span className="truncate text-xs text-muted-foreground">Quản trị bán hàng</span>
+                  </div>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -125,7 +144,7 @@ export function DashboardShell({
         </SidebarHeader>
 
         {/* Nav */}
-        <SidebarContent>
+        <SidebarContent className="gap-2">
           <SidebarGroup>
             <SidebarGroupLabel>Quản lý</SidebarGroupLabel>
             <SidebarGroupContent>
@@ -156,6 +175,57 @@ export function DashboardShell({
             </SidebarGroup>
           )}
         </SidebarContent>
+
+        <SidebarFooter>
+          <SidebarMenu className="gap-1">
+            <SidebarMenuItem>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <SidebarMenuButton size="lg" className="h-12 px-2" tooltip={displayName}>
+                    <Avatar className="size-8 rounded-lg">
+                      <AvatarImage src="https://cdn.shadcnstudio.com/ss-assets/avatar/avatar-1.png" />
+                      <AvatarFallback>{initials}</AvatarFallback>
+                    </Avatar>
+                    <div className="grid flex-1 text-left text-sm leading-tight">
+                      <span className="truncate font-semibold">{displayName}</span>
+                      <span className="truncate text-xs text-muted-foreground">{displayEmail}</span>
+                    </div>
+                    <ChevronsUpDownIcon className="ml-auto size-4" />
+                  </SidebarMenuButton>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" side="right" className="w-56">
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col gap-1">
+                      <p className="text-sm font-medium">{displayName}</p>
+                      <p className="text-xs text-muted-foreground">{displayEmail}</p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/account/profile">
+                      <UserIcon className="mr-2 size-4" />
+                      Tài khoản
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/dashboard/settings">
+                      <SettingsIcon className="mr-2 size-4" />
+                      Cài đặt
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive"
+                    onClick={handleLogout}
+                  >
+                    <LogOutIcon className="mr-2 size-4" />
+                    Đăng xuất
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarFooter>
 
         <SidebarRail />
       </Sidebar>
@@ -203,51 +273,11 @@ export function DashboardShell({
                 </Badge>
               </Button>
 
-              {/* Profile */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="size-8">
-                    <Avatar className="size-8 rounded-md">
-                      <AvatarImage src="https://cdn.shadcnstudio.com/ss-assets/avatar/avatar-1.png" />
-                      <AvatarFallback>{initials}</AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel className="font-normal">
-                    <div className="flex flex-col gap-1">
-                      <p className="text-sm font-medium">{displayName}</p>
-                      <p className="text-xs text-muted-foreground">{displayEmail}</p>
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link href="/account/profile">
-                      <UserIcon className="mr-2 size-4" />
-                      Tài khoản
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/dashboard/settings">
-                      <SettingsIcon className="mr-2 size-4" />
-                      Cài đặt
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    className="text-destructive focus:text-destructive"
-                    onClick={handleLogout}
-                  >
-                    <LogOutIcon className="mr-2 size-4" />
-                    Đăng xuất
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
             </div>
           </div>
         </header>
 
-        <main className="flex-1 p-6">{children}</main>
+        <main className="flex-1 p-4 lg:p-5 2xl:p-6">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   );
