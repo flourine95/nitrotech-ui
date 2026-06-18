@@ -33,12 +33,31 @@ export interface AdminOrderListItem {
   orderCode: string;
   receiver: string | null;
   phone: string | null;
+  email: string | null;
   status: AdminOrderStatus;
   paymentMethod: AdminPaymentMethod;
+  paymentStatus: string | null;
+  hasShipment: boolean;
+  shipmentStatus: string | null;
+  trackingCode: string | null;
   finalAmount: number;
   itemCount: number;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface AdminUserSummary {
+  name: string;
+  email: string;
+  phone: string | null;
+  avatar: string | null;
+}
+
+export interface AdminPaymentSummary {
+  provider: string;
+  status: string; // 'pending' | 'paid' | 'failed'
+  amount: number;
+  paidAt: string | null;
 }
 
 export interface AdminOrderItem {
@@ -49,6 +68,7 @@ export interface AdminOrderItem {
   quantity: number;
   unitPrice: number;
   subtotal: number;
+  imageUrl: string | null;
 }
 
 export interface AdminShippingAddress {
@@ -79,6 +99,8 @@ export interface AdminOrder {
   items: AdminOrderItem[];
   createdAt: string;
   updatedAt: string;
+  user: AdminUserSummary | null;
+  payment: AdminPaymentSummary | null;
 }
 
 export interface ShipmentData {
@@ -196,6 +218,17 @@ export async function getAdminOrderFacets(
 
 export async function getAdminOrder(id: number): Promise<AdminOrder> {
   const res = await apiFetch<ApiResult<AdminOrder>>(`/api/admin/orders/${id}`);
+  return res.data;
+}
+
+export async function updateAdminOrderStatus(
+  orderId: number,
+  status: Exclude<AdminOrderStatus, 'pending' | 'expired'>,
+): Promise<AdminOrder> {
+  const res = await apiFetch<ApiResult<AdminOrder>>(`/api/admin/orders/${orderId}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
+  });
   return res.data;
 }
 

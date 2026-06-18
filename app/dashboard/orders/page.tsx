@@ -2,9 +2,10 @@
 
 import Link from 'next/link';
 import { useEffect, useState, useTransition } from 'react';
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { parseAsInteger, parseAsString, useQueryState } from 'nuqs';
 import type { DateRange } from 'react-day-picker';
+import { toast } from 'sonner';
 import { useDebounce } from 'use-debounce';
 import {
   AlertCircleIcon,
@@ -16,7 +17,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   CreditCardIcon,
-  FileTextIcon,
+  DownloadIcon,
   MoreHorizontalIcon,
   PackageCheckIcon,
   PackageIcon,
@@ -61,13 +62,16 @@ import { Slider } from '@/components/ui/slider';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePagination } from '@/hooks/use-pagination';
 import {
+  createAdminOrderShipment,
   getAdminOrderFacets,
   getAdminOrders,
+  updateAdminOrderStatus,
   type AdminOrderListItem,
   type AdminOrderStatus,
   type AdminPaymentMethod,
 } from '@/lib/api/admin/orders';
 import { cn } from '@/lib/utils';
+import { downloadCSV, escapeCsv } from '@/lib/utils/formatting';
 import { DateRangePicker, formatDateKey, parseLocalDate } from './date-range-picker';
 
 const PAGE_SIZES = [5, 10, 20, 50];
@@ -92,7 +96,7 @@ const statusConfig: Record<
     label: 'Chờ xác nhận',
     tone: 'warning',
     progress: 1,
-    stateTitle: 'Báo giá mới',
+    stateTitle: 'Đơn mới',
     stateText: 'Đơn đang chờ xác nhận trước khi chuyển sang xử lý kho.',
     action: 'Xem chi tiết',
   },
@@ -161,6 +165,24 @@ const paymentLabels: Record<AdminPaymentMethod, string> = {
   sepay: 'SePay',
 };
 
+const paymentStatusLabels: Record<string, { label: string; tone: 'default' | 'danger' | 'success' | 'warning' }> = {
+  pending: { label: 'Chưa thanh toán', tone: 'warning' },
+  paid: { label: 'Đã thanh toán', tone: 'success' },
+  failed: { label: 'Thanh toán lỗi', tone: 'danger' },
+};
+
+const shipmentStatusLabels: Record<string, { label: string; tone: 'default' | 'danger' | 'success' | 'warning' }> = {
+  pending: { label: 'Chờ vận chuyển', tone: 'default' },
+  ready_to_pick: { label: 'Chờ lấy hàng', tone: 'warning' },
+  picking: { label: 'Đang lấy hàng', tone: 'warning' },
+  picked: { label: 'Đã lấy hàng', tone: 'default' },
+  delivering: { label: 'Đang giao', tone: 'default' },
+  delivered: { label: 'Đã giao', tone: 'success' },
+  delivery_fail: { label: 'Giao thất bại', tone: 'danger' },
+  returned: { label: 'Đã hoàn hàng', tone: 'danger' },
+  cancel: { label: 'Hủy vận chuyển', tone: 'danger' },
+};
+
 const sortFields = [
   { value: 'createdAt', label: 'Ngày tạo' },
   { value: 'finalAmount', label: 'Tổng tiền' },
@@ -192,7 +214,7 @@ function formatSortParam(rules: SortRule[]): string {
 }
 
 const progressSteps = [
-  { label: 'Báo giá', icon: FileTextIcon },
+  { label: 'Đặt hàng', icon: ShoppingCartIcon },
   { label: 'Đóng gói', icon: PackageCheckIcon },
   { label: 'Giao hàng', icon: TruckIcon },
   { label: 'Hoàn tất', icon: CheckCircle2Icon },
@@ -482,38 +504,50 @@ function PageSizeDropdown({
   );
 }
 
-function ToolbarActions() {
+function ExportCurrentPageButton({
+  disabled,
+  onExport,
+}: {
+  disabled: boolean;
+  onExport: () => void;
+}) {
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="outline"
-          className="h-10 w-full rounded-xl p-0 shadow-none sm:size-10 sm:shrink-0"
-          aria-label="Mở tùy chọn danh sách"
-        >
-          <MoreHorizontalIcon />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" sideOffset={6} className="w-48">
-        <DropdownMenuGroup>
-          <DropdownMenuItem>Xuất danh sách</DropdownMenuItem>
-          <DropdownMenuItem>Tùy chỉnh hiển thị</DropdownMenuItem>
-          <DropdownMenuItem>Làm mới bộ lọc</DropdownMenuItem>
-        </DropdownMenuGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <Button
+      variant="outline"
+      className="h-10 w-full rounded-xl shadow-none sm:w-fit"
+      disabled={disabled}
+      onClick={onExport}
+    >
+      <DownloadIcon data-icon="inline-start" />
+      Xuất CSV
+    </Button>
   );
 }
 
-function MoreActions({ orderId, code }: { orderId: number; code: string }) {
+type NextOrderStatus = Exclude<AdminOrderStatus, 'pending' | 'expired'>;
+
+function MoreActions({
+  order,
+  isPending,
+  onCreateShipment,
+  onStatusChange,
+}: {
+  order: AdminOrderListItem;
+  isPending: boolean;
+  onCreateShipment: (order: AdminOrderListItem) => void;
+  onStatusChange: (order: AdminOrderListItem, status: NextOrderStatus) => void;
+}) {
+  const canCreateShipment = !order.hasShipment && ['confirmed', 'processing'].includes(order.status);
+
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
           size="icon-sm"
           className="mt-2"
-          aria-label={`Mở thao tác cho đơn ${code}`}
+          disabled={isPending}
+          aria-label={`Mở thao tác cho đơn ${order.orderCode}`}
         >
           <MoreHorizontalIcon />
         </Button>
@@ -521,10 +555,56 @@ function MoreActions({ orderId, code }: { orderId: number; code: string }) {
       <DropdownMenuContent align="end" sideOffset={6} className="w-44">
         <DropdownMenuGroup>
           <DropdownMenuItem asChild>
-            <Link href={`/dashboard/orders/${orderId}`}>Xem chi tiết</Link>
+            <Link href={`/dashboard/orders/${order.id}`}>Xem chi tiết</Link>
           </DropdownMenuItem>
-          <DropdownMenuItem>Cập nhật trạng thái</DropdownMenuItem>
-          <DropdownMenuItem>In đơn hàng</DropdownMenuItem>
+          {order.status === 'pending' ? (
+            <>
+              <DropdownMenuItem onClick={() => onStatusChange(order, 'confirmed')}>Xác nhận đơn</DropdownMenuItem>
+              <DropdownMenuItem variant="destructive" onClick={() => onStatusChange(order, 'cancelled')}>
+                Hủy đơn
+              </DropdownMenuItem>
+            </>
+          ) : null}
+          {order.status === 'confirmed' ? (
+            <>
+              {canCreateShipment ? (
+                <DropdownMenuItem onClick={() => onCreateShipment(order)}>Tạo vận đơn</DropdownMenuItem>
+              ) : null}
+              <DropdownMenuItem onClick={() => onStatusChange(order, 'processing')}>
+                Chuyển sang xử lý
+              </DropdownMenuItem>
+              <DropdownMenuItem variant="destructive" onClick={() => onStatusChange(order, 'cancelled')}>
+                Hủy đơn
+              </DropdownMenuItem>
+            </>
+          ) : null}
+          {order.status === 'processing' ? (
+            <>
+              {canCreateShipment ? (
+                <DropdownMenuItem onClick={() => onCreateShipment(order)}>Tạo vận đơn</DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem asChild>
+                  <Link href={`/dashboard/orders/${order.id}`}>Xem vận đơn</Link>
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem onClick={() => onStatusChange(order, 'shipped')}>
+                Đánh dấu đang giao
+              </DropdownMenuItem>
+            </>
+          ) : null}
+          {order.status === 'shipped' ? (
+            <>
+              <DropdownMenuItem asChild>
+                <Link href={`/dashboard/orders/${order.id}`}>Theo dõi giao hàng</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onStatusChange(order, 'delivered')}>
+                Đánh dấu đã giao
+              </DropdownMenuItem>
+            </>
+          ) : null}
+          {order.status === 'delivered' ? (
+            <DropdownMenuItem onClick={() => onStatusChange(order, 'refunded')}>Hoàn tiền</DropdownMenuItem>
+          ) : null}
         </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -533,57 +613,88 @@ function MoreActions({ orderId, code }: { orderId: number; code: string }) {
 
 function OrderProgress({ progress }: { progress: number }) {
   return (
-    <div className="grid grid-cols-4 gap-2">
-      {progressSteps.map((step, index) => {
-        const active = index < progress;
-        const CurrentIcon = step.icon;
-        return (
-          <div key={step.label} className="flex min-w-0 flex-col gap-1.5">
-            <div className="flex items-center gap-1.5">
+    <div className="grid gap-2.5">
+      <div className="grid grid-cols-[auto_minmax(28px,1fr)_auto_minmax(28px,1fr)_auto_minmax(28px,1fr)_auto] items-center gap-x-2">
+        {progressSteps.map((step, index) => {
+          const active = index < progress;
+          const complete = index < progress - 1;
+          const CurrentIcon = step.icon;
+          return (
+            <div key={step.label} className="contents">
               <span
                 className={cn(
-                  'flex size-5 shrink-0 items-center justify-center rounded-full',
-                  active ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground',
+                  'flex size-5 shrink-0 items-center justify-center rounded-md border bg-background',
+                  active ? 'border-foreground text-foreground' : 'border-border text-muted-foreground',
                 )}
               >
                 <CurrentIcon className="size-3" />
               </span>
               {index < progressSteps.length - 1 ? (
-                <span
-                  className={cn(
-                    'h-1 min-w-0 flex-1 rounded-full',
-                    index < progress - 1 ? 'bg-foreground' : 'bg-muted',
-                  )}
-                />
+                <span className="h-1 rounded-full bg-border/70">
+                  <span className={cn('block h-full rounded-full', complete && 'bg-foreground')} />
+                </span>
               ) : null}
             </div>
-            <span className="truncate text-center text-[11px] leading-none text-muted-foreground">{step.label}</span>
+          );
+        })}
+      </div>
+      <div className="grid grid-cols-[auto_minmax(28px,1fr)_auto_minmax(28px,1fr)_auto_minmax(28px,1fr)_auto] gap-x-2 text-[11px] leading-none text-muted-foreground">
+      {progressSteps.map((step, index) => {
+        return (
+          <div key={step.label} className="contents">
+            <span>{step.label}</span>
+            {index < progressSteps.length - 1 ? <span aria-hidden /> : null}
           </div>
         );
       })}
+      </div>
     </div>
   );
 }
 
-function OrderCard({ order }: { order: AdminOrderListItem }) {
+function OrderCard({
+  order,
+  pendingActionOrderId,
+  onCreateShipment,
+  onStatusChange,
+}: {
+  order: AdminOrderListItem;
+  pendingActionOrderId: number | null;
+  onCreateShipment: (order: AdminOrderListItem) => void;
+  onStatusChange: (order: AdminOrderListItem, status: NextOrderStatus) => void;
+}) {
   const status = statusConfig[order.status];
+  const paymentStatus = order.paymentStatus ? paymentStatusLabels[order.paymentStatus] : null;
+  const shipmentStatus = order.shipmentStatus ? shipmentStatusLabels[order.shipmentStatus] : null;
   const receiver = order.receiver ?? 'Chưa có người nhận';
   const phone = order.phone ?? 'Chưa có SĐT';
+  const metaItems = [
+    phone,
+    order.email,
+    `Cập nhật ${viDate.format(new Date(order.updatedAt))}`,
+  ].filter((item): item is string => Boolean(item));
 
   return (
     <article className="rounded-xl border bg-card p-3 2xl:p-4">
       <div className="grid gap-3 xl:grid-cols-[1fr_auto] 2xl:gap-4">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="font-semibold">{order.orderCode}</span>
+            <Link
+              href={`/dashboard/orders/${order.id}`}
+              className="font-semibold underline-offset-4 hover:underline"
+            >
+              {order.orderCode}
+            </Link>
             <StatusChip tone={status.tone}>{status.label}</StatusChip>
             <StatusChip>{paymentLabels[order.paymentMethod] ?? order.paymentMethod}</StatusChip>
+            {paymentStatus ? <StatusChip tone={paymentStatus.tone}>{paymentStatus.label}</StatusChip> : null}
+            {shipmentStatus ? <StatusChip tone={shipmentStatus.tone}>{shipmentStatus.label}</StatusChip> : null}
           </div>
           <h2 className="mt-1.5 text-base font-semibold leading-snug 2xl:text-lg">
             {receiver} · {order.itemCount} sản phẩm
           </h2>
           <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
-            {[phone, `Khách #${order.userId}`, `Cập nhật ${viDate.format(new Date(order.updatedAt))}`].map((item, index) => (
+            {metaItems.map((item, index) => (
               <span key={item} className="flex items-center gap-2">
                 {index > 0 ? <span className="size-1 rounded-full bg-border" /> : null}
                 {item}
@@ -599,23 +710,33 @@ function OrderCard({ order }: { order: AdminOrderListItem }) {
           <div className="text-right">
             <p className="text-lg font-semibold 2xl:text-xl">{vnd.format(Number(order.finalAmount))}</p>
             <p className="text-sm text-muted-foreground">{viDate.format(new Date(order.createdAt))}</p>
-            <MoreActions orderId={order.id} code={order.orderCode} />
+            {order.trackingCode ? (
+              <p className="mt-1 max-w-36 truncate text-xs font-medium text-muted-foreground">
+                {order.trackingCode}
+              </p>
+            ) : null}
+            <MoreActions
+              order={order}
+              isPending={pendingActionOrderId === order.id}
+              onCreateShipment={onCreateShipment}
+              onStatusChange={onStatusChange}
+            />
           </div>
         </div>
       </div>
 
       <div className="mt-3 rounded-xl border p-3 2xl:mt-4 2xl:p-4">
-        <div className="grid gap-3 xl:grid-cols-[1fr_auto] xl:items-end 2xl:gap-4">
-          <div className="min-w-0">
+        <div className="grid gap-3 2xl:gap-4">
+          <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+            <div className="min-w-0">
             <p className="font-medium">{status.stateTitle}</p>
             <p className="mt-0.5 text-sm text-muted-foreground">{status.stateText}</p>
-            <div className="mt-3">
-              <OrderProgress progress={status.progress} />
             </div>
-          </div>
-          <Button variant="outline" className="h-9 w-fit justify-self-start 2xl:h-10 xl:justify-self-end" asChild>
+            <Button variant="outline" className="h-9 w-fit shrink-0 justify-self-start 2xl:h-10" asChild>
             <Link href={`/dashboard/orders/${order.id}`}>{status.action}</Link>
           </Button>
+          </div>
+          <OrderProgress progress={status.progress} />
         </div>
       </div>
     </article>
@@ -648,6 +769,7 @@ function OrderCardSkeleton({ count }: { count: number }) {
 }
 
 export default function DashboardOrdersPage() {
+  const queryClient = useQueryClient();
   const [search, setSearch] = useQueryState('search', parseAsString.withDefault(''));
   const [dateFrom, setDateFrom] = useQueryState('createdFrom', parseAsString.withDefault(''));
   const [dateTo, setDateTo] = useQueryState('createdTo', parseAsString.withDefault(''));
@@ -663,6 +785,7 @@ export default function DashboardOrdersPage() {
   const [draftRange, setDraftRange] = useState<DateRange | undefined>(undefined);
   const [searchInput, setSearchInput] = useState(search);
   const [amountRange, setAmountRange] = useState([toMillion(amountMin), toMillion(amountMax)]);
+  const [pendingActionOrderId, setPendingActionOrderId] = useState<number | null>(null);
   const [isPending, startTransition] = useTransition();
   const [debouncedSearch] = useDebounce(searchInput, 350);
   const [debouncedAmountRange] = useDebounce(amountRange, 350);
@@ -735,6 +858,40 @@ export default function DashboardOrdersPage() {
     staleTime: 20_000,
   });
 
+  const refreshOrderQueries = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['admin-orders'] }),
+      queryClient.invalidateQueries({ queryKey: ['admin-order-facets'] }),
+    ]);
+  };
+
+  const updateStatusMutation = useMutation({
+    mutationFn: ({ orderId, status }: { orderId: number; status: NextOrderStatus }) =>
+      updateAdminOrderStatus(orderId, status),
+    onMutate: ({ orderId }) => setPendingActionOrderId(orderId),
+    onSuccess: async () => {
+      toast.success('Đã cập nhật trạng thái đơn');
+      await refreshOrderQueries();
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : 'Không thể cập nhật trạng thái');
+    },
+    onSettled: () => setPendingActionOrderId(null),
+  });
+
+  const createShipmentMutation = useMutation({
+    mutationFn: ({ orderId }: { orderId: number }) => createAdminOrderShipment(orderId, 'ghtk'),
+    onMutate: ({ orderId }) => setPendingActionOrderId(orderId),
+    onSuccess: async () => {
+      toast.success('Đã tạo vận đơn');
+      await refreshOrderQueries();
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : 'Không thể tạo vận đơn');
+    },
+    onSettled: () => setPendingActionOrderId(null),
+  });
+
   const statusOptions = facetsQuery.data?.statuses ?? [];
   const paymentOptions = facetsQuery.data?.paymentMethods ?? [];
   const allStatusCount = facetsQuery.data?.total ?? 0;
@@ -786,6 +943,54 @@ export default function DashboardOrdersPage() {
       void setSortParam('createdAt,desc');
       void setCurrentPage(0);
     });
+  }
+
+  function exportCurrentPage() {
+    if (!orders.length) return;
+
+    const header = [
+      'Mã đơn',
+      'Người nhận',
+      'Số điện thoại',
+      'Email',
+      'Trạng thái',
+      'Thanh toán',
+      'Trạng thái thanh toán',
+      'Trạng thái vận chuyển',
+      'Mã vận đơn',
+      'Tổng tiền',
+      'Số sản phẩm',
+      'Ngày đặt',
+      'Cập nhật',
+    ];
+    const rows = orders.map((order) => [
+      order.orderCode,
+      order.receiver ?? '',
+      order.phone ?? '',
+      order.email ?? '',
+      statusConfig[order.status].label,
+      paymentLabels[order.paymentMethod] ?? order.paymentMethod,
+      order.paymentStatus ? (paymentStatusLabels[order.paymentStatus]?.label ?? order.paymentStatus) : '',
+      order.shipmentStatus ? (shipmentStatusLabels[order.shipmentStatus]?.label ?? order.shipmentStatus) : '',
+      order.trackingCode ?? '',
+      order.finalAmount,
+      order.itemCount,
+      viDate.format(new Date(order.createdAt)),
+      viDate.format(new Date(order.updatedAt)),
+    ]);
+    const csv = [header, ...rows]
+      .map((row) => row.map((cell) => escapeCsv(cell)).join(','))
+      .join('\n');
+
+    downloadCSV(csv, `orders-page-${currentPage + 1}.csv`);
+  }
+
+  function handleStatusChange(order: AdminOrderListItem, status: NextOrderStatus) {
+    updateStatusMutation.mutate({ orderId: order.id, status });
+  }
+
+  function handleCreateShipment(order: AdminOrderListItem) {
+    createShipmentMutation.mutate({ orderId: order.id });
   }
 
   useEffect(() => {
@@ -1016,7 +1221,7 @@ export default function DashboardOrdersPage() {
                     });
                   }}
                 />
-                <ToolbarActions />
+                <ExportCurrentPageButton disabled={!orders.length} onExport={exportCurrentPage} />
               </div>
             </div>
           </section>
@@ -1039,7 +1244,15 @@ export default function DashboardOrdersPage() {
             ) : ordersQuery.isLoading ? (
               <OrderCardSkeleton count={pageSize} />
             ) : orders.length ? (
-              orders.map((order) => <OrderCard key={order.id} order={order} />)
+              orders.map((order) => (
+                <OrderCard
+                  key={order.id}
+                  order={order}
+                  pendingActionOrderId={pendingActionOrderId}
+                  onCreateShipment={handleCreateShipment}
+                  onStatusChange={handleStatusChange}
+                />
+              ))
             ) : (
               <div className="flex flex-1 flex-col items-center justify-center rounded-xl border bg-card py-16 text-muted-foreground">
                 <PackageIcon className="mb-3 size-10 text-muted-foreground/50" />
