@@ -39,6 +39,7 @@ import {
   getAdminOrderShipment,
   type AdminOrderStatus,
 } from '@/lib/api/admin/orders';
+import { getAuditLogs, type AuditLogEntry } from '@/lib/api/admin/audit-logs';
 
 // ─── Formatters ──────────────────────────────────────────────────────────────
 const vnd = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' });
@@ -262,6 +263,27 @@ function CalloutBanner({ tone, title, text }: { tone: string; title: string; tex
   );
 }
 
+function auditSummary(log: AuditLogEntry) {
+  const beforeStatus = typeof log.beforeData?.status === 'string' ? log.beforeData.status : null;
+  const afterStatus = typeof log.afterData?.status === 'string' ? log.afterData.status : null;
+  const reason = typeof log.metadata?.reason === 'string' ? log.metadata.reason : null;
+  const note = typeof log.metadata?.note === 'string' ? log.metadata.note : null;
+
+  if (log.action === 'ORDER_STATUS_UPDATED') {
+    const from = beforeStatus ? (statusConfig[beforeStatus as AdminOrderStatus]?.label ?? beforeStatus) : null;
+    const to = afterStatus ? (statusConfig[afterStatus as AdminOrderStatus]?.label ?? afterStatus) : null;
+    return {
+      title: from && to ? `Đổi trạng thái từ ${from} sang ${to}` : 'Cập nhật trạng thái đơn',
+      detail: reason ?? note,
+    };
+  }
+
+  return {
+    title: log.action,
+    detail: reason ?? note,
+  };
+}
+
 function DetailSkeleton() {
   return (
     <div className="flex h-[calc(100dvh-6.5rem)] w-full max-w-none flex-col gap-4 overflow-hidden">
@@ -308,6 +330,19 @@ export default function OrderDetailPage() {
     enabled: !isNaN(id),
   });
 
+  const auditQuery = useQuery({
+    queryKey: ['audit-logs', 'order', id],
+    queryFn: () =>
+      getAuditLogs({
+        resourceType: 'ORDER',
+        resourceId: String(id),
+        sortBy: 'createdAt',
+        sortDir: 'desc',
+        size: 10,
+      }),
+    enabled: !isNaN(id),
+  });
+
   if (orderQuery.isLoading) return <DetailSkeleton />;
 
   if (orderQuery.isError || !orderQuery.data) {
@@ -327,6 +362,7 @@ export default function OrderDetailPage() {
   const shipmentData = shipmentQuery.data ?? null;
   const shipment = shipmentData?.shipment ?? null;
   const logs = shipmentData?.logs ?? [];
+  const auditLogs = auditQuery.data?.data ?? [];
   const cfg = statusConfig[order.status] ?? statusConfig.pending;
   const isTerminal = cfg.terminal === true;
   const paymentLabel = paymentLabels[order.paymentMethod] ?? order.paymentMethod.toUpperCase();
@@ -518,6 +554,42 @@ export default function OrderDetailPage() {
                           )}
                           <p className="mt-1 text-xs text-muted-foreground">
                             {viDateTime.format(new Date(log.createdAt))}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </section>
+          )}
+
+          {auditLogs.length > 0 && (
+            <section className="pb-2">
+              <div className="grid gap-5 px-1">
+                <div>
+                  <h2 className="text-base font-semibold">Lịch sử thao tác</h2>
+                  <p className="mt-0.5 text-sm text-muted-foreground">
+                    Các thay đổi trạng thái và thao tác quản trị trên đơn hàng.
+                  </p>
+                </div>
+                <div className="grid gap-0">
+                  {auditLogs.map((log, i) => {
+                    const summary = auditSummary(log);
+                    const isLast = i === auditLogs.length - 1;
+                    return (
+                      <div key={log.id} className="flex gap-3">
+                        <div className="flex flex-col items-center">
+                          <div className={cn('mt-1.5 size-2 shrink-0 rounded-full', i === 0 ? 'bg-foreground' : 'bg-border')} />
+                          {!isLast && <div className="my-1 w-px flex-1 bg-border/60" />}
+                        </div>
+                        <div className={cn('min-w-0 pb-4', isLast && 'pb-0')}>
+                          <p className="text-sm font-medium leading-tight">{summary.title}</p>
+                          {summary.detail && (
+                            <p className="mt-0.5 text-xs text-muted-foreground">{summary.detail}</p>
+                          )}
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {log.actorEmail ?? log.actorType} · {viDateTime.format(new Date(log.createdAt))}
                           </p>
                         </div>
                       </div>
