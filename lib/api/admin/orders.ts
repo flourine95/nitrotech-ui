@@ -52,6 +52,10 @@ export interface AdminOrderListItem {
   shipmentStatus: string | null;
   trackingCode: string | null;
   availableActions: AdminOrderAction[];
+  ageMinutes: number;
+  slaDueAt: string | null;
+  slaStatus: 'normal' | 'warning' | 'critical';
+  slaLabel: string | null;
   finalAmount: number;
   itemCount: number;
   createdAt: string;

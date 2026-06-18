@@ -184,6 +184,11 @@ const shipmentStatusLabels: Record<string, { label: string; tone: 'default' | 'd
   cancel: { label: 'Hủy vận chuyển', tone: 'danger' },
 };
 
+const slaStatusLabels: Record<'warning' | 'critical', { label: string; tone: 'warning' | 'danger' }> = {
+  warning: { label: 'Sắp quá SLA', tone: 'warning' },
+  critical: { label: 'Quá SLA', tone: 'danger' },
+};
+
 const sortFields = [
   { value: 'createdAt', label: 'Ngày tạo' },
   { value: 'finalAmount', label: 'Tổng tiền' },
@@ -658,6 +663,9 @@ function OrderCard({
   const status = statusConfig[order.status];
   const paymentStatus = order.paymentStatus ? paymentStatusLabels[order.paymentStatus] : null;
   const shipmentStatus = order.shipmentStatus ? shipmentStatusLabels[order.shipmentStatus] : null;
+  const slaStatus = order.slaStatus === 'warning' || order.slaStatus === 'critical'
+    ? slaStatusLabels[order.slaStatus]
+    : null;
   const receiver = order.receiver ?? 'Chưa có người nhận';
   const phone = order.phone ?? 'Chưa có SĐT';
   const metaItems = [
@@ -681,6 +689,11 @@ function OrderCard({
             <StatusChip>{paymentLabels[order.paymentMethod] ?? order.paymentMethod}</StatusChip>
             {paymentStatus ? <StatusChip tone={paymentStatus.tone}>{paymentStatus.label}</StatusChip> : null}
             {shipmentStatus ? <StatusChip tone={shipmentStatus.tone}>{shipmentStatus.label}</StatusChip> : null}
+            {slaStatus ? (
+              <StatusChip tone={slaStatus.tone}>
+                {order.slaLabel ? `${slaStatus.label}: ${order.slaLabel}` : slaStatus.label}
+              </StatusChip>
+            ) : null}
           </div>
           <h2 className="mt-1.5 text-base font-semibold leading-snug 2xl:text-lg">
             {receiver} · {order.itemCount} sản phẩm
