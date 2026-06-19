@@ -98,7 +98,7 @@ export function ExportCurrentPageButton({
       onClick={onExport}
     >
       <DownloadIcon data-icon="inline-start" />
-      Xuất CSV
+      Xuất CSV trang này
     </Button>
   );
 }

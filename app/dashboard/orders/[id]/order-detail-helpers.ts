@@ -2,6 +2,15 @@ import type { AuditLogEntry } from '@/lib/api/admin/audit-logs';
 import type { AdminOrderStatus } from '@/lib/api/admin/orders';
 import { orderStatusConfig } from '../order-display';
 
+const ACTION_LABELS: Record<string, string> = {
+  ORDER_CANCELLED: 'Hủy đơn hàng',
+  ORDER_NOTE_UPDATED: 'Cập nhật ghi chú đơn hàng',
+  ORDER_SHIPMENT_CREATED: 'Tạo vận đơn',
+  ORDER_STATUS_UPDATED: 'Cập nhật trạng thái đơn hàng',
+  SHIPMENT_CREATED: 'Tạo vận đơn',
+  SHIPMENT_WEBHOOK_RECEIVED: 'Cập nhật vận đơn từ webhook',
+};
+
 export function auditSummary(log: AuditLogEntry) {
   const beforeStatus = typeof log.beforeData?.status === 'string' ? log.beforeData.status : null;
   const afterStatus = typeof log.afterData?.status === 'string' ? log.afterData.status : null;
@@ -18,7 +27,7 @@ export function auditSummary(log: AuditLogEntry) {
   }
 
   return {
-    title: log.action,
+    title: ACTION_LABELS[log.action] ?? 'Cập nhật đơn hàng',
     detail: reason ?? note,
   };
 }

@@ -45,7 +45,7 @@ export const orderStatusConfig: Record<
     progress: 2,
     stateTitle: 'Đang đóng gói',
     stateText: 'Kho đang lấy hàng, kiểm tra và chuẩn bị bàn giao vận chuyển.',
-    action: 'Xem đóng gói',
+    action: 'Xem xử lý',
   },
   shipped: {
     label: 'Đang giao',
@@ -56,12 +56,12 @@ export const orderStatusConfig: Record<
     action: 'Theo dõi giao hàng',
   },
   delivered: {
-    label: 'Hoàn thành',
+    label: 'Đã giao',
     tone: 'success',
     progress: 4,
     stateTitle: 'Đã giao thành công',
-    stateText: 'Đơn đã hoàn tất và sẵn sàng đối soát chứng từ.',
-    action: 'Mở chứng từ',
+    stateText: 'Đơn đã được giao thành công và hoàn tất xử lý.',
+    action: 'Xem chi tiết',
   },
   cancelled: {
     label: 'Đã hủy',
@@ -78,7 +78,7 @@ export const orderStatusConfig: Record<
     progress: 0,
     stateTitle: 'Đã hoàn tiền',
     stateText: 'Thanh toán đã được hoàn trả và đơn đã đóng.',
-    action: 'Mở chứng từ',
+    action: 'Xem chi tiết',
     terminal: true,
   },
   expired: {
