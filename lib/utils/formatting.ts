@@ -4,8 +4,34 @@ const vndFormatter = new Intl.NumberFormat('vi-VN', {
   maximumFractionDigits: 0,
 });
 
+const viDateFormatter = new Intl.DateTimeFormat('vi-VN', {
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+});
+
+const viDateTimeFormatter = new Intl.DateTimeFormat('vi-VN', {
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+});
+
 export function formatCurrency(amount: number): string {
   return vndFormatter.format(amount);
+}
+
+export function formatVnd(amount: number): string {
+  return vndFormatter.format(amount);
+}
+
+export function formatViDate(value: string | number | Date): string {
+  return viDateFormatter.format(new Date(value));
+}
+
+export function formatViDateTime(value: string | number | Date): string {
+  return viDateTimeFormatter.format(new Date(value));
 }
 
 export function formatPriceRange(min: number | null, max: number | null): string {

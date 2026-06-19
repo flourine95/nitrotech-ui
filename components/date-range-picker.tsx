@@ -78,19 +78,19 @@ export function InlineDropdown({ options, value, onChange, width = 'w-28' }: Inl
 interface CalendarCaptionProps {
   displayMonth: Date;
   onMonthChange: (d: Date) => void;
-  fromYear?: number;
-  toYear?: number;
+  startYear?: number;
+  endYear?: number;
 }
 
 export function CalendarCaption({
   displayMonth,
   onMonthChange,
-  fromYear = 2020,
-  toYear = new Date().getFullYear() + 1,
+  startYear = 2020,
+  endYear = new Date().getFullYear() + 1,
 }: CalendarCaptionProps) {
-  const years = Array.from({ length: toYear - fromYear + 1 }, (_, i) => ({
-    value: i + fromYear,
-    label: String(i + fromYear),
+  const years = Array.from({ length: endYear - startYear + 1 }, (_, i) => ({
+    value: i + startYear,
+    label: String(i + startYear),
   }));
   const months = Array.from({ length: 12 }, (_, i) => ({
     value: i,
@@ -128,8 +128,8 @@ interface DateRangePickerProps {
   onChange: (range: DateRange | undefined) => void;
   label?: string;
   numberOfMonths?: number;
-  fromYear?: number;
-  toYear?: number;
+  startYear?: number;
+  endYear?: number;
   align?: 'start' | 'center' | 'end';
 }
 
@@ -138,8 +138,8 @@ export function DateRangePicker({
   onChange,
   label = 'Ngày',
   numberOfMonths = 2,
-  fromYear = 2020,
-  toYear = new Date().getFullYear() + 1,
+  startYear = 2020,
+  endYear = new Date().getFullYear() + 1,
   align = 'start',
 }: DateRangePickerProps) {
   const hasValue = !!(value?.from || value?.to);
@@ -238,8 +238,8 @@ export function DateRangePicker({
               <CalendarCaption
                 displayMonth={calendarMonth.date}
                 onMonthChange={setMonth}
-                fromYear={fromYear}
-                toYear={toYear}
+                startYear={startYear}
+                endYear={endYear}
               />
             ),
           }}
