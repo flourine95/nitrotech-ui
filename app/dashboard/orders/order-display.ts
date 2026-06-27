@@ -119,7 +119,33 @@ export const shipmentProviderLabels: Record<string, string> = {
   viettelpost: 'Viettel Post',
 };
 
-export const shipmentStatusLabels: Record<string, { label: string; tone: OrderTone }> = {
+export const shipmentStatusValues = [
+  'ready_to_pick',
+  'picked',
+  'storing',
+  'transporting',
+  'sorting',
+  'delivering',
+  'delivered',
+  'returning',
+  'returned',
+  'pickup_failed',
+  'delivery_failed',
+  'cancel',
+  'compensating',
+  'money_collect_delivering',
+  'waiting_to_return',
+  'return',
+  'return_transporting',
+  'return_sorting',
+  'unknown',
+] as const;
+
+type ShipmentStatusValue = (typeof shipmentStatusValues)[number];
+type ShipmentStatusLabel = { label: string; tone: OrderTone };
+
+export const shipmentStatusLabels: Record<ShipmentStatusValue, ShipmentStatusLabel> &
+  Record<string, ShipmentStatusLabel> = {
   pending: { label: 'Chờ xử lý', tone: 'default' },
   ready_to_pick: { label: 'Chờ lấy hàng', tone: 'warning' },
   picking: { label: 'Đang lấy hàng', tone: 'warning' },
@@ -131,13 +157,49 @@ export const shipmentStatusLabels: Record<string, { label: string; tone: OrderTo
   delivering: { label: 'Đang giao hàng', tone: 'default' },
   money_collect_delivering: { label: 'Đang giao & thu tiền', tone: 'warning' },
   delivered: { label: 'Đã giao thành công', tone: 'success' },
+  returning: { label: 'Đang hoàn hàng', tone: 'danger' },
+  returned: { label: 'Đã hoàn hàng', tone: 'danger' },
+  pickup_failed: { label: 'Lấy hàng thất bại', tone: 'danger' },
+  delivery_failed: { label: 'Giao thất bại', tone: 'danger' },
   delivery_fail: { label: 'Giao thất bại', tone: 'danger' },
+  compensating: { label: 'Đang bồi hoàn', tone: 'warning' },
   waiting_to_return: { label: 'Chờ hoàn hàng', tone: 'warning' },
   return: { label: 'Đang hoàn hàng', tone: 'danger' },
-  returned: { label: 'Đã hoàn hàng', tone: 'danger' },
+  return_transporting: { label: 'Đang vận chuyển hoàn', tone: 'danger' },
+  return_sorting: { label: 'Đang phân loại hoàn', tone: 'danger' },
   cancel: { label: 'Đã hủy', tone: 'danger' },
   exception: { label: 'Ngoại lệ', tone: 'danger' },
+  unknown: { label: 'Chưa xác định', tone: 'warning' },
 };
+
+const ghtkWebhookStatusLabels: Record<string, string> = {
+  '-1': 'Hủy đơn hàng',
+  '1': 'Chưa tiếp nhận',
+  '2': 'Đã tiếp nhận',
+  '3': 'Đã lấy hàng/Đã nhập kho',
+  '4': 'Đang giao hàng',
+  '5': 'Đã giao hàng',
+  '6': 'Đã đối soát',
+  '7': 'Không lấy được hàng',
+  '8': 'Delay lấy hàng',
+  '9': 'Không giao được hàng',
+  '10': 'Delay giao hàng',
+  '11': 'Đối soát công nợ trả hàng',
+  '12': 'Đang lấy hàng',
+  '13': 'Đơn hàng bồi hoàn',
+  '20': 'Đang trả hàng',
+  '21': 'Đã trả hàng',
+  '45': 'Shipper báo đã giao hàng',
+  '49': 'Shipper báo không giao được',
+  '123': 'Shipper báo đã lấy hàng',
+  '127': 'Shipper báo không lấy được hàng',
+  '128': 'Shipper báo delay lấy hàng',
+  '410': 'Shipper báo delay giao hàng',
+};
+
+export function getGhtkWebhookStatusLabel(rawStatus: string | null) {
+  return rawStatus ? ghtkWebhookStatusLabels[rawStatus] : undefined;
+}
 
 export const progressSteps: Array<{ label: string; icon: LucideIcon }> = [
   { label: 'Đặt hàng', icon: ShoppingCartIcon },

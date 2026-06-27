@@ -127,6 +127,7 @@ export interface ShipmentData {
   estimatedAt: string | null;
   shippedAt: string | null;
   deliveredAt: string | null;
+  lastOfficialEventAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -139,6 +140,8 @@ export interface ShipmentLogData {
   source: 'ADMIN_CREATE' | 'WEBHOOK' | 'SYSTEM' | string;
   location: string | null;
   note: string | null;
+  occurredAt: string | null;
+  reasonCode: string | null;
   createdAt: string;
 }
 
@@ -252,10 +255,30 @@ export async function getAdminOrderShipment(orderId: number): Promise<OrderShipm
   return res.data;
 }
 
-export async function createAdminOrderShipment(orderId: number, provider: string): Promise<ShipmentData> {
+export async function createAdminOrderShipment(
+  orderId: number,
+  provider: string,
+): Promise<ShipmentData> {
   const params = new URLSearchParams({ provider });
-  const res = await apiFetch<ApiResult<ShipmentData>>(`/api/admin/orders/${orderId}/shipment?${params}`, {
-    method: 'POST',
-  });
+  const res = await apiFetch<ApiResult<ShipmentData>>(
+    `/api/admin/orders/${orderId}/shipment?${params}`,
+    {
+      method: 'POST',
+    },
+  );
+  return res.data;
+}
+
+export async function simulateAdminShipmentEvent(
+  shipmentId: number,
+  data: { status: string; location?: string; note?: string },
+): Promise<ShipmentData> {
+  const res = await apiFetch<ApiResult<ShipmentData>>(
+    `/api/admin/shipments/${shipmentId}/simulation-events`,
+    {
+      method: 'POST',
+      body: JSON.stringify(data),
+    },
+  );
   return res.data;
 }

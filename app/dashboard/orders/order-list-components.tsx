@@ -2,12 +2,7 @@
 
 import { memo } from 'react';
 import Link from 'next/link';
-import {
-  ChevronDownIcon,
-  DownloadIcon,
-  MoreHorizontalIcon,
-  type LucideIcon,
-} from 'lucide-react';
+import { ChevronDownIcon, DownloadIcon, MoreHorizontalIcon, type LucideIcon } from 'lucide-react';
 
 import { StatusChip } from '@/components/dashboard/status-chip';
 import { Button } from '@/components/ui/button';
@@ -21,13 +16,21 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
-import type { AdminOrderAction, AdminOrderListItem, AdminOrderStatus } from '@/lib/api/admin/orders';
+import type {
+  AdminOrderAction,
+  AdminOrderListItem,
+  AdminOrderStatus,
+} from '@/lib/api/admin/orders';
 import { cn } from '@/lib/utils';
 import { formatRelativeTime, formatViDate, formatVnd } from '@/lib/utils/formatting';
-import { orderStatusConfig, paymentLabels, progressSteps } from './order-display';
 import {
-  slaStatusLabels,
-} from './order-list-helpers';
+  orderStatusConfig,
+  paymentLabels,
+  progressSteps,
+  shipmentStatusLabels,
+  type OrderTone,
+} from './order-display';
+import { slaStatusLabels } from './order-list-helpers';
 
 export type NextOrderStatus = Exclude<AdminOrderStatus, 'pending' | 'expired'>;
 
@@ -135,7 +138,9 @@ function MoreActions({
             <Link href={`/dashboard/orders/${order.id}`}>Xem chi tiết</Link>
           </DropdownMenuItem>
           {actions.has('confirm') ? (
-            <DropdownMenuItem onClick={() => onStatusChange(order, 'confirmed')}>Xác nhận đơn</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onStatusChange(order, 'confirmed')}>
+              Xác nhận đơn
+            </DropdownMenuItem>
           ) : null}
           {actions.has('create_shipment') ? (
             <DropdownMenuItem onClick={() => onCreateShipment(order)}>Tạo vận đơn</DropdownMenuItem>
@@ -156,10 +161,15 @@ function MoreActions({
             </DropdownMenuItem>
           ) : null}
           {actions.has('refund') ? (
-            <DropdownMenuItem onClick={() => onStatusChange(order, 'refunded')}>Hoàn tiền</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onStatusChange(order, 'refunded')}>
+              Hoàn tiền
+            </DropdownMenuItem>
           ) : null}
           {actions.has('cancel') ? (
-            <DropdownMenuItem variant="destructive" onClick={() => onStatusChange(order, 'cancelled')}>
+            <DropdownMenuItem
+              variant="destructive"
+              onClick={() => onStatusChange(order, 'cancelled')}
+            >
               Hủy đơn
             </DropdownMenuItem>
           ) : null}
@@ -182,7 +192,9 @@ function OrderProgress({ progress }: { progress: number }) {
               <span
                 className={cn(
                   'flex size-5 shrink-0 items-center justify-center rounded-md border bg-background',
-                  active ? 'border-foreground text-foreground' : 'border-border text-muted-foreground',
+                  active
+                    ? 'border-foreground text-foreground'
+                    : 'border-border text-muted-foreground',
                 )}
               >
                 <CurrentIcon className="size-3" />
@@ -219,17 +231,18 @@ export const OrderCard = memo(function OrderCard({
   onCreateShipment: (order: AdminOrderListItem) => void;
   onStatusChange: (order: AdminOrderListItem, status: NextOrderStatus) => void;
 }) {
-  const status = orderStatusConfig[order.status];
-  const slaStatus = order.slaStatus === 'warning' || order.slaStatus === 'critical'
-    ? slaStatusLabels[order.slaStatus]
-    : null;
+  const status =
+    getShipmentAwareListStatus(order.status, order.shipmentStatus) ??
+    orderStatusConfig[order.status];
+  const slaStatus =
+    order.slaStatus === 'warning' || order.slaStatus === 'critical'
+      ? slaStatusLabels[order.slaStatus]
+      : null;
   const receiver = order.receiver ?? 'Chưa có người nhận';
   const phone = order.phone ?? 'Chưa có SĐT';
-  const metaItems = [
-    phone,
-    order.email,
-    `Cập nhật ${formatRelativeTime(order.updatedAt)}`,
-  ].filter((item): item is string => Boolean(item));
+  const metaItems = [phone, order.email, `Cập nhật ${formatRelativeTime(order.updatedAt)}`].filter(
+    (item): item is string => Boolean(item),
+  );
 
   return (
     <article className="rounded-xl border bg-card p-3 2xl:p-4">
@@ -250,7 +263,7 @@ export const OrderCard = memo(function OrderCard({
               </StatusChip>
             ) : null}
           </div>
-          <h2 className="mt-1.5 text-base font-semibold leading-snug 2xl:text-lg">
+          <h2 className="mt-1.5 text-base leading-snug font-semibold 2xl:text-lg">
             {receiver} · {order.itemCount} sản phẩm
           </h2>
           <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
@@ -265,7 +278,9 @@ export const OrderCard = memo(function OrderCard({
 
         <div className="flex items-start justify-end gap-3 xl:min-w-40 2xl:min-w-44">
           <div className="text-right">
-            <p className="text-lg font-semibold 2xl:text-xl">{formatVnd(Number(order.finalAmount))}</p>
+            <p className="text-lg font-semibold 2xl:text-xl">
+              {formatVnd(Number(order.finalAmount))}
+            </p>
             <p className="text-sm text-muted-foreground">{formatViDate(order.createdAt)}</p>
             {order.trackingCode ? (
               <p className="mt-1 max-w-36 truncate text-xs font-medium text-muted-foreground">
@@ -289,7 +304,11 @@ export const OrderCard = memo(function OrderCard({
               <p className="font-medium">{status.stateTitle}</p>
               <p className="mt-0.5 text-sm text-muted-foreground">{status.stateText}</p>
             </div>
-            <Button variant="outline" className="h-9 w-fit shrink-0 justify-self-start 2xl:h-10" asChild>
+            <Button
+              variant="outline"
+              className="h-9 w-fit shrink-0 justify-self-start 2xl:h-10"
+              asChild
+            >
               <Link href={`/dashboard/orders/${order.id}`}>{status.action}</Link>
             </Button>
           </div>
@@ -350,4 +369,79 @@ export function OrderCardSkeleton({ count }: { count: number }) {
       </div>
     </article>
   ));
+}
+
+function getShipmentAwareListStatus(orderStatus: AdminOrderStatus, shipmentStatus: string | null) {
+  if (!shipmentStatus || orderStatus === 'delivered' || orderStatus === 'cancelled') return null;
+
+  const base = shipmentStatusLabels[shipmentStatus];
+  const label = base?.label ?? shipmentStatus;
+  const tone = base?.tone ?? ('warning' satisfies OrderTone);
+
+  if (shipmentStatus === 'delivery_failed') {
+    return {
+      label,
+      tone,
+      progress: 3,
+      stateTitle: 'Giao hàng thất bại',
+      stateText: 'Đơn vị vận chuyển báo giao thất bại. Cần xử lý giao lại hoặc hoàn hàng.',
+      action: 'Xem vận chuyển',
+      terminal: true,
+    };
+  }
+
+  if (
+    shipmentStatus === 'waiting_to_return' ||
+    shipmentStatus === 'returning' ||
+    shipmentStatus === 'return_transporting' ||
+    shipmentStatus === 'return_sorting'
+  ) {
+    return {
+      label,
+      tone,
+      progress: 3,
+      stateTitle: label,
+      stateText: 'Vận đơn đang trong nhánh hoàn hàng, không còn là giao hàng thành công.',
+      action: 'Xem vận chuyển',
+      terminal: true,
+    };
+  }
+
+  if (shipmentStatus === 'returned') {
+    return {
+      label,
+      tone,
+      progress: 0,
+      stateTitle: 'Đã hoàn hàng',
+      stateText: 'Vận đơn đã hoàn về. Đơn cần xử lý theo quy trình hoàn hàng/đối soát.',
+      action: 'Xem vận chuyển',
+      terminal: true,
+    };
+  }
+
+  if (shipmentStatus === 'pickup_failed') {
+    return {
+      label,
+      tone,
+      progress: 2,
+      stateTitle: 'Lấy hàng thất bại',
+      stateText: 'Đơn vị vận chuyển chưa lấy được hàng. Cần kiểm tra bàn giao kho.',
+      action: 'Xem vận chuyển',
+      terminal: true,
+    };
+  }
+
+  if (shipmentStatus === 'cancel') {
+    return {
+      label,
+      tone,
+      progress: 0,
+      stateTitle: 'Vận đơn đã hủy',
+      stateText: 'Vận đơn không còn hiệu lực. Cần tạo vận đơn mới nếu tiếp tục giao.',
+      action: 'Xem vận chuyển',
+      terminal: true,
+    };
+  }
+
+  return null;
 }

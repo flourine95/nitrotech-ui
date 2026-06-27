@@ -1,8 +1,10 @@
 'use client';
 
+import type { LucideIcon } from 'lucide-react';
 import { AlertCircleIcon, RefreshCwIcon, XCircleIcon } from 'lucide-react';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { progressSteps, toneBg } from '../order-display';
@@ -20,14 +22,21 @@ export function OrderPipeline({ progress }: { progress: number }) {
               <div
                 className={cn(
                   'flex size-7 items-center justify-center rounded-md border bg-background',
-                  active ? 'border-foreground text-foreground' : 'border-border text-muted-foreground',
+                  active
+                    ? 'border-foreground text-foreground'
+                    : 'border-border text-muted-foreground',
                 )}
               >
                 <Icon className="size-3.5" />
               </div>
               {i < progressSteps.length - 1 && (
                 <div className="h-1 rounded-full bg-border/70">
-                  <div className={cn('h-full rounded-full transition-all', complete && 'bg-foreground')} />
+                  <div
+                    className={cn(
+                      'h-full rounded-full transition-all',
+                      complete && 'bg-foreground',
+                    )}
+                  />
                 </div>
               )}
             </div>
@@ -53,7 +62,9 @@ export function OrderPipeline({ progress }: { progress: number }) {
                 <div
                   className={cn(
                     'flex size-5 shrink-0 items-center justify-center rounded-md border',
-                    active ? 'border-foreground text-foreground' : 'border-border text-muted-foreground',
+                    active
+                      ? 'border-foreground text-foreground'
+                      : 'border-border text-muted-foreground',
                   )}
                 >
                   <Icon className="size-2.5" />
@@ -64,7 +75,9 @@ export function OrderPipeline({ progress }: { progress: number }) {
                   </div>
                 )}
               </div>
-              <span className="truncate text-[11px] leading-none text-muted-foreground">{step.label}</span>
+              <span className="truncate text-[11px] leading-none text-muted-foreground">
+                {step.label}
+              </span>
             </div>
           );
         })}
@@ -73,7 +86,15 @@ export function OrderPipeline({ progress }: { progress: number }) {
   );
 }
 
-export function OrderCalloutBanner({ tone, title, text }: { tone: string; title: string; text: string }) {
+export function OrderCalloutBanner({
+  tone,
+  title,
+  text,
+}: {
+  tone: string;
+  title: string;
+  text: string;
+}) {
   return (
     <Alert className={cn('flex items-start gap-3 rounded-xl p-5', toneBg(tone))}>
       {tone === 'danger' ? (
@@ -88,6 +109,53 @@ export function OrderCalloutBanner({ tone, title, text }: { tone: string; title:
         <AlertDescription className="mt-0.5 text-sm opacity-80">{text}</AlertDescription>
       </div>
     </Alert>
+  );
+}
+
+export function OrderActionPanel({
+  title,
+  text,
+  actions,
+}: {
+  title: string;
+  text: string;
+  actions: Array<{
+    label: string;
+    icon?: LucideIcon;
+    variant?: 'default' | 'outline' | 'destructive';
+    disabled?: boolean;
+    pending?: boolean;
+    onClick: () => void;
+  }>;
+}) {
+  return (
+    <section className="rounded-xl border bg-card p-5">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="min-w-0">
+          <h2 className="text-base font-semibold">{title}</h2>
+          <p className="mt-0.5 max-w-2xl text-sm text-muted-foreground">{text}</p>
+        </div>
+        {actions.length ? (
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
+            {actions.map((action) => {
+              const Icon = action.icon;
+              return (
+                <Button
+                  key={action.label}
+                  variant={action.variant ?? 'default'}
+                  className="h-9 rounded-xl"
+                  disabled={action.disabled || action.pending}
+                  onClick={action.onClick}
+                >
+                  {Icon ? <Icon data-icon="inline-start" /> : null}
+                  {action.pending ? 'Đang xử lý...' : action.label}
+                </Button>
+              );
+            })}
+          </div>
+        ) : null}
+      </div>
+    </section>
   );
 }
 

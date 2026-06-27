@@ -45,6 +45,25 @@ interface ApiOrder {
   updatedAt: string;
 }
 
+interface ApiOrderShipment {
+  shipment: {
+    id: number;
+    provider: string;
+    trackingCode: string | null;
+    status: string;
+    estimatedAt: string | null;
+  } | null;
+  logs: Array<{
+    id: number;
+    status: string;
+    rawStatus: string | null;
+    location: string | null;
+    note: string | null;
+    occurredAt: string | null;
+    createdAt: string;
+  }>;
+}
+
 const statusMap: Record<OrderStatus, { label: string; color: string; dot: string }> = {
   pending: { label: 'Chờ thanh toán', color: 'bg-amber-100 text-amber-700', dot: 'bg-amber-400' },
   confirmed: { label: 'Đã thanh toán', color: 'bg-green-100 text-green-700', dot: 'bg-green-500' },
@@ -64,6 +83,7 @@ const paymentMethodLabel: Record<string, string> = {
 export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const order = await getOrder(id);
+  const shipmentData = await getOrderShipment(id);
   const status = statusMap[order.status] ?? statusMap.pending;
 
   return (
@@ -177,6 +197,45 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
               ))}
             </ol>
           </div>
+
+          {shipmentData.shipment && (
+            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+                <h2 className="font-bold text-slate-900">Hành trình vận chuyển</h2>
+                <div className="text-sm text-slate-500">
+                  {shipmentData.shipment.provider.toUpperCase()}
+                  {shipmentData.shipment.trackingCode
+                    ? ` · ${shipmentData.shipment.trackingCode}`
+                    : ''}
+                </div>
+              </div>
+              {shipmentData.logs.length > 0 ? (
+                <ol className="space-y-3">
+                  {shipmentData.logs.map((log) => (
+                    <li key={log.id} className="rounded-2xl bg-slate-50 px-4 py-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="text-sm font-semibold text-slate-900">
+                          {shipmentStatusLabel(log.status)}
+                        </span>
+                        <span className="text-xs text-slate-400">
+                          {formatDateTime(log.occurredAt ?? log.createdAt)}
+                        </span>
+                      </div>
+                      {(log.location || log.note) && (
+                        <p className="mt-1 text-sm text-slate-500">
+                          {[log.location, log.note].filter(Boolean).join(' · ')}
+                        </p>
+                      )}
+                    </li>
+                  ))}
+                </ol>
+              ) : (
+                <p className="text-sm text-slate-500">
+                  Đã tạo vận đơn, đang chờ đơn vị vận chuyển cập nhật hành trình.
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="space-y-5">
@@ -259,6 +318,16 @@ async function getOrder(id: string): Promise<ApiOrder> {
   return body.data;
 }
 
+async function getOrderShipment(id: string): Promise<ApiOrderShipment> {
+  const cookieStore = await cookies();
+  const res = await backendFetch(`/api/orders/${id}/shipment`, { cookieHeader: cookieStore.toString() });
+
+  if (!res.ok) return { shipment: null, logs: [] };
+
+  const body = (await res.json()) as { data: ApiOrderShipment };
+  return body.data;
+}
+
 function SummaryRow({
   label,
   value,
@@ -322,4 +391,20 @@ function formatDateTime(value: string) {
     dateStyle: 'short',
     timeStyle: 'short',
   }).format(parseApiDate(value));
+}
+
+function shipmentStatusLabel(status: string) {
+  const labels: Record<string, string> = {
+    ready_to_pick: 'Chờ lấy hàng',
+    picked: 'Đã lấy hàng',
+    storing: 'Đang lưu kho',
+    transporting: 'Đang vận chuyển',
+    sorting: 'Đang phân loại',
+    delivering: 'Đang giao hàng',
+    delivered: 'Giao hàng thành công',
+    delivery_failed: 'Giao hàng thất bại',
+    returned: 'Đã hoàn hàng',
+    cancel: 'Đã hủy vận đơn',
+  };
+  return labels[status] ?? status;
 }

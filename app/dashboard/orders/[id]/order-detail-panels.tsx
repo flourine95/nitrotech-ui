@@ -1,11 +1,25 @@
 'use client';
 
-import { ClipboardIcon, MailIcon, PhoneIcon, TruckIcon, UserRoundIcon } from 'lucide-react';
+import {
+  ClipboardIcon,
+  MailIcon,
+  PhoneIcon,
+  TestTube2Icon,
+  TruckIcon,
+  UserRoundIcon,
+} from 'lucide-react';
 
 import { MoneyRow } from '@/components/dashboard/money-row';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { AdminOrder, OrderShipmentData } from '@/lib/api/admin/orders';
@@ -30,16 +44,30 @@ export function OrderPaymentPanel({ order }: { order: AdminOrder }) {
             <h2 className="text-base font-semibold">Thanh toán</h2>
             <p className="mt-0.5 text-xs text-muted-foreground">{paymentDescription}</p>
           </div>
-          {order.payment && (() => {
-            const ps = paymentStatusLabels[order.payment.status] ?? { label: order.payment.status, tone: 'default' };
-            return (
-              <Badge className={cn('h-6 shrink-0 rounded-md px-2 text-xs font-semibold shadow-sm', toneClass(ps.tone))}>
-                {ps.label}
-              </Badge>
-            );
-          })()}
+          {order.payment &&
+            (() => {
+              const ps = paymentStatusLabels[order.payment.status] ?? {
+                label: order.payment.status,
+                tone: 'default',
+              };
+              return (
+                <Badge
+                  className={cn(
+                    'h-6 shrink-0 rounded-md px-2 text-xs font-semibold shadow-sm',
+                    toneClass(ps.tone),
+                  )}
+                >
+                  {ps.label}
+                </Badge>
+              );
+            })()}
           {!order.payment && order.paymentMethod === 'cod' && (
-            <Badge className={cn('h-6 shrink-0 rounded-md px-2 text-xs font-semibold shadow-sm', toneClass('default'))}>
+            <Badge
+              className={cn(
+                'h-6 shrink-0 rounded-md px-2 text-xs font-semibold shadow-sm',
+                toneClass('default'),
+              )}
+            >
               COD
             </Badge>
           )}
@@ -111,7 +139,9 @@ export function OrderShippingAddressPanel({ order }: { order: AdminOrder }) {
           <span className="font-medium text-foreground">{order.shippingAddress.receiver}</span>
           <span>{order.shippingAddress.phone}</span>
           <span>{order.shippingAddress.street}</span>
-          <span>{order.shippingAddress.ward}, {order.shippingAddress.district}</span>
+          <span>
+            {order.shippingAddress.ward}, {order.shippingAddress.district}
+          </span>
           <span>{order.shippingAddress.province}</span>
         </div>
       </div>
@@ -125,19 +155,27 @@ export function OrderShipmentPanel({
   isCreating,
   onCreateShipment,
   onCopyTracking,
+  simulationOptions,
+  isSimulating,
+  onSimulateShipmentEvent,
 }: {
   shipmentData: OrderShipmentData | null;
   isLoading: boolean;
   isCreating: boolean;
   onCreateShipment: () => void;
   onCopyTracking: (text: string) => void;
+  simulationOptions?: Array<{ status: string; label: string }>;
+  isSimulating?: boolean;
+  onSimulateShipmentEvent?: (status: string) => void;
 }) {
   const shipment = shipmentData?.shipment ?? null;
   const shipmentProvider = shipment
     ? (shipmentProviderLabels[shipment.provider.toLowerCase()] ?? shipment.provider.toUpperCase())
     : null;
   const carrierShippingFee = shipment ? Number(shipment.fee) : null;
-  const shipStatusInfo = shipment ? (shipmentStatusLabels[shipment.status] ?? { label: shipment.status, tone: 'default' }) : null;
+  const shipStatusInfo = shipment
+    ? (shipmentStatusLabels[shipment.status] ?? { label: shipment.status, tone: 'default' })
+    : null;
 
   return (
     <section className="rounded-xl border bg-card p-5">
@@ -146,11 +184,16 @@ export function OrderShipmentPanel({
           <div>
             <h2 className="text-base font-semibold">Vận chuyển</h2>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              {isLoading ? 'Đang tải...' : shipmentProvider ?? 'Chưa tạo vận đơn'}
+              {isLoading ? 'Đang tải...' : (shipmentProvider ?? 'Chưa tạo vận đơn')}
             </p>
           </div>
           {shipStatusInfo && (
-            <Badge className={cn('h-6 shrink-0 rounded-md px-2 text-xs font-semibold shadow-sm', toneClass(shipStatusInfo.tone))}>
+            <Badge
+              className={cn(
+                'h-6 shrink-0 rounded-md px-2 text-xs font-semibold shadow-sm',
+                toneClass(shipStatusInfo.tone),
+              )}
+            >
               {shipStatusInfo.label}
             </Badge>
           )}
@@ -189,6 +232,32 @@ export function OrderShipmentPanel({
             {shipment.deliveredAt && (
               <MoneyRow label="Đã giao lúc" value={formatViDateTime(shipment.deliveredAt)} />
             )}
+            {simulationOptions && simulationOptions.length > 0 && onSimulateShipmentEvent ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="mt-1 h-9 w-full rounded-lg"
+                    disabled={isSimulating}
+                  >
+                    <TestTube2Icon data-icon="inline-start" />
+                    Giả lập vận chuyển
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" sideOffset={6} className="w-52">
+                  <DropdownMenuGroup>
+                    {simulationOptions.map((option) => (
+                      <DropdownMenuItem
+                        key={option.status}
+                        onClick={() => onSimulateShipmentEvent(option.status)}
+                      >
+                        {option.label}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : null}
           </div>
         ) : (
           <Button
