@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { format, subDays, startOfMonth, endOfMonth, startOfYear } from 'date-fns';
+import { format, isValid, subDays, startOfMonth, endOfMonth, startOfYear } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { CalendarIcon, XIcon } from 'lucide-react';
 import type { DateRange } from 'react-day-picker';
@@ -46,41 +46,69 @@ interface DateRangePickerProps {
 
 export function DateRangePicker({ value, onChange, className }: DateRangePickerProps) {
   const [open, setOpen] = React.useState(false);
-  const presets = getPresets();
+  const presets = React.useMemo(() => getPresets(), []);
 
-  const label = value?.from
-    ? value.to
-      ? `${format(value.from, 'dd/MM/yyyy')} – ${format(value.to, 'dd/MM/yyyy')}`
-      : format(value.from, 'dd/MM/yyyy')
-    : 'Chọn khoảng ngày';
+  const label = React.useMemo(() => {
+    if (!value?.from) return 'Chọn khoảng ngày';
+    if (!isValid(value.from) || (value.to && !isValid(value.to))) return 'Khoảng ngày không hợp lệ';
+    const from = format(value.from, 'dd/MM/yyyy');
+    return value.to ? `${from} – ${format(value.to, 'dd/MM/yyyy')}` : from;
+  }, [value]);
 
-  function clear(e: React.MouseEvent) {
+  function clear(e: React.MouseEvent<HTMLButtonElement>) {
     e.stopPropagation();
     onChange(undefined);
   }
 
+  function isActive(range: DateRange) {
+    return (
+      value?.from?.getTime() === range.from?.getTime() &&
+      (value?.to?.getTime() ?? null) === (range.to?.getTime() ?? null)
+    );
+  }
+
+  function selectRange(range: DateRange | undefined) {
+    onChange(range);
+    if (!range?.from || !range.to) return;
+    if (range.from.getTime() !== range.to.getTime()) setOpen(false);
+  }
+
+  function selectPreset(range: DateRange) {
+    onChange(range);
+    setOpen(false);
+  }
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          className={cn(
-            'justify-start gap-2 font-normal',
-            !value && 'text-muted-foreground',
-            className,
-          )}
-        >
-          <CalendarIcon className="size-4 shrink-0" />
-          <span className="truncate">{label}</span>
-          {value && (
-            <XIcon
-              className="ml-auto size-3.5 shrink-0 text-muted-foreground transition-colors hover:text-foreground"
-              onClick={clear}
-              aria-label="Xóa khoảng ngày"
-            />
-          )}
-        </Button>
-      </PopoverTrigger>
+      <div className="relative">
+        <PopoverTrigger asChild>
+          <Button
+            type="button"
+            variant="outline"
+            className={cn(
+              'justify-start gap-2 font-normal',
+              value && 'pr-9',
+              !value && 'text-muted-foreground',
+              className,
+            )}
+          >
+            <CalendarIcon data-icon="inline-start" />
+            <span className="truncate">{label}</span>
+          </Button>
+        </PopoverTrigger>
+        {value && (
+          <Button
+            variant="ghost"
+            size="icon"
+            type="button"
+            onClick={clear}
+            aria-label="Xóa khoảng ngày"
+            className="absolute inset-y-0 right-1 my-auto size-7"
+          >
+            <XIcon />
+          </Button>
+        )}
+      </div>
       <PopoverContent className="w-auto p-0" align="start">
         <div className="flex">
           {/* Presets */}
@@ -88,19 +116,18 @@ export function DateRangePicker({ value, onChange, className }: DateRangePickerP
             {presets.map((p) => (
               <Button
                 key={p.label}
-                variant="ghost"
+                type="button"
+                variant={isActive(p.range) ? 'secondary' : 'ghost'}
                 size="sm"
                 className="justify-start text-sm font-normal"
-                onClick={() => {
-                  onChange(p.range);
-                  setOpen(false);
-                }}
+                onClick={() => selectPreset(p.range)}
               >
                 {p.label}
               </Button>
             ))}
             <Separator className="my-1" />
             <Button
+              type="button"
               variant="ghost"
               size="sm"
               className="justify-start text-sm font-normal text-muted-foreground"
@@ -115,15 +142,16 @@ export function DateRangePicker({ value, onChange, className }: DateRangePickerP
 
           {/* Calendar — captionLayout dropdown để đổi tháng/năm */}
           <Calendar
+            key={open ? 'open' : 'closed'}
             mode="range"
             selected={value}
-            onSelect={onChange}
+            onSelect={selectRange}
             numberOfMonths={2}
             locale={vi}
             captionLayout="dropdown"
             defaultMonth={value?.from ?? subDays(getToday(), 30)}
-            fromYear={2020}
-            toYear={new Date().getFullYear() + 1}
+            startMonth={new Date(2020, 0)}
+            endMonth={new Date(new Date().getFullYear() + 1, 11)}
           />
         </div>
       </PopoverContent>

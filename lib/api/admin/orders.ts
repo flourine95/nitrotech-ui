@@ -11,6 +11,15 @@ export type AdminOrderStatus =
   | 'expired';
 
 export type AdminPaymentMethod = 'cod' | 'vnpay' | 'momo' | 'sepay';
+export type AdminOrderAction =
+  | 'view_detail'
+  | 'confirm'
+  | 'cancel'
+  | 'create_shipment'
+  | 'mark_processing'
+  | 'mark_shipped'
+  | 'mark_delivered'
+  | 'refund';
 
 export interface OrderOption<T extends string = string> {
   value: T;
@@ -33,12 +42,36 @@ export interface AdminOrderListItem {
   orderCode: string;
   receiver: string | null;
   phone: string | null;
+  email: string | null;
   status: AdminOrderStatus;
   paymentMethod: AdminPaymentMethod;
+  paymentStatus: string | null;
+  hasShipment: boolean;
+  shipmentStatus: string | null;
+  trackingCode: string | null;
+  availableActions: AdminOrderAction[];
+  ageMinutes: number;
+  slaDueAt: string | null;
+  slaStatus: 'normal' | 'warning' | 'critical';
+  slaLabel: string | null;
   finalAmount: number;
   itemCount: number;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface AdminUserSummary {
+  name: string;
+  email: string;
+  phone: string | null;
+  avatar: string | null;
+}
+
+export interface AdminPaymentSummary {
+  provider: string;
+  status: string; // 'pending' | 'paid' | 'failed'
+  amount: number;
+  paidAt: string | null;
 }
 
 export interface AdminOrderItem {
@@ -49,6 +82,7 @@ export interface AdminOrderItem {
   quantity: number;
   unitPrice: number;
   subtotal: number;
+  imageUrl: string | null;
 }
 
 export interface AdminShippingAddress {
@@ -79,6 +113,8 @@ export interface AdminOrder {
   items: AdminOrderItem[];
   createdAt: string;
   updatedAt: string;
+  user: AdminUserSummary | null;
+  payment: AdminPaymentSummary | null;
 }
 
 export interface ShipmentData {
@@ -91,6 +127,7 @@ export interface ShipmentData {
   estimatedAt: string | null;
   shippedAt: string | null;
   deliveredAt: string | null;
+  lastOfficialEventAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -103,6 +140,8 @@ export interface ShipmentLogData {
   source: 'ADMIN_CREATE' | 'WEBHOOK' | 'SYSTEM' | string;
   location: string | null;
   note: string | null;
+  occurredAt: string | null;
+  reasonCode: string | null;
   createdAt: string;
 }
 
@@ -199,15 +238,47 @@ export async function getAdminOrder(id: number): Promise<AdminOrder> {
   return res.data;
 }
 
+export async function updateAdminOrderStatus(
+  orderId: number,
+  status: Exclude<AdminOrderStatus, 'pending' | 'expired'>,
+  details?: { reason?: string; note?: string },
+): Promise<AdminOrder> {
+  const res = await apiFetch<ApiResult<AdminOrder>>(`/api/admin/orders/${orderId}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status, ...details }),
+  });
+  return res.data;
+}
+
 export async function getAdminOrderShipment(orderId: number): Promise<OrderShipmentData> {
   const res = await apiFetch<ApiResult<OrderShipmentData>>(`/api/admin/orders/${orderId}/shipment`);
   return res.data;
 }
 
-export async function createAdminOrderShipment(orderId: number, provider: string): Promise<ShipmentData> {
+export async function createAdminOrderShipment(
+  orderId: number,
+  provider: string,
+): Promise<ShipmentData> {
   const params = new URLSearchParams({ provider });
-  const res = await apiFetch<ApiResult<ShipmentData>>(`/api/admin/orders/${orderId}/shipment?${params}`, {
-    method: 'POST',
-  });
+  const res = await apiFetch<ApiResult<ShipmentData>>(
+    `/api/admin/orders/${orderId}/shipment?${params}`,
+    {
+      method: 'POST',
+    },
+  );
+  return res.data;
+}
+
+export async function simulateAdminShipmentEvent(
+  shipmentId: number,
+  data: { status: string; location?: string; note?: string },
+): Promise<ShipmentData> {
+  const res = await apiFetch<ApiResult<ShipmentData>>(
+    `/api/admin/shipments/${shipmentId}/simulation-events`,
+    {
+      method: 'POST',
+      body: JSON.stringify(data),
+    },
+  );
   return res.data;
 }

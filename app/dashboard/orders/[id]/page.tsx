@@ -1,28 +1,24 @@
 'use client';
 
-import Image from 'next/image';
+import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useParams } from 'next/navigation';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  AlertCircleIcon,
   ArrowLeftIcon,
   CheckCircle2Icon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  ClipboardIcon,
-  FileTextIcon,
-  MailIcon,
   MoreHorizontalIcon,
   PackageIcon,
-  PencilIcon,
-  PhoneIcon,
-  StoreIcon,
   TruckIcon,
-  UserRoundIcon,
+  XCircleIcon,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { InfoRow } from '@/components/dashboard/info-row';
+import { MoneyRow } from '@/components/dashboard/money-row';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -31,276 +27,198 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
-
-const vnd = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' });
-const viDate = new Intl.DateTimeFormat('vi-VN', {
-  day: '2-digit',
-  month: '2-digit',
-  year: 'numeric',
-});
-
-const pipelineSteps = [
-  { label: 'Báo giá', icon: FileTextIcon },
-  { label: 'Đóng gói', icon: PackageIcon },
-  { label: 'Giao hàng', icon: TruckIcon },
-  { label: 'Hoàn tất', icon: CheckCircle2Icon },
-];
-
-const mockOrders = [
-  {
-    id: '652',
-    code: 'SO-652',
-    invoice: 'INV-00652',
-    title: 'Đơn bán hàng SO-652',
-    status: 'Một phần',
-    statusTone: 'warning',
-    stageTitle: 'Sản phẩm đang đóng gói',
-    stageText: 'Kho đang kiểm hàng, dán tem QA và chuẩn bị bàn giao cho GHTK.',
-    progress: 2,
-    source: 'Đại lý',
-    orderDate: '2026-03-24',
-    dueDate: '2026-04-10',
-    assignTo: 'Huy Phạm',
-    assignInitials: 'HP',
-    paymentTerm: 'Thanh toán khi nhận hàng',
-    location: 'Đà Nẵng',
-    paymentMethod: 'COD',
-    receivedAmount: 4800000,
-    shippingFee: 35000,
-    discount: 300000,
-    tax: 0,
-    customer: {
-      name: 'Lê Hoàng Nam',
-      type: 'Đại lý',
-      phone: '+84 912 555 014',
-      email: 'nam.le@daily-nitro.vn',
-      avatar: 'https://i.pravatar.cc/120?u=le-hoang-nam',
-    },
-    address: {
-      receiver: 'Lê Hoàng Nam',
-      phone: '+84 912 555 014',
-      street: '28 Nguyễn Văn Linh',
-      ward: 'Phường Bình Hiên',
-      district: 'Quận Hải Châu',
-      province: 'Đà Nẵng',
-    },
-    shipment: {
-      provider: 'GHTK',
-      trackingCode: 'GHTK652926',
-      status: 'Chờ lấy hàng',
-      estimatedAt: '2026-03-29',
-      fee: 35000,
-    },
-    items: [
-      {
-        id: 1,
-        name: 'Cloud Silk Toner / Army / XL',
-        sku: 'SKU-TONER-7723',
-        quantity: 1,
-        unitPrice: 4800000,
-        tax: '0%',
-        image: 'https://images.unsplash.com/photo-1608248597279-f99d160bfcbc?q=80&w=160&auto=format&fit=crop',
-      },
-      {
-        id: 2,
-        name: 'Barrier Repair Drops / Core / M',
-        sku: 'SKU-TREAT-6612',
-        quantity: 2,
-        unitPrice: 3750000,
-        tax: '0%',
-        image: 'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?q=80&w=160&auto=format&fit=crop',
-      },
-    ],
-    notes: [
-      {
-        author: 'Huy Phạm',
-        initials: 'HP',
-        time: '17 giờ trước',
-        text: 'Khách yêu cầu giữ nguyên hóa đơn và gọi xác nhận trước khi đơn vị vận chuyển đến lấy hàng.',
-      },
-      {
-        author: 'Linh Đỗ',
-        initials: 'LĐ',
-        time: '2 ngày trước',
-        text: 'Địa chỉ giao hàng đã đối chiếu với thông tin đại lý. Kho đã giữ đủ số lượng cho đơn này.',
-      },
-    ],
-  },
-  {
-    id: '654',
-    code: 'SO-654',
-    invoice: 'INV-00654',
-    title: 'Đơn bán hàng SO-654',
-    status: 'Chưa trả',
-    statusTone: 'danger',
-    stageTitle: 'Báo giá mới',
-    stageText: 'Báo giá mới đang chờ duyệt trước khi chuyển sang đóng gói.',
-    progress: 1,
-    source: 'Website',
-    orderDate: '2026-03-28',
-    dueDate: '2026-04-10',
-    assignTo: 'Huy Phạm',
-    assignInitials: 'HP',
-    paymentTerm: 'Thanh toán ngay',
-    location: 'TP. Hồ Chí Minh',
-    paymentMethod: 'VNPay',
-    receivedAmount: 0,
-    shippingFee: 0,
-    discount: 0,
-    tax: 0,
-    customer: {
-      name: 'Nguyễn Minh Anh',
-      type: 'Website',
-      phone: '+84 903 555 018',
-      email: 'minhanh@example.com',
-      avatar: 'https://i.pravatar.cc/120?u=nguyen-minh-anh',
-    },
-    address: {
-      receiver: 'Nguyễn Minh Anh',
-      phone: '+84 903 555 018',
-      street: '102 Lê Lợi',
-      ward: 'Phường Bến Thành',
-      district: 'Quận 1',
-      province: 'TP. Hồ Chí Minh',
-    },
-    shipment: null,
-    items: [
-      {
-        id: 1,
-        name: 'Radiance Ritual Set / Ocean Blue / S',
-        sku: 'SKU-SKIN-4006',
-        quantity: 1,
-        unitPrice: 5250000,
-        tax: '0%',
-        image: 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?q=80&w=160&auto=format&fit=crop',
-      },
-    ],
-    notes: [
-      {
-        author: 'Huy Phạm',
-        initials: 'HP',
-        time: '3 giờ trước',
-        text: 'Chờ khách xác nhận phương thức thanh toán trước khi tạo vận đơn.',
-      },
-    ],
-  },
-];
-
-function toneClass(tone: string) {
-  if (tone === 'success') return 'border-transparent bg-emerald-500/12 text-emerald-700 hover:bg-emerald-500/12';
-  if (tone === 'warning') return 'border-transparent bg-amber-500/12 text-amber-700 hover:bg-amber-500/12';
-  if (tone === 'danger') return 'border-transparent bg-rose-500/12 text-rose-700 hover:bg-rose-500/12';
-  return 'border-transparent bg-muted text-foreground hover:bg-muted';
-}
-
-function statusLabel(progress: number) {
-  return pipelineSteps[Math.max(0, Math.min(progress - 1, pipelineSteps.length - 1))]?.label ?? 'Báo giá';
-}
-
-function InfoBlock({
-  label,
-  children,
-  icon: Icon,
-}: {
-  label: string;
-  children: React.ReactNode;
-  icon?: React.ComponentType<{ className?: string }>;
-}) {
-  return (
-    <div className="grid gap-1.5">
-      <span className="text-xs font-medium text-muted-foreground">{label}</span>
-      <div className="flex items-center gap-2 text-sm font-medium">
-        {Icon ? <Icon className="size-4 text-muted-foreground" /> : null}
-        {children}
-      </div>
-    </div>
-  );
-}
-
-function MoneyRow({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
-  return (
-    <div className={cn('flex items-center justify-between gap-3 text-sm', strong && 'text-lg font-semibold')}>
-      <span className={cn(!strong && 'text-muted-foreground')}>{label}</span>
-      <span className="text-right font-medium">{value}</span>
-    </div>
-  );
-}
-
-function Pipeline({ progress }: { progress: number }) {
-  return (
-    <div className="grid gap-3">
-      <div className="hidden grid-cols-[auto_minmax(48px,1fr)_auto_minmax(48px,1fr)_auto_minmax(48px,1fr)_auto] items-center gap-x-4 md:grid">
-        {pipelineSteps.map((step, index) => {
-          const active = index < progress;
-          const complete = index < progress - 1;
-          const Icon = step.icon;
-          return (
-            <div key={step.label} className="contents">
-              <div
-                className={cn(
-                  'flex size-7 items-center justify-center rounded-md border bg-background',
-                  active ? 'border-foreground text-foreground' : 'border-border text-muted-foreground',
-                )}
-              >
-                <Icon className="size-3.5" />
-              </div>
-              {index < pipelineSteps.length - 1 ? (
-                <div className="h-1 rounded-full bg-border/70">
-                  <div className={cn('h-full rounded-full', complete && 'bg-foreground')} />
-                </div>
-              ) : null}
-            </div>
-          );
-        })}
-      </div>
-      <div className="hidden grid-cols-[auto_minmax(48px,1fr)_auto_minmax(48px,1fr)_auto_minmax(48px,1fr)_auto] gap-x-4 text-[11px] font-medium text-muted-foreground md:grid">
-        {pipelineSteps.map((step, index) => (
-          <div key={step.label} className="contents">
-            <span>{step.label}</span>
-            {index < pipelineSteps.length - 1 ? <span aria-hidden="true" /> : null}
-          </div>
-        ))}
-      </div>
-      <div className="grid grid-cols-4 gap-2 md:hidden">
-        {pipelineSteps.map((step, index) => {
-          const active = index < progress;
-          const complete = index < progress - 1;
-          const Icon = step.icon;
-          return (
-            <div key={step.label} className="flex min-w-0 flex-col gap-1.5">
-              <div className="flex items-center gap-1.5">
-                <div
-                  className={cn(
-                    'flex size-5 shrink-0 items-center justify-center rounded-md border bg-background',
-                    active ? 'border-foreground text-foreground' : 'border-border text-muted-foreground',
-                  )}
-                >
-                  <Icon className="size-2.5" />
-                </div>
-                {index < pipelineSteps.length - 1 ? (
-                  <div className="h-1 min-w-0 flex-1 rounded-full bg-border/70">
-                    <div className={cn('h-full rounded-full', complete && 'bg-foreground')} />
-                  </div>
-                ) : null}
-              </div>
-              <span className="truncate text-center text-[11px] leading-none text-muted-foreground">{step.label}</span>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
+import {
+  createAdminOrderShipment,
+  getAdminOrder,
+  getAdminOrderShipment,
+  simulateAdminShipmentEvent,
+  updateAdminOrderStatus,
+  type AdminOrderStatus,
+} from '@/lib/api/admin/orders';
+import { getAuditLogs } from '@/lib/api/admin/audit-logs';
+import { formatViDate, formatViDateTime, formatVnd } from '@/lib/utils/formatting';
+import {
+  orderStatusConfig,
+  type OrderTone,
+  paymentLabels,
+  getGhtkWebhookStatusLabel,
+  shipmentStatusLabels,
+  toneClass,
+} from '../order-display';
+import {
+  OrderActionPanel,
+  OrderCalloutBanner,
+  DetailSkeleton,
+  OrderPipeline,
+} from './order-detail-components';
+import { auditSummary } from './order-detail-helpers';
+import {
+  OrderCustomerPanel,
+  OrderPaymentPanel,
+  OrderShipmentPanel,
+  OrderShippingAddressPanel,
+} from './order-detail-panels';
 
 export default function OrderDetailPage() {
   const params = useParams<{ id: string }>();
-  const order = mockOrders.find((item) => item.id === params.id || item.code.toLowerCase() === params.id?.toLowerCase()) ?? mockOrders[0];
-  const subtotal = order.items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
-  const total = subtotal + order.shippingFee + order.tax - order.discount;
-  const remaining = Math.max(total - order.receivedAmount, 0);
+  const id = Number(params.id);
+  const queryClient = useQueryClient();
+  const [reasonAction, setReasonAction] = useState<{
+    status: Extract<NextOrderStatus, 'cancelled' | 'refunded'>;
+    label: string;
+  } | null>(null);
+  const [reasonText, setReasonText] = useState('');
+
+  const orderQuery = useQuery({
+    queryKey: ['admin-order', id],
+    queryFn: () => getAdminOrder(id),
+    enabled: !isNaN(id),
+  });
+
+  const shipmentQuery = useQuery({
+    queryKey: ['admin-order-shipment', id],
+    queryFn: () => getAdminOrderShipment(id),
+    enabled: !isNaN(id),
+  });
+
+  const auditQuery = useQuery({
+    queryKey: ['audit-logs', 'order', id],
+    queryFn: () =>
+      getAuditLogs({
+        resourceType: 'ORDER',
+        resourceId: String(id),
+        sortBy: 'createdAt',
+        sortDir: 'desc',
+        size: 10,
+      }),
+    enabled: !isNaN(id),
+  });
+
+  const createShipmentMutation = useMutation({
+    mutationFn: () => createAdminOrderShipment(id, 'ghtk'),
+    onSuccess: async () => {
+      toast.success('Đã tạo vận đơn');
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['admin-order', id] }),
+        queryClient.invalidateQueries({ queryKey: ['admin-order-shipment', id] }),
+        queryClient.invalidateQueries({ queryKey: ['admin-orders'] }),
+        queryClient.invalidateQueries({ queryKey: ['admin-order-facets'] }),
+      ]);
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : 'Không thể tạo vận đơn');
+    },
+  });
+
+  const updateStatusMutation = useMutation({
+    mutationFn: ({
+      status,
+      reason,
+      note,
+    }: {
+      status: NextOrderStatus;
+      reason?: string;
+      note?: string;
+    }) => updateAdminOrderStatus(id, status, { reason, note }),
+    onSuccess: async () => {
+      toast.success('Đã cập nhật trạng thái đơn');
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['admin-order', id] }),
+        queryClient.invalidateQueries({ queryKey: ['admin-order-shipment', id] }),
+        queryClient.invalidateQueries({ queryKey: ['audit-logs', 'order', id] }),
+        queryClient.invalidateQueries({ queryKey: ['admin-orders'] }),
+        queryClient.invalidateQueries({ queryKey: ['admin-order-facets'] }),
+      ]);
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : 'Không thể cập nhật trạng thái');
+    },
+  });
+
+  const simulateShipmentMutation = useMutation({
+    mutationFn: ({ shipmentId, status }: { shipmentId: number; status: string }) =>
+      simulateAdminShipmentEvent(shipmentId, {
+        status,
+        location: 'Staging demo',
+        note: `Simulated ${status} event from admin order detail`,
+      }),
+    onSuccess: async () => {
+      toast.success('Đã giả lập cập nhật vận chuyển');
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['admin-order', id] }),
+        queryClient.invalidateQueries({ queryKey: ['admin-order-shipment', id] }),
+        queryClient.invalidateQueries({ queryKey: ['audit-logs', 'order', id] }),
+        queryClient.invalidateQueries({ queryKey: ['admin-orders'] }),
+        queryClient.invalidateQueries({ queryKey: ['admin-order-facets'] }),
+      ]);
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : 'Không thể giả lập vận chuyển');
+    },
+  });
+
+  if (orderQuery.isLoading) return <DetailSkeleton />;
+
+  if (orderQuery.isError || !orderQuery.data) {
+    return (
+      <div className="flex h-[calc(100dvh-6.5rem)] w-full flex-col items-center justify-center gap-3 text-muted-foreground">
+        <AlertCircleIcon className="size-10 text-destructive/40" />
+        <p className="text-sm font-medium text-foreground">Không tìm thấy đơn hàng</p>
+        <p className="text-xs">ID không hợp lệ hoặc đơn hàng không tồn tại.</p>
+        <Button variant="outline" size="sm" className="mt-1" asChild>
+          <Link href="/dashboard/orders">Quay lại danh sách</Link>
+        </Button>
+      </div>
+    );
+  }
+
+  const order = orderQuery.data;
+  const shipmentData = shipmentQuery.data ?? null;
+  const logs = shipmentData?.logs ?? [];
+  const auditLogs = auditQuery.data?.data ?? [];
+  const paymentLabel = paymentLabels[order.paymentMethod] ?? order.paymentMethod.toUpperCase();
+  const customerShippingFee = Number(order.shippingFee);
+  const shipment = shipmentData?.shipment ?? null;
+  const cfg =
+    getShipmentAwareDisplayConfig(order.status, shipment?.status ?? null) ??
+    orderStatusConfig[order.status] ??
+    orderStatusConfig.pending;
+  const isTerminal = cfg.terminal === true;
+  const simulationEnabled = process.env.NEXT_PUBLIC_ENABLE_SHIPMENT_SIMULATION === 'true';
+  const simulationOptions =
+    simulationEnabled && shipment ? getShipmentSimulationOptions(shipment.status) : [];
+  const operationalActions = getOperationalActions({
+    status: order.status,
+    hasShipment: Boolean(shipment),
+    shipmentStatus: shipment?.status ?? null,
+    isCreatingShipment: createShipmentMutation.isPending,
+    isUpdatingStatus: updateStatusMutation.isPending,
+    onCreateShipment: () => createShipmentMutation.mutate(),
+    onStatusChange: (status) => {
+      if (status === 'cancelled' || status === 'refunded') {
+        setReasonAction({
+          status,
+          label: status === 'cancelled' ? 'Hủy đơn hàng' : 'Hoàn tiền đơn hàng',
+        });
+        setReasonText('');
+        return;
+      }
+
+      updateStatusMutation.mutate({ status });
+    },
+  });
 
   async function copyTracking(text: string) {
     await navigator.clipboard.writeText(text);
@@ -308,253 +226,581 @@ export default function OrderDetailPage() {
   }
 
   return (
-    <div className="flex h-[calc(100dvh-6.5rem)] w-full max-w-none flex-col gap-4 overflow-hidden">
-      <section className="shrink-0 border-b border-dashed border-border/70 pb-4">
-        <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-          <div className="flex min-w-0 items-start gap-3">
-            <Button variant="outline" size="icon" className="size-9 shrink-0 rounded-xl shadow-none" asChild>
-              <Link href="/dashboard/orders" aria-label="Quay lại danh sách đơn hàng">
-                <ArrowLeftIcon />
-              </Link>
-            </Button>
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-xl font-semibold tracking-tight 2xl:text-2xl">Mã đơn: {order.code}</h1>
-                <Badge className={cn('h-6 rounded-md px-2 font-semibold shadow-sm', toneClass(order.statusTone))}>
-                  {order.status}
-                </Badge>
-              </div>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-                Chi tiết đơn bán hàng với tiến trình xử lý, thanh toán, khách hàng và vận chuyển trong một màn hình.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <Button variant="outline" className="h-9 rounded-xl shadow-none">
-              {statusLabel(order.progress)}
-            </Button>
-            <Button variant="outline" size="icon" className="size-9 rounded-xl shadow-none" disabled aria-label="Đơn trước">
-              <ChevronLeftIcon />
-            </Button>
-            <Button variant="outline" size="icon" className="size-9 rounded-xl shadow-none" aria-label="Đơn sau">
-              <ChevronRightIcon />
-            </Button>
-            <Button className="h-9 rounded-xl">
-              <PencilIcon data-icon="inline-start" />
-              Cập nhật
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" className="size-9 rounded-xl shadow-none" aria-label="Mở tùy chọn đơn hàng">
-                  <MoreHorizontalIcon />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" sideOffset={6} className="w-48">
-                <DropdownMenuGroup>
-                  <DropdownMenuItem>In phiếu đóng gói</DropdownMenuItem>
-                  <DropdownMenuItem>Xuất hóa đơn</DropdownMenuItem>
-                  <DropdownMenuItem>Hủy đơn hàng</DropdownMenuItem>
-                </DropdownMenuGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-      </section>
-
-      <section className="grid min-h-0 flex-1 gap-4 overflow-hidden xl:grid-cols-[minmax(0,1fr)_360px] 2xl:grid-cols-[minmax(0,1fr)_380px]">
-        <main className="flex min-h-0 min-w-0 flex-col gap-4 overflow-y-auto pr-1">
-          <div className="rounded-xl border bg-muted/20 p-5">
-            <div className="mb-4">
-              <p className="text-sm font-semibold">{order.stageTitle}</p>
-              <p className="text-sm text-muted-foreground">{order.stageText}</p>
-            </div>
-            <Pipeline progress={order.progress} />
-          </div>
-
-          <section className="rounded-xl border bg-card p-5">
-            <div className="grid gap-6">
-              <div>
-                <h2 className="text-lg font-semibold">Thông tin đơn hàng</h2>
-                <p className="mt-1 text-sm text-muted-foreground">Phân công xử lý, nguồn đơn và điều kiện thanh toán.</p>
-              </div>
-              <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-                <InfoBlock label="Nguồn" icon={StoreIcon}>{order.source}</InfoBlock>
-                <InfoBlock label="Ngày đặt">{viDate.format(new Date(order.orderDate))}</InfoBlock>
-                <InfoBlock label="Hạn xử lý">{viDate.format(new Date(order.dueDate))}</InfoBlock>
-                <InfoBlock label="Phụ trách" icon={UserRoundIcon}>
-                  <Avatar className="size-6">
-                    <AvatarFallback>{order.assignInitials}</AvatarFallback>
-                  </Avatar>
-                  <span>{order.assignTo}</span>
-                </InfoBlock>
-                <InfoBlock label="Điều kiện thanh toán">{order.paymentTerm}</InfoBlock>
-                <InfoBlock label="Khu vực">{order.location}</InfoBlock>
-              </div>
-            </div>
-          </section>
-
-          <section className="rounded-xl border bg-card p-5">
-            <div className="grid gap-6">
-              <div>
-                <h2 className="text-lg font-semibold">Sản phẩm đã đặt</h2>
-                <p className="mt-1 text-sm text-muted-foreground">Line-item và tổng tiền cho đơn bán hàng hiện tại.</p>
-              </div>
-              <div className="grid gap-4">
-                {order.items.map((item) => (
-                  <div
-                    key={item.id}
-                    className="grid gap-4 border-b border-dashed border-border/70 pb-4 last:border-b-0 last:pb-0 lg:grid-cols-[minmax(0,1.8fr)_72px_110px_80px_130px] lg:items-start"
+    <>
+      <div className="flex h-[calc(100dvh-6.5rem)] w-full max-w-none flex-col gap-4 overflow-hidden">
+        {/* ── Header ── */}
+        <section className="shrink-0 border-b border-dashed border-border/70 pb-4">
+          <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+            {/* Left: Back + title */}
+            <div className="flex min-w-0 items-start gap-3">
+              <Button
+                variant="outline"
+                size="icon"
+                className="size-9 shrink-0 rounded-xl shadow-none"
+                asChild
+              >
+                <Link href="/dashboard/orders" aria-label="Quay lại danh sách đơn hàng">
+                  <ArrowLeftIcon />
+                </Link>
+              </Button>
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h1 className="text-xl font-semibold tracking-tight">
+                    Mã đơn: {order.orderCode}
+                  </h1>
+                  <Badge
+                    className={cn(
+                      'h-6 rounded-md px-2 font-semibold shadow-sm',
+                      toneClass(cfg.tone),
+                    )}
                   >
-                    <div className="flex min-w-0 items-center gap-3">
-                      <div className="relative size-14 shrink-0 overflow-hidden rounded-xl border bg-muted/30">
-                        <Image src={item.image} alt={item.name} fill sizes="56px" className="object-cover" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="font-medium">{item.name}</p>
-                        <p className="text-sm text-muted-foreground">{item.sku}</p>
-                      </div>
-                    </div>
-                    <InfoBlock label="SL">{item.quantity} cái</InfoBlock>
-                    <InfoBlock label="Đơn giá">{vnd.format(item.unitPrice)}</InfoBlock>
-                    <InfoBlock label="Thuế">{item.tax}</InfoBlock>
-                    <InfoBlock label="Thành tiền">{vnd.format(item.unitPrice * item.quantity)}</InfoBlock>
-                  </div>
-                ))}
-              </div>
-              <div className="ml-auto grid w-full max-w-sm gap-3">
-                <MoneyRow label="Tạm tính" value={vnd.format(subtotal)} />
-                <MoneyRow label="Phí vận chuyển" value={order.shippingFee === 0 ? 'Miễn phí' : vnd.format(order.shippingFee)} />
-                <MoneyRow label="Giảm giá" value={order.discount > 0 ? `-${vnd.format(order.discount)}` : '-'} />
-                <Separator />
-                <MoneyRow label="Tổng cộng" value={vnd.format(total)} strong />
-              </div>
-            </div>
-          </section>
-
-          <section className="rounded-xl border bg-card p-5">
-            <div className="grid gap-4">
-              <div>
-                <h2 className="text-lg font-semibold">Ghi chú nội bộ</h2>
-                <p className="mt-1 text-sm text-muted-foreground">Bối cảnh phối hợp giữa kho, CSKH và vận hành.</p>
-              </div>
-              <Textarea className="min-h-24 resize-none rounded-xl" placeholder="Thêm ghi chú cho đơn hàng" />
-              <div className="rounded-xl border bg-muted/10">
-                {order.notes.map((note, index) => (
-                  <div key={`${note.author}-${note.time}`} className={cn('px-5 py-4', index < order.notes.length - 1 && 'border-b')}>
-                    <div className="flex items-start gap-3">
-                      <Avatar className="size-10">
-                        <AvatarFallback>{note.initials}</AvatarFallback>
-                      </Avatar>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                          <p className="font-medium">{note.author}</p>
-                          <p className="text-sm text-muted-foreground">{note.time}</p>
-                        </div>
-                        <p className="mt-2 text-sm leading-6 text-muted-foreground">{note.text}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-        </main>
-
-        <aside className="flex min-h-0 min-w-0 flex-col gap-4 overflow-y-auto rounded-xl border bg-muted/30 p-4 xl:self-start">
-          <section className="rounded-xl border bg-background p-5">
-            <div className="grid gap-5">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h2 className="text-lg font-semibold">Thanh toán</h2>
-                  <p className="mt-1 text-xs text-muted-foreground">Hóa đơn #{order.invoice}</p>
-                </div>
-                <Button variant="link" className="h-auto p-0 text-muted-foreground">Xem hóa đơn</Button>
-              </div>
-              <Separator />
-              <div className="grid gap-3">
-                <MoneyRow label="Đã nhận" value={vnd.format(order.receivedAmount)} />
-                <MoneyRow label="Còn lại" value={vnd.format(remaining)} />
-                <MoneyRow label="Tổng thanh toán" value={vnd.format(total)} />
-              </div>
-              <Button variant="outline" className="h-10 rounded-lg shadow-none">Ghi nhận thanh toán</Button>
-            </div>
-          </section>
-
-          <section className="rounded-xl border bg-background p-5">
-            <div className="grid gap-5">
-              <h2 className="text-lg font-semibold">Khách hàng</h2>
-              <div className="flex items-center gap-3">
-                <Avatar className="size-12">
-                  <AvatarImage src={order.customer.avatar} alt={order.customer.name} />
-                  <AvatarFallback>{order.customer.name.slice(0, 2).toUpperCase()}</AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="font-medium">{order.customer.name}</p>
-                  <p className="text-sm text-muted-foreground">{order.customer.type}</p>
-                </div>
-              </div>
-              <div className="grid gap-3 text-sm">
-                <div className="flex items-start gap-2">
-                  <PhoneIcon className="mt-0.5 size-4 text-muted-foreground" />
-                  <span>{order.customer.phone}</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <MailIcon className="mt-0.5 size-4 text-muted-foreground" />
-                  <span className="min-w-0 break-all">{order.customer.email}</span>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section className="rounded-xl border bg-background p-5">
-            <div className="grid gap-4">
-              <h2 className="text-lg font-semibold">Địa chỉ giao hàng</h2>
-              <div className="grid gap-1 text-sm leading-6 text-muted-foreground">
-                <span className="font-medium text-foreground">{order.address.receiver}</span>
-                <span>{order.address.phone}</span>
-                <span>{order.address.street}</span>
-                <span>{order.address.ward}, {order.address.district}</span>
-                <span>{order.address.province}</span>
-              </div>
-            </div>
-          </section>
-
-          <section className="rounded-xl border bg-background p-5">
-            <div className="grid gap-4">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h2 className="text-lg font-semibold">Vận chuyển</h2>
-                  <p className="mt-1 text-xs text-muted-foreground">{order.shipment ? order.shipment.provider : 'Chưa tạo vận đơn'}</p>
-                </div>
-                {order.shipment ? (
-                  <Badge className="border-transparent bg-sky-500/12 text-sky-700 shadow-sm hover:bg-sky-500/12">
-                    {order.shipment.status}
+                    {cfg.label}
                   </Badge>
-                ) : null}
-              </div>
-              {order.shipment ? (
-                <div className="grid gap-3 text-sm">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-muted-foreground">Tracking</span>
-                    <Button variant="ghost" size="sm" onClick={() => copyTracking(order.shipment!.trackingCode)}>
-                      <span className="font-mono">{order.shipment.trackingCode}</span>
-                      <ClipboardIcon data-icon="inline-end" />
-                    </Button>
-                  </div>
-                  <MoneyRow label="Phí vận chuyển" value={vnd.format(order.shipment.fee)} />
-                  <MoneyRow label="Dự kiến giao" value={viDate.format(new Date(order.shipment.estimatedAt))} />
                 </div>
-              ) : (
-                <Button className="h-10 rounded-lg">
-                  <TruckIcon data-icon="inline-start" />
-                  Tạo vận đơn
-                </Button>
-              )}
+                <p className="mt-1.5 max-w-2xl text-sm leading-6 text-muted-foreground">
+                  Chi tiết đơn bán hàng, tiến trình xử lý, thanh toán, khách hàng và vận chuyển.
+                </p>
+              </div>
             </div>
-          </section>
-        </aside>
-      </section>
-    </div>
+            {/* Right: Actions */}
+            <div className="flex flex-wrap items-center gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="size-9 rounded-xl shadow-none"
+                    aria-label="Tùy chọn đơn hàng"
+                  >
+                    <MoreHorizontalIcon />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" sideOffset={6} className="w-48">
+                  <DropdownMenuGroup>
+                    <DropdownMenuItem disabled>In phiếu đóng gói</DropdownMenuItem>
+                    <DropdownMenuItem disabled>Xuất hóa đơn</DropdownMenuItem>
+                    <DropdownMenuItem disabled className="text-destructive focus:text-destructive">
+                      Hủy đơn hàng
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Body ── */}
+        <section className="grid min-h-0 flex-1 gap-4 overflow-hidden xl:grid-cols-[minmax(0,1fr)_360px] 2xl:grid-cols-[minmax(0,1fr)_380px]">
+          {/* Main column */}
+          <main className="flex min-h-0 min-w-0 flex-col gap-8 overflow-y-auto pr-1">
+            {/* Pipeline OR Terminal callout */}
+            {isTerminal ? (
+              <OrderCalloutBanner tone={cfg.tone} title={cfg.stateTitle} text={cfg.stateText} />
+            ) : (
+              <div className="rounded-xl border bg-muted/20 p-5">
+                <div className="mb-4">
+                  <p className="text-sm font-semibold">{cfg.stateTitle}</p>
+                  <p className="text-sm text-muted-foreground">{cfg.stateText}</p>
+                </div>
+                <OrderPipeline progress={cfg.progress} />
+              </div>
+            )}
+
+            {operationalActions.length > 0 ? (
+              <OrderActionPanel
+                title="Hành động tiếp theo"
+                text="Chỉ hiển thị các thao tác phù hợp với trạng thái hiện tại để hạn chế cập nhật nhầm."
+                actions={operationalActions}
+              />
+            ) : null}
+
+            {/* Order meta info */}
+            <section className="border-b border-border/70 pb-8">
+              <div className="grid gap-5 px-1">
+                <div>
+                  <h2 className="text-base font-semibold">Thông tin đơn hàng</h2>
+                  <p className="mt-0.5 text-sm text-muted-foreground">
+                    Ngày tạo, phương thức thanh toán và các thông tin liên quan.
+                  </p>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                  <InfoRow label="Ngày đặt">{formatViDate(order.createdAt)}</InfoRow>
+                  <InfoRow label="Cập nhật gần nhất">{formatViDate(order.updatedAt)}</InfoRow>
+                  <InfoRow label="Phương thức thanh toán">{paymentLabel}</InfoRow>
+                  {order.promotionCode && (
+                    <InfoRow label="Mã khuyến mãi">
+                      <span className="font-mono text-sm">{order.promotionCode}</span>
+                    </InfoRow>
+                  )}
+                  {order.note && <InfoRow label="Ghi chú của khách">{order.note}</InfoRow>}
+                </div>
+              </div>
+            </section>
+
+            {/* Products */}
+            <section className="border-b border-border/70 pb-8">
+              <div className="grid gap-5 px-1">
+                <div>
+                  <h2 className="text-base font-semibold">Sản phẩm đã đặt</h2>
+                  <p className="mt-0.5 text-sm text-muted-foreground">
+                    Line-item và tổng tiền cho đơn bán hàng hiện tại.
+                  </p>
+                </div>
+
+                <div className="grid gap-4">
+                  {order.items.map((item) => (
+                    <div
+                      key={item.id}
+                      className="grid gap-3 border-b border-dashed border-border/70 pb-4 last:border-b-0 last:pb-0 sm:grid-cols-[minmax(0,1.8fr)_64px_100px_120px] sm:items-start"
+                    >
+                      {/* Product name + image */}
+                      <div className="flex min-w-0 items-center gap-3">
+                        {item.imageUrl ? (
+                          <Image
+                            src={item.imageUrl}
+                            alt={item.name}
+                            width={56}
+                            height={56}
+                            unoptimized
+                            className="size-14 shrink-0 rounded-xl border object-cover"
+                          />
+                        ) : (
+                          <div className="flex size-14 shrink-0 items-center justify-center rounded-xl border bg-muted/30 text-muted-foreground">
+                            <PackageIcon className="size-5" />
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <p className="leading-snug font-medium">{item.name}</p>
+                          <p className="text-sm text-muted-foreground">{item.sku ?? '—'}</p>
+                        </div>
+                      </div>
+                      <InfoRow label="SL">{item.quantity} cái</InfoRow>
+                      <InfoRow label="Đơn giá">{formatVnd(Number(item.unitPrice))}</InfoRow>
+                      <InfoRow label="Thành tiền">{formatVnd(Number(item.subtotal))}</InfoRow>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Money summary */}
+                <div className="ml-auto grid w-full max-w-sm gap-3 pt-1">
+                  <MoneyRow label="Tạm tính" value={formatVnd(Number(order.totalAmount))} />
+                  <MoneyRow
+                    label="Phí khách trả"
+                    value={customerShippingFee === 0 ? 'Miễn phí' : formatVnd(customerShippingFee)}
+                  />
+                  <MoneyRow
+                    label="Giảm giá"
+                    value={
+                      Number(order.discountAmount) > 0
+                        ? `-${formatVnd(Number(order.discountAmount))}`
+                        : '—'
+                    }
+                  />
+                  <Separator />
+                  <MoneyRow label="Tổng cộng" value={formatVnd(Number(order.finalAmount))} strong />
+                </div>
+              </div>
+            </section>
+
+            {/* Shipment logs timeline */}
+            {logs.length > 0 && (
+              <section className="pb-2">
+                <div className="grid gap-5 px-1">
+                  <div>
+                    <h2 className="text-base font-semibold">Lịch sử vận chuyển</h2>
+                    <p className="mt-0.5 text-sm text-muted-foreground">
+                      Hành trình cập nhật từ đơn vị vận chuyển.
+                    </p>
+                  </div>
+                  <div className="grid gap-0">
+                    {logs.map((log, i) => {
+                      const mapped = shipmentStatusLabels[log.status];
+                      const ghtkEventLabel = shipment?.provider === 'ghtk' && log.source === 'WEBHOOK'
+                        ? getGhtkWebhookStatusLabel(log.rawStatus)
+                        : undefined;
+                      const label = ghtkEventLabel ?? mapped?.label ?? log.status;
+                      const isLast = i === logs.length - 1;
+                      return (
+                        <div key={log.id} className="flex gap-3">
+                          {/* Connector */}
+                          <div className="flex flex-col items-center">
+                            <div
+                              className={cn(
+                                'mt-1.5 size-2 shrink-0 rounded-full',
+                                i === 0 ? 'bg-foreground' : 'bg-border',
+                              )}
+                            />
+                            {!isLast && <div className="my-1 w-px flex-1 bg-border/60" />}
+                          </div>
+                          {/* Content */}
+                          <div className={cn('min-w-0 pb-4', isLast && 'pb-0')}>
+                            <p className="text-sm leading-tight font-medium">{label}</p>
+                            {log.location && (
+                              <p className="mt-0.5 text-xs text-muted-foreground">{log.location}</p>
+                            )}
+                            {log.note && (
+                              <p className="mt-0.5 text-xs text-muted-foreground">{log.note}</p>
+                            )}
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              {formatViDateTime(log.occurredAt ?? log.createdAt)}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {auditLogs.length > 0 && (
+              <section className="pb-2">
+                <div className="grid gap-5 px-1">
+                  <div>
+                    <h2 className="text-base font-semibold">Lịch sử thao tác</h2>
+                    <p className="mt-0.5 text-sm text-muted-foreground">
+                      Các thay đổi trạng thái và thao tác quản trị trên đơn hàng.
+                    </p>
+                  </div>
+                  <div className="grid gap-0">
+                    {auditLogs.map((log, i) => {
+                      const summary = auditSummary(log);
+                      const isLast = i === auditLogs.length - 1;
+                      return (
+                        <div key={log.id} className="flex gap-3">
+                          <div className="flex flex-col items-center">
+                            <div
+                              className={cn(
+                                'mt-1.5 size-2 shrink-0 rounded-full',
+                                i === 0 ? 'bg-foreground' : 'bg-border',
+                              )}
+                            />
+                            {!isLast && <div className="my-1 w-px flex-1 bg-border/60" />}
+                          </div>
+                          <div className={cn('min-w-0 pb-4', isLast && 'pb-0')}>
+                            <p className="text-sm leading-tight font-medium">{summary.title}</p>
+                            {summary.detail && (
+                              <p className="mt-0.5 text-xs text-muted-foreground">
+                                {summary.detail}
+                              </p>
+                            )}
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              {log.actorEmail ?? log.actorType} · {formatViDateTime(log.createdAt)}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </section>
+            )}
+          </main>
+
+          {/* Aside */}
+          <aside className="flex max-h-full min-h-0 self-start overflow-y-auto rounded-xl border bg-muted/20 p-4">
+            <div className="flex flex-col gap-4">
+              <OrderPaymentPanel order={order} />
+              <OrderCustomerPanel order={order} />
+              <OrderShippingAddressPanel order={order} />
+              <OrderShipmentPanel
+                shipmentData={shipmentData}
+                isLoading={shipmentQuery.isLoading}
+                isCreating={createShipmentMutation.isPending}
+                onCreateShipment={() => createShipmentMutation.mutate()}
+                onCopyTracking={copyTracking}
+                simulationOptions={simulationOptions}
+                isSimulating={simulateShipmentMutation.isPending}
+                onSimulateShipmentEvent={
+                  shipment
+                    ? (status) =>
+                        simulateShipmentMutation.mutate({ shipmentId: shipment.id, status })
+                    : undefined
+                }
+              />
+            </div>
+          </aside>
+        </section>
+      </div>
+      <Dialog
+        open={reasonAction !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setReasonAction(null);
+            setReasonText('');
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{reasonAction?.label}</DialogTitle>
+            <DialogDescription>
+              Nhập lý do để lưu vào lịch sử thao tác và hỗ trợ tra soát sau này.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-2">
+            <Label htmlFor="order-detail-action-reason">Lý do</Label>
+            <Textarea
+              id="order-detail-action-reason"
+              value={reasonText}
+              onChange={(event) => setReasonText(event.target.value)}
+              placeholder={
+                reasonAction?.status === 'cancelled'
+                  ? 'Ví dụ: Khách yêu cầu hủy đơn'
+                  : 'Ví dụ: Đơn đã hoàn tiền sau đối soát'
+              }
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setReasonAction(null);
+                setReasonText('');
+              }}
+            >
+              Đóng
+            </Button>
+            <Button
+              variant={reasonAction?.status === 'cancelled' ? 'destructive' : 'default'}
+              disabled={!reasonText.trim() || updateStatusMutation.isPending}
+              onClick={() => {
+                if (!reasonAction || !reasonText.trim()) return;
+                updateStatusMutation.mutate({
+                  status: reasonAction.status,
+                  reason: reasonText.trim(),
+                });
+                setReasonAction(null);
+                setReasonText('');
+              }}
+            >
+              {reasonAction?.status === 'cancelled' ? 'Hủy đơn' : 'Xác nhận hoàn tiền'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
+}
+
+function getShipmentSimulationOptions(status: string) {
+  const labels: Record<string, string> = {
+    ready_to_pick: 'Chờ lấy hàng',
+    picked: 'Đã lấy hàng',
+    storing: 'Đang lưu kho',
+    transporting: 'Đang vận chuyển',
+    sorting: 'Đang phân loại',
+    delivering: 'Đang giao hàng',
+    delivered: 'Đã giao thành công',
+    delivery_failed: 'Giao thất bại',
+    waiting_to_return: 'Chờ hoàn hàng',
+    returning: 'Đang hoàn hàng',
+    returned: 'Đã hoàn hàng',
+    cancel: 'Hủy vận đơn',
+  };
+  const transitions: Record<string, string[]> = {
+    unknown: ['ready_to_pick'],
+    ready_to_pick: ['picked', 'cancel'],
+    picked: ['storing', 'transporting', 'delivering', 'delivery_failed', 'cancel'],
+    storing: ['transporting', 'sorting', 'delivering', 'delivery_failed'],
+    transporting: ['sorting', 'delivering', 'delivery_failed'],
+    sorting: ['delivering', 'delivery_failed'],
+    delivering: ['delivered', 'delivery_failed', 'waiting_to_return'],
+    money_collect_delivering: ['delivered', 'delivery_failed', 'waiting_to_return'],
+    delivery_failed: ['delivering', 'waiting_to_return', 'returning'],
+    waiting_to_return: ['returning'],
+    return: ['return_transporting'],
+    returning: ['return_transporting', 'returned'],
+    return_transporting: ['return_sorting', 'returned'],
+    return_sorting: ['returned'],
+  };
+
+  return (transitions[status] ?? []).map((value) => ({
+    status: value,
+    label: labels[value] ?? value,
+  }));
+}
+
+type NextOrderStatus = Exclude<AdminOrderStatus, 'pending' | 'expired'>;
+
+function getOperationalActions({
+  status,
+  hasShipment,
+  shipmentStatus,
+  isCreatingShipment,
+  isUpdatingStatus,
+  onCreateShipment,
+  onStatusChange,
+}: {
+  status: AdminOrderStatus;
+  hasShipment: boolean;
+  shipmentStatus: string | null;
+  isCreatingShipment: boolean;
+  isUpdatingStatus: boolean;
+  onCreateShipment: () => void;
+  onStatusChange: (status: NextOrderStatus) => void;
+}) {
+  const pending = isCreatingShipment || isUpdatingStatus;
+  const actions: Array<{
+    label: string;
+    icon?: typeof CheckCircle2Icon;
+    variant?: 'default' | 'outline' | 'destructive';
+    disabled?: boolean;
+    pending?: boolean;
+    onClick: () => void;
+  }> = [];
+
+  if (status === 'pending') {
+    actions.push({
+      label: 'Xác nhận đơn',
+      icon: CheckCircle2Icon,
+      pending: isUpdatingStatus,
+      onClick: () => onStatusChange('confirmed'),
+    });
+  }
+
+  if (status === 'confirmed') {
+    actions.push({
+      label: 'Chuyển sang xử lý',
+      icon: CheckCircle2Icon,
+      pending: isUpdatingStatus,
+      onClick: () => onStatusChange('processing'),
+    });
+  }
+
+  if ((status === 'confirmed' || status === 'processing') && !hasShipment) {
+    actions.push({
+      label: 'Tạo vận đơn',
+      icon: TruckIcon,
+      variant: status === 'processing' ? 'default' : 'outline',
+      pending: isCreatingShipment,
+      onClick: onCreateShipment,
+    });
+  }
+
+  if (status === 'processing') {
+    actions.push({
+      label: 'Đánh dấu đang giao',
+      icon: TruckIcon,
+      variant: hasShipment ? 'default' : 'outline',
+      disabled: !hasShipment,
+      pending: isUpdatingStatus,
+      onClick: () => onStatusChange('shipped'),
+    });
+  }
+
+  if (status === 'shipped' && canMarkDeliveredFromShipment(shipmentStatus)) {
+    actions.push({
+      label: 'Đánh dấu đã giao',
+      icon: CheckCircle2Icon,
+      pending: isUpdatingStatus,
+      onClick: () => onStatusChange('delivered'),
+    });
+  }
+
+  if (status === 'pending' || status === 'confirmed' || status === 'processing') {
+    actions.push({
+      label: 'Hủy đơn',
+      icon: XCircleIcon,
+      variant: 'destructive',
+      disabled: pending,
+      onClick: () => onStatusChange('cancelled'),
+    });
+  }
+
+  return actions;
+}
+
+function canMarkDeliveredFromShipment(status: string | null) {
+  if (!status) return true;
+  return [
+    'delivering',
+    'money_collect_delivering',
+    'transporting',
+    'sorting',
+    'picked',
+    'storing',
+  ].includes(status);
+}
+
+function getShipmentAwareDisplayConfig(
+  orderStatus: AdminOrderStatus,
+  shipmentStatus: string | null,
+) {
+  if (!shipmentStatus || orderStatus === 'delivered' || orderStatus === 'cancelled') return null;
+
+  const base = shipmentStatusLabels[shipmentStatus];
+  const label = base?.label ?? shipmentStatus;
+  const tone = base?.tone ?? ('warning' satisfies OrderTone);
+
+  if (shipmentStatus === 'delivery_failed') {
+    return {
+      label,
+      tone,
+      progress: 3,
+      stateTitle: 'Giao hàng thất bại',
+      stateText:
+        'Đơn vị vận chuyển báo giao thất bại. Không nên đánh dấu đã giao cho đến khi có lượt giao lại thành công.',
+      action: 'Xem vận chuyển',
+      terminal: true,
+    };
+  }
+
+  if (
+    shipmentStatus === 'waiting_to_return' ||
+    shipmentStatus === 'returning' ||
+    shipmentStatus === 'return_transporting' ||
+    shipmentStatus === 'return_sorting'
+  ) {
+    return {
+      label,
+      tone,
+      progress: 3,
+      stateTitle: label,
+      stateText: 'Vận đơn đã rời luồng giao hàng thành công và đang trong quá trình hoàn hàng.',
+      action: 'Xem vận chuyển',
+      terminal: true,
+    };
+  }
+
+  if (shipmentStatus === 'returned') {
+    return {
+      label,
+      tone,
+      progress: 0,
+      stateTitle: 'Đã hoàn hàng',
+      stateText:
+        'Vận đơn đã hoàn về. Đơn hàng cần được xử lý theo quy trình hoàn hàng/đối soát, không phải hoàn tất giao hàng.',
+      action: 'Xem vận chuyển',
+      terminal: true,
+    };
+  }
+
+  if (shipmentStatus === 'pickup_failed') {
+    return {
+      label,
+      tone,
+      progress: 2,
+      stateTitle: 'Lấy hàng thất bại',
+      stateText:
+        'Đơn vị vận chuyển chưa lấy được hàng. Cần kiểm tra lại bàn giao kho hoặc tạo lịch lấy hàng mới.',
+      action: 'Xem vận chuyển',
+      terminal: true,
+    };
+  }
+
+  if (shipmentStatus === 'cancel') {
+    return {
+      label,
+      tone,
+      progress: 0,
+      stateTitle: 'Vận đơn đã hủy',
+      stateText:
+        'Vận đơn không còn hiệu lực. Nếu vẫn cần giao hàng, hãy tạo vận đơn mới trước khi tiếp tục xử lý.',
+      action: 'Xem vận chuyển',
+      terminal: true,
+    };
+  }
+
+  return null;
 }
