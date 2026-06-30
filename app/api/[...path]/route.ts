@@ -1,29 +1,64 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { backendFetch } from '@/lib/api/server';
 import { isPublicApiPath } from '@/lib/auth/routes';
 
+const BACKEND_URL = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL;
+
 async function handler(request: NextRequest) {
+  if (!BACKEND_URL) {
+    return NextResponse.json(
+      {
+        status: 500,
+        code: 'BACKEND_URL_MISSING',
+        message: 'BACKEND_URL hoặc NEXT_PUBLIC_API_URL chưa được cấu hình',
+      },
+      { status: 500 },
+    );
+  }
+
   const { pathname, search } = request.nextUrl;
-  const cookieHeader = request.headers.get('cookie') ?? '';
+  const method = request.method.toUpperCase();
 
-  const body =
-    request.method !== 'GET' && request.method !== 'HEAD' ? await request.text() : undefined;
+  const targetUrl = `${BACKEND_URL}${pathname}${search}`;
 
-  const springRes = await backendFetch(`${pathname}${search}`, {
-    method: request.method,
-    cookieHeader: isPublicApiPath(pathname) ? undefined : cookieHeader,
+  const headers = new Headers();
+
+  const contentType = request.headers.get('content-type');
+  if (contentType) {
+    headers.set('Content-Type', contentType);
+  }
+
+  const accept = request.headers.get('accept');
+  if (accept) {
+    headers.set('Accept', accept);
+  }
+
+  const cookieHeader = request.headers.get('cookie');
+  if (cookieHeader && !isPublicApiPath(pathname)) {
+    headers.set('Cookie', cookieHeader);
+  }
+
+  const body = method === 'GET' || method === 'HEAD' ? undefined : await request.text();
+
+  const springRes = await fetch(targetUrl, {
+    method,
+    headers,
     body,
+    cache: 'no-store',
   });
 
   const data = await springRes.text();
+
   const res = new NextResponse(data, {
     status: springRes.status,
-    headers: { 'Content-Type': springRes.headers.get('content-type') ?? 'application/json' },
+    headers: {
+      'Content-Type': springRes.headers.get('content-type') ?? 'application/json',
+    },
   });
 
-  // Forward Set-Cookie nếu có (ví dụ session renewal)
   const setCookie = springRes.headers.get('set-cookie');
-  if (setCookie) res.headers.set('set-cookie', setCookie);
+  if (setCookie) {
+    res.headers.set('set-cookie', setCookie);
+  }
 
   return res;
 }
