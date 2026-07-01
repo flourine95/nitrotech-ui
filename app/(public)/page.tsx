@@ -56,7 +56,7 @@ const featuredProducts = [
 const categories = [
   {
     label: 'Laptop Gaming',
-    href: '/products?cat=laptop-gaming',
+    href: '/products?category=laptop-gaming',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -74,7 +74,7 @@ const categories = [
   },
   {
     label: 'CPU & Bo mạch',
-    href: '/products?cat=cpu',
+    href: '/products?category=linh-kien-may-tinh',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -93,7 +93,7 @@ const categories = [
   },
   {
     label: 'Card đồ họa',
-    href: '/products?cat=gpu',
+    href: '/products?category=vga-card-man-hinh',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -111,7 +111,7 @@ const categories = [
   },
   {
     label: 'RAM & SSD',
-    href: '/products?cat=storage',
+    href: '/products?category=ram-bo-nho',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -129,7 +129,7 @@ const categories = [
   },
   {
     label: 'Màn hình',
-    href: '/products?cat=monitors',
+    href: '/products?category=man-hinh-may-tinh',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -147,7 +147,7 @@ const categories = [
   },
   {
     label: 'Phụ kiện',
-    href: '/products?cat=accessories',
+    href: '/products?category=phu-kien-gear',
     icon: (
       <svg
         viewBox="0 0 24 24"

@@ -3,9 +3,9 @@ import { SiteHeaderServer as SiteHeader } from '@/components/site-header-server'
 import { SiteFooter } from '@/components/site-footer';
 
 const quickLinks = [
-  { label: 'Laptop', href: '/products?cat=laptop' },
-  { label: 'GPU', href: '/products?cat=gpu' },
-  { label: 'Màn hình', href: '/products?cat=monitors' },
+  { label: 'Laptop', href: '/products?category=laptop-may-tinh-xach-tay' },
+  { label: 'GPU', href: '/products?category=vga-card-man-hinh' },
+  { label: 'Màn hình', href: '/products?category=man-hinh-may-tinh' },
   { label: 'Khuyến mãi', href: '/products?sale=true' },
 ];
 
