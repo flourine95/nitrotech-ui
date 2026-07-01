@@ -19,7 +19,6 @@ const nextConfig = {
       '@tiptap/react',
       '@tiptap/core',
       '@tiptap/extensions',
-      'reactjs-tiptap-editor',
     ],
   },
 };
