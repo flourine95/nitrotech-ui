@@ -3,7 +3,7 @@ import { SubmitEventHandler, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { verifyEmail, resendVerification } from '@/lib/api/auth';
-import { ApiException } from '@/lib/api/client';
+import { getFriendlyErrorMessage } from '@/lib/utils/errors';
 
 type Status = 'loading' | 'success' | 'error';
 
@@ -25,13 +25,9 @@ export function VerifyEmailContent() {
     }
     verifyEmail(token)
       .then(() => setStatus('success'))
-      .catch((e) => {
+      .catch((error) => {
         setStatus('error');
-        setMessage(
-          e instanceof ApiException
-            ? e.error.message
-            : 'Xác thực thất bại. Token có thể đã hết hạn.',
-        );
+        setMessage(getFriendlyErrorMessage(error, 'Xác thực thất bại. Token có thể đã hết hạn.'));
       });
   }, [token]);
 
@@ -45,10 +41,8 @@ export function VerifyEmailContent() {
     try {
       await resendVerification(email);
       setResent(true);
-    } catch (e) {
-      setResendError(
-        e instanceof ApiException ? e.error.message : 'Gửi lại thất bại, vui lòng thử lại.',
-      );
+    } catch (error) {
+      setResendError(getFriendlyErrorMessage(error, 'Gửi lại thất bại, vui lòng thử lại.'));
     } finally {
       setResending(false);
     }

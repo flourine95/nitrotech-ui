@@ -13,8 +13,18 @@ export const API_ERROR_MAP: Record<string, string> = {
   CART_EMPTY: 'Giỏ hàng trống',
 
   // Auth Errors
-  EMAIL_NOT_VERIFIED: 'Tài khoản chưa xác thực email',
+  ACCOUNT_NOT_ACTIVE: 'Tài khoản chưa xác thực email',
   INVALID_CREDENTIALS: 'Email hoặc mật khẩu không đúng',
+  EMAIL_ALREADY_EXISTS: 'Email đã được đăng ký',
+  EMAIL_NOT_FOUND: 'Không tìm thấy tài khoản với email này',
+  USER_NOT_FOUND: 'Không tìm thấy người dùng',
+  INVALID_RESET_TOKEN: 'Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn',
+  INVALID_VERIFICATION_TOKEN: 'Liên kết xác thực email không hợp lệ hoặc đã hết hạn',
+  VALIDATION_ERROR: 'Dữ liệu không hợp lệ',
+  INVALID_REQUEST_BODY: 'Dữ liệu gửi lên không hợp lệ',
+  AUTH_REQUIRED: 'Vui lòng đăng nhập để tiếp tục',
+  NETWORK_ERROR: 'Không thể kết nối đến server. Vui lòng thử lại sau.',
+  INTERNAL_ERROR: 'Hệ thống đang gặp lỗi, vui lòng thử lại sau',
 };
 
 function getPromotionMinAmount(data: unknown) {

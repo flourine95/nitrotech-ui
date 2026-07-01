@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { Mail, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { forgotPasswordSchema, type ForgotPasswordInput } from '@/schemas/auth';
 import { forgotPassword } from '@/lib/api/auth';
+import { getFriendlyErrorMessage } from '@/lib/utils/errors';
 import { FieldGroup, Field, FieldLabel, FieldDescription } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -28,10 +29,10 @@ export default function ForgotPasswordPage() {
       await forgotPassword(data.email);
       setSubmittedEmail(data.email);
       setSent(true);
-    } catch {
+    } catch (error) {
       // API luôn trả 200 kể cả email không tồn tại (chống email enumeration)
       // nên lỗi ở đây chỉ là network error
-      toast.error('Có lỗi xảy ra, vui lòng thử lại');
+      toast.error(getFriendlyErrorMessage(error));
     }
   }
 
@@ -41,7 +42,7 @@ export default function ForgotPasswordPage() {
         {!sent ? (
           <>
             <div className="mb-8 text-center">
-              <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-blue-50">
+              <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-full bg-blue-50">
                 <Mail className="size-7 text-blue-600" aria-hidden="true" />
               </div>
               <h1 className="mb-1 text-2xl font-bold">Quên mật khẩu?</h1>

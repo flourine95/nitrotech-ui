@@ -8,10 +8,10 @@ import { Eye, EyeOff, CheckCircle2 } from 'lucide-react';
 import { type RegisterInput, registerSchema } from '@/schemas/auth';
 import { register as registerUser } from '@/lib/api/auth';
 import { ApiException } from '@/lib/api/client';
+import { getFriendlyErrorMessage } from '@/lib/utils/errors';
 import { FieldGroup, Field, FieldLabel, FieldDescription } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 
 export default function RegisterPage() {
   const [showPass, setShowPass] = useState(false);
@@ -63,8 +63,10 @@ export default function RegisterPage() {
             setError(field as keyof RegisterInput, { message: msg }),
           );
         } else {
-          toast.error(e.error.message);
+          toast.error(getFriendlyErrorMessage(e, 'Đăng ký thất bại'));
         }
+      } else {
+        toast.error(getFriendlyErrorMessage(e, 'Đăng ký thất bại'));
       }
     }
   }
@@ -98,28 +100,31 @@ export default function RegisterPage() {
         </div>
 
         {/* Step indicator */}
-        <div className="mb-8 flex items-center gap-2">
-          {['Thông tin', 'Bảo mật'].map((s, i) => (
-            <div key={s} className="flex flex-1 items-center">
-              <div
-                className={`flex flex-1 items-center gap-2 ${i < step - 1 ? 'text-green-600' : i === step - 1 ? 'text-foreground' : 'text-muted-foreground'}`}
-              >
-                <div
-                  className={`flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors ${i < step - 1 ? 'bg-green-100 text-green-600' : i === step - 1 ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground'}`}
-                >
-                  {i < step - 1 ? (
-                    <CheckCircle2 className="size-3.5" aria-hidden="true" />
-                  ) : (
-                    i + 1
-                  )}
-                </div>
-                <span className="text-sm font-medium">{s}</span>
-              </div>
-              {i < 1 && (
-                <Separator className={`mx-3 flex-1 ${step > 1 ? 'bg-green-300' : ''}`} />
-              )}
+        <div className="mb-8 flex items-center justify-center">
+          <div
+            className={`flex shrink-0 items-center gap-2 ${step > 1 ? 'text-green-600' : 'text-foreground'}`}
+          >
+            <div
+              className={`flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors ${step > 1 ? 'bg-green-100 text-green-600' : 'bg-foreground text-background'}`}
+            >
+              {step > 1 ? <CheckCircle2 className="size-3.5" aria-hidden="true" /> : 1}
             </div>
-          ))}
+            <span className="whitespace-nowrap text-sm font-medium">Thông tin</span>
+          </div>
+          <div
+            aria-hidden="true"
+            className={`mx-4 h-px w-8 shrink-0 ${step > 1 ? 'bg-green-300' : 'bg-muted'}`}
+          />
+          <div
+            className={`flex shrink-0 items-center gap-2 ${step === 2 ? 'text-foreground' : 'text-muted-foreground'}`}
+          >
+            <div
+              className={`flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors ${step === 2 ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground'}`}
+            >
+              2
+            </div>
+            <span className="whitespace-nowrap text-sm font-medium">Bảo mật</span>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate>

@@ -58,6 +58,13 @@ export async function resendVerification(email: string) {
   });
 }
 
+export async function login(email: string, password: string) {
+  return apiFetch<{ data: { user: User }; message: string }>('/api/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
+  });
+}
+
 export async function register(name: string, email: string, password: string) {
   return apiFetch<{ data: { user: Pick<User, 'id' | 'name' | 'email'> }; message: string }>(
     '/api/auth/register',
