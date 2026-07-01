@@ -3,13 +3,32 @@ export interface ApiError {
   code: string;
   message: string;
   errors?: Record<string, string>;
+  data?: unknown;
 }
 
 export class ApiException extends Error {
   constructor(public readonly error: ApiError) {
     super(error.message);
     this.name = 'ApiException';
+    Object.setPrototypeOf(this, ApiException.prototype);
   }
+}
+
+function isApiError(value: unknown): value is ApiError {
+  if (!value || typeof value !== 'object') return false;
+
+  const error = value as Partial<ApiError>;
+  return (
+    typeof error.status === 'number' &&
+    typeof error.code === 'string' &&
+    typeof error.message === 'string'
+  );
+}
+
+async function readJson(response: Response): Promise<unknown> {
+  const contentType = response.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) return null;
+  return response.json().catch(() => null);
 }
 
 export async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -18,7 +37,7 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
     res = await fetch(path, {
       ...options,
       headers: {
-        'Content-Type': 'application/json',
+        ...(options.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }),
         ...(options.headers as Record<string, string>),
       },
     });
@@ -39,14 +58,16 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
   }
 
   if (!res.ok) {
-    const err: ApiError = await res.json().catch(() => ({
+    const raw = await readJson(res);
+    const err: ApiError = isApiError(raw) ? raw : {
       status: res.status,
       code: 'UNKNOWN_ERROR',
       message: 'Có lỗi xảy ra',
-    }));
+    };
     throw new ApiException(err);
   }
 
   if (res.status === 204) return undefined as T;
-  return res.json();
+
+  return readJson(res) as Promise<T>;
 }

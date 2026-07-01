@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { CheckCircle2, ChevronLeft, Clipboard, Clock3, Loader2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useCartStore } from '@/stores/cart.store';
+import { useCartStore } from '@/stores/cart-store';
 import { createOrder, getOrder } from '@/lib/api/orders';
 import { createAddress, getAddresses } from '@/lib/api/addresses';
 import type { CreateOrderData } from '@/schemas/order';
@@ -15,6 +15,7 @@ import type { Address } from '@/types/address';
 import ShippingForm from './shipping-form';
 import PaymentMethodSelector from './payment-method';
 import OrderSummary from './order-summary';
+import { getFriendlyErrorMessage } from '@/lib/utils/errors';
 
 type CheckoutStep = 'shipping' | 'payment' | 'review';
 
@@ -142,45 +143,18 @@ export default function CheckoutPage() {
       toast.success('Đặt hàng thành công!');
       router.push(`/account/orders/${order.id}`);
     } catch (error) {
-      const err = error as { error?: { code?: string; message?: string; data?: unknown } };
+      const err = error as { error?: { code?: string } };
       const code = err?.error?.code;
 
-      switch (code) {
-        case 'CART_EMPTY':
-          toast.error('Giỏ hàng trống');
-          router.push('/cart');
-          break;
-        case 'PROMOTION_NOT_FOUND':
-          toast.error('Mã khuyến mãi không tồn tại hoặc đã hết hạn');
-          setPromotionCode('');
-          break;
-        case 'PROMOTION_NOT_APPLICABLE': {
-          const data = err.error?.data as { minAmount?: number; currentAmount?: number };
-          toast.error(
-            `Đơn hàng chưa đủ điều kiện. Tối thiểu: ${data?.minAmount?.toLocaleString('vi-VN')} ₫`,
-          );
-          setPromotionCode('');
-          break;
-        }
-        case 'VARIANT_OUT_OF_STOCK': {
-          const data = err.error?.data as {
-            outOfStockItems?: Array<{ productName: string; variantName: string }>;
-          };
-          const items = data?.outOfStockItems || [];
-          if (items.length > 0) {
-            toast.error(
-              `Sản phẩm hết hàng: ${items.map((i) => `${i.productName} (${i.variantName})`).join(', ')}`,
-            );
-          } else {
-            toast.error('Một số sản phẩm đã hết hàng');
-          }
-          // Refetch cart to update stock status
-          await fetchCart();
-          router.push('/cart');
-          break;
-        }
-        default:
-          toast.error(err?.error?.message || 'Đặt hàng thất bại');
+      toast.error(getFriendlyErrorMessage(error, 'Đặt hàng thất bại'));
+
+      if (code === 'CART_EMPTY') {
+        router.push('/cart');
+      } else if (code === 'PROMOTION_NOT_FOUND' || code === 'PROMOTION_NOT_APPLICABLE') {
+        setPromotionCode('');
+      } else if (code === 'VARIANT_OUT_OF_STOCK') {
+        void fetchCart();
+        router.push('/cart');
       }
     } finally {
       setIsSubmitting(false);
