@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { CheckCircle2, ChevronLeft, Clipboard, Clock3, Loader2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useCartStore } from '@/stores/cart.store';
+import { useCartStore } from '@/stores/cart-store';
 import { createOrder, getOrder, initiateOrderPayment } from '@/lib/api/orders';
 import { createAddress, getAddresses } from '@/lib/api/addresses';
 import type { CreateOrderData } from '@/schemas/order';
@@ -15,6 +15,7 @@ import type { Address } from '@/types/address';
 import ShippingForm from './shipping-form';
 import PaymentMethodSelector from './payment-method';
 import OrderSummary from './order-summary';
+import { getFriendlyErrorMessage } from '@/lib/utils/errors';
 
 type CheckoutStep = 'shipping' | 'payment' | 'review';
 
@@ -27,28 +28,6 @@ function parseApiDate(value: string) {
   const normalized = value.replace(/(\.\d{3})\d+/, '$1');
   const hasTimezone = /(?:Z|[+-]\d{2}:?\d{2})$/.test(normalized);
   return new Date(hasTimezone ? normalized : `${normalized}Z`);
-}
-
-function getErrorMessage(error: unknown, fallback: string) {
-  if (error instanceof Error && error.message) {
-    return error.message;
-  }
-
-  if (typeof error === 'object' && error !== null) {
-    const err = error as {
-      message?: string;
-      error?: {
-        message?: string;
-      };
-      data?: {
-        message?: string;
-      };
-    };
-
-    return err.error?.message || err.data?.message || err.message || fallback;
-  }
-
-  return fallback;
 }
 
 export default function CheckoutPage() {
@@ -182,7 +161,7 @@ export default function CheckoutPage() {
           toast.error(message);
           return;
         } catch (error) {
-          const message = getErrorMessage(
+          const message = getFriendlyErrorMessage(
             error,
             'Không thể khởi tạo thanh toán VNPAY. Vui lòng thử lại từ trang đơn hàng.',
           );
@@ -200,48 +179,18 @@ export default function CheckoutPage() {
       toast.success('Đặt hàng thành công!');
       router.push(`/account/orders/${order.id}`);
     } catch (error) {
-      const err = error as { error?: { code?: string; message?: string; data?: unknown } };
+      const err = error as { error?: { code?: string } };
       const code = err?.error?.code;
 
-      switch (code) {
-        case 'CART_EMPTY':
-          toast.error('Giỏ hàng trống');
-          router.push('/cart');
-          break;
-        case 'PROMOTION_NOT_FOUND':
-          toast.error('Mã khuyến mãi không tồn tại hoặc đã hết hạn');
-          setPromotionCode('');
-          break;
-        case 'PROMOTION_NOT_APPLICABLE': {
-          const data = err.error?.data as { minAmount?: number; currentAmount?: number };
-          toast.error(
-            `Đơn hàng chưa đủ điều kiện. Tối thiểu: ${data?.minAmount?.toLocaleString('vi-VN')} ₫`,
-          );
-          setPromotionCode('');
-          break;
-        }
-        case 'VARIANT_OUT_OF_STOCK': {
-          const data = err.error?.data as {
-            outOfStockItems?: Array<{ productName: string; variantName: string }>;
-          };
-          const items = data?.outOfStockItems || [];
+      toast.error(getFriendlyErrorMessage(error, 'Đặt hàng thất bại'));
 
-          if (items.length > 0) {
-            toast.error(
-              `Sản phẩm hết hàng: ${items
-                .map((i) => `${i.productName} (${i.variantName})`)
-                .join(', ')}`,
-            );
-          } else {
-            toast.error('Một số sản phẩm đã hết hàng');
-          }
-
-          await fetchCart();
-          router.push('/cart');
-          break;
-        }
-        default:
-          toast.error(err?.error?.message || 'Đặt hàng thất bại');
+      if (code === 'CART_EMPTY') {
+        router.push('/cart');
+      } else if (code === 'PROMOTION_NOT_FOUND' || code === 'PROMOTION_NOT_APPLICABLE') {
+        setPromotionCode('');
+      } else if (code === 'VARIANT_OUT_OF_STOCK') {
+        void fetchCart();
+        router.push('/cart');
       }
     } finally {
       setIsSubmitting(false);
@@ -444,11 +393,11 @@ export default function CheckoutPage() {
 }
 
 function SepayPaymentView({
-                            order,
-                            isRefreshing,
-                            onOrderChange,
-                            onRefreshingChange,
-                          }: {
+  order,
+  isRefreshing,
+  onOrderChange,
+  onRefreshingChange,
+}: {
   order: Order;
   isRefreshing: boolean;
   onOrderChange: (order: Order) => void;
@@ -648,11 +597,11 @@ function SepayPaymentView({
 }
 
 function PaymentInfoRow({
-                          label,
-                          value,
-                          strong,
-                          onCopy,
-                        }: {
+  label,
+  value,
+  strong,
+  onCopy,
+}: {
   label: string;
   value: string;
   strong?: boolean;
@@ -664,7 +613,7 @@ function PaymentInfoRow({
 
       <div className="flex min-w-0 items-center gap-2">
         <span
-          className={`break-all text-right text-sm ${
+          className={`text-right text-sm break-all ${
             strong ? 'font-bold text-slate-950' : 'font-medium text-slate-800'
           }`}
         >
@@ -743,11 +692,11 @@ function CheckoutStepper({ currentStep }: { currentStep: CheckoutStep }) {
 }
 
 function StepIndicator({
-                         step,
-                         label,
-                         active,
-                         completed,
-                       }: {
+  step,
+  label,
+  active,
+  completed,
+}: {
   step: number;
   label: string;
   active: boolean;

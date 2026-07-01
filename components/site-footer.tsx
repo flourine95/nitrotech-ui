@@ -3,12 +3,12 @@ import { FacebookIcon, YouTubeIcon, TikTokIcon, BrandLogo } from '@/components/i
 
 const footerLinks = {
   'Sản phẩm': [
-    { label: 'Laptop Gaming', href: '/products?cat=laptop-gaming' },
-    { label: 'Laptop Văn phòng', href: '/products?cat=laptop-office' },
-    { label: 'PC Desktop', href: '/products?cat=desktop' },
-    { label: 'Linh kiện', href: '/products?cat=components' },
-    { label: 'Màn hình', href: '/products?cat=monitors' },
-    { label: 'Phụ kiện', href: '/products?cat=accessories' },
+    { label: 'Laptop Gaming', href: '/products?category=laptop-gaming' },
+    { label: 'Laptop Văn phòng', href: '/products?category=laptop-van-phong' },
+    { label: 'PC Desktop', href: '/products?category=pc-may-tinh-de-ban' },
+    { label: 'Linh kiện', href: '/products?category=linh-kien-may-tinh' },
+    { label: 'Màn hình', href: '/products?category=man-hinh-may-tinh' },
+    { label: 'Phụ kiện', href: '/products?category=phu-kien-gear' },
   ],
   'Hỗ trợ': [
     { label: 'Tra cứu đơn hàng', href: '/account/orders' },

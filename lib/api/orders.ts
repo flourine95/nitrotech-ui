@@ -3,6 +3,7 @@ import type {
   Order as ApiOrder,
   OrderListResponse,
   OrderResponse,
+  ShippingAddress,
 } from '@/types/order';
 import type {
   CreateOrderData,
@@ -39,6 +40,14 @@ export async function createOrder(data: CreateOrderData): Promise<ApiOrder> {
     body: JSON.stringify(data),
   });
 
+  return res.data;
+}
+
+export async function quoteShippingFee(shippingAddress: ShippingAddress): Promise<number> {
+  const res = await apiFetch<{ data: number }>('/api/orders/shipping-fee', {
+    method: 'POST',
+    body: JSON.stringify({ shippingAddress }),
+  });
   return res.data;
 }
 

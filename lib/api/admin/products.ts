@@ -24,6 +24,10 @@ export interface CreateVariantBody {
   price: number;
   attributes?: Record<string, string>;
   active: boolean;
+  weightGrams?: number;
+  lengthCm?: number;
+  widthCm?: number;
+  heightCm?: number;
 }
 
 export interface CreateProductBody {

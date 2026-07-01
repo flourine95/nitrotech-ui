@@ -1,9 +1,9 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Loader2, Shield, Zap, Package, CreditCard } from 'lucide-react';
-import { useCartStore } from '@/stores/cart.store';
+import { useCartStore } from '@/stores/cart-store';
 import { Button } from '@/components/ui/button';
 import type { ProductVariant } from '@/lib/api/public/products';
 import { formatCurrency } from '@/lib/utils/formatting';
@@ -44,7 +44,7 @@ export function ProductActions({
   const pathname = usePathname();
   const { cart, addItem, fetchCart, isLoading } = useCartStore();
   const [qty, setQty] = useState(1);
-  const variantOptions = buildVariantOptions(variants);
+  const variantOptions = useMemo(() => buildVariantOptions(variants), [variants]);
   const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>(() => {
     const firstVariant = variants[0]?.attributes ?? {};
     return Object.fromEntries(variantOptions.map((option) => [option.key, firstVariant[option.key]]).filter(([, value]) => value));
@@ -58,6 +58,9 @@ export function ProductActions({
   const availableToAdd = typeof selectedStock === 'number'
     ? Math.max(0, selectedStock - quantityInCart)
     : null;
+  const purchaseQty = availableToAdd === null
+    ? qty
+    : Math.min(Math.max(1, qty), Math.max(1, availableToAdd));
   const canPurchase = Boolean(
     selectedVariant?.id &&
     selectedVariant.active &&
@@ -71,12 +74,6 @@ export function ProductActions({
   useEffect(() => {
     onVariantChange?.(selectedVariant);
   }, [onVariantChange, selectedVariant]);
-
-  useEffect(() => {
-    if (availableToAdd !== null) {
-      setQty((current) => Math.min(Math.max(1, current), Math.max(1, availableToAdd)));
-    }
-  }, [availableToAdd]);
 
   function handleAttributeChange(key: string, value: string) {
     const nextAttributes = { ...selectedAttributes, [key]: value };
@@ -96,9 +93,9 @@ export function ProductActions({
     }
 
     try {
-      await addItem(selectedVariant.id, qty);
+      await addItem(selectedVariant.id, purchaseQty);
       toast.success('Đã thêm vào giỏ hàng', {
-        description: `${qty} × sản phẩm`,
+        description: `${purchaseQty} × sản phẩm`,
         action: {
           label: 'Xem giỏ hàng',
           onClick: () => router.push('/cart'),
@@ -135,7 +132,7 @@ export function ProductActions({
     }
 
     try {
-      await addItem(selectedVariant.id, qty);
+      await addItem(selectedVariant.id, purchaseQty);
       router.push('/checkout');
     } catch (error) {
       const err = error as { error?: { code?: string; message?: string } };
@@ -205,11 +202,11 @@ export function ProductActions({
               className="flex h-10 min-w-16 items-center justify-center px-4 text-sm font-semibold text-foreground"
               aria-live="polite"
             >
-              {qty}
+              {purchaseQty}
             </span>
             <Button
               onClick={() => setQty((q) => q + 1)}
-              disabled={!canPurchase || isLoading || (availableToAdd !== null && qty >= availableToAdd)}
+              disabled={!canPurchase || isLoading || (availableToAdd !== null && purchaseQty >= availableToAdd)}
               variant="ghost"
               size="default"
               className="h-10 rounded-none px-4"
