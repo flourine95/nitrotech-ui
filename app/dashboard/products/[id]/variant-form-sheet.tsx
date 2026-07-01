@@ -43,6 +43,10 @@ export function VariantFormSheet({
   const [sku, setSku] = useState(variant?.sku ?? '');
   const [name, setName] = useState(variant?.name ?? '');
   const [price, setPrice] = useState(variant?.price?.toString() ?? '');
+  const [weightGrams, setWeightGrams] = useState(variant?.weightGrams?.toString() ?? '');
+  const [lengthCm, setLengthCm] = useState(variant?.lengthCm?.toString() ?? '');
+  const [widthCm, setWidthCm] = useState(variant?.widthCm?.toString() ?? '');
+  const [heightCm, setHeightCm] = useState(variant?.heightCm?.toString() ?? '');
   const [active, setActive] = useState(variant?.active ?? true);
   const [attributes, setAttributes] = useState<Record<string, string>>(variant?.attributes ?? {});
   const [showMediaPicker, setShowMediaPicker] = useState(false);
@@ -55,6 +59,7 @@ export function VariantFormSheet({
         price: parseFloat(price),
         attributes: Object.keys(attributes).length > 0 ? attributes : undefined,
         active,
+        ...shippingFields(),
       }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['products'] });
@@ -72,6 +77,7 @@ export function VariantFormSheet({
         price: parseFloat(price),
         attributes: Object.keys(attributes).length > 0 ? attributes : undefined,
         active,
+        ...shippingFields(),
       }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['products'] });
@@ -92,6 +98,19 @@ export function VariantFormSheet({
     } else {
       createMutation.mutate();
     }
+  }
+
+  function optionalNumber(value: string) {
+    return value.trim() ? Number(value) : undefined;
+  }
+
+  function shippingFields() {
+    return {
+      weightGrams: optionalNumber(weightGrams),
+      lengthCm: optionalNumber(lengthCm),
+      widthCm: optionalNumber(widthCm),
+      heightCm: optionalNumber(heightCm),
+    };
   }
 
   function addAttribute() {
@@ -190,6 +209,78 @@ export function VariantFormSheet({
                           đ
                         </span>
                       </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Attributes card */}
+                <div className="rounded-2xl border bg-card shadow-none">
+                  <div className="flex flex-col gap-2 space-y-1.5 p-6">
+                    <div className="text-base font-semibold tracking-tight">Vận chuyển</div>
+                    <div className="text-sm text-muted-foreground">
+                      Khối lượng và kích thước dùng để tính phí giao hàng.
+                    </div>
+                  </div>
+                  <div className="grid gap-4 p-6 pt-0 md:grid-cols-2">
+                    <div className="grid gap-2">
+                      <Label htmlFor="weightGrams">Khối lượng</Label>
+                      <div className="relative">
+                        <Input
+                          id="weightGrams"
+                          type="number"
+                          min="1"
+                          value={weightGrams}
+                          onChange={(e) => setWeightGrams(e.target.value)}
+                          placeholder="1000"
+                          className="h-12 pr-16"
+                          disabled={isPending}
+                        />
+                        <span className="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-sm text-muted-foreground">
+                          gram
+                        </span>
+                      </div>
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="lengthCm">Dài</Label>
+                      <Input
+                        id="lengthCm"
+                        type="number"
+                        min="0"
+                        step="0.1"
+                        value={lengthCm}
+                        onChange={(e) => setLengthCm(e.target.value)}
+                        placeholder="30"
+                        className="h-12"
+                        disabled={isPending}
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="widthCm">Rộng</Label>
+                      <Input
+                        id="widthCm"
+                        type="number"
+                        min="0"
+                        step="0.1"
+                        value={widthCm}
+                        onChange={(e) => setWidthCm(e.target.value)}
+                        placeholder="20"
+                        className="h-12"
+                        disabled={isPending}
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="heightCm">Cao</Label>
+                      <Input
+                        id="heightCm"
+                        type="number"
+                        min="0"
+                        step="0.1"
+                        value={heightCm}
+                        onChange={(e) => setHeightCm(e.target.value)}
+                        placeholder="10"
+                        className="h-12"
+                        disabled={isPending}
+                      />
                     </div>
                   </div>
                 </div>

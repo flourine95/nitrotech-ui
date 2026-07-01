@@ -6,6 +6,7 @@ import type {
   OrderListResponse,
 } from '@/types/order';
 import type { CreateOrderData, CancelOrderData, OrderStatus as ApiOrderStatus } from '@/schemas/order';
+import type { ShippingAddress } from '@/types/order';
 
 // Dashboard OrderStatus (uppercase) - used in admin panel
 export type OrderStatus = 'PENDING' | 'CONFIRMED' | 'SHIPPING' | 'COMPLETED' | 'CANCELLED';
@@ -27,6 +28,14 @@ export async function createOrder(data: CreateOrderData): Promise<ApiOrder> {
   const res = await apiFetch<OrderResponse>('/api/orders', {
     method: 'POST',
     body: JSON.stringify(data),
+  });
+  return res.data;
+}
+
+export async function quoteShippingFee(shippingAddress: ShippingAddress): Promise<number> {
+  const res = await apiFetch<{ data: number }>('/api/orders/shipping-fee', {
+    method: 'POST',
+    body: JSON.stringify({ shippingAddress }),
   });
   return res.data;
 }
