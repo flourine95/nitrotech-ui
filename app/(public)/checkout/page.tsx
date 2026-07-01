@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { CheckCircle2, ChevronLeft, Clipboard, Clock3, Loader2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCartStore } from '@/stores/cart-store';
-import { createOrder, getOrder } from '@/lib/api/orders';
+import { createOrder, getOrder, initiateOrderPayment } from '@/lib/api/orders';
 import { createAddress, getAddresses } from '@/lib/api/addresses';
 import type { CreateOrderData } from '@/schemas/order';
 import type { Order, ShippingAddress } from '@/types/order';
@@ -38,8 +38,9 @@ export default function CheckoutPage() {
   const [orderCompleted, setOrderCompleted] = useState(false);
   const [sepayOrder, setSepayOrder] = useState<Order | null>(null);
   const [isRefreshingOrder, setIsRefreshingOrder] = useState(false);
+  const [paymentInitError, setPaymentInitError] = useState<string | null>(null);
+  const [failedPaymentOrderId, setFailedPaymentOrderId] = useState<number | null>(null);
 
-  // Form data
   const [shippingAddress, setShippingAddress] = useState<ShippingAddress | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cod');
   const [promotionCode, setPromotionCode] = useState('');
@@ -81,9 +82,9 @@ export default function CheckoutPage() {
     void loadSavedAddress();
   }, []);
 
-  // Redirect if cart is empty
   useEffect(() => {
     if (orderCompleted) return;
+
     if (!cartLoading && (!cart || cart.items.length === 0)) {
       toast.error('Giỏ hàng trống');
       router.push('/cart');
@@ -102,6 +103,8 @@ export default function CheckoutPage() {
   };
 
   const handlePaymentSubmit = (method: PaymentMethod) => {
+    setPaymentInitError(null);
+    setFailedPaymentOrderId(null);
     setPaymentMethod(method);
     setCurrentStep('review');
   };
@@ -113,6 +116,8 @@ export default function CheckoutPage() {
       return;
     }
 
+    setPaymentInitError(null);
+    setFailedPaymentOrderId(null);
     setIsSubmitting(true);
 
     try {
@@ -128,16 +133,47 @@ export default function CheckoutPage() {
       }
 
       const order = await createOrder(orderData);
-      setOrderCompleted(true);
 
       if (order.paymentMethod === 'sepay') {
+        setOrderCompleted(true);
         setSepayOrder(order);
         void clearCart();
         toast.success('Đặt hàng thành công!');
         return;
       }
 
-      // Clear cart after successful order
+      if (order.paymentMethod === 'vnpay') {
+        setOrderCompleted(true);
+        await clearCart();
+
+        try {
+          const payment = await initiateOrderPayment(order.id);
+
+          if (payment.redirect && payment.paymentUrl) {
+            window.location.href = payment.paymentUrl;
+            return;
+          }
+
+          const message =
+            'Không lấy được liên kết thanh toán VNPAY. Vui lòng thử lại từ trang đơn hàng.';
+          setFailedPaymentOrderId(order.id);
+          setPaymentInitError(message);
+          toast.error(message);
+          return;
+        } catch (error) {
+          const message = getFriendlyErrorMessage(
+            error,
+            'Không thể khởi tạo thanh toán VNPAY. Vui lòng thử lại từ trang đơn hàng.',
+          );
+
+          setFailedPaymentOrderId(order.id);
+          setPaymentInitError(message);
+          toast.error(message);
+          return;
+        }
+      }
+
+      setOrderCompleted(true);
       await clearCart();
 
       toast.success('Đặt hàng thành công!');
@@ -203,12 +239,10 @@ export default function CheckoutPage() {
             </p>
           </div>
 
-          {/* Progress Steps */}
           <CheckoutStepper currentStep={currentStep} />
         </div>
 
         <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
-          {/* Main Content */}
           <div className="min-w-0">
             {currentStep === 'shipping' && (
               <ShippingForm
@@ -229,7 +263,6 @@ export default function CheckoutPage() {
 
             {currentStep === 'review' && (
               <div className="space-y-6">
-                {/* Shipping Address Review */}
                 <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                   <div className="mb-4 flex items-center justify-between gap-4">
                     <h2 className="text-lg font-semibold text-slate-950">Địa chỉ giao hàng</h2>
@@ -242,6 +275,7 @@ export default function CheckoutPage() {
                       Sửa
                     </Button>
                   </div>
+
                   {shippingAddress && (
                     <div className="space-y-1 text-sm leading-6">
                       <p className="font-semibold text-slate-950">{shippingAddress.name}</p>
@@ -260,7 +294,6 @@ export default function CheckoutPage() {
                   )}
                 </div>
 
-                {/* Payment Method Review */}
                 <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                   <div className="mb-4 flex items-center justify-between gap-4">
                     <h2 className="text-lg font-semibold text-slate-950">Phương thức thanh toán</h2>
@@ -273,15 +306,15 @@ export default function CheckoutPage() {
                       Sửa
                     </Button>
                   </div>
+
                   <p className="text-sm text-slate-600">
                     {paymentMethod === 'cod' && 'Thanh toán khi nhận hàng (COD)'}
-                    {paymentMethod === 'vnpay' && 'VNPay'}
-                    {paymentMethod === 'momo' && 'Momo'}
+                    {paymentMethod === 'vnpay' && 'VNPAY'}
+                    {paymentMethod === 'momo' && 'MoMo'}
                     {paymentMethod === 'sepay' && 'Chuyển khoản VietQR qua SePay'}
                   </p>
                 </div>
 
-                {/* Note */}
                 <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                   <h2 className="mb-4 text-lg font-semibold text-slate-950">Ghi chú đơn hàng</h2>
                   <textarea
@@ -295,22 +328,42 @@ export default function CheckoutPage() {
                   <p className="mt-2 text-xs text-slate-500">{note.length}/500 ký tự</p>
                 </div>
 
-                {/* Action Buttons */}
+                {paymentInitError && (
+                  <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                    <p>{paymentInitError}</p>
+
+                    {failedPaymentOrderId && (
+                      <Button
+                        variant="outline"
+                        className="mt-3 rounded-full border-rose-300 bg-white text-rose-700 hover:bg-rose-100"
+                        onClick={() => router.push(`/account/orders/${failedPaymentOrderId}`)}
+                      >
+                        Xem đơn hàng đã tạo
+                      </Button>
+                    )}
+                  </div>
+                )}
+
+                {isSubmitting && paymentMethod === 'vnpay' && (
+                  <p className="text-sm text-slate-500">Đang khởi tạo thanh toán VNPAY...</p>
+                )}
+
                 <div className="flex flex-col gap-3 sm:flex-row sm:justify-between">
                   <Button
                     variant="outline"
                     className="rounded-full sm:w-auto"
                     onClick={handleBack}
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || failedPaymentOrderId !== null}
                   >
                     <ChevronLeft />
                     Quay lại
                   </Button>
+
                   <Button
                     className="w-full rounded-full sm:w-48"
                     size="lg"
                     onClick={handlePlaceOrder}
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || failedPaymentOrderId !== null}
                   >
                     {isSubmitting ? (
                       <>
@@ -326,7 +379,6 @@ export default function CheckoutPage() {
             )}
           </div>
 
-          {/* Order Summary Sidebar */}
           <div className="w-full lg:max-w-[360px]">
             <OrderSummary
               cart={cart}
@@ -364,11 +416,14 @@ function SepayPaymentView({
     if (isPaid || isExpired) return;
 
     let cancelled = false;
+
     const refresh = async () => {
       try {
         const latestOrder = await getOrder(order.id);
         if (cancelled) return;
+
         onOrderChange(latestOrder);
+
         if (latestOrder.status === 'confirmed') {
           toast.success('Thanh toán đã được xác nhận');
         }
@@ -378,6 +433,7 @@ function SepayPaymentView({
     };
 
     const interval = window.setInterval(() => void refresh(), 5000);
+
     return () => {
       cancelled = true;
       window.clearInterval(interval);
@@ -386,7 +442,9 @@ function SepayPaymentView({
 
   useEffect(() => {
     if (isPaid || isExpired) return;
+
     const interval = window.setInterval(() => setNow(Date.now()), 1000);
+
     return () => window.clearInterval(interval);
   }, [isExpired, isPaid]);
 
@@ -401,9 +459,11 @@ function SepayPaymentView({
 
   const handleRefresh = async () => {
     onRefreshingChange(true);
+
     try {
       const latestOrder = await getOrder(order.id);
       onOrderChange(latestOrder);
+
       if (latestOrder.status === 'confirmed') {
         toast.success('Thanh toán đã được xác nhận');
       } else if (isExpired) {
@@ -440,6 +500,7 @@ function SepayPaymentView({
                 className="aspect-square w-full object-contain"
               />
             </div>
+
             <p className="mt-4 text-center text-sm text-slate-500">
               Quét mã bằng ứng dụng ngân hàng để tự điền số tiền và nội dung chuyển khoản.
             </p>
@@ -452,6 +513,7 @@ function SepayPaymentView({
                   <h2 className="text-lg font-semibold text-slate-950">Thông tin chuyển khoản</h2>
                   <p className="mt-1 text-sm text-slate-500">Chuyển đúng số tiền và nội dung.</p>
                 </div>
+
                 <span
                   className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium ${
                     isPaid
@@ -518,6 +580,7 @@ function SepayPaymentView({
                   )}
                   Kiểm tra lại
                 </Button>
+
                 <Button
                   className="rounded-full"
                   onClick={() => router.push(`/account/orders/${order.id}`)}
@@ -547,12 +610,16 @@ function PaymentInfoRow({
   return (
     <div className="flex flex-col gap-2 rounded-xl bg-slate-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
       <span className="text-sm text-slate-500">{label}</span>
+
       <div className="flex min-w-0 items-center gap-2">
         <span
-          className={`break-all text-right text-sm ${strong ? 'font-bold text-slate-950' : 'font-medium text-slate-800'}`}
+          className={`text-right text-sm break-all ${
+            strong ? 'font-bold text-slate-950' : 'font-medium text-slate-800'
+          }`}
         >
           {value}
         </span>
+
         {onCopy && (
           <button
             type="button"
@@ -585,6 +652,7 @@ function formatDuration(ms: number) {
   const totalSeconds = Math.max(0, Math.floor(ms / 1000));
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
+
   return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 }
 
@@ -647,6 +715,7 @@ function StepIndicator({
       >
         {step}
       </div>
+
       <span
         className={`text-xs font-medium ${active ? 'text-foreground' : 'text-muted-foreground'}`}
       >
