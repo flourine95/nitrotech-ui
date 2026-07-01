@@ -1,7 +1,7 @@
 'use client';
 import { CheckIcon, ClipboardIcon, ImageIcon } from 'lucide-react';
 import { useCopy } from '@/hooks/use-copy';
-import { formatBytes } from '@/lib/utils';
+import { formatBytes } from '@/lib/utils/formatting';
 import { cn } from '@/lib/utils';
 import { type AssetViewProps } from './media-types';
 

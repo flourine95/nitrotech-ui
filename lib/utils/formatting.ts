@@ -18,6 +18,16 @@ const viDateTimeFormatter = new Intl.DateTimeFormat('vi-VN', {
   minute: '2-digit',
 });
 
+export function formatBytes(b: number): string {
+  if (b < 1024) return `${b} B`;
+  if (b < 1024 * 1024) return `${(b / 1024).toFixed(1)} KB`;
+  return `${(b / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+export function formatDate(iso: string): string {
+  return viDateFormatter.format(new Date(iso));
+}
+
 export function formatCurrency(amount: number): string {
   return vndFormatter.format(amount);
 }

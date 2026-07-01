@@ -7,7 +7,8 @@ import { Check, ChevronsUpDown, FolderOpen } from 'lucide-react';
 import { createCategory, updateCategory, type Category } from '@/lib/api/admin/categories';
 import { ApiException } from '@/lib/api/client';
 import { categorySchema, type CategoryFormData } from '@/schemas/categories';
-import { slugify, cn } from '@/lib/utils';
+import { cn } from '@/lib/utils';
+import { slugify } from '@/lib/utils/string';
 import {
   Command,
   CommandEmpty,

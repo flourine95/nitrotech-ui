@@ -1,7 +1,7 @@
 'use client';
 import { CheckIcon, ClipboardIcon, ExternalLinkIcon, XIcon } from 'lucide-react';
 import { useCopy } from '@/hooks/use-copy';
-import { formatBytes, formatDate } from '@/lib/utils';
+import { formatBytes, formatDate } from '@/lib/utils/formatting';
 import { Button } from '@/components/ui/button';
 import { type CloudinaryResource } from '@/lib/api/upload';
 
