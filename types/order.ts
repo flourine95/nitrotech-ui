@@ -52,15 +52,35 @@ export interface Order {
 
 export interface OrderListItem {
   id: number;
-  orderNumber: string;
+  userId?: number;
+  orderCode?: string;
+  orderNumber?: string;
+  receiver?: string | null;
+  phone?: string | null;
+  email?: string | null;
   status: OrderStatus;
   paymentMethod: PaymentMethod;
-  totalAmount: number;
-  discountAmount: number;
-  shippingFee: number;
+  paymentStatus?: string | null;
+  hasShipment?: boolean | null;
+  shipmentStatus?: string | null;
+  trackingCode?: string | null;
+  availableActions?: string[];
+  ageMinutes?: number | null;
+  slaDueAt?: string | null;
+  slaStatus?: string | null;
+  slaLabel?: string | null;
+  totalAmount?: number;
+  discountAmount?: number;
+  shippingFee?: number;
   finalAmount: number;
-  itemCount: number;
+  itemCount?: number;
+  items?: Array<{
+    id?: number;
+    name?: string;
+    quantity?: number;
+  }>;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface OrderResponse {

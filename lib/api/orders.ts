@@ -3,7 +3,6 @@ import type {
   Order as ApiOrder,
   OrderListResponse,
   OrderResponse,
-  ShippingAddress,
 } from '@/types/order';
 import type {
   CreateOrderData,
@@ -33,6 +32,11 @@ export type PaymentInitResult = {
   redirect: boolean;
 };
 
+export type PaymentVerificationResult = {
+  success: boolean;
+  message?: string;
+};
+
 // POST /api/orders - Create order
 export async function createOrder(data: CreateOrderData): Promise<ApiOrder> {
   const res = await apiFetch<OrderResponse>('/api/orders', {
@@ -40,14 +44,6 @@ export async function createOrder(data: CreateOrderData): Promise<ApiOrder> {
     body: JSON.stringify(data),
   });
 
-  return res.data;
-}
-
-export async function quoteShippingFee(shippingAddress: ShippingAddress): Promise<number> {
-  const res = await apiFetch<{ data: number }>('/api/orders/shipping-fee', {
-    method: 'POST',
-    body: JSON.stringify({ shippingAddress }),
-  });
   return res.data;
 }
 
@@ -116,4 +112,13 @@ export async function initiateOrderPayment(orderId: number): Promise<PaymentInit
   }
 
   return data.data ?? data;
+}
+
+export async function verifyVnpayReturn(
+  params: URLSearchParams,
+): Promise<PaymentVerificationResult> {
+  const query = params.toString();
+  return apiFetch<PaymentVerificationResult>(
+    `/api/webhooks/payments/vnpay${query ? `?${query}` : ''}`,
+  );
 }
