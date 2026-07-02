@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Minus, Plus, ShoppingBag, Trash2, Tag, Truck, ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Minus, Plus, ShoppingBag, Tag, Trash2, Truck } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,7 +16,6 @@ export function CartContent() {
   const { cart, isLoading, fetchCart, updateQuantity, removeItem } = useCartStore();
   const [voucherCode, setVoucherCode] = useState('');
   const [isApplyingVoucher, setIsApplyingVoucher] = useState(false);
-  const [shippingMethod, setShippingMethod] = useState<'standard' | 'express'>('standard');
 
   useEffect(() => {
     void fetchCart();
@@ -47,7 +46,7 @@ export function CartContent() {
     try {
       await removeItem(itemId);
       toast.success('Đã xóa sản phẩm khỏi giỏ hàng');
-    } catch (error) {
+    } catch {
       toast.error('Xóa sản phẩm thất bại');
     }
   };
@@ -59,8 +58,7 @@ export function CartContent() {
     }
 
     setIsApplyingVoucher(true);
-    // TODO: Implement voucher API call
-    setTimeout(() => {
+    window.setTimeout(() => {
       setIsApplyingVoucher(false);
       toast.success('Áp dụng mã giảm giá thành công');
     }, 1000);
@@ -70,8 +68,8 @@ export function CartContent() {
     router.push('/checkout');
   };
 
-  const shippingFee = shippingMethod === 'express' ? 50000 : cart?.summary.shipping || 0;
-  const total = (cart?.summary.total || 0) + shippingFee - (cart?.summary.discount || 0);
+  const shippingFee = cart?.summary.shipping || 0;
+  const total = (cart?.summary.subtotal || 0) + shippingFee - (cart?.summary.discount || 0);
 
   if (isLoading && !cart) {
     return <CartSkeleton />;
@@ -84,7 +82,6 @@ export function CartContent() {
   return (
     <main className="bg-slate-50 py-8">
       <div className="mx-auto max-w-7xl px-6">
-        {/* Breadcrumb */}
         <Link
           href="/products"
           className="mb-6 inline-flex items-center gap-2 text-sm text-slate-600 transition-colors hover:text-slate-900"
@@ -93,7 +90,6 @@ export function CartContent() {
           Tiếp tục mua sắm
         </Link>
 
-        {/* Page Title */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-slate-900">Giỏ hàng của bạn</h1>
           <p className="mt-2 text-slate-500">
@@ -102,7 +98,6 @@ export function CartContent() {
         </div>
 
         <div className="grid gap-8 lg:grid-cols-3">
-          {/* Cart Items */}
           <div className="lg:col-span-2">
             <div className="flex flex-col gap-4">
               {cart.items.map((item) => (
@@ -111,7 +106,6 @@ export function CartContent() {
                   className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 transition-all hover:shadow-md"
                 >
                   <div className="flex gap-5">
-                    {/* Product Image */}
                     <Link
                       href={`/products/${item.variant.product.slug}`}
                       className="relative size-28 shrink-0 overflow-hidden rounded-xl bg-slate-100"
@@ -124,7 +118,6 @@ export function CartContent() {
                       />
                     </Link>
 
-                    {/* Product Info */}
                     <div className="flex flex-1 flex-col">
                       <div className="flex-1">
                         <Link
@@ -149,7 +142,6 @@ export function CartContent() {
                       </div>
 
                       <div className="mt-4 flex items-center justify-between">
-                        {/* Quantity Controls */}
                         <div className="flex items-center gap-3">
                           <button
                             onClick={() => handleUpdateQuantity(item.variantId, item.quantity - 1)}
@@ -170,7 +162,6 @@ export function CartContent() {
                           </button>
                         </div>
 
-                        {/* Price */}
                         <div className="text-right">
                           <p className="text-lg font-bold text-slate-900">
                             {(item.variant.price * item.quantity).toLocaleString('vi-VN')}₫
@@ -184,7 +175,6 @@ export function CartContent() {
                       </div>
                     </div>
 
-                    {/* Remove Button */}
                     <button
                       onClick={() => handleRemoveItem(item.variantId)}
                       disabled={isLoading}
@@ -197,7 +187,6 @@ export function CartContent() {
               ))}
             </div>
 
-            {/* Voucher Section */}
             <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-5">
               <div className="flex items-center gap-2 text-slate-900">
                 <Tag className="h-5 w-5 text-blue-600" />
@@ -217,52 +206,20 @@ export function CartContent() {
             </div>
           </div>
 
-          {/* Order Summary */}
           <div className="lg:col-span-1">
             <div className="sticky top-4 rounded-2xl border border-slate-200 bg-white p-6">
               <h2 className="text-lg font-bold text-slate-900">Tóm tắt đơn hàng</h2>
 
-              {/* Shipping Options */}
-              <div className="mt-6">
-                <div className="mb-3 flex items-center gap-2 text-sm font-medium text-slate-700">
+              <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <div className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
                   <Truck className="h-4 w-4" />
-                  Phương thức vận chuyển
+                  Phí vận chuyển
                 </div>
-                <div className="space-y-2">
-                  <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-slate-200 p-3 transition-colors hover:bg-slate-50">
-                    <input
-                      type="radio"
-                      name="shipping"
-                      value="standard"
-                      checked={shippingMethod === 'standard'}
-                      onChange={(e) => setShippingMethod(e.target.value as 'standard')}
-                      className="h-4 w-4 text-blue-600"
-                    />
-                    <div className="flex-1">
-                      <div className="text-sm font-medium text-slate-900">Giao hàng tiêu chuẩn</div>
-                      <div className="text-xs text-slate-500">2-3 ngày</div>
-                    </div>
-                    <div className="text-sm font-semibold text-slate-900">Miễn phí</div>
-                  </label>
-                  <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-slate-200 p-3 transition-colors hover:bg-slate-50">
-                    <input
-                      type="radio"
-                      name="shipping"
-                      value="express"
-                      checked={shippingMethod === 'express'}
-                      onChange={(e) => setShippingMethod(e.target.value as 'express')}
-                      className="h-4 w-4 text-blue-600"
-                    />
-                    <div className="flex-1">
-                      <div className="text-sm font-medium text-slate-900">Giao hàng nhanh</div>
-                      <div className="text-xs text-slate-500">Trong 2 giờ (HCM & HN)</div>
-                    </div>
-                    <div className="text-sm font-semibold text-slate-900">50.000₫</div>
-                  </label>
-                </div>
+                <p className="text-sm text-slate-600">
+                  Phí ship sẽ được GHTK tính lại ở bước checkout theo địa chỉ giao hàng thực tế.
+                </p>
               </div>
 
-              {/* Price Breakdown */}
               <div className="mt-6 space-y-3 border-t border-slate-100 pt-6">
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-600">Tạm tính</span>
@@ -281,7 +238,7 @@ export function CartContent() {
                 )}
 
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">Phí vận chuyển</span>
+                  <span className="text-slate-600">Phí vận chuyển hiện tại</span>
                   <span className="font-medium text-slate-900">
                     {shippingFee === 0 ? 'Miễn phí' : `${shippingFee.toLocaleString('vi-VN')}₫`}
                   </span>
@@ -289,7 +246,7 @@ export function CartContent() {
 
                 <div className="border-t border-slate-100 pt-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-base font-semibold text-slate-900">Tổng cộng</span>
+                    <span className="text-base font-semibold text-slate-900">Tổng cộng tạm tính</span>
                     <span className="text-2xl font-bold text-blue-600">
                       {total.toLocaleString('vi-VN')}₫
                     </span>
@@ -297,7 +254,6 @@ export function CartContent() {
                 </div>
               </div>
 
-              {/* Checkout Button */}
               <Button
                 className="mt-6 h-12 w-full rounded-full bg-slate-900 text-base font-semibold hover:bg-slate-700"
                 onClick={handleCheckout}
@@ -305,7 +261,10 @@ export function CartContent() {
                 Tiến hành thanh toán
               </Button>
 
-              {/* Trust Badges */}
+              <p className="mt-3 text-xs leading-5 text-slate-500">
+                Checkout sẽ quote lại phí ship bằng GHTK trước khi bạn đặt hàng.
+              </p>
+
               <div className="mt-6 space-y-2 border-t border-slate-100 pt-6">
                 <div className="flex items-center gap-2 text-xs text-slate-600">
                   <svg
@@ -363,7 +322,8 @@ function EmptyCart() {
           </div>
           <h2 className="text-2xl font-bold text-slate-900">Giỏ hàng trống</h2>
           <p className="mt-2 max-w-md text-slate-500">
-            Bạn chưa có sản phẩm nào trong giỏ hàng. Khám phá các sản phẩm công nghệ đỉnh cao của chúng tôi!
+            Bạn chưa có sản phẩm nào trong giỏ hàng. Khám phá các sản phẩm công nghệ đỉnh cao của
+            chúng tôi!
           </p>
           <Link href="/products">
             <Button className="mt-8 h-12 rounded-full bg-slate-900 px-8 text-base font-semibold hover:bg-slate-700">

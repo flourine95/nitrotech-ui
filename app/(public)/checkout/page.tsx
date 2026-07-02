@@ -6,10 +6,15 @@ import { toast } from 'sonner';
 import { CheckCircle2, ChevronLeft, Clipboard, Clock3, Loader2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCartStore } from '@/stores/cart.store';
-import { createOrder, getOrder, initiateOrderPayment } from '@/lib/api/orders';
+import {
+  createOrder,
+  getOrder,
+  initiateOrderPayment,
+  quoteShippingFee,
+} from '@/lib/api/orders';
 import { createAddress, getAddresses } from '@/lib/api/addresses';
 import type { CreateOrderData } from '@/schemas/order';
-import type { Order, ShippingAddress } from '@/types/order';
+import type { Order, ShippingAddress, ShippingFeeQuote } from '@/types/order';
 import type { PaymentMethod } from '@/schemas/order';
 import type { Address } from '@/types/address';
 import ShippingForm from './shipping-form';
@@ -69,6 +74,9 @@ export default function CheckoutPage() {
   const [defaultAddress, setDefaultAddress] = useState(false);
   const [shouldSaveAddress, setShouldSaveAddress] = useState(false);
   const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
+  const [shippingQuote, setShippingQuote] = useState<ShippingFeeQuote | null>(null);
+  const [isQuotingShipping, setIsQuotingShipping] = useState(false);
+  const [shippingQuoteError, setShippingQuoteError] = useState<string | null>(null);
 
   useEffect(() => {
     void fetchCart();
@@ -111,6 +119,52 @@ export default function CheckoutPage() {
       router.push('/cart');
     }
   }, [cart, cartLoading, orderCompleted, router]);
+
+  useEffect(() => {
+    if (!cart || orderCompleted) return;
+
+    const hasShippingAddress = Boolean(shippingAddress && isCompleteShippingAddress(shippingAddress));
+
+    if (!hasShippingAddress) {
+      setShippingQuote(null);
+      setShippingQuoteError(null);
+      setIsQuotingShipping(false);
+      return;
+    }
+
+    let cancelled = false;
+    setShippingQuote(null);
+    const timer = window.setTimeout(async () => {
+      setIsQuotingShipping(true);
+      setShippingQuoteError(null);
+
+      try {
+        const quote = await quoteShippingFee({
+          shippingAddress: shippingAddress as ShippingAddress,
+        });
+        if (cancelled) return;
+        setShippingQuote(quote);
+      } catch (error) {
+        if (cancelled) return;
+        setShippingQuote(null);
+        setShippingQuoteError(
+          getErrorMessage(
+            error,
+            'Không thể tính phí vận chuyển lúc này. Bạn vẫn có thể tiếp tục và backend sẽ tính lại khi đặt hàng.',
+          ),
+        );
+      } finally {
+        if (!cancelled) {
+          setIsQuotingShipping(false);
+        }
+      }
+    }, 350);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [cart, orderCompleted, shippingAddress]);
 
   const handleShippingSubmit = (
     address: ShippingAddress,
@@ -300,6 +354,7 @@ export default function CheckoutPage() {
                 initialData={shippingAddress}
                 initialSaveAddress={defaultAddress}
                 savedAddresses={savedAddresses}
+                onAddressChange={setShippingAddress}
                 onSubmit={handleShippingSubmit}
               />
             )}
@@ -435,11 +490,30 @@ export default function CheckoutPage() {
               cart={cart}
               promotionCode={promotionCode}
               onPromotionCodeChange={setPromotionCode}
+              shippingQuote={shippingQuote}
+              isShippingQuoteLoading={isQuotingShipping}
+              shippingQuoteError={shippingQuoteError}
+              hasShippingAddress={Boolean(
+                shippingAddress && isCompleteShippingAddress(shippingAddress),
+              )}
             />
           </div>
         </div>
       </div>
     </main>
+  );
+}
+
+function isCompleteShippingAddress(address: ShippingAddress) {
+  return Boolean(
+    address.name &&
+      address.phone &&
+      address.address &&
+      address.ward &&
+      address.district &&
+      address.districtCode &&
+      address.city &&
+      address.country,
   );
 }
 
