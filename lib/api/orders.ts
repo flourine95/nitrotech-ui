@@ -3,6 +3,8 @@ import type {
   Order as ApiOrder,
   OrderListResponse,
   OrderResponse,
+  ShippingAddress,
+  ShippingFeeQuote,
 } from '@/types/order';
 import type {
   CreateOrderData,
@@ -35,6 +37,10 @@ export type PaymentInitResult = {
 export type PaymentVerificationResult = {
   success: boolean;
   message?: string;
+};
+
+export type ShippingFeeQuoteRequest = {
+  shippingAddress: ShippingAddress;
 };
 
 // POST /api/orders - Create order
@@ -87,6 +93,39 @@ export async function cancelOrder(id: number, data?: CancelOrderData): Promise<A
   });
 
   return res.data;
+}
+
+export async function quoteShippingFee(
+  payload: ShippingFeeQuoteRequest,
+): Promise<ShippingFeeQuote> {
+  const res = await apiFetch<{
+    data?: number | {
+      fee?: number;
+      shippingFee?: number;
+      provider?: string | null;
+      estimatedDelivery?: string | null;
+    };
+    fee?: number;
+    shippingFee?: number;
+    provider?: string | null;
+    estimatedDelivery?: string | null;
+  }>('/api/orders/shipping-fee', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+
+  const data = res.data ?? res;
+  const fee = typeof data === 'number' ? data : data.fee ?? data.shippingFee;
+
+  if (typeof fee !== 'number' || Number.isNaN(fee)) {
+    throw new Error('Phản hồi phí vận chuyển không hợp lệ');
+  }
+
+  return {
+    fee,
+    provider: typeof data === 'number' ? null : data.provider ?? null,
+    estimatedDelivery: typeof data === 'number' ? null : data.estimatedDelivery ?? null,
+  };
 }
 
 // POST /api/orders/{id}/payment/initiate - Initiate online payment
