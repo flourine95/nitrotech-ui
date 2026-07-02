@@ -14,6 +14,12 @@ export interface ShippingAddress {
   country: string;
 }
 
+export interface ShippingFeeQuote {
+  fee: number;
+  provider?: string | null;
+  estimatedDelivery?: string | null;
+}
+
 export interface OrderItem {
   id: number;
   orderId: number;
