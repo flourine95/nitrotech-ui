@@ -32,6 +32,11 @@ export type PaymentInitResult = {
   redirect: boolean;
 };
 
+export type PaymentVerificationResult = {
+  success: boolean;
+  message?: string;
+};
+
 // POST /api/orders - Create order
 export async function createOrder(data: CreateOrderData): Promise<ApiOrder> {
   const res = await apiFetch<OrderResponse>('/api/orders', {
@@ -107,4 +112,13 @@ export async function initiateOrderPayment(orderId: number): Promise<PaymentInit
   }
 
   return data.data ?? data;
+}
+
+export async function verifyVnpayReturn(
+  params: URLSearchParams,
+): Promise<PaymentVerificationResult> {
+  const query = params.toString();
+  return apiFetch<PaymentVerificationResult>(
+    `/api/webhooks/payments/vnpay${query ? `?${query}` : ''}`,
+  );
 }
