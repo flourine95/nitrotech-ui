@@ -15,11 +15,12 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 
-export function ResetPasswordClient() {
+export function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const token = searchParams.get('token') ?? '';
+  const token = searchParams.get('token');
   const [showPass, setShowPass] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const {
     register,
@@ -30,6 +31,8 @@ export function ResetPasswordClient() {
   });
 
   async function onSubmit(data: ResetPasswordInput) {
+    if (!token) return;
+
     try {
       await resetPassword(token, data.newPassword);
       toast.success('Đặt lại mật khẩu thành công');
@@ -95,14 +98,30 @@ export function ResetPasswordClient() {
 
           <Field data-invalid={!!errors.confirmPassword}>
             <FieldLabel htmlFor="confirmPassword">Xác nhận mật khẩu</FieldLabel>
-            <Input
-              id="confirmPassword"
-              type="password"
-              placeholder="Nhập lại mật khẩu"
-              {...register('confirmPassword')}
-              aria-invalid={!!errors.confirmPassword}
-              className="h-auto rounded-full px-4 py-3"
-            />
+            <div className="relative">
+              <Input
+                id="confirmPassword"
+                type={showConfirm ? 'text' : 'password'}
+                placeholder="Nhập lại mật khẩu"
+                {...register('confirmPassword')}
+                aria-invalid={!!errors.confirmPassword}
+                className="h-auto rounded-full px-4 py-3 pr-12"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowConfirm(!showConfirm)}
+                className="absolute top-0 right-0 h-full px-3 hover:bg-transparent"
+                aria-label={showConfirm ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+              >
+                {showConfirm ? (
+                  <EyeOff data-icon="inline-start" aria-hidden="true" />
+                ) : (
+                  <Eye data-icon="inline-start" aria-hidden="true" />
+                )}
+              </Button>
+            </div>
             {errors.confirmPassword && (
               <FieldDescription>{errors.confirmPassword.message}</FieldDescription>
             )}

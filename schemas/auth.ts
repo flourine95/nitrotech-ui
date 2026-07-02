@@ -11,6 +11,7 @@ export const registerSchema = z
     email: z.email('Email không hợp lệ'),
     password: z.string().min(6, 'Mật khẩu tối thiểu 6 ký tự'),
     confirmPassword: z.string(),
+    terms: z.literal(true, { error: 'Bạn phải đồng ý điều khoản' }),
   })
   .refine((d) => d.password === d.confirmPassword, {
     error: 'Mật khẩu xác nhận không khớp',
@@ -20,6 +21,8 @@ export const registerSchema = z
 export const forgotPasswordSchema = z.object({
   email: z.email('Email không hợp lệ'),
 });
+
+export const resendVerificationSchema = forgotPasswordSchema;
 
 export const resetPasswordSchema = z
   .object({
@@ -45,5 +48,6 @@ export const changePasswordSchema = z
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
+export type ResendVerificationInput = z.infer<typeof resendVerificationSchema>;
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;

@@ -20,7 +20,7 @@ function safeRedirect(value: string | null) {
   return value;
 }
 
-export function LoginClient() {
+export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [showPass, setShowPass] = useState(false);
@@ -37,7 +37,6 @@ export function LoginClient() {
 
       toast.success('Đăng nhập thành công');
       router.replace(safeRedirect(searchParams.get('from')));
-      router.refresh();
     } catch (error) {
       toast.error(getFriendlyErrorMessage(error, 'Đăng nhập thất bại'));
     }
@@ -45,10 +44,10 @@ export function LoginClient() {
 
   return (
     <div className="w-full max-w-md">
-      <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-lg transition-shadow hover:shadow-xl">
+      <div className="rounded-3xl border bg-card p-8 shadow-lg transition-shadow hover:shadow-xl">
         <div className="mb-8 text-center">
-          <h1 className="mb-1 text-2xl font-bold text-slate-900">Đăng nhập</h1>
-          <p className="text-sm text-slate-500">Chào mừng bạn quay lại NitroTech</p>
+          <h1 className="mb-1 text-2xl font-bold">Đăng nhập</h1>
+          <p className="text-sm text-muted-foreground">Chào mừng bạn quay lại NitroTech</p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
