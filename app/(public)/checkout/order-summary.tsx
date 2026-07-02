@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import type { Cart } from '@/types/cart';
 import { validatePromotion } from '@/lib/api/promotions';
 import type { PromotionValidationResult } from '@/types/promotion';
+import { getFriendlyErrorMessage } from '@/lib/utils/errors';
 
 interface OrderSummaryProps {
   cart: Cart;
@@ -38,29 +39,7 @@ export default function OrderSummary({
       toast.success(`Đã áp dụng mã giảm giá: ${data.code}`);
     },
     onError: (error: unknown) => {
-      const err = error as { error?: { code?: string; message?: string; data?: unknown } };
-      const code = err?.error?.code;
-
-      switch (code) {
-        case 'PROMOTION_NOT_FOUND':
-          toast.error('Mã khuyến mãi không tồn tại hoặc đã hết hạn');
-          break;
-        case 'PROMOTION_NOT_APPLICABLE': {
-          const data = err.error?.data as { minAmount?: number };
-          toast.error(
-            `Đơn hàng chưa đủ điều kiện. Tối thiểu: ${data?.minAmount?.toLocaleString('vi-VN')} ₫`,
-          );
-          break;
-        }
-        case 'PROMOTION_USAGE_LIMIT_REACHED':
-          toast.error('Mã khuyến mãi đã hết lượt sử dụng');
-          break;
-        case 'PROMOTION_USER_LIMIT_REACHED':
-          toast.error('Bạn đã sử dụng hết lượt cho mã này');
-          break;
-        default:
-          toast.error(err?.error?.message || 'Mã khuyến mãi không hợp lệ');
-      }
+      toast.error(getFriendlyErrorMessage(error, 'Mã khuyến mãi không hợp lệ'));
     },
   });
 

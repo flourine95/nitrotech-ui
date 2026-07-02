@@ -9,17 +9,32 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useCartStore } from '@/stores/cart.store';
+import { useCartStore } from '@/stores/cart-store';
+import { validatePromotion } from '@/lib/api/promotions';
+import type { PromotionValidationResult } from '@/types/promotion';
+import { getSystemConfig, type SystemConfig } from '@/lib/api/config';
+import { getFriendlyErrorMessage } from '@/lib/utils/errors';
 
 export function CartContent() {
   const router = useRouter();
   const { cart, isLoading, fetchCart, updateQuantity, removeItem } = useCartStore();
   const [voucherCode, setVoucherCode] = useState('');
+  const [appliedVoucher, setAppliedVoucher] = useState<PromotionValidationResult | null>(null);
   const [isApplyingVoucher, setIsApplyingVoucher] = useState(false);
-  const [shippingMethod, setShippingMethod] = useState<'standard' | 'express'>('standard');
+  const [config, setConfig] = useState<SystemConfig | null>(null);
 
   useEffect(() => {
     void fetchCart();
+    getSystemConfig()
+      .then(setConfig)
+      .catch(() => {
+        setConfig({
+          shipping: {
+            freeThreshold: 500000,
+            flatFee: 30000,
+          },
+        });
+      });
   }, [fetchCart]);
 
   const handleUpdateQuantity = async (itemId: number, newQuantity: number) => {
@@ -27,19 +42,7 @@ export function CartContent() {
       await updateQuantity(itemId, newQuantity);
       toast.success('Đã cập nhật giỏ hàng');
     } catch (error) {
-      const err = error as { error?: { code?: string; message?: string } };
-      const code = err?.error?.code;
-
-      switch (code) {
-        case 'CART_ITEM_NOT_FOUND':
-          toast.error('Sản phẩm không tồn tại trong giỏ hàng');
-          break;
-        case 'INSUFFICIENT_STOCK':
-          toast.error('Không đủ hàng trong kho');
-          break;
-        default:
-          toast.error(err?.error?.message || 'Cập nhật thất bại');
-      }
+      toast.error(getFriendlyErrorMessage(error, 'Cập nhật thất bại'));
     }
   };
 
@@ -47,7 +50,7 @@ export function CartContent() {
     try {
       await removeItem(itemId);
       toast.success('Đã xóa sản phẩm khỏi giỏ hàng');
-    } catch (error) {
+    } catch {
       toast.error('Xóa sản phẩm thất bại');
     }
   };
@@ -59,19 +62,32 @@ export function CartContent() {
     }
 
     setIsApplyingVoucher(true);
-    // TODO: Implement voucher API call
-    setTimeout(() => {
-      setIsApplyingVoucher(false);
+    try {
+      const voucher = await validatePromotion({
+        code: voucherCode.trim().toUpperCase(),
+        orderAmount: cart?.summary.subtotal || 0,
+      });
+      setAppliedVoucher(voucher);
+      setVoucherCode(voucher.code);
       toast.success('Áp dụng mã giảm giá thành công');
-    }, 1000);
+    } catch (error) {
+      toast.error(getFriendlyErrorMessage(error, 'Mã giảm giá không hợp lệ'));
+    } finally {
+      setIsApplyingVoucher(false);
+    }
   };
 
   const handleCheckout = () => {
-    router.push('/checkout');
+    const qs = appliedVoucher ? `?promotion=${encodeURIComponent(appliedVoucher.code)}` : '';
+    router.push(`/checkout${qs}`);
   };
 
-  const shippingFee = shippingMethod === 'express' ? 50000 : cart?.summary.shipping || 0;
-  const total = (cart?.summary.total || 0) + shippingFee - (cart?.summary.discount || 0);
+  const subtotal = cart?.summary.subtotal || 0;
+  const freeThreshold = config?.shipping.freeThreshold ?? 500000;
+  const isFreeShipping = subtotal >= freeThreshold;
+  const shippingFee = isFreeShipping ? 0 : (config?.shipping.flatFee ?? 30000);
+  const discount = appliedVoucher?.discountAmount || cart?.summary.discount || 0;
+  const total = subtotal - discount;
 
   if (isLoading && !cart) {
     return <CartSkeleton />;
@@ -97,7 +113,7 @@ export function CartContent() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-slate-900">Giỏ hàng của bạn</h1>
           <p className="mt-2 text-slate-500">
-            {cart.summary.totalItems} sản phẩm · Miễn phí vận chuyển cho đơn từ 500.000₫
+            {cart.summary.totalItems} sản phẩm · Miễn phí vận chuyển cho đơn từ {freeThreshold.toLocaleString('vi-VN')}₫
           </p>
         </div>
 
@@ -222,46 +238,6 @@ export function CartContent() {
             <div className="sticky top-4 rounded-2xl border border-slate-200 bg-white p-6">
               <h2 className="text-lg font-bold text-slate-900">Tóm tắt đơn hàng</h2>
 
-              {/* Shipping Options */}
-              <div className="mt-6">
-                <div className="mb-3 flex items-center gap-2 text-sm font-medium text-slate-700">
-                  <Truck className="h-4 w-4" />
-                  Phương thức vận chuyển
-                </div>
-                <div className="space-y-2">
-                  <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-slate-200 p-3 transition-colors hover:bg-slate-50">
-                    <input
-                      type="radio"
-                      name="shipping"
-                      value="standard"
-                      checked={shippingMethod === 'standard'}
-                      onChange={(e) => setShippingMethod(e.target.value as 'standard')}
-                      className="h-4 w-4 text-blue-600"
-                    />
-                    <div className="flex-1">
-                      <div className="text-sm font-medium text-slate-900">Giao hàng tiêu chuẩn</div>
-                      <div className="text-xs text-slate-500">2-3 ngày</div>
-                    </div>
-                    <div className="text-sm font-semibold text-slate-900">Miễn phí</div>
-                  </label>
-                  <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-slate-200 p-3 transition-colors hover:bg-slate-50">
-                    <input
-                      type="radio"
-                      name="shipping"
-                      value="express"
-                      checked={shippingMethod === 'express'}
-                      onChange={(e) => setShippingMethod(e.target.value as 'express')}
-                      className="h-4 w-4 text-blue-600"
-                    />
-                    <div className="flex-1">
-                      <div className="text-sm font-medium text-slate-900">Giao hàng nhanh</div>
-                      <div className="text-xs text-slate-500">Trong 2 giờ (HCM & HN)</div>
-                    </div>
-                    <div className="text-sm font-semibold text-slate-900">50.000₫</div>
-                  </label>
-                </div>
-              </div>
-
               {/* Price Breakdown */}
               <div className="mt-6 space-y-3 border-t border-slate-100 pt-6">
                 <div className="flex justify-between text-sm">
@@ -271,19 +247,19 @@ export function CartContent() {
                   </span>
                 </div>
 
-                {cart.summary.discount > 0 && (
+                {discount > 0 && (
                   <div className="flex justify-between text-sm">
                     <span className="text-slate-600">Giảm giá</span>
                     <span className="font-medium text-green-600">
-                      -{cart.summary.discount.toLocaleString('vi-VN')}₫
+                      -{discount.toLocaleString('vi-VN')}₫
                     </span>
                   </div>
                 )}
 
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-600">Phí vận chuyển</span>
-                  <span className="font-medium text-slate-900">
-                    {shippingFee === 0 ? 'Miễn phí' : `${shippingFee.toLocaleString('vi-VN')}₫`}
+                  <span className={`font-medium ${isFreeShipping ? 'font-semibold text-green-600' : 'text-slate-900'}`}>
+                    {isFreeShipping ? 'Miễn phí' : 'Tính khi thanh toán'}
                   </span>
                 </div>
 

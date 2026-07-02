@@ -7,14 +7,10 @@ import { useQuery } from '@tanstack/react-query';
 import { getMe } from '@/lib/api/auth';
 import { BrandLogo } from '@/components/icons';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { useCartStore } from '@/stores/cart.store';
+import { useCartStore } from '@/stores/cart-store';
 import { MegaCategoryMenu } from '@/components/mega-category-menu';
 
 const navLinks = [
-  { label: 'Laptop', href: '/products?cat=laptop' },
-  { label: 'Linh kiện PC', href: '/products?cat=components' },
-  { label: 'Màn hình', href: '/products?cat=monitors' },
-  { label: 'Phụ kiện', href: '/products?cat=accessories' },
   { label: 'Khuyến mãi', href: '/products?sale=true' },
   { label: 'Blog', href: '/blog' },
 ];
@@ -73,8 +69,7 @@ export function SiteHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-background/95 shadow-sm backdrop-blur-md">
-      {/* Top bar — marquee */}
+    <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-md">
       <div className="relative overflow-hidden bg-primary py-2 text-xs text-primary-foreground/80">
         <div
           className="pointer-events-none absolute top-0 bottom-0 left-0 z-10 w-12 bg-linear-to-r from-primary to-transparent"
@@ -105,23 +100,19 @@ export function SiteHeader() {
         </div>
       </div>
 
-      {/* Main nav */}
-      <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-        {/* Logo */}
+      <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-6 px-6">
         <BrandLogo />
 
-        {/* Desktop nav */}
-        <div className="hidden items-center gap-1 md:flex">
-          {/* Mega Category Menu */}
+        <div className="hidden items-center gap-2 md:flex">
           <MegaCategoryMenu />
-          
+
           {navLinks.map((l) => (
             <Link
               key={l.href}
               href={l.href}
-              className={`cursor-pointer rounded-full px-4 py-2 text-sm transition-colors duration-200 ${
-                pathname === l.href
-                  ? 'bg-muted font-medium text-foreground'
+              className={`cursor-pointer rounded-full px-3.5 py-2 text-sm font-medium transition-colors duration-200 ${
+                pathname === l.href.split('?')[0]
+                  ? 'bg-muted text-foreground'
                   : 'text-muted-foreground hover:bg-muted hover:text-foreground'
               }`}
             >
@@ -130,12 +121,10 @@ export function SiteHeader() {
           ))}
         </div>
 
-        {/* Actions */}
         <div className="flex items-center gap-2">
-          {/* Search */}
           <Link
             href="/search"
-            className="hidden cursor-pointer items-center gap-2 rounded-full bg-muted px-3 py-2 text-sm text-muted-foreground transition-colors duration-200 hover:bg-accent hover:text-foreground sm:flex"
+            className="hidden h-10 cursor-pointer items-center gap-2 rounded-full border border-border bg-muted/55 px-3.5 text-sm text-muted-foreground transition-colors duration-200 hover:bg-muted hover:text-foreground sm:flex"
             aria-label="Tìm kiếm"
           >
             <svg
@@ -149,14 +138,13 @@ export function SiteHeader() {
               <circle cx="11" cy="11" r="8" />
               <path d="m21 21-4.35-4.35" />
             </svg>
-            <span className="text-xs">Tìm kiếm...</span>
+            <span className="text-xs font-medium">Tìm kiếm...</span>
           </Link>
-          {/* Cart */}
           <Tooltip>
             <TooltipTrigger asChild>
               <Link
                 href="/cart"
-                className="relative cursor-pointer rounded-full p-2 text-muted-foreground transition-colors duration-200 hover:bg-muted hover:text-foreground"
+                className="relative flex size-10 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors duration-200 hover:bg-muted hover:text-foreground"
                 aria-label={`Giỏ hàng (${totalItems} sản phẩm)`}
               >
                 <svg
@@ -180,12 +168,11 @@ export function SiteHeader() {
             </TooltipTrigger>
             <TooltipContent side="bottom">Giỏ hàng ({totalItems})</TooltipContent>
           </Tooltip>
-          {/* Login / Account */}
           {isLoggedIn ? (
             <div className="relative hidden sm:block">
               <button
                 onClick={() => setAccountOpen(!accountOpen)}
-                className="flex cursor-pointer items-center gap-2 rounded-full bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground transition-colors duration-200 hover:bg-primary/90"
+                className="flex h-10 cursor-pointer items-center gap-2 rounded-full bg-primary px-3.5 text-sm font-semibold text-primary-foreground transition-colors duration-200 hover:bg-primary/90"
                 aria-expanded={accountOpen}
                 aria-haspopup="true"
               >
@@ -217,7 +204,7 @@ export function SiteHeader() {
                     aria-hidden="true"
                   />
                   {/* Dropdown */}
-                  <div className="absolute top-full right-0 z-50 mt-2 w-52 overflow-hidden rounded-2xl border border-border bg-popover text-popover-foreground shadow-xl">
+                  <div className="absolute top-full right-0 z-50 mt-2 w-52 overflow-hidden rounded-xl border border-border bg-popover text-popover-foreground shadow-lg">
                     <div className="border-b border-border px-4 py-3">
                       <div className="truncate text-sm font-semibold text-foreground">
                         {userName}
@@ -383,14 +370,13 @@ export function SiteHeader() {
           ) : (
             <Link
               href="/login"
-              className="hidden cursor-pointer rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition-colors duration-200 hover:bg-primary/90 sm:block"
+              className="hidden h-10 cursor-pointer items-center rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors duration-200 hover:bg-primary/90 sm:flex"
             >
               Đăng nhập
             </Link>
           )}
-          {/* Mobile menu toggle */}
           <button
-            className="cursor-pointer rounded-full p-2 text-muted-foreground transition-colors duration-200 hover:bg-muted hover:text-foreground md:hidden"
+            className="flex size-10 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors duration-200 hover:bg-muted hover:text-foreground md:hidden"
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label="Menu"
             aria-expanded={mobileOpen}

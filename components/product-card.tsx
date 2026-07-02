@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { ProductImagePlaceholder } from '@/components/product-image-placeholder';
 import { ProductRating } from '@/components/product-rating';
-import { getProductBadgeLabel } from '@/lib/product-badges';
+import { getProductBadgeLabel } from '@/lib/utils/product-badges';
 import { cn } from '@/lib/utils';
 import { cloudinaryImage } from '@/lib/utils/cloudinary';
 

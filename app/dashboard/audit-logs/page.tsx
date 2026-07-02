@@ -249,21 +249,21 @@ export default function AuditLogsPage() {
       return facets.actions;
     }
     return Object.keys(ACTION_LABELS);
-  }, [facets?.actions]);
+  }, [facets]);
 
   const resourceTypesList = useMemo(() => {
     if (facets?.resourceTypes && facets.resourceTypes.length > 0) {
       return facets.resourceTypes;
     }
     return Object.keys(RESOURCE_LABELS);
-  }, [facets?.resourceTypes]);
+  }, [facets]);
 
   const outcomesList = useMemo(() => {
     if (facets?.outcomes && facets.outcomes.length > 0) {
       return facets.outcomes;
     }
     return Object.keys(OUTCOME_LABELS);
-  }, [facets?.outcomes]);
+  }, [facets]);
 
   const totalElements = meta?.totalElements ?? 0;
   const totalPages = meta?.totalPages ?? 0;

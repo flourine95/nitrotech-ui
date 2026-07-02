@@ -10,8 +10,8 @@ Do not enable React Compiler for the whole project yet.
 
 The project currently uses:
 
-- Next.js 16.1.7
-- React 19.2.4
+- Next.js 16.2.9
+- React 19.2.7
 - eslint-plugin-react-hooks 7.0.1
 
 Next.js 16 supports React Compiler, but enabling it adds another moving part to builds and debugging. The app does not currently have measured render bottlenecks that justify enabling the compiler globally.

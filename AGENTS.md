@@ -77,6 +77,17 @@ Use these rules for changes under `nitrotech-ui`. Treat this file as the canonic
 - Use kebab-case filenames except for Next.js route files such as `page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`, and `route.ts`.
 - Use default exports only for Next.js route files. Use named exports elsewhere.
 
+### Shared code placement
+
+- Keep `lib/utils.ts` limited to `cn()` and other shadcn-level primitives expected by generated UI.
+- Put generic reusable helpers in `lib/utils/<topic>.ts`, such as `formatting.ts`, `string.ts`, `errors.ts`, and `cloudinary.ts`.
+- Put domain UI helpers in `lib/utils/<domain>.ts` only when reused across routes or components; otherwise co-locate them beside the component that uses them.
+- Put API calls and API response shaping in `lib/api/**`; do not put request logic in hooks, stores, schemas, or components.
+- Put Zod schemas and inferred form/input types in `schemas/`; put backend/shared DTO types in `types/` only when they are not owned by an API wrapper.
+- Put React hooks in `hooks/` only when reused; route-specific hooks stay co-located in the route folder.
+- Put Zustand stores in `stores/` only for cross-route client state, not server data already owned by TanStack Query.
+- Avoid barrel files for shared helpers unless repeated imports become noisy in real usage.
+
 ### Data fetching and state
 
 - Server Components fetch directly with `backendFetch()` from `lib/api/server.ts`.
@@ -124,3 +135,11 @@ Use these rules for changes under `nitrotech-ui`. Treat this file as the canonic
 
 - For frontend changes, run `npm run typecheck` and `npm run lint` from `nitrotech-ui` when feasible.
 - Run `npm run build` before deployment or before a demo milestone.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# Next.js: ALWAYS read docs before coding
+
+Before any Next.js work, find and read the relevant doc in `node_modules/next/dist/docs/`. Your training data is outdated - the docs are the source of truth.
+
+<!-- END:nextjs-agent-rules -->
