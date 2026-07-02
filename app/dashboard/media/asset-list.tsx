@@ -1,7 +1,7 @@
 'use client';
 import { CheckIcon, ClipboardIcon } from 'lucide-react';
 import { useCopy } from '@/hooks/use-copy';
-import { formatBytes, formatDate } from '@/lib/utils';
+import { formatBytes, formatDate } from '@/lib/utils/formatting';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
 import { type AssetViewProps } from './media-types';

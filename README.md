@@ -18,7 +18,6 @@ npm install
 Create `.env.local` in the project root:
 
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:8080
 BACKEND_URL=http://localhost:8080
 ```
 
@@ -43,8 +42,9 @@ Open `http://localhost:3000`.
 
 ## Environment variables
 
-- `NEXT_PUBLIC_API_URL`: API URL used by browser-side requests through the BFF proxy
 - `BACKEND_URL`: API URL used by Server Components and Route Handlers
+- `NEXT_PUBLIC_SEPAY_BANK`, `NEXT_PUBLIC_SEPAY_ACCOUNT`, `NEXT_PUBLIC_SEPAY_ACCOUNT_HOLDER`: optional checkout transfer details
+- `NEXT_PUBLIC_ENABLE_SHIPMENT_SIMULATION`: optional dashboard shipment simulation toggle
 
 ## Stack
 
@@ -80,7 +80,6 @@ lib/
   api/                    # Domain API wrappers
   auth/                   # Session and route helpers
   data/                   # Static data
-  mocks/                  # Mock data
   utils/                  # Formatting and utility helpers
 providers/                # App-level providers
 schemas/                  # Zod schemas

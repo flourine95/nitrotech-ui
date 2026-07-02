@@ -296,10 +296,6 @@
   z-index: 9999 !important;
 }
 
-.reactjs-tiptap-editor [style*="position: absolute"][style*="opacity"] {
-  z-index: 50 !important;
-}
-
 /* Hide browser's default clear button in search inputs */
 input[type="search"]::-webkit-search-cancel-button,
 input[type="search"]::-webkit-search-decoration,

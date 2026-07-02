@@ -71,6 +71,7 @@ export function ProductDetailMain({ product }: ProductDetailMainProps) {
         </div>
 
         <ProductActions
+          key={product.id}
           priceMin={product.priceMin}
           variants={product.variants ?? []}
           warranty="12 tháng chính hãng"

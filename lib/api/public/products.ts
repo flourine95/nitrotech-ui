@@ -11,6 +11,10 @@ export interface ProductVariant {
   active: boolean;
   imageId: number | null;
   imageUrl: string | null;
+  weightGrams: number | null;
+  lengthCm: number | null;
+  widthCm: number | null;
+  heightCm: number | null;
   stockQuantity: number | null;
   lowStockThreshold: number | null;
   inStock: boolean | null;

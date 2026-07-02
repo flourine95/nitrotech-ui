@@ -15,7 +15,7 @@ import { type AllowedFolder, type CloudinaryResource } from '@/lib/api/upload';
 import { useMediaAssets } from '@/hooks/use-media-assets';
 import { useCopy } from '@/hooks/use-copy';
 import { useFolders } from '@/hooks/use-folders';
-import { formatBytes } from '@/lib/utils';
+import { formatBytes } from '@/lib/utils/formatting';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
