@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { backendFetch } from '@/lib/api/server';
 import type { Product } from '@/lib/api/public/products';
+import type { Review, ReviewStats } from '@/lib/api/reviews';
 import { ProductDetailMain } from './product-detail-main';
 import { ProductDetailTabs } from './product-detail-tabs';
 import { RelatedProducts } from './related-products';
@@ -39,30 +40,6 @@ export async function generateMetadata({
   }
 }
 
-const reviewsData = [
-  {
-    name: 'Trần Thị Lan Anh',
-    role: 'Graphic Designer',
-    rating: 5,
-    date: '15/03/2025',
-    text: 'Sản phẩm chất lượng tuyệt vời, giao hàng nhanh. Rất hài lòng với lần mua này tại NitroTech.',
-  },
-  {
-    name: 'Nguyễn Văn Hùng',
-    role: 'Developer',
-    rating: 5,
-    date: '02/03/2025',
-    text: 'Hàng chính hãng, đóng gói cẩn thận. Giá tại NitroTech tốt hơn nhiều chỗ khác.',
-  },
-  {
-    name: 'Lê Minh Châu',
-    role: 'Content Creator',
-    rating: 4,
-    date: '20/02/2025',
-    text: 'Hiệu năng xuất sắc, đáng đồng tiền. Nhân viên tư vấn nhiệt tình, hỗ trợ tốt.',
-  },
-];
-
 export default async function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   
@@ -92,14 +69,30 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   ];
 
   let relatedProducts: Product[] = [];
+  let reviews: Review[] = [];
+  let reviewStats: ReviewStats | null = null;
   try {
-    const relatedRes = await backendFetch(`/api/products/${product.id}/related?limit=4`, { cookieHeader });
+    const [relatedRes, reviewsRes, statsRes] = await Promise.all([
+      backendFetch(`/api/products/${product.id}/related?limit=4`, { cookieHeader }),
+      backendFetch(`/api/products/${product.id}/reviews?status=approved&size=20`, { cookieHeader }),
+      backendFetch(`/api/products/${product.id}/reviews/stats`, { cookieHeader }),
+    ]);
     if (relatedRes.ok) {
       const relatedJson = await relatedRes.json() as { data: Product[] };
       relatedProducts = relatedJson.data;
     }
+    if (reviewsRes.ok) {
+      const reviewsJson = await reviewsRes.json() as { data: Review[] };
+      reviews = reviewsJson.data;
+    }
+    if (statsRes.ok) {
+      const statsJson = await statsRes.json() as { data: ReviewStats };
+      reviewStats = statsJson.data;
+    }
   } catch {
     relatedProducts = [];
+    reviews = [];
+    reviewStats = null;
   }
 
   return (
@@ -151,7 +144,8 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
             specs={specs}
             rating={product.rating}
             reviewCount={product.reviewCount || 0}
-            reviews={reviewsData}
+            reviews={reviews}
+            reviewStats={reviewStats}
           />
           <RelatedProducts products={relatedProducts} />
         </div>

@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { backendFetch } from '@/lib/api/server';
 import { CancelOrderButton } from './cancel-order-button';
+import { OrderReviewButton } from './order-review-button';
 
 export const metadata: Metadata = { title: 'Chi tiết đơn hàng' };
 
@@ -12,6 +13,7 @@ type OrderStatus = 'pending' | 'confirmed' | 'processing' | 'shipped' | 'deliver
 interface ApiOrderItem {
   id: number;
   variantId: number;
+  productId: number | null;
   name: string;
   sku: string;
   quantity: number;
@@ -153,6 +155,15 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                     <div className="mt-0.5 text-xs text-slate-400">
                       {formatCurrency(item.unitPrice)} / sản phẩm
                     </div>
+                    {order.status === 'delivered' && item.productId && (
+                      <div className="mt-3">
+                        <OrderReviewButton
+                          orderId={order.id}
+                          productId={item.productId}
+                          productName={item.name}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

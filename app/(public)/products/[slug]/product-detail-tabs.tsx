@@ -1,20 +1,15 @@
 'use client';
 
+import Link from 'next/link';
+import { toast } from 'sonner';
 import { ProductRating } from '@/components/product-rating';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { reportReview, type Review, type ReviewStats } from '@/lib/api/reviews';
 
 interface ProductSpec {
   label: string;
   value: string;
-}
-
-interface ReviewItem {
-  name: string;
-  role: string;
-  rating: number;
-  date: string;
-  text: string;
 }
 
 interface ProductDetailTabsProps {
@@ -23,7 +18,8 @@ interface ProductDetailTabsProps {
   specs: ProductSpec[];
   rating: number | null;
   reviewCount: number;
-  reviews: ReviewItem[];
+  reviews: Review[];
+  reviewStats: ReviewStats | null;
 }
 
 export function ProductDetailTabs({
@@ -33,7 +29,28 @@ export function ProductDetailTabs({
   rating,
   reviewCount,
   reviews,
+  reviewStats,
 }: ProductDetailTabsProps) {
+  async function handleReport(reviewId: number) {
+    const reason = window.prompt('Lý do báo cáo đánh giá này?');
+    if (!reason?.trim()) return;
+    try {
+      await reportReview(reviewId, reason.trim());
+      toast.success('Đã gửi báo cáo');
+    } catch {
+      toast.error('Không thể gửi báo cáo');
+    }
+  }
+
+  const distribution = [
+    [5, reviewStats?.fiveStars ?? 0],
+    [4, reviewStats?.fourStars ?? 0],
+    [3, reviewStats?.threeStars ?? 0],
+    [2, reviewStats?.twoStars ?? 0],
+    [1, reviewStats?.oneStar ?? 0],
+  ];
+  const total = reviewStats?.total ?? reviewCount;
+
   return (
     <Tabs defaultValue="specs" className="mb-16 gap-6">
       <TabsList variant="line" className="scrollbar-none h-auto w-full justify-start overflow-x-auto">
@@ -70,8 +87,8 @@ export function ProductDetailTabs({
         <div className="flex flex-col gap-6">
           <div className="flex items-center justify-between gap-4">
             <h2 className="text-xl font-bold text-foreground">Đánh giá từ khách hàng</h2>
-            <Button variant="outline" className="rounded-full">
-              Viết đánh giá
+            <Button asChild variant="outline" className="rounded-full">
+              <Link href="/account/orders">Viết đánh giá</Link>
             </Button>
           </div>
 
@@ -84,13 +101,9 @@ export function ProductDetailTabs({
               <div className="text-xs text-muted-foreground">{reviewCount || 0} đánh giá</div>
             </div>
             <div className="flex flex-1 flex-col gap-2">
-              {[
-                [5, 80],
-                [4, 15],
-                [3, 3],
-                [2, 1],
-                [1, 1],
-              ].map(([star, percent]) => (
+              {distribution.map(([star, count]) => {
+                const percent = total > 0 ? Math.round((count / total) * 100) : 0;
+                return (
                 <div key={star} className="flex items-center gap-3">
                   <span className="w-4 text-xs text-muted-foreground">{star}</span>
                   <ProductRating rating={1} showReviews={false} size="sm" />
@@ -99,36 +112,59 @@ export function ProductDetailTabs({
                   </div>
                   <span className="w-8 text-xs text-muted-foreground">{percent}%</span>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
           <div className="flex flex-col gap-4">
+            {reviews.length === 0 && (
+              <div className="rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
+                Sản phẩm chưa có đánh giá được duyệt.
+              </div>
+            )}
             {reviews.map((review) => (
-              <article key={review.name} className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+              <article key={review.id} className="rounded-2xl border border-border bg-card p-6 shadow-sm">
                 <div className="mb-3 flex items-start justify-between gap-4">
                   <div className="flex items-center gap-3">
                     <div
                       className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground"
                       aria-hidden="true"
                     >
-                      {review.name
+                      {(review.userName ?? 'Khách hàng')
                         .split(' ')
                         .map((part) => part[0])
                         .slice(-2)
                         .join('')}
                     </div>
                     <div>
-                      <div className="text-sm font-semibold text-foreground">{review.name}</div>
-                      <div className="text-xs text-muted-foreground">{review.role}</div>
+                      <div className="text-sm font-semibold text-foreground">
+                        {review.userName ?? 'Khách hàng'}
+                      </div>
+                      <div className="text-xs text-muted-foreground">Đã mua hàng</div>
                     </div>
                   </div>
-                  <span className="shrink-0 text-xs text-muted-foreground">{review.date}</span>
+                  <span className="shrink-0 text-xs text-muted-foreground">
+                    {formatDate(review.createdAt)}
+                  </span>
                 </div>
                 <div className="mb-2">
                   <ProductRating rating={review.rating} showReviews={false} size="sm" />
                 </div>
-                <p className="text-sm leading-relaxed text-muted-foreground">{review.text}</p>
+                {review.comment && (
+                  <p className="text-sm leading-relaxed text-muted-foreground">{review.comment}</p>
+                )}
+                <div className="mt-3">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="px-0 text-xs text-muted-foreground"
+                    onClick={() => void handleReport(review.id)}
+                  >
+                    Báo cáo
+                  </Button>
+                </div>
               </article>
             ))}
           </div>
@@ -146,6 +182,10 @@ export function ProductDetailTabs({
       </TabsContent>
     </Tabs>
   );
+}
+
+function formatDate(value: string) {
+  return new Intl.DateTimeFormat('vi-VN', { dateStyle: 'short' }).format(new Date(value));
 }
 
 function ProductDescriptionContent({ description }: { description: string }) {

@@ -18,6 +18,7 @@ export interface OrderItem {
   id: number;
   orderId: number;
   variantId: number;
+  productId: number | null;
   quantity: number;
   price: number;
   variant: CartItem['variant'];

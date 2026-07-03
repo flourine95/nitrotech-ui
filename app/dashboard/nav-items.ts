@@ -12,6 +12,7 @@ import {
   FlaskConicalIcon,
   ShieldCheckIcon,
   ActivityIcon,
+  MessageSquareIcon,
 } from 'lucide-react';
 
 export type NavItem = {
@@ -33,6 +34,7 @@ export const mainNavItems: NavItem[] = [
 export const catalogNavItems: NavItem[] = [
   { label: 'Thương hiệu', href: '/dashboard/brands', icon: TagIcon },
   { label: 'Danh mục', href: '/dashboard/categories', icon: FolderIcon },
+  { label: 'Đánh giá', href: '/dashboard/reviews', icon: MessageSquareIcon },
   { label: 'Hình ảnh', href: '/dashboard/media', icon: ImageIcon },
 ];
 
