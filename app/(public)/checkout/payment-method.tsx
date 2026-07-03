@@ -43,20 +43,6 @@ export default function PaymentMethodSelector({
           onSelect={setMethod}
         />
         <PaymentOption
-          value="vnpay"
-          selected={method === 'vnpay'}
-          title="VNPay"
-          description="Thanh toán qua ví điện tử VNPay, thẻ ATM, thẻ tín dụng"
-          onSelect={setMethod}
-        />
-        <PaymentOption
-          value="momo"
-          selected={method === 'momo'}
-          title="Momo"
-          description="Thanh toán qua ví điện tử Momo"
-          onSelect={setMethod}
-        />
-        <PaymentOption
           value="sepay"
           selected={method === 'sepay'}
           title="Chuyển khoản VietQR qua SePay"
