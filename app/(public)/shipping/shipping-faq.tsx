@@ -1,5 +1,10 @@
 'use client';
-import { useState } from 'react';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 
 const faqs = [
   {
@@ -25,39 +30,22 @@ const faqs = [
 ];
 
 export function ShippingFaq() {
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
-
   return (
-    <div className="space-y-3">
+    <Accordion type="single" collapsible className="gap-3">
       {faqs.map((faq, i) => (
-        <div
-          key={i}
-          className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+        <AccordionItem
+          key={faq.q}
+          value={String(i)}
+          className="overflow-hidden rounded-2xl border border-border bg-card px-6"
         >
-          <button
-            onClick={() => setOpenFaq(openFaq === i ? null : i)}
-            className="flex w-full cursor-pointer items-center justify-between px-6 py-4 text-left transition-colors duration-150 hover:bg-slate-50"
-            aria-expanded={openFaq === i}
-          >
-            <span className="text-sm font-medium text-slate-900">{faq.q}</span>
-            <svg
-              viewBox="0 0 24 24"
-              className={`h-5 w-5 shrink-0 text-slate-400 transition-transform duration-200 ${openFaq === i ? 'rotate-180' : ''}`}
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              aria-hidden="true"
-            >
-              <path d="M6 9l6 6 6-6" />
-            </svg>
-          </button>
-          {openFaq === i && (
-            <div className="border-t border-slate-100 px-6 pt-3 pb-4 text-sm leading-relaxed text-slate-600">
-              {faq.a}
-            </div>
-          )}
-        </div>
+          <AccordionTrigger className="py-4 hover:no-underline">
+            <span className="text-sm font-medium text-foreground">{faq.q}</span>
+          </AccordionTrigger>
+          <AccordionContent className="border-t border-border pt-3 pb-4 text-sm leading-relaxed text-muted-foreground">
+            {faq.a}
+          </AccordionContent>
+        </AccordionItem>
       ))}
-    </div>
+    </Accordion>
   );
 }

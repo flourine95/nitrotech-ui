@@ -1,6 +1,12 @@
 'use client';
-import { useState } from 'react';
 import type { ReactNode } from 'react';
+import { Check, X } from 'lucide-react';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 
 const warrantyByCategory = [
   { category: 'Laptop', duration: '12 – 24 tháng', note: 'Tùy hãng sản xuất' },
@@ -39,7 +45,7 @@ const accordionItems: { id: string; title: string; content: ReactNode }[] = [
     id: 'dieu-kien',
     title: 'Điều kiện bảo hành',
     content: (
-      <ul className="space-y-2 text-sm text-slate-600">
+      <ul className="flex flex-col gap-2 text-sm text-muted-foreground">
         {[
           'Sản phẩm còn trong thời hạn bảo hành',
           'Tem bảo hành còn nguyên vẹn, không bị rách hoặc tẩy xóa',
@@ -48,16 +54,7 @@ const accordionItems: { id: string; title: string; content: ReactNode }[] = [
           'Sản phẩm không bị ngấm nước, cháy nổ, hoặc va đập mạnh',
         ].map((item) => (
           <li key={item} className="flex items-start gap-2">
-            <svg
-              viewBox="0 0 24 24"
-              className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              aria-hidden="true"
-            >
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
+            <Check className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
             {item}
           </li>
         ))}
@@ -68,21 +65,21 @@ const accordionItems: { id: string; title: string; content: ReactNode }[] = [
     id: 'thoi-gian',
     title: 'Thời gian bảo hành theo danh mục',
     content: (
-      <div className="overflow-x-auto rounded-xl border border-slate-200">
+      <div className="overflow-x-auto rounded-xl border border-border">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-slate-200 bg-slate-50">
-              <th className="px-4 py-3 text-left font-semibold text-slate-700">Danh mục</th>
-              <th className="px-4 py-3 text-left font-semibold text-slate-700">Thời gian</th>
-              <th className="px-4 py-3 text-left font-semibold text-slate-700">Ghi chú</th>
+            <tr className="border-b border-border bg-muted">
+              <th className="px-4 py-3 text-left font-semibold text-foreground">Danh mục</th>
+              <th className="px-4 py-3 text-left font-semibold text-foreground">Thời gian</th>
+              <th className="px-4 py-3 text-left font-semibold text-foreground">Ghi chú</th>
             </tr>
           </thead>
           <tbody>
             {warrantyByCategory.map((row, i) => (
-              <tr key={row.category} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}>
-                <td className="px-4 py-3 font-medium text-slate-900">{row.category}</td>
-                <td className="px-4 py-3 text-slate-700">{row.duration}</td>
-                <td className="px-4 py-3 text-slate-500">{row.note}</td>
+              <tr key={row.category} className={i % 2 === 0 ? 'bg-card' : 'bg-muted/50'}>
+                <td className="px-4 py-3 font-medium text-foreground">{row.category}</td>
+                <td className="px-4 py-3 text-foreground">{row.duration}</td>
+                <td className="px-4 py-3 text-muted-foreground">{row.note}</td>
               </tr>
             ))}
           </tbody>
@@ -94,15 +91,15 @@ const accordionItems: { id: string; title: string; content: ReactNode }[] = [
     id: 'quy-trinh',
     title: 'Quy trình bảo hành',
     content: (
-      <div className="space-y-4">
+      <div className="flex flex-col gap-4">
         {steps.map((s) => (
           <div key={s.step} className="flex gap-4">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-900 text-sm font-bold text-white">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
               {s.step}
             </div>
             <div>
-              <div className="mb-1 font-semibold text-slate-900">{s.title}</div>
-              <div className="text-sm text-slate-600">{s.desc}</div>
+              <div className="mb-1 font-semibold text-foreground">{s.title}</div>
+              <div className="text-sm text-muted-foreground">{s.desc}</div>
             </div>
           </div>
         ))}
@@ -113,7 +110,7 @@ const accordionItems: { id: string; title: string; content: ReactNode }[] = [
     id: 'khong-bao-hanh',
     title: 'Các trường hợp không được bảo hành',
     content: (
-      <ul className="space-y-2 text-sm text-slate-600">
+      <ul className="flex flex-col gap-2 text-sm text-muted-foreground">
         {[
           'Hư hỏng do va đập, rơi vỡ, bị ép lực',
           'Ngấm nước, ẩm ướt, tiếp xúc hóa chất',
@@ -123,16 +120,7 @@ const accordionItems: { id: string; title: string; content: ReactNode }[] = [
           'Sản phẩm hết hạn bảo hành',
         ].map((item) => (
           <li key={item} className="flex items-start gap-2">
-            <svg
-              viewBox="0 0 24 24"
-              className="mt-0.5 h-4 w-4 shrink-0 text-rose-500"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              aria-hidden="true"
-            >
-              <path d="M18 6L6 18M6 6l12 12" />
-            </svg>
+            <X className="mt-0.5 size-4 shrink-0 text-destructive" aria-hidden="true" />
             {item}
           </li>
         ))}
@@ -143,20 +131,20 @@ const accordionItems: { id: string; title: string; content: ReactNode }[] = [
     id: 'lien-he',
     title: 'Liên hệ bảo hành',
     content: (
-      <div className="space-y-3 text-sm text-slate-600">
+      <div className="flex flex-col gap-3 text-sm text-muted-foreground">
         <p>
-          <span className="font-semibold text-slate-900">Hotline bảo hành:</span> 1800 6789 (miễn
+          <span className="font-semibold text-foreground">Hotline bảo hành:</span> 1800 6789 (miễn
           phí, 8:00 – 20:00)
         </p>
         <p>
-          <span className="font-semibold text-slate-900">Email:</span> warranty@nitrotech.vn
+          <span className="font-semibold text-foreground">Email:</span> warranty@nitrotech.vn
         </p>
         <p>
-          <span className="font-semibold text-slate-900">Địa chỉ:</span> 123 Nguyễn Huệ, Quận 1, TP.
+          <span className="font-semibold text-foreground">Địa chỉ:</span> 123 Nguyễn Huệ, Quận 1, TP.
           Hồ Chí Minh
         </p>
         <p>
-          <span className="font-semibold text-slate-900">Giờ tiếp nhận:</span> Thứ 2 – Chủ nhật,
+          <span className="font-semibold text-foreground">Giờ tiếp nhận:</span> Thứ 2 – Chủ nhật,
           8:00 – 18:00
         </p>
       </div>
@@ -165,37 +153,22 @@ const accordionItems: { id: string; title: string; content: ReactNode }[] = [
 ];
 
 export function WarrantyAccordion() {
-  const [openId, setOpenId] = useState<string | null>('dieu-kien');
-
   return (
-    <div className="space-y-3">
+    <Accordion type="single" defaultValue="dieu-kien" className="gap-3">
       {accordionItems.map((item) => (
-        <div
+        <AccordionItem
           key={item.id}
-          className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+          value={item.id}
+          className="overflow-hidden rounded-2xl border border-border bg-card"
         >
-          <button
-            onClick={() => setOpenId(openId === item.id ? null : item.id)}
-            className="flex w-full cursor-pointer items-center justify-between px-6 py-4 text-left transition-colors duration-150 hover:bg-slate-50"
-            aria-expanded={openId === item.id}
-          >
-            <span className="font-semibold text-slate-900">{item.title}</span>
-            <svg
-              viewBox="0 0 24 24"
-              className={`h-5 w-5 shrink-0 text-slate-400 transition-transform duration-200 ${openId === item.id ? 'rotate-180' : ''}`}
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              aria-hidden="true"
-            >
-              <path d="M6 9l6 6 6-6" />
-            </svg>
-          </button>
-          {openId === item.id && (
-            <div className="border-t border-slate-100 px-6 pt-4 pb-5">{item.content}</div>
-          )}
-        </div>
+          <AccordionTrigger className="px-6 py-4 hover:no-underline">
+            <span className="font-semibold text-foreground">{item.title}</span>
+          </AccordionTrigger>
+          <AccordionContent className="border-t border-border px-6 pt-4 pb-5">
+            {item.content}
+          </AccordionContent>
+        </AccordionItem>
       ))}
-    </div>
+    </Accordion>
   );
 }

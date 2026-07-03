@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { FacebookIcon, YouTubeIcon, TikTokIcon, BrandLogo } from '@/components/icons';
+import { Button } from '@/components/ui/button';
 
 const footerLinks = {
   'Sản phẩm': [
@@ -46,13 +47,13 @@ const socials = [
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-slate-200 bg-white pt-14 pb-8">
+    <footer className="border-t border-border bg-card pt-14 pb-8">
       <div className="mx-auto max-w-7xl px-6">
         <div className="mb-12 grid grid-cols-2 gap-8 sm:grid-cols-4 lg:grid-cols-5">
           {/* Brand */}
           <div className="col-span-2 sm:col-span-4 lg:col-span-2">
             <BrandLogo interactive={false} className="mb-4" />
-            <p className="mb-5 max-w-xs text-sm leading-relaxed text-slate-500">
+            <p className="mb-5 max-w-xs text-sm leading-relaxed text-muted-foreground">
               Hệ thống bán lẻ linh kiện điện tử, laptop và máy tính hàng đầu Việt Nam. Chính hãng —
               Giá tốt — Giao nhanh.
             </p>
@@ -60,14 +61,11 @@ export function SiteFooter() {
               {socials.map((s) => {
                 const Icon = s.icon;
                 return (
-                  <a
-                    key={s.label}
-                    href={s.href}
-                    aria-label={s.label}
-                    className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-slate-100 text-slate-500 transition-colors duration-200 hover:bg-slate-200 hover:text-slate-900"
-                  >
-                    <Icon className="h-4 w-4" />
-                  </a>
+                  <Button key={s.label} asChild variant="secondary" size="icon-lg" className="rounded-full">
+                    <a href={s.href} aria-label={s.label}>
+                      <Icon />
+                    </a>
+                  </Button>
                 );
               })}
             </div>
@@ -76,13 +74,13 @@ export function SiteFooter() {
           {/* Links */}
           {Object.entries(footerLinks).map(([title, links]) => (
             <div key={title}>
-              <h3 className="mb-4 text-sm font-semibold text-slate-900">{title}</h3>
-              <ul className="space-y-2.5">
+              <h3 className="mb-4 text-sm font-semibold text-foreground">{title}</h3>
+              <ul className="flex flex-col gap-2.5">
                 {links.map((link) => (
                   <li key={link.label}>
                     <Link
                       href={link.href}
-                      className="cursor-pointer text-sm text-slate-500 transition-colors duration-200 hover:text-slate-900"
+                      className="cursor-pointer text-sm text-muted-foreground transition-colors duration-200 hover:text-foreground"
                     >
                       {link.label}
                     </Link>
@@ -94,13 +92,13 @@ export function SiteFooter() {
         </div>
 
         {/* Bottom */}
-        <div className="flex flex-col items-center justify-between gap-4 border-t border-slate-100 pt-8 sm:flex-row">
-          <p className="text-xs text-slate-400">© 2025 NitroTech. Tất cả quyền được bảo lưu.</p>
+        <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
+          <p className="text-xs text-muted-foreground">© 2025 NitroTech. Tất cả quyền được bảo lưu.</p>
           <div className="flex flex-wrap items-center justify-center gap-2">
             {['Visa', 'Mastercard', 'MoMo', 'ZaloPay', 'VNPay'].map((m) => (
               <span
                 key={m}
-                className="rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs text-slate-500"
+                className="rounded-full border border-border bg-muted px-2.5 py-1 text-xs text-muted-foreground"
               >
                 {m}
               </span>

@@ -13,6 +13,7 @@ import { MegaCategoryMenu } from '@/components/mega-category-menu';
 const navLinks = [
   { label: 'Khuyến mãi', href: '/products?sale=true' },
   { label: 'Blog', href: '/blog' },
+  { label: 'Về NitroTech', href: '/about' },
 ];
 
 const announcements = [
