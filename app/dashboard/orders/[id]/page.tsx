@@ -46,6 +46,7 @@ import {
   simulateAdminShipmentEvent,
   updateAdminOrderStatus,
   type AdminOrderStatus,
+  type ShipmentLogData,
 } from '@/lib/api/admin/orders';
 import { getAuditLogs } from '@/lib/api/admin/audit-logs';
 import { formatViDate, formatViDateTime, formatVnd } from '@/lib/utils/formatting';
@@ -151,8 +152,8 @@ export default function OrderDetailPage() {
     mutationFn: ({ shipmentId, status }: { shipmentId: number; status: string }) =>
       simulateAdminShipmentEvent(shipmentId, {
         status,
-        location: 'Staging demo',
-        note: `Simulated ${status} event from admin order detail`,
+        location: 'Mô phỏng admin',
+        note: `Admin mô phỏng trạng thái ${getShipmentStatusLabel(status)}`,
       }),
     onSuccess: async () => {
       toast.success('Đã giả lập cập nhật vận chuyển');
@@ -419,6 +420,7 @@ export default function OrderDetailPage() {
                         ? getGhtkWebhookStatusLabel(log.rawStatus)
                         : undefined;
                       const label = ghtkEventLabel ?? mapped?.label ?? log.status;
+                      const displayLog = getShipmentLogDisplay(log);
                       const isLast = i === logs.length - 1;
                       return (
                         <div key={log.id} className="flex gap-3">
@@ -435,11 +437,11 @@ export default function OrderDetailPage() {
                           {/* Content */}
                           <div className={cn('min-w-0 pb-4', isLast && 'pb-0')}>
                             <p className="text-sm leading-tight font-medium">{label}</p>
-                            {log.location && (
-                              <p className="mt-0.5 text-xs text-muted-foreground">{log.location}</p>
+                            {displayLog.location && (
+                              <p className="mt-0.5 text-xs text-muted-foreground">{displayLog.location}</p>
                             )}
-                            {log.note && (
-                              <p className="mt-0.5 text-xs text-muted-foreground">{log.note}</p>
+                            {displayLog.note && (
+                              <p className="mt-0.5 text-xs text-muted-foreground">{displayLog.note}</p>
                             )}
                             <p className="mt-1 text-xs text-muted-foreground">
                               {formatViDateTime(log.occurredAt ?? log.createdAt)}
@@ -584,20 +586,6 @@ export default function OrderDetailPage() {
 }
 
 function getShipmentSimulationOptions(status: string) {
-  const labels: Record<string, string> = {
-    ready_to_pick: 'Chờ lấy hàng',
-    picked: 'Đã lấy hàng',
-    storing: 'Đang lưu kho',
-    transporting: 'Đang vận chuyển',
-    sorting: 'Đang phân loại',
-    delivering: 'Đang giao hàng',
-    delivered: 'Đã giao thành công',
-    delivery_failed: 'Giao thất bại',
-    waiting_to_return: 'Chờ hoàn hàng',
-    returning: 'Đang hoàn hàng',
-    returned: 'Đã hoàn hàng',
-    cancel: 'Hủy vận đơn',
-  };
   const transitions: Record<string, string[]> = {
     unknown: ['ready_to_pick'],
     ready_to_pick: ['picked', 'cancel'],
@@ -617,8 +605,30 @@ function getShipmentSimulationOptions(status: string) {
 
   return (transitions[status] ?? []).map((value) => ({
     status: value,
-    label: labels[value] ?? value,
+    label: getShipmentStatusLabel(value),
   }));
+}
+
+function getShipmentStatusLabel(status: string) {
+  return shipmentStatusLabels[status]?.label ?? status;
+}
+
+function getShipmentLogDisplay(log: ShipmentLogData) {
+  const location = log.location === 'Staging demo' ? 'Mô phỏng admin' : log.location;
+  let note = log.note;
+
+  if (note?.startsWith('Simulated shipment event - Simulated ')) {
+    const match = note.match(/^Simulated shipment event - Simulated (.+?) event from admin order detail$/);
+    note = match
+      ? `Admin mô phỏng trạng thái ${getShipmentStatusLabel(match[1])}`
+      : note.replace('Simulated shipment event - ', '');
+  } else if (note === 'Simulated shipment event') {
+    note = 'Admin mô phỏng cập nhật vận chuyển';
+  } else if (note === 'SHIPMENT_SIMULATED') {
+    note = 'Admin mô phỏng cập nhật vận chuyển';
+  }
+
+  return { location, note };
 }
 
 type NextOrderStatus = Exclude<AdminOrderStatus, 'pending' | 'expired'>;
