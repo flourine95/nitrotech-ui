@@ -1,4 +1,5 @@
 'use client';
+
 import { Suspense, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -6,12 +7,11 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { Eye, EyeOff } from 'lucide-react';
-import { GoogleIcon, FacebookIcon } from '@/components/icons';
+import { OAuthButtons } from '@/components/auth/oauth-buttons';
 import { loginSchema, type LoginInput } from '@/schemas/auth';
 import { FieldGroup, Field, FieldLabel, FieldDescription } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 import { Spinner } from '@/components/ui/spinner';
 
 function LoginForm() {
@@ -63,31 +63,7 @@ function LoginForm() {
           <p className="text-sm text-slate-500">Chào mừng bạn quay lại NitroTech</p>
         </div>
 
-        {/* Social login */}
-        <div className="mb-6 grid grid-cols-2 gap-3">
-          <Button
-            type="button"
-            variant="outline"
-            className="h-auto rounded-full py-2.5"
-          >
-            <GoogleIcon className="size-4" />
-            Google
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            className="h-auto rounded-full py-2.5"
-          >
-            <FacebookIcon className="size-4 text-[#0866FF]" />
-            Facebook
-          </Button>
-        </div>
-
-        <div className="mb-6 flex items-center gap-3">
-          <Separator className="flex-1" />
-          <span className="text-xs text-muted-foreground">hoặc đăng nhập bằng email</span>
-          <Separator className="flex-1" />
-        </div>
+        <OAuthButtons mode="login" />
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
           <FieldGroup>
@@ -108,10 +84,7 @@ function LoginForm() {
             <Field data-invalid={!!errors.password}>
               <div className="flex items-center justify-between">
                 <FieldLabel htmlFor="password">Mật khẩu</FieldLabel>
-                <Link
-                  href="/forgot-password"
-                  className="text-xs text-primary hover:underline"
-                >
+                <Link href="/forgot-password" className="text-xs text-primary hover:underline">
                   Quên mật khẩu?
                 </Link>
               </div>
@@ -156,10 +129,7 @@ function LoginForm() {
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
           Chưa có tài khoản?{' '}
-          <Link
-            href="/register"
-            className="font-medium text-primary hover:underline"
-          >
+          <Link href="/register" className="font-medium text-primary hover:underline">
             Đăng ký ngay
           </Link>
         </p>
@@ -170,7 +140,13 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="w-full max-w-md"><Spinner /></div>}>
+    <Suspense
+      fallback={
+        <div className="w-full max-w-md">
+          <Spinner />
+        </div>
+      }
+    >
       <LoginForm />
     </Suspense>
   );

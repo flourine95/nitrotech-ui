@@ -1,4 +1,5 @@
 'use client';
+
 import { useState } from 'react';
 import Link from 'next/link';
 import { useForm, useWatch } from 'react-hook-form';
@@ -8,10 +9,12 @@ import { Eye, EyeOff, CheckCircle2 } from 'lucide-react';
 import { type RegisterInput, registerSchema } from '@/schemas/auth';
 import { register as registerUser } from '@/lib/api/auth';
 import { ApiException } from '@/lib/api/client';
+import { OAuthButtons } from '@/components/auth/oauth-buttons';
 import { FieldGroup, Field, FieldLabel, FieldDescription } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { Spinner } from '@/components/ui/spinner';
 
 export default function RegisterPage() {
   const [showPass, setShowPass] = useState(false);
@@ -94,30 +97,39 @@ export default function RegisterPage() {
       <div className="rounded-3xl border bg-card p-8 shadow-lg">
         <div className="mb-8 text-center">
           <h1 className="mb-1 text-2xl font-bold">Tạo tài khoản</h1>
-          <p className="text-sm text-muted-foreground">Tham gia NitroTech để mua sắm dễ dàng hơn</p>
+          <p className="text-sm text-muted-foreground">
+            Tham gia NitroTech để mua sắm dễ dàng hơn
+          </p>
         </div>
 
-        {/* Step indicator */}
+        {step === 1 && <OAuthButtons mode="register" />}
+
         <div className="mb-8 flex items-center gap-2">
           {['Thông tin', 'Bảo mật'].map((s, i) => (
             <div key={s} className="flex flex-1 items-center">
               <div
-                className={`flex flex-1 items-center gap-2 ${i < step - 1 ? 'text-green-600' : i === step - 1 ? 'text-foreground' : 'text-muted-foreground'}`}
+                className={`flex flex-1 items-center gap-2 ${
+                  i < step - 1
+                    ? 'text-green-600'
+                    : i === step - 1
+                      ? 'text-foreground'
+                      : 'text-muted-foreground'
+                }`}
               >
                 <div
-                  className={`flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors ${i < step - 1 ? 'bg-green-100 text-green-600' : i === step - 1 ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground'}`}
+                  className={`flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors ${
+                    i < step - 1
+                      ? 'bg-green-100 text-green-600'
+                      : i === step - 1
+                        ? 'bg-foreground text-background'
+                        : 'bg-muted text-muted-foreground'
+                  }`}
                 >
-                  {i < step - 1 ? (
-                    <CheckCircle2 className="size-3.5" aria-hidden="true" />
-                  ) : (
-                    i + 1
-                  )}
+                  {i < step - 1 ? <CheckCircle2 className="size-3.5" aria-hidden="true" /> : i + 1}
                 </div>
                 <span className="text-sm font-medium">{s}</span>
               </div>
-              {i < 1 && (
-                <Separator className={`mx-3 flex-1 ${step > 1 ? 'bg-green-300' : ''}`} />
-              )}
+              {i < 1 && <Separator className={`mx-3 flex-1 ${step > 1 ? 'bg-green-300' : ''}`} />}
             </div>
           ))}
         </div>
@@ -195,12 +207,18 @@ export default function RegisterPage() {
                       {[1, 2, 3, 4].map((i) => (
                         <div
                           key={i}
-                          className={`h-1 flex-1 rounded-full transition-colors ${i <= strength ? strengthColor : 'bg-muted'}`}
+                          className={`h-1 flex-1 rounded-full transition-colors ${
+                            i <= strength ? strengthColor : 'bg-muted'
+                          }`}
                         />
                       ))}
                     </div>
                     <p
-                      className={`mt-1 text-xs ${['', 'text-rose-500', 'text-amber-600', 'text-blue-600', 'text-green-600'][strength]}`}
+                      className={`mt-1 text-xs ${
+                        ['', 'text-rose-500', 'text-amber-600', 'text-blue-600', 'text-green-600'][
+                          strength
+                        ]
+                      }`}
                     >
                       {strengthLabel}
                     </p>
@@ -286,6 +304,7 @@ export default function RegisterPage() {
                   disabled={isSubmitting}
                   className="h-auto flex-1 rounded-full py-3 font-semibold"
                 >
+                  {isSubmitting && <Spinner data-icon="inline-start" />}
                   {isSubmitting ? 'Đang tạo...' : 'Tạo tài khoản'}
                 </Button>
               </div>
@@ -295,10 +314,7 @@ export default function RegisterPage() {
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
           Đã có tài khoản?{' '}
-          <Link
-            href="/login"
-            className="font-medium text-primary hover:underline"
-          >
+          <Link href="/login" className="font-medium text-primary hover:underline">
             Đăng nhập
           </Link>
         </p>
