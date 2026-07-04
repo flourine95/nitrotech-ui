@@ -46,6 +46,17 @@ async function handler(request: NextRequest) {
     cache: 'no-store',
   });
 
+  if (springRes.headers.get('content-type')?.includes('text/event-stream') && springRes.body) {
+    return new NextResponse(springRes.body, {
+      status: springRes.status,
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache, no-transform',
+        'Connection': 'keep-alive',
+      },
+    });
+  }
+
   const data = await springRes.text();
 
   const res = new NextResponse(data, {

@@ -4,13 +4,17 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import {
+  AlertTriangleIcon,
   BellIcon,
   BoltIcon,
+  CheckIcon,
   ChevronsUpDownIcon,
   LogOutIcon,
   SearchIcon,
   SettingsIcon,
+  ShoppingBagIcon,
   UserIcon,
+  UserPlusIcon,
 } from 'lucide-react';
 import { memo, type CSSProperties } from 'react';
 
@@ -44,6 +48,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { useNotifications } from '@/hooks/use-notifications';
 import { mainNavItems, catalogNavItems, systemNavItems, devNavItems, type NavItem } from './nav-items';
 
 type User = {
@@ -92,6 +99,7 @@ export function DashboardShell({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { notifications, unreadCount, markAllAsRead, markAsRead } = useNotifications();
 
   const displayName = user?.name ?? 'Admin';
   const displayEmail = user?.email ?? 'admin@nitrotech.vn';
@@ -261,17 +269,126 @@ export function DashboardShell({
               </Button>
 
               {/* Notifications */}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="relative size-8"
-                aria-label="Thông báo"
-              >
-                <BellIcon />
-                <Badge className="absolute -top-0.5 -right-0.5 size-4 justify-center rounded-full p-0 text-[10px]">
-                  3
-                </Badge>
-              </Button>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="relative size-8"
+                    aria-label="Thông báo"
+                  >
+                    <BellIcon className="size-4.5" />
+                    {unreadCount > 0 ? (
+                      <Badge className="absolute -top-0.5 -right-0.5 size-4 justify-center rounded-full p-0 text-[10px]">
+                        {unreadCount}
+                      </Badge>
+                    ) : null}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-80 p-0 sm:w-96 bg-popover border-border rounded-xl">
+                  <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
+                    <span className="text-sm font-semibold">Thông báo hoạt động</span>
+                    {unreadCount > 0 ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={markAllAsRead}
+                        className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground"
+                      >
+                        Đọc tất cả
+                      </Button>
+                    ) : null}
+                  </div>
+                  <ScrollArea className="h-80">
+                    {notifications.length === 0 ? (
+                      <div className="flex h-64 flex-col items-center justify-center text-muted-foreground">
+                        <BellIcon className="mb-2 size-8 opacity-40" />
+                        <span className="text-xs">Không có thông báo nào</span>
+                      </div>
+                    ) : (
+                      <div className="divide-y divide-border">
+                        {notifications.map((notif) => (
+                          <div
+                            key={notif.id}
+                            className={`flex gap-3 p-4 transition-colors hover:bg-muted/50 ${
+                              !notif.read ? 'bg-muted/20' : ''
+                            }`}
+                          >
+                            <div className="flex-shrink-0">
+                              {notif.type === 'NEW_ORDER' && (
+                                <div className="flex size-8 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-500">
+                                  <ShoppingBagIcon className="size-4" />
+                                </div>
+                              )}
+                              {notif.type === 'USER_SIGNUP' && (
+                                <div className="flex size-8 items-center justify-center rounded-full bg-blue-100 text-blue-600 dark:bg-blue-950/30 dark:text-blue-500">
+                                  <UserPlusIcon className="size-4" />
+                                </div>
+                              )}
+                              {notif.type === 'LOW_STOCK' && (
+                                <div className="flex size-8 items-center justify-center rounded-full bg-amber-100 text-amber-600 dark:bg-amber-950/30 dark:text-amber-500">
+                                  <AlertTriangleIcon className="size-4" />
+                                </div>
+                              )}
+                              {notif.type === 'SYSTEM_ALERT' && (
+                                <div className="flex size-8 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+                                  <AlertTriangleIcon className="size-4" />
+                                </div>
+                              )}
+                            </div>
+                            <div className="grid flex-1 gap-1">
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="text-xs font-semibold leading-none">{notif.title}</span>
+                                {!notif.read && (
+                                  <span className="size-1.5 rounded-full bg-primary" />
+                                )}
+                              </div>
+                              <p className="text-xs text-muted-foreground leading-normal">
+                                {notif.message}
+                              </p>
+                              <div className="mt-1 flex items-center justify-between gap-2">
+                                <span className="text-[10px] text-muted-foreground">
+                                  {new Date(notif.createdAt).toLocaleTimeString('vi-VN', {
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  })}{' '}
+                                  -{' '}
+                                  {new Date(notif.createdAt).toLocaleDateString('vi-VN', {
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                  })}
+                                </span>
+                                <div className="flex gap-1.5">
+                                  {!notif.read && (
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => markAsRead(notif.id)}
+                                      className="size-5 hover:bg-muted text-muted-foreground hover:text-foreground"
+                                      title="Đánh dấu đã đọc"
+                                    >
+                                      <CheckIcon className="size-3" />
+                                    </Button>
+                                  )}
+                                  {notif.href && (
+                                    <Link
+                                      href={notif.href}
+                                      onClick={() => markAsRead(notif.id)}
+                                      className="text-[10px] font-medium text-primary hover:underline"
+                                    >
+                                      Chi tiết
+                                    </Link>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </ScrollArea>
+                </PopoverContent>
+              </Popover>
 
             </div>
           </div>
