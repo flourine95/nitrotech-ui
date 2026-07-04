@@ -71,3 +71,18 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
 
   return readJson(res) as Promise<T>;
 }
+
+export interface PageMeta {
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+}
+
+export interface ApiResult<T, F = unknown> {
+  data: T;
+  meta?: PageMeta;
+  facets?: F;
+}
