@@ -3,7 +3,6 @@ import argparse
 from pathlib import Path
 
 DEFAULT_IGNORE_DIRS = {'.next', 'node_modules', '.git', 'out', 'build', 'coverage', 'public'}
-
 DEFAULT_EXTENSIONS = {'.ts', '.tsx', '.js', '.jsx', '.css', '.scss', '.json', '.md', '.env.example'}
 
 def generate_tree(dir_path, prefix="", ignore_dirs=None):
@@ -17,7 +16,6 @@ def generate_tree(dir_path, prefix="", ignore_dirs=None):
     except PermissionError:
         return ""
 
-    # Lọc bỏ các thư mục bị ignore
     valid_paths = [p for p in paths if not (p.is_dir() and p.name in ignore_dirs)]
 
     for i, path in enumerate(valid_paths):
@@ -31,53 +29,81 @@ def generate_tree(dir_path, prefix="", ignore_dirs=None):
 
     return tree_str
 
-def merge_code(target_dir, output_file, ignore_dirs, extensions):
-    """Hàm đọc và gộp code"""
-    target_path = Path(target_dir).resolve()
+def read_and_write_file(file_path, root_path, outfile, extensions):
+    """Hàm phụ trợ để kiểm tra extension và ghi nội dung file vào outfile"""
+    # Nếu có bộ lọc extension và file không khớp -> Bỏ qua
+    if extensions and file_path.suffix.lower() not in extensions:
+        return
+
+    # Tính đường dẫn hiển thị trực quan
+    if root_path.is_dir():
+        relative_path = Path(root_path.name) / file_path.relative_to(root_path)
+    else:
+        relative_path = file_path.name
+
+    try:
+        with open(file_path, 'r', encoding='utf-8') as infile:
+            content = infile.read()
+
+        outfile.write(f"\n// {'-'*40}\n")
+        outfile.write(f"// File: {relative_path}\n")
+        outfile.write(f"// {'-'*40}\n\n")
+        outfile.write(content)
+        outfile.write("\n")
+    except Exception as e:
+        outfile.write(f"\n// [LỖI] Không thể đọc file: {relative_path} ({str(e)})\n")
+
+def merge_code(inputs, output_file, ignore_dirs, extensions):
+    """Hàm đọc và gộp code từ danh sách FILE và FOLDER"""
+    if ignore_dirs is None:
+        ignore_dirs = set()
 
     with open(output_file, 'w', encoding='utf-8') as outfile:
-        # 1. In cấu trúc thư mục
-        outfile.write(f"=== CẤU TRÚC THƯ MỤC: {target_path.name} ===\n\n")
-        outfile.write(f"{target_path.name}/\n")
-        outfile.write(generate_tree(target_path, ignore_dirs=ignore_dirs))
+
+        # === PHẦN 1: IN CẤU TRÚC THƯ MỤC / DANH SÁCH FILE ĐẦU VÀO ===
+        outfile.write("=== DANH SÁCH ĐẦU VÀO CẦN GỘP ===\n")
+        for item in inputs:
+            item_path = Path(item).resolve()
+            if not item_path.exists():
+                print(f"[CẢNH BÁO] Đường dẫn không tồn tại: {item}")
+                continue
+
+            if item_path.is_dir():
+                outfile.write(f"\n[FOLDER] {item_path.name}/\n")
+                outfile.write(generate_tree(item_path, ignore_dirs=ignore_dirs))
+            else:
+                outfile.write(f"[FILE]   {item_path.name}\n")
         outfile.write("\n" + "="*50 + "\n\n")
 
-        # 2. In nội dung từng file
+        # === PHẦN 2: GỘP NỘI DUNG SOURCE CODE ===
         outfile.write("=== NỘI DUNG SOURCE CODE ===\n\n")
 
-        for root, dirs, files in os.walk(target_path):
-            # Xóa các thư mục ignore để os.walk không đi sâu vào
-            dirs[:] = [d for d in dirs if d not in ignore_dirs]
+        for item in inputs:
+            item_path = Path(item).resolve()
+            if not item_path.exists():
+                continue
 
-            for file in files:
-                file_path = Path(root) / file
+            if item_path.is_file():
+                # Nếu đầu vào là file đơn lẻ, đọc luôn (bỏ qua lọc extension để linh hoạt, hoặc giữ lại tùy bạn)
+                read_and_write_file(item_path, item_path, outfile, extensions=None)
 
-                # Kiểm tra định dạng file (hoặc lấy tất cả nếu extensions rỗng)
-                if extensions and file_path.suffix.lower() not in extensions:
-                    continue
+            elif item_path.is_dir():
+                # Nếu là thư mục, duyệt os.walk như cũ
+                for root, dirs, files in os.walk(item_path):
+                    dirs[:] = [d for d in dirs if d not in ignore_dirs]
 
-                relative_path = file_path.relative_to(target_path)
-
-                try:
-                    with open(file_path, 'r', encoding='utf-8') as infile:
-                        content = infile.read()
-
-                    # Viết header cho mỗi file
-                    outfile.write(f"\n// {'-'*40}\n")
-                    outfile.write(f"// File: {relative_path}\n")
-                    outfile.write(f"// {'-'*40}\n\n")
-                    outfile.write(content)
-                    outfile.write("\n")
-                except Exception as e:
-                    outfile.write(f"\n// [LỖI] Không thể đọc file: {relative_path} ({str(e)})\n")
+                    for file in files:
+                        file_path = Path(root) / file
+                        read_and_write_file(file_path, item_path, outfile, extensions)
 
     print(f"Đã gộp thành công vào file: {output_file}")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Script gộp code dự án Next.js")
+    parser = argparse.ArgumentParser(description="Script gộp code dự án linh hoạt (File & Folder)")
 
-    parser.add_argument("-d", "--dir", type=str, default=".",
-                        help="Thư mục cần gộp (mặc định: thư mục hiện tại '.')")
+    # Sử dụng nargs="+" để nhận nhiều tham số cách nhau bởi dấu cách
+    parser.add_argument("-d", "--dir", type=str, nargs="+", default=["."],
+                        help="Danh sách các file hoặc thư mục cần gộp (mặc định: '.')")
 
     parser.add_argument("-o", "--out", type=str, default="merged_code.txt",
                         help="Tên file đầu ra (mặc định: merged_code.txt)")
@@ -89,4 +115,5 @@ if __name__ == "__main__":
 
     extensions_to_use = set() if args.all else DEFAULT_EXTENSIONS
 
+    # Truyền args.dir (lúc này là một list chứa cả file và folder) vào hàm xử lý
     merge_code(args.dir, args.out, DEFAULT_IGNORE_DIRS, extensions_to_use)
