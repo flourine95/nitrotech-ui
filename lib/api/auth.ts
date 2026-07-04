@@ -10,6 +10,8 @@ export interface User {
   provider: string;
 }
 
+export type OAuthProvider = 'google' | 'github';
+
 export async function getMe() {
   const res = await apiFetch<{ data: User }>('/api/auth/me');
   return res.data;
@@ -78,4 +80,11 @@ export async function logout() {
 
 export async function logoutAll() {
   return apiFetch<{ message: string }>('/api/auth/logout-all', { method: 'POST' });
+}
+
+export async function getOAuthAuthorizationUrl(provider: OAuthProvider) {
+  const res = await apiFetch<{ data: { authorizationUrl: string } }>(
+    `/api/auth/oauth/${provider}/authorize`,
+  );
+  return res.data.authorizationUrl;
 }

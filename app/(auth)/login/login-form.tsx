@@ -10,6 +10,7 @@ import { Eye, EyeOff } from 'lucide-react';
 import { loginSchema, type LoginInput } from '@/schemas/auth';
 import { login } from '@/lib/api/auth';
 import { getFriendlyErrorMessage } from '@/lib/utils/errors';
+import { OAuthButtons } from '@/components/auth/oauth-buttons';
 import { FieldGroup, Field, FieldLabel, FieldDescription } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -50,6 +51,8 @@ export function LoginForm() {
           <p className="text-sm text-muted-foreground">Chào mừng bạn quay lại NitroTech</p>
         </div>
 
+        <OAuthButtons mode="login" />
+
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
           <FieldGroup>
             <Field data-invalid={!!errors.email}>
@@ -69,10 +72,7 @@ export function LoginForm() {
             <Field data-invalid={!!errors.password}>
               <div className="flex items-center justify-between">
                 <FieldLabel htmlFor="password">Mật khẩu</FieldLabel>
-                <Link
-                  href="/forgot-password"
-                  className="text-xs text-primary hover:underline"
-                >
+                <Link href="/forgot-password" className="text-xs text-primary hover:underline">
                   Quên mật khẩu?
                 </Link>
               </div>
@@ -117,10 +117,7 @@ export function LoginForm() {
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
           Chưa có tài khoản?{' '}
-          <Link
-            href="/register"
-            className="font-medium text-primary hover:underline"
-          >
+          <Link href="/register" className="font-medium text-primary hover:underline">
             Đăng ký ngay
           </Link>
         </p>
