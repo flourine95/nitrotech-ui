@@ -2,14 +2,13 @@
 
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { Loader2, Tag, Truck, X } from 'lucide-react';
+import { Tag, X } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import type { Cart } from '@/types/cart';
-import type { ShippingFeeQuote } from '@/types/order';
 import { validatePromotion } from '@/lib/api/promotions';
 import type { PromotionValidationResult } from '@/types/promotion';
 import { getFriendlyErrorMessage } from '@/lib/utils/errors';
@@ -18,20 +17,12 @@ interface OrderSummaryProps {
   cart: Cart;
   promotionCode: string;
   onPromotionCodeChange: (code: string) => void;
-  shippingQuote: ShippingFeeQuote | null;
-  isShippingQuoteLoading: boolean;
-  shippingQuoteError: string | null;
-  hasShippingAddress: boolean;
 }
 
 export default function OrderSummary({
   cart,
   promotionCode,
   onPromotionCodeChange,
-  shippingQuote,
-  isShippingQuoteLoading,
-  shippingQuoteError,
-  hasShippingAddress,
 }: OrderSummaryProps) {
   const [promoInput, setPromoInput] = useState(promotionCode);
   const [appliedPromo, setAppliedPromo] = useState<PromotionValidationResult | null>(null);
@@ -58,7 +49,6 @@ export default function OrderSummary({
       toast.error('Vui lòng nhập mã khuyến mãi');
       return;
     }
-
     validatePromoMutation.mutate(code);
   };
 
@@ -69,15 +59,8 @@ export default function OrderSummary({
     toast.success('Đã xóa mã khuyến mãi');
   };
 
-  const discount = appliedPromo?.discountAmount ?? cart.summary.discount;
-  const shippingFee = shippingQuote?.fee ?? null;
-  const total =
-    typeof shippingFee === 'number'
-      ? Math.max(0, cart.summary.subtotal - discount + shippingFee)
-      : null;
-  const shippingMeta = [shippingQuote?.provider?.trim(), shippingQuote?.estimatedDelivery?.trim()]
-    .filter(Boolean)
-    .join(' · ');
+  const discount = appliedPromo?.discountAmount || cart.summary.discount;
+  const total = appliedPromo?.finalAmount || cart.summary.total;
 
   return (
     <div className="sticky top-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -88,6 +71,7 @@ export default function OrderSummary({
         </span>
       </div>
 
+      {/* Cart Items */}
       <div className="mt-4 space-y-3">
         {cart.items.map((item) => (
           <div key={item.id} className="flex gap-3">
@@ -105,7 +89,7 @@ export default function OrderSummary({
             <div className="min-w-0 flex-1 text-sm">
               <Link
                 href={`/products/${item.variant.product.slug}`}
-                className="line-clamp-2 font-medium leading-5 text-slate-950 hover:text-primary"
+                className="line-clamp-2 leading-5 font-medium text-slate-950 hover:text-primary"
               >
                 {item.variant.product.name}
               </Link>
@@ -118,6 +102,7 @@ export default function OrderSummary({
         ))}
       </div>
 
+      {/* Promotion Code */}
       <div className="mt-5 border-t border-slate-100 pt-4">
         <Label className="text-sm font-semibold text-slate-950">Mã khuyến mãi</Label>
         {appliedPromo ? (
@@ -163,6 +148,7 @@ export default function OrderSummary({
         )}
       </div>
 
+      {/* Summary */}
       <div className="mt-5 space-y-3 border-t border-slate-100 pt-4">
         <div className="flex justify-between text-sm">
           <span className="text-slate-500">Tạm tính</span>
@@ -183,53 +169,17 @@ export default function OrderSummary({
         <div className="flex justify-between text-sm">
           <span className="text-slate-500">Phí vận chuyển</span>
           <span className="font-semibold text-slate-950">
-            {!hasShippingAddress
-              ? 'Chọn địa chỉ'
-              : isShippingQuoteLoading
-                ? 'Đang tính phí vận chuyển...'
-                : typeof shippingFee !== 'number'
-                  ? '--'
-                  : shippingFee === 0
-                    ? 'Miễn phí'
-                    : `${shippingFee.toLocaleString('vi-VN')} ₫`}
+            {cart.summary.shipping === 0
+              ? 'Miễn phí'
+              : `${cart.summary.shipping.toLocaleString('vi-VN')} ₫`}
           </span>
         </div>
-
-        {(isShippingQuoteLoading || shippingMeta || shippingQuoteError || !hasShippingAddress) && (
-          <div className="rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-500">
-            {!hasShippingAddress ? (
-              <div className="flex items-start gap-2">
-                <Truck className="mt-0.5 size-3.5 shrink-0" />
-                <span>Chọn hoặc nhập địa chỉ giao hàng để tính phí vận chuyển bằng GHTK.</span>
-              </div>
-            ) : isShippingQuoteLoading ? (
-              <div className="flex items-center gap-2">
-                <Loader2 className="size-3.5 animate-spin" />
-                Đang tính phí vận chuyển theo địa chỉ đã chọn...
-              </div>
-            ) : shippingQuoteError ? (
-              <div className="flex items-start gap-2">
-                <Truck className="mt-0.5 size-3.5 shrink-0" />
-                <span>{shippingQuoteError}</span>
-              </div>
-            ) : (
-              <div className="flex items-start gap-2">
-                <Truck className="mt-0.5 size-3.5 shrink-0" />
-                <span>{shippingMeta}</span>
-              </div>
-            )}
-          </div>
-        )}
 
         <div className="border-t border-slate-100 pt-4">
           <div className="flex justify-between">
             <span className="font-semibold text-slate-950">Tổng cộng</span>
             <span className="text-xl font-bold tracking-tight text-primary">
-              {total === null
-                ? hasShippingAddress && isShippingQuoteLoading
-                  ? 'Đang tính...'
-                  : '--'
-                : `${total.toLocaleString('vi-VN')} ₫`}
+              {total.toLocaleString('vi-VN')} ₫
             </span>
           </div>
         </div>

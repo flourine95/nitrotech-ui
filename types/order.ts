@@ -14,12 +14,6 @@ export interface ShippingAddress {
   country: string;
 }
 
-export interface ShippingFeeQuote {
-  fee: number;
-  provider?: string | null;
-  estimatedDelivery?: string | null;
-}
-
 export interface OrderItem {
   id: number;
   orderId: number;
@@ -58,35 +52,15 @@ export interface Order {
 
 export interface OrderListItem {
   id: number;
-  userId?: number;
-  orderCode?: string;
-  orderNumber?: string;
-  receiver?: string | null;
-  phone?: string | null;
-  email?: string | null;
+  orderNumber: string;
   status: OrderStatus;
   paymentMethod: PaymentMethod;
-  paymentStatus?: string | null;
-  hasShipment?: boolean | null;
-  shipmentStatus?: string | null;
-  trackingCode?: string | null;
-  availableActions?: string[];
-  ageMinutes?: number | null;
-  slaDueAt?: string | null;
-  slaStatus?: string | null;
-  slaLabel?: string | null;
-  totalAmount?: number;
-  discountAmount?: number;
-  shippingFee?: number;
+  totalAmount: number;
+  discountAmount: number;
+  shippingFee: number;
   finalAmount: number;
-  itemCount?: number;
-  items?: Array<{
-    id?: number;
-    name?: string;
-    quantity?: number;
-  }>;
+  itemCount: number;
   createdAt: string;
-  updatedAt?: string;
 }
 
 export interface OrderResponse {

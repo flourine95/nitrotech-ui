@@ -4,7 +4,6 @@ import type {
   OrderListResponse,
   OrderResponse,
   ShippingAddress,
-  ShippingFeeQuote,
 } from '@/types/order';
 import type {
   CreateOrderData,
@@ -34,15 +33,6 @@ export type PaymentInitResult = {
   redirect: boolean;
 };
 
-export type PaymentVerificationResult = {
-  success: boolean;
-  message?: string;
-};
-
-export type ShippingFeeQuoteRequest = {
-  shippingAddress: ShippingAddress;
-};
-
 // POST /api/orders - Create order
 export async function createOrder(data: CreateOrderData): Promise<ApiOrder> {
   const res = await apiFetch<OrderResponse>('/api/orders', {
@@ -50,6 +40,14 @@ export async function createOrder(data: CreateOrderData): Promise<ApiOrder> {
     body: JSON.stringify(data),
   });
 
+  return res.data;
+}
+
+export async function quoteShippingFee(shippingAddress: ShippingAddress): Promise<number> {
+  const res = await apiFetch<{ data: number }>('/api/orders/shipping-fee', {
+    method: 'POST',
+    body: JSON.stringify({ shippingAddress }),
+  });
   return res.data;
 }
 
@@ -95,39 +93,6 @@ export async function cancelOrder(id: number, data?: CancelOrderData): Promise<A
   return res.data;
 }
 
-export async function quoteShippingFee(
-  payload: ShippingFeeQuoteRequest,
-): Promise<ShippingFeeQuote> {
-  const res = await apiFetch<{
-    data?: number | {
-      fee?: number;
-      shippingFee?: number;
-      provider?: string | null;
-      estimatedDelivery?: string | null;
-    };
-    fee?: number;
-    shippingFee?: number;
-    provider?: string | null;
-    estimatedDelivery?: string | null;
-  }>('/api/orders/shipping-fee', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
-
-  const data = res.data ?? res;
-  const fee = typeof data === 'number' ? data : data.fee ?? data.shippingFee;
-
-  if (typeof fee !== 'number' || Number.isNaN(fee)) {
-    throw new Error('Phản hồi phí vận chuyển không hợp lệ');
-  }
-
-  return {
-    fee,
-    provider: typeof data === 'number' ? null : data.provider ?? null,
-    estimatedDelivery: typeof data === 'number' ? null : data.estimatedDelivery ?? null,
-  };
-}
-
 // POST /api/orders/{id}/payment/initiate - Initiate online payment
 export async function initiateOrderPayment(orderId: number): Promise<PaymentInitResult> {
   const res = await fetch(`/api/orders/${orderId}/payment/initiate`, {
@@ -151,13 +116,4 @@ export async function initiateOrderPayment(orderId: number): Promise<PaymentInit
   }
 
   return data.data ?? data;
-}
-
-export async function verifyVnpayReturn(
-  params: URLSearchParams,
-): Promise<PaymentVerificationResult> {
-  const query = params.toString();
-  return apiFetch<PaymentVerificationResult>(
-    `/api/webhooks/payments/vnpay${query ? `?${query}` : ''}`,
-  );
 }

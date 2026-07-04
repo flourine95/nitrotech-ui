@@ -42,7 +42,6 @@ interface ShippingFormProps {
   initialData: ShippingAddress | null;
   initialSaveAddress: boolean;
   savedAddresses: Address[];
-  onAddressChange?: (shippingAddress: ShippingAddress | null) => void;
   onSubmit: (address: ShippingAddress, defaultAddress: boolean, shouldSaveAddress: boolean) => void;
 }
 
@@ -50,7 +49,6 @@ export default function ShippingForm({
   initialData,
   initialSaveAddress,
   savedAddresses,
-  onAddressChange,
   onSubmit,
 }: ShippingFormProps) {
   const [saveAddress, setSaveAddress] = useState(initialSaveAddress);
@@ -90,8 +88,7 @@ export default function ShippingForm({
 
   const selectedCityCode = watch('cityCode');
   const selectedDistrictCode = watch('districtCode');
-  const watchedAddress = watch();
-  const selectedAddressKey = addressKey(watchedAddress);
+  const selectedAddressKey = addressKey(watch());
   const selectedSavedAddress = savedAddresses.find(
     (address) => addressKey(address) === selectedAddressKey,
   );
@@ -243,41 +240,6 @@ export default function ShippingForm({
     if (addressMode !== 'saved' || selectedSavedAddress || !fallbackSavedAddress) return;
     handleSavedAddressChange(String(fallbackSavedAddress.id));
   }, [addressMode, fallbackSavedAddress, handleSavedAddressChange, selectedSavedAddress]);
-
-  useEffect(() => {
-    if (!onAddressChange) return;
-
-    if (addressMode === 'saved') {
-      if (!fallbackSavedAddress || !savedAddressComplete) {
-        onAddressChange(null);
-        return;
-      }
-
-      onAddressChange({
-        name: fallbackSavedAddress.name,
-        phone: fallbackSavedAddress.phone,
-        address: fallbackSavedAddress.address,
-        ward: fallbackSavedAddress.ward,
-        wardCode: fallbackSavedAddress.wardCode,
-        district: fallbackSavedAddress.district || '',
-        districtCode: fallbackSavedAddress.districtCode || '',
-        city: fallbackSavedAddress.city,
-        cityCode: fallbackSavedAddress.cityCode,
-        country: fallbackSavedAddress.country || 'Vietnam',
-      });
-      return;
-    }
-
-    const result = shippingAddressSchema.safeParse(watchedAddress);
-    onAddressChange(
-      result.success
-        ? {
-            ...result.data,
-            country: result.data.country || 'Vietnam',
-          }
-        : null,
-    );
-  }, [addressMode, fallbackSavedAddress, onAddressChange, savedAddressComplete, watchedAddress]);
 
   const submitAddress = (data: ShippingAddressData, shouldSaveAddress: boolean) => {
     const address: ShippingAddress = {

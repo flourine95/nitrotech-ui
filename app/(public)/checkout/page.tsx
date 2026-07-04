@@ -6,20 +6,16 @@ import { toast } from 'sonner';
 import { CheckCircle2, ChevronLeft, Clipboard, Clock3, Loader2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCartStore } from '@/stores/cart-store';
-import {
-  createOrder,
-  getOrder,
-  initiateOrderPayment,
-  quoteShippingFee,
-} from '@/lib/api/orders';
+import { createOrder, getOrder, initiateOrderPayment } from '@/lib/api/orders';
 import { createAddress, getAddresses } from '@/lib/api/addresses';
 import type { CreateOrderData } from '@/schemas/order';
-import type { Order, ShippingAddress, ShippingFeeQuote } from '@/types/order';
+import type { Order, ShippingAddress } from '@/types/order';
 import type { PaymentMethod } from '@/schemas/order';
 import type { Address } from '@/types/address';
 import ShippingForm from './shipping-form';
 import PaymentMethodSelector from './payment-method';
 import OrderSummary from './order-summary';
+import { getFriendlyErrorMessage } from '@/lib/utils/errors';
 
 type CheckoutStep = 'shipping' | 'payment' | 'review';
 
@@ -32,28 +28,6 @@ function parseApiDate(value: string) {
   const normalized = value.replace(/(\.\d{3})\d+/, '$1');
   const hasTimezone = /(?:Z|[+-]\d{2}:?\d{2})$/.test(normalized);
   return new Date(hasTimezone ? normalized : `${normalized}Z`);
-}
-
-function getErrorMessage(error: unknown, fallback: string) {
-  if (error instanceof Error && error.message) {
-    return error.message;
-  }
-
-  if (typeof error === 'object' && error !== null) {
-    const err = error as {
-      message?: string;
-      error?: {
-        message?: string;
-      };
-      data?: {
-        message?: string;
-      };
-    };
-
-    return err.error?.message || err.data?.message || err.message || fallback;
-  }
-
-  return fallback;
 }
 
 export default function CheckoutPage() {
@@ -74,9 +48,6 @@ export default function CheckoutPage() {
   const [defaultAddress, setDefaultAddress] = useState(false);
   const [shouldSaveAddress, setShouldSaveAddress] = useState(false);
   const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
-  const [shippingQuote, setShippingQuote] = useState<ShippingFeeQuote | null>(null);
-  const [isQuotingShipping, setIsQuotingShipping] = useState(false);
-  const [shippingQuoteError, setShippingQuoteError] = useState<string | null>(null);
 
   useEffect(() => {
     void fetchCart();
@@ -119,52 +90,6 @@ export default function CheckoutPage() {
       router.push('/cart');
     }
   }, [cart, cartLoading, orderCompleted, router]);
-
-  useEffect(() => {
-    if (!cart || orderCompleted) return;
-
-    const hasShippingAddress = Boolean(shippingAddress && isCompleteShippingAddress(shippingAddress));
-
-    if (!hasShippingAddress) {
-      setShippingQuote(null);
-      setShippingQuoteError(null);
-      setIsQuotingShipping(false);
-      return;
-    }
-
-    let cancelled = false;
-    setShippingQuote(null);
-    const timer = window.setTimeout(async () => {
-      setIsQuotingShipping(true);
-      setShippingQuoteError(null);
-
-      try {
-        const quote = await quoteShippingFee({
-          shippingAddress: shippingAddress as ShippingAddress,
-        });
-        if (cancelled) return;
-        setShippingQuote(quote);
-      } catch (error) {
-        if (cancelled) return;
-        setShippingQuote(null);
-        setShippingQuoteError(
-          getErrorMessage(
-            error,
-            'Không thể tính phí vận chuyển lúc này. Bạn vẫn có thể tiếp tục và backend sẽ tính lại khi đặt hàng.',
-          ),
-        );
-      } finally {
-        if (!cancelled) {
-          setIsQuotingShipping(false);
-        }
-      }
-    }, 350);
-
-    return () => {
-      cancelled = true;
-      window.clearTimeout(timer);
-    };
-  }, [cart, orderCompleted, shippingAddress]);
 
   const handleShippingSubmit = (
     address: ShippingAddress,
@@ -236,7 +161,7 @@ export default function CheckoutPage() {
           toast.error(message);
           return;
         } catch (error) {
-          const message = getErrorMessage(
+          const message = getFriendlyErrorMessage(
             error,
             'Không thể khởi tạo thanh toán VNPAY. Vui lòng thử lại từ trang đơn hàng.',
           );
@@ -254,48 +179,18 @@ export default function CheckoutPage() {
       toast.success('Đặt hàng thành công!');
       router.push(`/account/orders/${order.id}`);
     } catch (error) {
-      const err = error as { error?: { code?: string; message?: string; data?: unknown } };
+      const err = error as { error?: { code?: string } };
       const code = err?.error?.code;
 
-      switch (code) {
-        case 'CART_EMPTY':
-          toast.error('Giỏ hàng trống');
-          router.push('/cart');
-          break;
-        case 'PROMOTION_NOT_FOUND':
-          toast.error('Mã khuyến mãi không tồn tại hoặc đã hết hạn');
-          setPromotionCode('');
-          break;
-        case 'PROMOTION_NOT_APPLICABLE': {
-          const data = err.error?.data as { minAmount?: number; currentAmount?: number };
-          toast.error(
-            `Đơn hàng chưa đủ điều kiện. Tối thiểu: ${data?.minAmount?.toLocaleString('vi-VN')} ₫`,
-          );
-          setPromotionCode('');
-          break;
-        }
-        case 'VARIANT_OUT_OF_STOCK': {
-          const data = err.error?.data as {
-            outOfStockItems?: Array<{ productName: string; variantName: string }>;
-          };
-          const items = data?.outOfStockItems || [];
+      toast.error(getFriendlyErrorMessage(error, 'Đặt hàng thất bại'));
 
-          if (items.length > 0) {
-            toast.error(
-              `Sản phẩm hết hàng: ${items
-                .map((i) => `${i.productName} (${i.variantName})`)
-                .join(', ')}`,
-            );
-          } else {
-            toast.error('Một số sản phẩm đã hết hàng');
-          }
-
-          await fetchCart();
-          router.push('/cart');
-          break;
-        }
-        default:
-          toast.error(err?.error?.message || 'Đặt hàng thất bại');
+      if (code === 'CART_EMPTY') {
+        router.push('/cart');
+      } else if (code === 'PROMOTION_NOT_FOUND' || code === 'PROMOTION_NOT_APPLICABLE') {
+        setPromotionCode('');
+      } else if (code === 'VARIANT_OUT_OF_STOCK') {
+        void fetchCart();
+        router.push('/cart');
       }
     } finally {
       setIsSubmitting(false);
@@ -354,7 +249,6 @@ export default function CheckoutPage() {
                 initialData={shippingAddress}
                 initialSaveAddress={defaultAddress}
                 savedAddresses={savedAddresses}
-                onAddressChange={setShippingAddress}
                 onSubmit={handleShippingSubmit}
               />
             )}
@@ -490,12 +384,6 @@ export default function CheckoutPage() {
               cart={cart}
               promotionCode={promotionCode}
               onPromotionCodeChange={setPromotionCode}
-              shippingQuote={shippingQuote}
-              isShippingQuoteLoading={isQuotingShipping}
-              shippingQuoteError={shippingQuoteError}
-              hasShippingAddress={Boolean(
-                shippingAddress && isCompleteShippingAddress(shippingAddress),
-              )}
             />
           </div>
         </div>
@@ -504,25 +392,12 @@ export default function CheckoutPage() {
   );
 }
 
-function isCompleteShippingAddress(address: ShippingAddress) {
-  return Boolean(
-    address.name &&
-      address.phone &&
-      address.address &&
-      address.ward &&
-      address.district &&
-      address.districtCode &&
-      address.city &&
-      address.country,
-  );
-}
-
 function SepayPaymentView({
-                            order,
-                            isRefreshing,
-                            onOrderChange,
-                            onRefreshingChange,
-                          }: {
+  order,
+  isRefreshing,
+  onOrderChange,
+  onRefreshingChange,
+}: {
   order: Order;
   isRefreshing: boolean;
   onOrderChange: (order: Order) => void;
@@ -722,11 +597,11 @@ function SepayPaymentView({
 }
 
 function PaymentInfoRow({
-                          label,
-                          value,
-                          strong,
-                          onCopy,
-                        }: {
+  label,
+  value,
+  strong,
+  onCopy,
+}: {
   label: string;
   value: string;
   strong?: boolean;
@@ -738,7 +613,7 @@ function PaymentInfoRow({
 
       <div className="flex min-w-0 items-center gap-2">
         <span
-          className={`break-all text-right text-sm ${
+          className={`text-right text-sm break-all ${
             strong ? 'font-bold text-slate-950' : 'font-medium text-slate-800'
           }`}
         >
@@ -817,11 +692,11 @@ function CheckoutStepper({ currentStep }: { currentStep: CheckoutStep }) {
 }
 
 function StepIndicator({
-                         step,
-                         label,
-                         active,
-                         completed,
-                       }: {
+  step,
+  label,
+  active,
+  completed,
+}: {
   step: number;
   label: string;
   active: boolean;
