@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { Eye } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 export const metadata: Metadata = { title: 'Review MacBook Pro M4' };
 
@@ -69,92 +71,41 @@ const specsTable = [
 
 export default function BlogPostPage() {
   return (
-    <main>
-        {/* Hero */}
-        <div className="bg-slate-900 px-6 py-14 text-white">
-          <div className="mx-auto max-w-4xl">
-            <nav
-              aria-label="Breadcrumb"
-              className="mb-6 flex items-center gap-2 text-sm text-slate-400"
-            >
-              <Link
-                href="/"
-                className="cursor-pointer transition-colors duration-150 hover:text-white"
-              >
-                Trang chủ
-              </Link>
-              <svg
-                viewBox="0 0 24 24"
-                className="h-3.5 w-3.5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                aria-hidden="true"
-              >
-                <path d="M9 18l6-6-6-6" />
-              </svg>
-              <Link
-                href="/blog"
-                className="cursor-pointer transition-colors duration-150 hover:text-white"
-              >
-                Blog
-              </Link>
-              <svg
-                viewBox="0 0 24 24"
-                className="h-3.5 w-3.5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                aria-hidden="true"
-              >
-                <path d="M9 18l6-6-6-6" />
-              </svg>
-              <span className="max-w-52 truncate text-slate-300">Review MacBook Pro M4</span>
-            </nav>
-            <span className="mb-4 inline-block rounded-full bg-blue-500/20 px-3 py-1 text-xs font-semibold text-blue-300">
+    <main className="bg-background">
+        <div className="mx-auto max-w-4xl px-6 pt-16">
+            <Badge variant="secondary" className="mb-4">
               Review
-            </span>
-            <h1 className="mb-5 text-3xl leading-tight font-bold md:text-4xl">
+            </Badge>
+            <h1 className="mb-5 text-3xl leading-tight font-bold text-foreground md:text-4xl">
               Review MacBook Pro M4: Hiệu năng vượt trội, pin &ldquo;trâu&rdquo; nhất từ trước đến
               nay
             </h1>
-            <div className="flex flex-wrap items-center gap-4 text-sm text-slate-400">
+            <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
                 <div
-                  className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-500 text-xs font-bold text-white"
+                  className="flex size-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground"
                   aria-hidden="true"
                 >
                   M
                 </div>
-                <span className="font-medium text-slate-300">Minh Khoa</span>
+                <span className="font-medium text-foreground">Minh Khoa</span>
               </div>
               <span>15 tháng 1, 2025</span>
               <span>12 phút đọc</span>
               <div className="flex items-center gap-1">
-                <svg
-                  viewBox="0 0 24 24"
-                  className="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  aria-hidden="true"
-                >
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                  <circle cx="12" cy="12" r="3" />
-                </svg>
+                <Eye className="size-4" aria-hidden="true" />
                 <span>24.5K lượt xem</span>
               </div>
             </div>
-          </div>
         </div>
 
         <div className="mx-auto max-w-7xl px-6 py-10">
           <div className="flex gap-10">
             {/* Article */}
             <article className="prose-custom min-w-0 flex-1">
-              <div className="space-y-6 leading-relaxed text-slate-700">
+              <div className="flex flex-col gap-6 leading-relaxed text-foreground">
                 <section id="tong-quan">
-                  <h2 className="mb-3 text-2xl font-bold text-slate-900">Tổng quan</h2>
+                  <h2 className="mb-3 text-2xl font-bold text-foreground">Tổng quan</h2>
                   <p>
                     Apple vừa ra mắt MacBook Pro M4 với những cải tiến đáng kể về hiệu năng và thời
                     lượng pin. Sau 2 tuần sử dụng thực tế, chúng tôi có thể khẳng định đây là chiếc
@@ -168,7 +119,7 @@ export default function BlogPostPage() {
                 </section>
 
                 <section id="thiet-ke">
-                  <h2 className="mb-3 text-2xl font-bold text-slate-900">
+                  <h2 className="mb-3 text-2xl font-bold text-foreground">
                     Thiết kế &amp; Màn hình
                   </h2>
                   <p>
@@ -176,7 +127,7 @@ export default function BlogPostPage() {
                     không hẳn là xấu. Khung nhôm nguyên khối vẫn mang lại cảm giác cao cấp và bền
                     bỉ.
                   </p>
-                  <h3 className="mt-4 mb-2 text-lg font-bold text-slate-900">
+                  <h3 className="mt-4 mb-2 text-lg font-bold text-foreground">
                     Màn hình Liquid Retina XDR
                   </h3>
                   <p>
@@ -184,19 +135,19 @@ export default function BlogPostPage() {
                     120Hz và độ sáng tối đa 1600 nits vẫn là một trong những màn hình laptop tốt
                     nhất hiện tại.
                   </p>
-                  <blockquote className="my-4 rounded-r-xl border-l-4 border-blue-500 bg-blue-50 py-2 pl-5">
-                    <p className="text-slate-700 italic">
+                  <blockquote className="my-4 rounded-xl bg-muted p-5">
+                    <p className="text-foreground italic">
                       &ldquo;Màn hình MacBook Pro M4 vẫn là chuẩn mực mà các nhà sản xuất khác phải
                       hướng tới. Màu sắc chính xác, độ sáng ấn tượng và tần số quét mượt mà.&rdquo;
                     </p>
-                    <cite className="mt-1 block text-sm text-slate-500 not-italic">
+                    <cite className="mt-1 block text-sm text-muted-foreground not-italic">
                       — Nhóm kiểm thử NitroTech
                     </cite>
                   </blockquote>
                 </section>
 
                 <section id="hieu-nang">
-                  <h2 className="mb-3 text-2xl font-bold text-slate-900">Hiệu năng chip M4</h2>
+                  <h2 className="mb-3 text-2xl font-bold text-foreground">Hiệu năng chip M4</h2>
                   <p>
                     Chip M4 được sản xuất trên tiến trình 3nm thế hệ 2 của TSMC, mang lại hiệu năng
                     vượt trội trong khi tiêu thụ điện năng thấp hơn đáng kể so với các đối thủ x86.
@@ -209,7 +160,7 @@ export default function BlogPostPage() {
                 </section>
 
                 <section id="pin">
-                  <h2 className="mb-3 text-2xl font-bold text-slate-900">Thời lượng pin</h2>
+                  <h2 className="mb-3 text-2xl font-bold text-foreground">Thời lượng pin</h2>
                   <p>
                     Apple tuyên bố MacBook Pro M4 có thể hoạt động đến 24 giờ — và trong thực tế,
                     con số này khá chính xác với tác vụ văn phòng thông thường. Đây là cải thiện
@@ -218,21 +169,21 @@ export default function BlogPostPage() {
                 </section>
 
                 <section id="so-sanh">
-                  <h2 className="mb-4 text-2xl font-bold text-slate-900">So sánh thông số</h2>
-                  <div className="overflow-x-auto rounded-xl border border-slate-200">
+                  <h2 className="mb-4 text-2xl font-bold text-foreground">So sánh thông số</h2>
+                  <div className="overflow-x-auto rounded-xl border border-border">
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="border-b border-slate-200 bg-slate-50">
-                          <th className="px-4 py-3 text-left font-semibold text-slate-700">
+                        <tr className="border-b border-border bg-muted">
+                          <th className="px-4 py-3 text-left font-semibold text-foreground">
                             Thông số
                           </th>
-                          <th className="bg-blue-50 px-4 py-3 text-left font-semibold text-blue-700">
+                          <th className="bg-muted px-4 py-3 text-left font-semibold text-primary">
                             MacBook Pro M4
                           </th>
-                          <th className="px-4 py-3 text-left font-semibold text-slate-700">
+                          <th className="px-4 py-3 text-left font-semibold text-foreground">
                             MacBook Pro M3
                           </th>
-                          <th className="px-4 py-3 text-left font-semibold text-slate-700">
+                          <th className="px-4 py-3 text-left font-semibold text-foreground">
                             MacBook Air M2
                           </th>
                         </tr>
@@ -241,12 +192,12 @@ export default function BlogPostPage() {
                         {specsTable.map((row, i) => (
                           <tr
                             key={row.spec}
-                            className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}
+                            className={i % 2 === 0 ? 'bg-card' : 'bg-muted/50'}
                           >
-                            <td className="px-4 py-3 font-medium text-slate-700">{row.spec}</td>
-                            <td className="bg-blue-50/30 px-4 py-3 text-slate-900">{row.m4}</td>
-                            <td className="px-4 py-3 text-slate-600">{row.m3}</td>
-                            <td className="px-4 py-3 text-slate-600">{row.m2}</td>
+                            <td className="px-4 py-3 font-medium text-foreground">{row.spec}</td>
+                            <td className="bg-muted/50 px-4 py-3 text-foreground">{row.m4}</td>
+                            <td className="px-4 py-3 text-muted-foreground">{row.m3}</td>
+                            <td className="px-4 py-3 text-muted-foreground">{row.m2}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -255,7 +206,7 @@ export default function BlogPostPage() {
                 </section>
 
                 <section id="ket-luan">
-                  <h2 className="mb-3 text-2xl font-bold text-slate-900">Kết luận</h2>
+                  <h2 className="mb-3 text-2xl font-bold text-foreground">Kết luận</h2>
                   <p>
                     MacBook Pro M4 là chiếc laptop tốt nhất Apple từng sản xuất. Nếu bạn đang dùng
                     M2 hoặc cũ hơn, đây là thời điểm tốt để nâng cấp. Nếu bạn đang dùng M3, sự khác
@@ -265,50 +216,50 @@ export default function BlogPostPage() {
               </div>
 
               {/* Author bio */}
-              <div className="mt-12 flex gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-6">
+              <div className="mt-12 flex gap-4 rounded-2xl border border-border bg-muted p-6">
                 <div
-                  className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-blue-500 text-xl font-bold text-white"
+                  className="flex size-14 shrink-0 items-center justify-center rounded-full bg-primary text-xl font-bold text-primary-foreground"
                   aria-hidden="true"
                 >
                   M
                 </div>
                 <div>
-                  <div className="mb-1 font-bold text-slate-900">Minh Khoa</div>
-                  <div className="mb-2 text-sm text-slate-500">
+                  <div className="mb-1 font-bold text-foreground">Minh Khoa</div>
+                  <div className="mb-2 text-sm text-muted-foreground">
                     Editor-in-Chief tại NitroTech. Chuyên review laptop, PC và linh kiện với hơn 8
                     năm kinh nghiệm trong ngành công nghệ.
                   </div>
                   <div className="flex gap-2">
-                    <span className="rounded-full bg-slate-200 px-2.5 py-1 text-xs text-slate-600">
+                    <Badge variant="secondary">
                       Laptop
-                    </span>
-                    <span className="rounded-full bg-slate-200 px-2.5 py-1 text-xs text-slate-600">
+                    </Badge>
+                    <Badge variant="secondary">
                       Apple
-                    </span>
-                    <span className="rounded-full bg-slate-200 px-2.5 py-1 text-xs text-slate-600">
+                    </Badge>
+                    <Badge variant="secondary">
                       Gaming
-                    </span>
+                    </Badge>
                   </div>
                 </div>
               </div>
 
               {/* Related articles */}
               <div className="mt-10">
-                <h2 className="mb-5 text-xl font-bold text-slate-900">Bài viết liên quan</h2>
+                <h2 className="mb-5 text-xl font-bold text-foreground">Bài viết liên quan</h2>
                 <div className="grid gap-4 sm:grid-cols-3">
                   {relatedPosts.map((p) => (
                     <Link
                       key={p.slug}
                       href={`/blog/${p.slug}`}
-                      className="group cursor-pointer rounded-2xl border border-slate-200 bg-white p-4 transition-shadow duration-200 hover:shadow-md"
+                      className="group cursor-pointer rounded-2xl border border-border bg-card p-4 transition-colors duration-200 hover:bg-muted/50"
                     >
-                      <span className="mb-2 inline-block rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600">
+                      <Badge variant="secondary" className="mb-2">
                         {p.category}
-                      </span>
-                      <div className="mb-2 text-sm leading-snug font-semibold text-slate-900 transition-colors duration-150 group-hover:text-blue-600">
+                      </Badge>
+                      <div className="mb-2 text-sm leading-snug font-semibold text-foreground transition-colors duration-150 group-hover:text-primary">
                         {p.title}
                       </div>
-                      <div className="text-xs text-slate-400">{p.date}</div>
+                      <div className="text-xs text-muted-foreground">{p.date}</div>
                     </Link>
                   ))}
                 </div>
@@ -317,17 +268,17 @@ export default function BlogPostPage() {
 
             {/* Sidebar */}
             <aside className="hidden w-64 shrink-0 lg:block">
-              <div className="sticky top-24 space-y-5">
+              <div className="sticky top-24 flex flex-col gap-5">
                 {/* TOC */}
-                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                  <h3 className="mb-3 text-sm font-bold text-slate-900">Mục lục</h3>
+                <div className="rounded-2xl border border-border bg-card p-5 ">
+                  <h3 className="mb-3 text-sm font-bold text-foreground">Mục lục</h3>
                   <nav aria-label="Table of contents">
-                    <ul className="space-y-1">
+                    <ul className="flex flex-col gap-1">
                       {toc.map((item) => (
                         <li key={item.id}>
                           <a
                             href={`#${item.id}`}
-                            className="block cursor-pointer rounded-lg px-2 py-1 text-sm text-slate-500 transition-colors duration-150 hover:bg-slate-50 hover:text-slate-900"
+                            className="block cursor-pointer rounded-lg px-2 py-1 text-sm text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground"
                           >
                             {item.label}
                           </a>
@@ -335,66 +286,6 @@ export default function BlogPostPage() {
                       ))}
                     </ul>
                   </nav>
-                </div>
-
-                {/* Share */}
-                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                  <h3 className="mb-3 text-sm font-bold text-slate-900">Chia sẻ</h3>
-                  <div className="flex gap-2">
-                    {[
-                      {
-                        label: 'Facebook',
-                        color: 'bg-blue-600 hover:bg-blue-700',
-                        icon: (
-                          <svg
-                            viewBox="0 0 24 24"
-                            className="h-4 w-4 fill-current"
-                            aria-hidden="true"
-                          >
-                            <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z" />
-                          </svg>
-                        ),
-                      },
-                      {
-                        label: 'Twitter/X',
-                        color: 'bg-slate-900 hover:bg-slate-700',
-                        icon: (
-                          <svg
-                            viewBox="0 0 24 24"
-                            className="h-4 w-4 fill-current"
-                            aria-hidden="true"
-                          >
-                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                          </svg>
-                        ),
-                      },
-                      {
-                        label: 'Copy link',
-                        color: 'bg-slate-100 hover:bg-slate-200 text-slate-700',
-                        icon: (
-                          <svg
-                            viewBox="0 0 24 24"
-                            className="h-4 w-4"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            aria-hidden="true"
-                          >
-                            <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" />
-                            <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" />
-                          </svg>
-                        ),
-                      },
-                    ].map((s) => (
-                      <button
-                        key={s.label}
-                        aria-label={s.label}
-                        className={`flex flex-1 cursor-pointer items-center justify-center rounded-full py-2 text-sm text-white transition-colors duration-200 ${s.color}`}
-                      >
-                        {s.icon}
-                      </button>
-                    ))}
-                  </div>
                 </div>
               </div>
             </aside>

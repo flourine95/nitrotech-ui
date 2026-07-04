@@ -1,6 +1,4 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
-
 export const metadata: Metadata = { title: 'Chính sách bảo mật' };
 
 const sections = [
@@ -56,52 +54,25 @@ const sections = [
 
 export default function PrivacyPage() {
   return (
-    <>
-      <main className="min-h-screen bg-slate-50">
-        {/* Breadcrumb */}
-        <div className="border-b border-slate-100 bg-white">
-          <div className="mx-auto flex max-w-7xl items-center gap-2 px-6 py-3 text-sm text-slate-400">
-            <Link
-              href="/"
-              className="cursor-pointer transition-colors duration-150 hover:text-slate-700"
-            >
-              Trang chủ
-            </Link>
-            <svg
-              viewBox="0 0 24 24"
-              className="h-3.5 w-3.5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              aria-hidden="true"
-            >
-              <path d="M9 18l6-6-6-6" />
-            </svg>
-            <span className="font-medium text-slate-700">Chính sách bảo mật</span>
-          </div>
-        </div>
-
-        {/* Hero */}
-        <div className="border-b border-slate-100 bg-white">
-          <div className="mx-auto max-w-7xl px-6 py-10">
-            <h1 className="mb-2 text-2xl font-bold text-slate-900 sm:text-3xl">
+      <main className="bg-background">
+        <div className="mx-auto max-w-5xl px-6 py-16">
+          <header className="mb-10">
+            <h1 className="mb-2 text-2xl font-bold text-foreground sm:text-3xl">
               Chính sách bảo mật
             </h1>
-            <p className="text-sm text-slate-500">
-              Cập nhật lần cuối: <span className="font-medium text-slate-700">01/01/2025</span>
+            <p className="text-sm text-muted-foreground">
+              Cập nhật lần cuối: <span className="font-medium text-foreground">01/01/2025</span>
             </p>
-          </div>
-        </div>
+          </header>
 
-        <div className="mx-auto max-w-7xl px-6 py-10">
           <div className="flex gap-10">
             {/* Content */}
-            <article className="min-w-0 flex-1 space-y-10">
+            <article className="min-w-0 flex-1 flex flex-col gap-10">
               {sections.map((section) => (
                 <section key={section.id} id={section.id} className="scroll-mt-32">
-                  <h2 className="mb-4 text-lg font-bold text-slate-900">{section.title}</h2>
+                  <h2 className="mb-4 text-lg font-bold text-foreground">{section.title}</h2>
                   {section.content.map((para, i) => (
-                    <p key={i} className="mb-3 text-sm leading-relaxed text-slate-600">
+                    <p key={i} className="mb-3 text-sm leading-relaxed text-muted-foreground">
                       {para}
                     </p>
                   ))}
@@ -112,17 +83,17 @@ export default function PrivacyPage() {
             {/* Sidebar TOC */}
             <aside className="hidden w-56 shrink-0 lg:block">
               <div className="sticky top-36">
-                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                  <p className="mb-4 text-xs font-semibold tracking-wider text-slate-500 uppercase">
+                <div className="rounded-2xl border border-border bg-card p-5">
+                  <p className="mb-4 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                     Mục lục
                   </p>
                   <nav aria-label="Mục lục chính sách bảo mật">
-                    <ul className="space-y-1">
+                    <ul className="flex flex-col gap-1">
                       {sections.map((section) => (
                         <li key={section.id}>
                           <a
                             href={`#${section.id}`}
-                            className="block cursor-pointer rounded-lg px-3 py-1.5 text-sm leading-snug text-slate-500 transition-colors duration-150 hover:bg-slate-50 hover:text-slate-900"
+                            className="block cursor-pointer rounded-lg px-3 py-1.5 text-sm leading-snug text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground"
                           >
                             {section.title}
                           </a>
@@ -136,6 +107,5 @@ export default function PrivacyPage() {
           </div>
         </div>
       </main>
-    </>
   );
 }
