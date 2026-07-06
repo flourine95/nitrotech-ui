@@ -2,8 +2,9 @@
 
 import { memo } from 'react';
 import Link from 'next/link';
-import { ChevronDownIcon, DownloadIcon, MoreHorizontalIcon, type LucideIcon } from 'lucide-react';
+import { DownloadIcon, MoreHorizontalIcon, type LucideIcon } from 'lucide-react';
 
+import { DashboardFilterDropdown } from '@/components/dashboard/filter-dropdown';
 import { StatusChip } from '@/components/dashboard/status-chip';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,8 +12,6 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -47,41 +46,17 @@ export function FilterDropdown({
   options: Array<{ value: string; label: string; count?: number }>;
   onChange: (value: string) => void;
 }) {
-  const selected = options.find((option) => option.value === value)?.label ?? label;
-
   return (
     <div className="flex flex-col gap-3">
       <p className="text-sm font-medium">{label}</p>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="outline" className="h-10 w-full justify-between font-normal shadow-none">
-            <span className="flex min-w-0 items-center gap-2">
-              <Icon className="shrink-0 text-muted-foreground" />
-              <span className="truncate">{selected}</span>
-            </span>
-            <ChevronDownIcon data-icon="inline-end" className="shrink-0 text-muted-foreground" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent
-          align="start"
-          side="bottom"
-          sideOffset={6}
-          className="w-(--radix-dropdown-menu-trigger-width)"
-        >
-          <DropdownMenuRadioGroup value={value} onValueChange={onChange}>
-            {options.map((option) => (
-              <DropdownMenuRadioItem key={option.value} value={option.value}>
-                <span className="flex w-full items-center justify-between gap-3">
-                  <span>{option.label}</span>
-                  {option.count !== undefined ? (
-                    <span className="text-xs text-muted-foreground">{option.count}</span>
-                  ) : null}
-                </span>
-              </DropdownMenuRadioItem>
-            ))}
-          </DropdownMenuRadioGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <DashboardFilterDropdown
+        label={label}
+        value={value}
+        options={options}
+        onChange={onChange}
+        icon={Icon}
+        className="h-9 w-full min-w-0 justify-between gap-1.5 rounded-xl px-3 font-normal shadow-none"
+      />
     </div>
   );
 }
@@ -96,7 +71,7 @@ export function ExportCurrentPageButton({
   return (
     <Button
       variant="outline"
-      className="h-10 w-full rounded-xl shadow-none sm:w-fit"
+      className="h-9 w-full rounded-xl px-3 shadow-none sm:w-fit"
       disabled={disabled}
       onClick={onExport}
     >
