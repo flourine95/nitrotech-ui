@@ -42,6 +42,25 @@ export async function getRoles() {
   return res.data;
 }
 
+export async function createRole(input: { name: string; slug: string; description?: string | null }) {
+  const res = await apiFetch<ApiResult<RoleData>>('/api/admin/access/roles', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+  return res.data;
+}
+
+export async function updateRole(
+  roleId: number,
+  input: { name: string; description?: string | null; active?: boolean },
+) {
+  const res = await apiFetch<ApiResult<RoleData>>(`/api/admin/access/roles/${roleId}`, {
+    method: 'PUT',
+    body: JSON.stringify(input),
+  });
+  return res.data;
+}
+
 export async function updateRolePermissions(roleId: number, permissionSlugs: string[]) {
   const res = await apiFetch<ApiResult<RoleData>>(`/api/admin/access/roles/${roleId}/permissions`, {
     method: 'PUT',
