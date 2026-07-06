@@ -10,6 +10,7 @@ import { type RegisterInput, registerSchema } from '@/schemas/auth';
 import { register as registerUser } from '@/lib/api/auth';
 import { ApiException } from '@/lib/api/client';
 import { getFriendlyErrorMessage } from '@/lib/utils/errors';
+import { OAuthButtons } from '@/components/auth/oauth-buttons';
 import { FieldGroup, Field, FieldLabel, FieldDescription } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -100,6 +101,8 @@ export function RegisterForm() {
           <h1 className="mb-1 text-2xl font-bold">Tạo tài khoản</h1>
           <p className="text-sm text-muted-foreground">Tham gia NitroTech để mua sắm dễ dàng hơn</p>
         </div>
+
+        {step === 1 && <OAuthButtons mode="register" />}
 
         <div className="mb-8 flex items-center justify-center">
           <div
@@ -304,10 +307,7 @@ export function RegisterForm() {
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
           Đã có tài khoản?{' '}
-          <Link
-            href="/login"
-            className="font-medium text-primary hover:underline"
-          >
+          <Link href="/login" className="font-medium text-primary hover:underline">
             Đăng nhập
           </Link>
         </p>

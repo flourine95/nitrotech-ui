@@ -26,7 +26,7 @@ export const mainNavItems: NavItem[] = [
   { label: 'Tổng quan', href: '/dashboard', icon: LayoutDashboardIcon },
   { label: 'Sản phẩm', href: '/dashboard/products', icon: PackageIcon },
   { label: 'Đơn hàng', href: '/dashboard/orders', icon: ShoppingCartIcon, badge: 12 },
-  { label: 'Khách hàng', href: '/dashboard/customers', icon: UsersIcon },
+  { label: 'Tài khoản', href: '/dashboard/users', icon: UsersIcon },
   { label: 'Doanh thu', href: '/dashboard/revenue', icon: TrendingUpIcon },
   { label: 'Kho hàng', href: '/dashboard/inventory', icon: WarehouseIcon },
 ];
@@ -40,7 +40,7 @@ export const catalogNavItems: NavItem[] = [
 
 export const systemNavItems: NavItem[] = [
   { label: 'Phân quyền', href: '/dashboard/access', icon: ShieldCheckIcon },
-  { label: 'Audit logs', href: '/dashboard/audit-logs', icon: ActivityIcon },
+  { label: 'Nhật ký hoạt động', href: '/dashboard/audit-logs', icon: ActivityIcon },
   { label: 'Cài đặt', href: '/dashboard/settings', icon: SettingsIcon },
 ];
 
