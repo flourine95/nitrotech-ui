@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import {
   ArrowDownIcon,
   ArrowDownUpIcon,
@@ -13,6 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { cn } from '@/lib/utils';
 
 export interface SortFieldOption {
   value: string;
@@ -72,57 +73,85 @@ export function MultipleSortPopover({
   onChange,
   fallback = { field: 'createdAt', direction: 'desc' },
   labels = defaultLabels,
+  className,
 }: {
   value: string;
   fields: SortFieldOption[];
   onChange: (val: string) => void;
   fallback?: SortRule;
   labels?: MultipleSortPopoverLabels;
+  className?: string;
 }) {
   const fallbackField = fallback.field;
   const fallbackDirection = fallback.direction;
+  const fallbackParam = `${fallbackField},${fallbackDirection}`;
   const rules = useMemo(
     () => parseSortParam(value, { field: fallbackField, direction: fallbackDirection }),
     [value, fallbackField, fallbackDirection],
   );
-  const fallbackParam = `${fallbackField},${fallbackDirection}`;
+
+  const [open, setOpen] = useState(false);
+  const [draftRules, setDraftRules] = useState<SortRule[]>([]);
+
 
   function handleRulesChange(newRules: SortRule[]) {
-    onChange(formatSortParam(newRules, fallbackParam));
+    setDraftRules(newRules);
   }
 
   function addRule() {
-    const usedFields = new Set(rules.map((r) => r.field));
+    const usedFields = new Set(draftRules.map((r) => r.field));
     const next = fields.find((o) => !usedFields.has(o.value));
     if (!next) return;
-    handleRulesChange([...rules, { field: next.value, direction: fallbackDirection }]);
+    handleRulesChange([...draftRules, { field: next.value, direction: fallbackDirection }]);
   }
 
   function updateField(index: number, field: string) {
-    handleRulesChange(rules.map((r, i) => (i === index ? { ...r, field } : r)));
+    handleRulesChange(draftRules.map((r, i) => (i === index ? { ...r, field } : r)));
+  }
+
+  // When reset clicked, clear state and apply immediately
+  function resetRules() {
+    const reset = [{ field: fallbackField, direction: fallbackDirection }];
+    setDraftRules(reset);
+    onChange(formatSortParam(reset, fallbackParam));
   }
 
   function updateDirection(index: number, direction: 'asc' | 'desc') {
-    handleRulesChange(rules.map((r, i) => (i === index ? { ...r, direction } : r)));
+    handleRulesChange(draftRules.map((r, i) => (i === index ? { ...r, direction } : r)));
   }
 
   function removeRule(index: number) {
-    handleRulesChange(rules.filter((_, i) => i !== index));
+    handleRulesChange(draftRules.filter((_, i) => i !== index));
   }
 
   function moveRule(from: number, to: number) {
-    const next = [...rules];
+    const next = [...draftRules];
     const [item] = next.splice(from, 1);
     next.splice(to, 0, item);
     handleRulesChange(next);
   }
 
+  function handleOpenChange(nextOpen: boolean) {
+    setOpen(nextOpen);
+    if (nextOpen) {
+      setDraftRules(parseSortParam(value, { field: fallbackField, direction: fallbackDirection }));
+    } else {
+      const nextValue = formatSortParam(draftRules, fallbackParam);
+      if (nextValue !== value) {
+        onChange(nextValue);
+      }
+    }
+  }
+
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
-          className="h-10 w-full min-w-0 justify-between rounded-xl px-3 font-normal shadow-none sm:w-48 xl:w-56 2xl:w-64 2xl:px-4"
+          className={cn(
+            "h-9 w-fit min-w-0 justify-between gap-1.5 rounded-xl px-3 font-normal shadow-none",
+            className
+          )}
         >
           <span className="flex items-center gap-2 truncate">
             <ArrowDownUpIcon data-icon="inline-start" />
@@ -142,8 +171,8 @@ export function MultipleSortPopover({
         </div>
 
         <div className="flex max-h-60 flex-col gap-2 overflow-y-auto">
-          {rules.map((rule, i) => {
-            const usedFields = new Set(rules.filter((_, j) => j !== i).map((r) => r.field));
+          {draftRules.map((rule, i) => {
+            const usedFields = new Set(draftRules.filter((_, j) => j !== i).map((r) => r.field));
             const ruleLabel = fields.find((field) => field.value === rule.field)?.label ?? rule.field;
             return (
               <div key={rule.field} className="flex items-center gap-2">
@@ -159,8 +188,8 @@ export function MultipleSortPopover({
                   </button>
                   <button
                     type="button"
-                    onClick={() => i < rules.length - 1 && moveRule(i, i + 1)}
-                    disabled={i === rules.length - 1}
+                    onClick={() => i < draftRules.length - 1 && moveRule(i, i + 1)}
+                    disabled={i === draftRules.length - 1}
                     className="flex h-4 w-5 items-center justify-center rounded text-muted-foreground hover:bg-accent disabled:opacity-30"
                     aria-label={`${labels.moveDown}: ${ruleLabel}`}
                   >
@@ -225,16 +254,16 @@ export function MultipleSortPopover({
             variant="outline"
             className="h-8 gap-1.5 rounded-lg"
             onClick={addRule}
-            disabled={rules.length >= fields.length}
+            disabled={draftRules.length >= fields.length}
           >
             <PlusIcon data-icon="inline-start" />
             {labels.addRule}
           </Button>
-          {rules.length > 1 && (
+          {draftRules.length > 1 && (
             <Button
               variant="ghost"
               className="h-8 rounded-lg text-muted-foreground hover:text-foreground"
-              onClick={() => handleRulesChange([{ field: fallbackField, direction: fallbackDirection }])}
+              onClick={resetRules}
             >
               {labels.reset}
             </Button>

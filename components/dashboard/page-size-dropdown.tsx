@@ -25,8 +25,7 @@ export function PageSizeDropdown({
       <DropdownMenuTrigger asChild>
         <Button
           variant="outline"
-          size="sm"
-          className="h-8 min-w-24 justify-between rounded-lg px-2.5 font-normal shadow-none"
+          className="h-9 min-w-28 justify-between rounded-xl px-3 font-normal shadow-none"
           aria-label={`Số dòng mỗi trang: ${value}`}
           disabled={options.length === 0}
         >
