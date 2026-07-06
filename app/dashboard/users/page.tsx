@@ -9,12 +9,9 @@ import {
   ChevronRightIcon,
   CoinsIcon,
   DownloadIcon,
-  MailIcon,
   MoreHorizontalIcon,
   PlusIcon,
-  RefreshCwIcon,
   SearchIcon,
-  Settings2Icon,
   ShieldCheckIcon,
   UploadIcon,
   UserRoundIcon,
@@ -26,6 +23,7 @@ import { useDebounce } from 'use-debounce';
 
 import { MultipleSortPopover, parseSortParam } from '@/components/dashboard/multiple-sort-popover';
 import { PageSizeDropdown } from '@/components/dashboard/page-size-dropdown';
+import { DashboardFilterDropdown } from '@/components/dashboard/filter-dropdown';
 import { StatusChip, type StatusChipTone } from '@/components/dashboard/status-chip';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -33,8 +31,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
   DropdownMenuSub,
@@ -124,12 +120,11 @@ const roleOptions = [
   { value: 'super_admin', label: 'Super Admin' },
 ];
 
-const roleLabels: Record<string, string> = {
-  customer: 'Khách hàng',
-  staff: 'Nhân viên',
-  admin: 'Admin',
-  super_admin: 'Super Admin',
-};
+const roleLabels = Object.fromEntries(roleOptions.map((option) => [option.value, option.label]));
+
+function roleLabel(slug: string) {
+  return roleLabels[slug] ?? slug;
+}
 
 const statusLabels: Record<string, string> = {
   active: 'Đang hoạt động',
@@ -156,6 +151,12 @@ const activityConfig: Record<string, { label: string; tone: StatusChipTone }> = 
   no_orders: { label: 'Chưa mua', tone: 'warning' },
   at_risk: { label: 'Có nguy cơ', tone: 'danger' },
 };
+
+function roleTone(slug: string): StatusChipTone {
+  if (slug === 'super_admin') return 'danger';
+  if (slug === 'admin' || slug === 'staff') return 'warning';
+  return 'default';
+}
 
 const filterParsers = {
   search: parseAsString.withDefault(''),
@@ -206,7 +207,7 @@ function exportUsersPage(users: AdminUser[], currentPage: number) {
     user.phone ?? '',
     statusLabels[user.status] ?? user.status,
     user.provider,
-    user.roleSlugs.map((slug) => roleLabels[slug] ?? slug).join(' | '),
+    user.roleSlugs.map(roleLabel).join(' | '),
     activityConfig[user.customerState]?.label ?? user.customerState,
     user.orderCount,
     user.totalSpent,
@@ -224,39 +225,6 @@ function downloadUsersImportTemplate() {
     ['Nguyen Van A', 'a@example.com', '0901000000', 'customer|staff', 'active'],
   ].map((row) => row.map((cell) => escapeCsv(cell)).join(',')).join('\n');
   downloadCSV(csv, 'users-import-template.csv');
-}
-
-function FilterMenu({
-  label,
-  value,
-  options,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  options: Array<{ value: string; label: string }>;
-  onChange: (value: string) => void;
-}) {
-  const selected = options.find((option) => option.value === value)?.label ?? label;
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline" className="h-9 justify-between rounded-xl shadow-none">
-          <span className="truncate">{selected}</span>
-          <Settings2Icon data-icon="inline-end" className="text-muted-foreground" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" sideOffset={6} className="w-(--radix-dropdown-menu-trigger-width) min-w-[180px]">
-        <DropdownMenuRadioGroup value={value} onValueChange={onChange}>
-          {options.map((option) => (
-            <DropdownMenuRadioItem key={option.value} value={option.value}>
-              {option.label}
-            </DropdownMenuRadioItem>
-          ))}
-        </DropdownMenuRadioGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
 }
 
 function UserTableSkeleton({ count }: { count: number }) {
@@ -638,14 +606,23 @@ export default function DashboardUsersPage() {
     staleTime: 20_000,
   });
 
-  const users = usersQuery.data?.data ?? EMPTY_USERS;
+  const [displayUsersPage, setDisplayUsersPage] = useState(usersQuery.data);
+
+  useEffect(() => {
+    if (!usersQuery.data || usersQuery.isFetching) return;
+    const id = window.setTimeout(() => setDisplayUsersPage(usersQuery.data), 0);
+    return () => window.clearTimeout(id);
+  }, [usersQuery.data, usersQuery.isFetching]);
+
+  const users = displayUsersPage?.data ?? usersQuery.data?.data ?? EMPTY_USERS;
   const facets = facetsQuery.data;
-  const meta = usersQuery.data?.meta;
+  const meta = displayUsersPage?.meta ?? usersQuery.data?.meta;
+  const displayPage = meta?.page ?? currentPage;
   const totalPages = meta?.totalPages ?? 0;
   const totalElements = meta?.totalElements ?? 0;
-  const shownFrom = totalElements > 0 ? currentPage * pageSize + 1 : 0;
-  const shownTo = Math.min((currentPage + 1) * pageSize, totalElements);
-  const pagination = useSimplePagination({ currentPage, totalPages });
+  const shownFrom = totalElements > 0 ? displayPage * pageSize + 1 : 0;
+  const shownTo = Math.min((displayPage + 1) * pageSize, totalElements);
+  const pagination = useSimplePagination({ currentPage: displayPage, totalPages });
   const activeFilterCount = (search ? 1 : 0) + (status !== ALL ? 1 : 0) + (role !== ALL ? 1 : 0) + (activity !== ALL ? 1 : 0);
   const pageSpend = useMemo(() => users.reduce((sum, user) => sum + Number(user.totalSpent), 0), [users]);
 
@@ -666,7 +643,7 @@ export default function DashboardUsersPage() {
   }
 
   return (
-    <div className="flex h-[calc(100dvh-7.5rem)] w-full max-w-none flex-col gap-4 overflow-hidden">
+    <div className="-m-4 flex h-[calc(100dvh-3.5rem)] w-auto max-w-none flex-col gap-4 overflow-hidden p-4 lg:-m-5 lg:p-5 2xl:-m-6 2xl:p-6">
       <section className="flex flex-col gap-3 border-b border-dashed border-border/70 pb-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-start gap-3">
           <div className="flex size-10 items-center justify-center rounded-xl border bg-card 2xl:size-11">
@@ -682,7 +659,7 @@ export default function DashboardUsersPage() {
         <div className="flex flex-wrap justify-end gap-2">
           <Button
             variant="outline"
-            className="h-10 rounded-xl shadow-none"
+            className="h-10 w-full rounded-xl px-4 shadow-none sm:w-fit"
             onClick={() => {
               setImportResult(null);
               setIsImportOpen(true);
@@ -691,16 +668,17 @@ export default function DashboardUsersPage() {
             <UploadIcon data-icon="inline-start" />
             Import
           </Button>
-          <Button variant="outline" className="h-10 rounded-xl shadow-none" onClick={() => usersQuery.refetch()}>
-            <RefreshCwIcon data-icon="inline-start" />
-            Tải lại
-          </Button>
-          <Button className="h-10 rounded-xl" disabled={!users.length} onClick={() => exportUsersPage(users, currentPage)}>
+          <Button
+            variant="outline"
+            className="h-10 w-full rounded-xl px-4 shadow-none sm:w-fit"
+            disabled={!users.length}
+            onClick={() => exportUsersPage(users, displayPage)}
+          >
             <DownloadIcon data-icon="inline-start" />
             Xuất CSV
           </Button>
           <Button
-            className="h-10 rounded-xl"
+            className="h-10 w-full rounded-xl px-4 sm:w-fit"
             onClick={() => {
               setEditingUser(null);
               setIsEditorOpen(true);
@@ -782,8 +760,8 @@ export default function DashboardUsersPage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              <FilterMenu label="Trạng thái" value={status} options={statusOptions} onChange={(value) => updateFilter({ status: value })} />
-              <FilterMenu label="Role" value={role} options={roleOptions} onChange={(value) => updateFilter({ role: value })} />
+              <DashboardFilterDropdown label="Trạng thái" value={status} options={statusOptions} onChange={(value) => updateFilter({ status: value })} />
+              <DashboardFilterDropdown label="Role" value={role} options={roleOptions} onChange={(value) => updateFilter({ role: value })} />
               <MultipleSortPopover
                 value={sort}
                 fields={sortFields}
@@ -805,7 +783,7 @@ export default function DashboardUsersPage() {
           </div>
         </div>
 
-        <div className={cn('mt-3 min-h-0 flex-1 overflow-auto rounded-xl border bg-card transition-opacity duration-200 [scrollbar-gutter:stable]', usersQuery.isPlaceholderData ? 'opacity-50 pointer-events-none' : '')}>
+        <div className="mt-3 min-h-0 flex-1 overflow-auto rounded-xl border bg-card [scrollbar-gutter:stable]">
           {usersQuery.isError ? (
             <div className="flex h-full min-h-80 flex-col items-center justify-center py-16 text-muted-foreground">
               <AlertCircleIcon className="mb-3 size-10 text-destructive/40" />
@@ -880,8 +858,8 @@ export default function DashboardUsersPage() {
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
                           {user.roleSlugs.map((item) => (
-                            <StatusChip key={item} tone={item === 'customer' ? 'default' : 'warning'}>
-                              {roleLabels[item] ?? item}
+                            <StatusChip key={item} tone={roleTone(item)}>
+                              {roleLabel(item)}
                             </StatusChip>
                           ))}
                         </div>
@@ -1026,31 +1004,33 @@ export default function DashboardUsersPage() {
               <Pagination className="mx-0! ml-auto w-auto justify-end">
                 <PaginationContent>
                   <PaginationItem>
-                    <button
+                    <Button
                       type="button"
-                      className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-2.5 text-sm font-medium text-foreground disabled:pointer-events-none disabled:opacity-50"
+                      variant="outline"
+                      className="h-9 rounded-xl px-3 shadow-none"
                       disabled={!pagination.canGoPrevious}
                       onClick={() => void setQueryParams({ page: pagination.previousPage })}
                     >
-                      <ChevronLeftIcon className="size-4" />
+                      <ChevronLeftIcon data-icon="inline-start" />
                       Trước
-                    </button>
+                    </Button>
                   </PaginationItem>
                   <PaginationItem>
-                    <span aria-current="page" className="inline-flex h-8 min-w-24 items-center justify-center rounded-lg border border-primary bg-primary px-3 text-sm font-medium text-primary-foreground">
+                    <span aria-current="page" className="inline-flex h-9 min-w-28 items-center justify-center rounded-xl border border-primary bg-primary px-3 text-sm font-medium text-primary-foreground">
                       Trang {pagination.currentPageLabel} / {pagination.totalPages}
                     </span>
                   </PaginationItem>
                   <PaginationItem>
-                    <button
+                    <Button
                       type="button"
-                      className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-2.5 text-sm font-medium text-foreground disabled:pointer-events-none disabled:opacity-50"
+                      variant="outline"
+                      className="h-9 rounded-xl px-3 shadow-none"
                       disabled={!pagination.canGoNext}
                       onClick={() => void setQueryParams({ page: pagination.nextPage })}
                     >
                       Sau
-                      <ChevronRightIcon className="size-4" />
-                    </button>
+                      <ChevronRightIcon data-icon="inline-end" />
+                    </Button>
                   </PaginationItem>
                 </PaginationContent>
               </Pagination>
