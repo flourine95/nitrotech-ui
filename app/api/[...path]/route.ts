@@ -44,7 +44,24 @@ async function handler(request: NextRequest) {
     headers,
     body,
     cache: 'no-store',
+    redirect: 'manual',
   });
+
+  if (springRes.status >= 300 && springRes.status < 400) {
+    const res = new NextResponse(null, {
+      status: springRes.status,
+      headers: {
+        Location: springRes.headers.get('location') ?? '/',
+      },
+    });
+
+    const setCookie = springRes.headers.get('set-cookie');
+    if (setCookie) {
+      res.headers.set('set-cookie', setCookie);
+    }
+
+    return res;
+  }
 
   if (springRes.headers.get('content-type')?.includes('text/event-stream') && springRes.body) {
     return new NextResponse(springRes.body, {
