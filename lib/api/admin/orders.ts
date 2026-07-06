@@ -1,4 +1,4 @@
-import { apiFetch } from '@/lib/api/client';
+import { apiFetch, type ApiResult, type PageMeta } from '@/lib/api/client';
 
 export type AdminOrderStatus =
   | 'pending'
@@ -150,18 +150,7 @@ export interface OrderShipmentData {
   logs: ShipmentLogData[];
 }
 
-interface ApiResult<T> {
-  data: T;
-  meta?: {
-    page: number;
-    size: number;
-    totalElements: number;
-    totalPages: number;
-    hasNext: boolean;
-    hasPrevious: boolean;
-  };
-  facets?: unknown;
-}
+
 
 export interface AdminOrdersParams {
   search?: string;
@@ -178,7 +167,7 @@ export interface AdminOrdersParams {
 
 export interface AdminOrdersPage {
   data: AdminOrderListItem[];
-  meta: NonNullable<ApiResult<unknown>['meta']>;
+  meta: PageMeta;
 }
 
 export async function getAdminOrders(params: AdminOrdersParams): Promise<AdminOrdersPage> {

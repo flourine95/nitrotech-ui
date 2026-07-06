@@ -1,4 +1,4 @@
-import { apiFetch } from '@/lib/api/client';
+import { apiFetch, type ApiResult } from '@/lib/api/client';
 
 export interface AuditLogEntry {
   id: number;
@@ -32,14 +32,7 @@ export interface AuditLogParams {
   size?: number;
 }
 
-export interface PageMeta {
-  page: number;
-  size: number;
-  totalElements: number;
-  totalPages: number;
-  hasNext: boolean;
-  hasPrevious: boolean;
-}
+
 
 export interface AuditLogFacets {
   actions: string[];
@@ -47,11 +40,7 @@ export interface AuditLogFacets {
   outcomes: string[];
 }
 
-interface ApiResult<T> {
-  data: T;
-  meta?: PageMeta;
-  facets?: AuditLogFacets;
-}
+
 
 export async function getAuditLogs(params: AuditLogParams = {}) {
   const searchParams = new URLSearchParams();
@@ -62,7 +51,7 @@ export async function getAuditLogs(params: AuditLogParams = {}) {
   });
 
   const query = searchParams.toString();
-  const res = await apiFetch<ApiResult<AuditLogEntry[]>>(`/api/admin/audit-logs${query ? `?${query}` : ''}`);
+  const res = await apiFetch<ApiResult<AuditLogEntry[], AuditLogFacets>>(`/api/admin/audit-logs${query ? `?${query}` : ''}`);
   return {
     data: res.data,
     meta: res.meta ?? {
