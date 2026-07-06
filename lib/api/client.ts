@@ -25,6 +25,13 @@ function isApiError(value: unknown): value is ApiError {
   );
 }
 
+function redirectToLogin(path: string) {
+  if (typeof window === 'undefined' || !path.startsWith('/api/admin/')) return;
+
+  const from = `${window.location.pathname}${window.location.search}`;
+  window.location.assign(`/login?from=${encodeURIComponent(from)}`);
+}
+
 async function readJson(response: Response): Promise<unknown> {
   const contentType = response.headers.get('content-type') || '';
   if (!contentType.includes('application/json')) return null;
@@ -50,6 +57,7 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
   }
 
   if (res.status === 401) {
+    redirectToLogin(path);
     throw new ApiException({
       status: 401,
       code: 'AUTH_REQUIRED',
