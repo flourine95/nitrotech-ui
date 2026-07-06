@@ -136,7 +136,10 @@ export function MultipleSortPopover({
     if (nextOpen) {
       setDraftRules(parseSortParam(value, { field: fallbackField, direction: fallbackDirection }));
     } else {
-      onChange(formatSortParam(draftRules, fallbackParam));
+      const nextValue = formatSortParam(draftRules, fallbackParam);
+      if (nextValue !== value) {
+        onChange(nextValue);
+      }
     }
   }
 
@@ -146,7 +149,7 @@ export function MultipleSortPopover({
         <Button
           variant="outline"
           className={cn(
-            "h-10 w-full min-w-0 justify-between rounded-xl px-3 font-normal shadow-none sm:w-48 xl:w-56 2xl:w-64 2xl:px-4",
+            "h-9 w-fit min-w-0 justify-between gap-1.5 rounded-xl px-3 font-normal shadow-none",
             className
           )}
         >
