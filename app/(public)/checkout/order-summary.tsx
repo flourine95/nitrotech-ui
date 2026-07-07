@@ -15,12 +15,16 @@ import { getFriendlyErrorMessage } from '@/lib/utils/errors';
 
 interface OrderSummaryProps {
   cart: Cart;
+  shippingFee: number | null;
+  isShippingFeeLoading: boolean;
   promotionCode: string;
   onPromotionCodeChange: (code: string) => void;
 }
 
 export default function OrderSummary({
   cart,
+  shippingFee,
+  isShippingFeeLoading,
   promotionCode,
   onPromotionCodeChange,
 }: OrderSummaryProps) {
@@ -60,7 +64,8 @@ export default function OrderSummary({
   };
 
   const discount = appliedPromo?.discountAmount || cart.summary.discount;
-  const total = appliedPromo?.finalAmount || cart.summary.total;
+  const shipping = shippingFee ?? cart.summary.shipping;
+  const total = Math.max(0, cart.summary.subtotal + shipping - discount);
 
   return (
     <div className="sticky top-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -169,9 +174,11 @@ export default function OrderSummary({
         <div className="flex justify-between text-sm">
           <span className="text-slate-500">Phí vận chuyển</span>
           <span className="font-semibold text-slate-950">
-            {cart.summary.shipping === 0
+            {isShippingFeeLoading
+              ? 'Đang tính...'
+              : shipping === 0
               ? 'Miễn phí'
-              : `${cart.summary.shipping.toLocaleString('vi-VN')} ₫`}
+              : `${shipping.toLocaleString('vi-VN')} ₫`}
           </span>
         </div>
 

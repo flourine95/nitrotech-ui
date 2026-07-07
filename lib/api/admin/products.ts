@@ -137,6 +137,29 @@ export async function deleteVariant(productId: number, variantId: number): Promi
   });
 }
 
+export interface InventoryData {
+  variantId: number;
+  productId: number | null;
+  productName: string | null;
+  variantName: string | null;
+  sku: string | null;
+  quantity: number;
+  lowStockThreshold: number;
+  lowStock: boolean;
+  inStock: boolean;
+}
+
+export async function setVariantInventory(
+  variantId: number,
+  body: { quantity: number; lowStockThreshold?: number },
+): Promise<InventoryData> {
+  const res = await apiFetch<{ data: InventoryData }>(`/api/inventory/variants/${variantId}`, {
+    method: 'PUT',
+    body: JSON.stringify(body),
+  });
+  return res.data;
+}
+
 export interface BulkActionResult {
   success: number;
   failed: number;

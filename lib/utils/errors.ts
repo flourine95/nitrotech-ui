@@ -1,4 +1,5 @@
 import { ApiException } from '@/lib/api/client';
+import { toast } from 'sonner';
 
 export const API_ERROR_MAP: Record<string, string> = {
   // Promotion Errors
@@ -51,7 +52,13 @@ export const API_ERROR_MAP: Record<string, string> = {
   CATEGORY_HAS_CHILDREN: 'Không thể xóa danh mục đang có danh mục con',
   CATEGORY_HAS_PRODUCTS: 'Không thể xóa danh mục đang có sản phẩm',
   CATEGORY_SLUG_EXISTS: 'Slug danh mục đã tồn tại',
+  CATEGORY_SLUG_CONFLICT: 'Slug danh mục đã được sử dụng',
   CATEGORY_CIRCULAR_REF: 'Không thể di chuyển danh mục vào chính cây con của nó',
+  CIRCULAR_REFERENCE: 'Không thể tạo tham chiếu vòng',
+  ALREADY_FIRST: 'Danh mục đã ở vị trí đầu tiên',
+  ALREADY_LAST: 'Danh mục đã ở vị trí cuối cùng',
+  INVALID_MOVE_TARGET: 'Vị trí đích không hợp lệ',
+  INVALID_AFTER_ID: 'Vị trí đích không hợp lệ',
   PRODUCT_NOT_FOUND: 'Không tìm thấy sản phẩm',
   PRODUCT_SLUG_EXISTS: 'Slug sản phẩm đã tồn tại',
   VARIANT_NOT_FOUND: 'Không tìm thấy biến thể',
@@ -64,6 +71,7 @@ export const API_ERROR_MAP: Record<string, string> = {
   REVIEW_ALREADY_EXISTS: 'Bạn đã đánh giá sản phẩm này cho đơn hàng này',
   REVIEW_NOT_ALLOWED: 'Chỉ có thể đánh giá sản phẩm từ đơn đã giao',
   REVIEW_REPORT_ALREADY_EXISTS: 'Bạn đã báo cáo đánh giá này',
+  CANNOT_UNSET_DEFAULT_ADDRESS: 'Không thể bỏ địa chỉ mặc định hiện tại',
 };
 
 function getPromotionMinAmount(data: unknown) {
@@ -93,4 +101,12 @@ export function getFriendlyErrorMessage(
   }
 
   return message || fallbackMessage;
+}
+
+export function isClientError(error: unknown): boolean {
+  return error instanceof ApiException && error.error.status >= 400 && error.error.status < 500;
+}
+
+export function toastApiError(error: unknown, fallbackMessage?: string) {
+  toast.error(getFriendlyErrorMessage(error, fallbackMessage));
 }

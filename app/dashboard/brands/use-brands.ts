@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useQueryState, parseAsInteger, parseAsString } from 'nuqs';
 import type { SortRule } from '@/components/data-table-toolbar';
-import { ApiException } from '@/lib/api/client';
+import { toastApiError } from '@/lib/utils/errors';
 import {
   type Brand,
   type AdminBrandsQuery,
@@ -66,11 +66,7 @@ export function useBrands() {
         toast.success(brand.active ? `Đã ẩn "${brand.name}"` : `Đã hiển thị "${brand.name}"`);
         invalidate();
       } catch (e) {
-        if (e instanceof ApiException) {
-          toast.error(e.error.message);
-        } else {
-          toast.error('Cập nhật thất bại');
-        }
+        toastApiError(e, 'Cập nhật thất bại');
       }
     },
     [invalidate],
@@ -78,27 +74,39 @@ export function useBrands() {
 
   const handleDelete = useCallback(
     async (brand: Brand) => {
-      await deleteBrand(brand.id);
-      toast.success('Đã xóa thương hiệu');
-      invalidate();
+      try {
+        await deleteBrand(brand.id);
+        toast.success('Đã xóa thương hiệu');
+        invalidate();
+      } catch (e) {
+        toastApiError(e, 'Xóa thương hiệu thất bại');
+      }
     },
     [invalidate],
   );
 
   const handleRestore = useCallback(
     async (brand: Brand) => {
-      await restoreBrand(brand.id);
-      toast.success('Đã khôi phục thương hiệu');
-      invalidate();
+      try {
+        await restoreBrand(brand.id);
+        toast.success('Đã khôi phục thương hiệu');
+        invalidate();
+      } catch (e) {
+        toastApiError(e, 'Khôi phục thương hiệu thất bại');
+      }
     },
     [invalidate],
   );
 
   const handleHardDelete = useCallback(
     async (brand: Brand) => {
-      await hardDeleteBrand(brand.id);
-      toast.success('Đã xóa vĩnh viễn');
-      invalidate();
+      try {
+        await hardDeleteBrand(brand.id);
+        toast.success('Đã xóa vĩnh viễn');
+        invalidate();
+      } catch (e) {
+        toastApiError(e, 'Xóa vĩnh viễn thất bại');
+      }
     },
     [invalidate],
   );

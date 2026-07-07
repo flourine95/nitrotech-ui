@@ -29,7 +29,9 @@ async function fetchPageData(id: number) {
   const cats: Category[] = Array.isArray(catsJson.data)
     ? catsJson.data
     : ((catsJson.data as Page<Category>).content ?? []);
-  const brands: Brand[] = (brandsJson.data as Page<Brand>).content ?? [];
+  const brands: Brand[] = Array.isArray(brandsJson.data)
+    ? brandsJson.data
+    : ((brandsJson.data as Page<Brand>).content ?? []);
 
   return { product: productJson.data, categories: cats, brands };
 }

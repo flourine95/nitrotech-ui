@@ -25,14 +25,38 @@ const MediaPickerDialog = dynamic(() => import('@/components/media-picker-dialog
 interface VariantFormSheetProps {
   open: boolean;
   onClose: () => void;
+  onSaved: (variant: ProductVariant) => void;
   productId: number;
   productName: string;
   variant?: ProductVariant;
 }
 
+interface AttributeDraft {
+  id: string;
+  key: string;
+  value: string;
+}
+
+function toAttributeDrafts(attributes?: Record<string, string>): AttributeDraft[] {
+  return Object.entries(attributes ?? {}).map(([key, value], index) => ({
+    id: `${key}-${index}`,
+    key,
+    value,
+  }));
+}
+
+function toAttributes(drafts: AttributeDraft[]) {
+  return Object.fromEntries(
+    drafts
+      .map((attr) => [attr.key.trim(), attr.value.trim()] as const)
+      .filter(([key]) => key),
+  );
+}
+
 export function VariantFormSheet({
   open,
   onClose,
+  onSaved,
   productId,
   productName,
   variant,
@@ -48,21 +72,26 @@ export function VariantFormSheet({
   const [widthCm, setWidthCm] = useState(variant?.widthCm?.toString() ?? '');
   const [heightCm, setHeightCm] = useState(variant?.heightCm?.toString() ?? '');
   const [active, setActive] = useState(variant?.active ?? true);
-  const [attributes, setAttributes] = useState<Record<string, string>>(variant?.attributes ?? {});
+  const [attributes, setAttributes] = useState<AttributeDraft[]>(() =>
+    toAttributeDrafts(variant?.attributes),
+  );
   const [showMediaPicker, setShowMediaPicker] = useState(false);
 
   const createMutation = useMutation({
-    mutationFn: () =>
-      createVariant(productId, {
+    mutationFn: () => {
+      const attrs = toAttributes(attributes);
+      return createVariant(productId, {
         sku,
         name,
         price: parseFloat(price),
-        attributes: Object.keys(attributes).length > 0 ? attributes : undefined,
+        attributes: Object.keys(attrs).length > 0 ? attrs : undefined,
         active,
         ...shippingFields(),
-      }),
-    onSuccess: () => {
+      });
+    },
+    onSuccess: (created) => {
       void queryClient.invalidateQueries({ queryKey: ['products'] });
+      onSaved(created);
       toast.success('Đã tạo biến thể');
       onClose();
     },
@@ -70,17 +99,20 @@ export function VariantFormSheet({
   });
 
   const updateMutation = useMutation({
-    mutationFn: () =>
-      updateVariant(productId, variant!.id, {
+    mutationFn: () => {
+      const attrs = toAttributes(attributes);
+      return updateVariant(productId, variant!.id, {
         sku,
         name,
         price: parseFloat(price),
-        attributes: Object.keys(attributes).length > 0 ? attributes : undefined,
+        attributes: Object.keys(attrs).length > 0 ? attrs : undefined,
         active,
         ...shippingFields(),
-      }),
-    onSuccess: () => {
+      });
+    },
+    onSuccess: (updated) => {
       void queryClient.invalidateQueries({ queryKey: ['products'] });
+      onSaved(updated);
       toast.success('Đã cập nhật biến thể');
       onClose();
     },
@@ -114,33 +146,22 @@ export function VariantFormSheet({
   }
 
   function addAttribute() {
-    const key = `attr_${Date.now()}`;
-    setAttributes({ ...attributes, [key]: '' });
+    setAttributes([...attributes, { id: crypto.randomUUID(), key: '', value: '' }]);
   }
 
-  function updateAttributeKey(oldKey: string, newKey: string) {
-    const newAttrs = { ...attributes };
-    const value = newAttrs[oldKey];
-    delete newAttrs[oldKey];
-    newAttrs[newKey] = value;
-    setAttributes(newAttrs);
+  function updateAttribute(id: string, patch: Partial<Omit<AttributeDraft, 'id'>>) {
+    setAttributes(attributes.map((attr) => (attr.id === id ? { ...attr, ...patch } : attr)));
   }
 
-  function updateAttributeValue(key: string, value: string) {
-    setAttributes({ ...attributes, [key]: value });
-  }
-
-  function removeAttribute(key: string) {
-    const newAttrs = { ...attributes };
-    delete newAttrs[key];
-    setAttributes(newAttrs);
+  function removeAttribute(id: string) {
+    setAttributes(attributes.filter((attr) => attr.id !== id));
   }
 
   const isPending = createMutation.isPending || updateMutation.isPending;
 
   return (
     <>
-      <Sheet open={open} onOpenChange={onClose}>
+      <Sheet open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
         <SheetContent className="flex w-full flex-col gap-0 p-0 sm:max-w-2xl">
           <SheetHeader className="border-b border-border/70 px-6 pt-6 pb-5">
             <SheetTitle className="text-2xl">
@@ -294,13 +315,13 @@ export function VariantFormSheet({
                     </div>
                   </div>
                   <div className="grid gap-4 p-6 pt-0">
-                    {Object.entries(attributes).map(([key, value]) => (
-                      <div key={key} className="grid gap-3 md:grid-cols-[1fr_1fr_auto]">
+                    {attributes.map((attr) => (
+                      <div key={attr.id} className="grid gap-3 md:grid-cols-[1fr_1fr_auto]">
                         <div className="grid gap-2">
                           <Label>Tên thuộc tính</Label>
                           <Input
-                            value={key.startsWith('attr_') ? '' : key}
-                            onChange={(e) => updateAttributeKey(key, e.target.value)}
+                            value={attr.key}
+                            onChange={(e) => updateAttribute(attr.id, { key: e.target.value })}
                             placeholder="VD: Màu sắc"
                             className="h-12"
                             disabled={isPending}
@@ -309,8 +330,8 @@ export function VariantFormSheet({
                         <div className="grid gap-2">
                           <Label>Giá trị</Label>
                           <Input
-                            value={value}
-                            onChange={(e) => updateAttributeValue(key, e.target.value)}
+                            value={attr.value}
+                            onChange={(e) => updateAttribute(attr.id, { value: e.target.value })}
                             placeholder="VD: Đen"
                             className="h-12"
                             disabled={isPending}
@@ -321,7 +342,7 @@ export function VariantFormSheet({
                             type="button"
                             variant="ghost"
                             size="icon"
-                            onClick={() => removeAttribute(key)}
+                            onClick={() => removeAttribute(attr.id)}
                             className="h-12 w-12"
                             disabled={isPending}
                           >

@@ -39,13 +39,25 @@ async function handler(request: NextRequest) {
 
   const body = method === 'GET' || method === 'HEAD' ? undefined : await request.text();
 
-  const springRes = await fetch(targetUrl, {
-    method,
-    headers,
-    body,
-    cache: 'no-store',
-    redirect: 'manual',
-  });
+  let springRes: Response;
+  try {
+    springRes = await fetch(targetUrl, {
+      method,
+      headers,
+      body,
+      cache: 'no-store',
+      redirect: 'manual',
+    });
+  } catch {
+    return NextResponse.json(
+      {
+        status: 502,
+        code: 'NETWORK_ERROR',
+        message: 'Không thể kết nối đến server. Vui lòng thử lại sau.',
+      },
+      { status: 502 },
+    );
+  }
 
   if (springRes.status >= 300 && springRes.status < 400) {
     const res = new NextResponse(null, {

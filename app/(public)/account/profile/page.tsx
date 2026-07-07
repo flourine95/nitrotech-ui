@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { updateProfile, getMe } from '@/lib/api/auth';
 import { ApiException } from '@/lib/api/client';
+import { toastApiError } from '@/lib/utils/errors';
 
 const profileSchema = z.object({
   name: z.string().min(2, 'Họ tên tối thiểu 2 ký tự'),
@@ -43,7 +44,7 @@ export default function ProfilePage() {
       if (e instanceof ApiException && e.error.errors) {
         toast.error(Object.values(e.error.errors)[0]);
       } else {
-        toast.error('Cập nhật thất bại');
+        toastApiError(e, 'Cập nhật thất bại');
       }
     },
   });

@@ -1,9 +1,14 @@
+'use client';
+
+import { useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { ProductCard } from '@/components/product-card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Empty, EmptyHeader, EmptyTitle, EmptyDescription } from '@/components/ui/empty';
-import type { Product } from '@/lib/api/public/products';
+import { getProduct, type Product, type ProductVariant } from '@/lib/api/public/products';
 import { formatCurrency } from '@/lib/utils/formatting';
+import { useCartStore } from '@/stores/cart-store';
 
 interface ProductGridProps {
   products: Product[];
@@ -12,6 +17,44 @@ interface ProductGridProps {
 }
 
 export function ProductGrid({ products, isLoading, isError = false }: ProductGridProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const { addItem } = useCartStore();
+  const [addingSlug, setAddingSlug] = useState<string | null>(null);
+
+  async function handleAddToCart(product: Product) {
+    setAddingSlug(product.slug);
+    try {
+      const detail = await getProduct(product.id);
+      const variant = firstBuyableVariant(detail.variants ?? []);
+
+      if (!variant) {
+        toast.error('Sản phẩm chưa có cấu hình còn hàng');
+        router.push(`/products/${product.slug}`);
+        return;
+      }
+
+      await addItem(variant.id, 1);
+      toast.success('Đã thêm vào giỏ hàng', {
+        description: product.name,
+        action: {
+          label: 'Xem giỏ hàng',
+          onClick: () => router.push('/cart'),
+        },
+      });
+    } catch (error) {
+      const err = error as { error?: { code?: string; message?: string } };
+      if (err?.error?.code === 'AUTH_REQUIRED') {
+        toast.error('Vui lòng đăng nhập để mua hàng');
+        router.push(`/login?from=${encodeURIComponent(pathname)}`);
+        return;
+      }
+      toast.error(err?.error?.message || 'Không thể thêm vào giỏ hàng');
+    } finally {
+      setAddingSlug(null);
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
@@ -59,9 +102,8 @@ export function ProductGrid({ products, isLoading, isError = false }: ProductGri
           rating={p.rating || 0}
           thumbnail={p.thumbnail}
           reviews={p.reviewCount}
-          onAddToCart={(product) => {
-            toast.success('Đã thêm vào giỏ hàng', { description: product.name });
-          }}
+          addToCartDisabled={addingSlug === p.slug}
+          onAddToCart={() => void handleAddToCart(p)}
           onAddToWishlist={(product) => {
             toast.success('Đã thêm vào yêu thích', { description: product.name });
           }}
@@ -69,4 +111,12 @@ export function ProductGrid({ products, isLoading, isError = false }: ProductGri
       ))}
     </div>
   );
+}
+
+function firstBuyableVariant(variants: ProductVariant[]) {
+  return variants.find((variant) =>
+    variant.active &&
+    variant.inStock !== false &&
+    (variant.stockQuantity == null || variant.stockQuantity > 0)
+  ) ?? null;
 }

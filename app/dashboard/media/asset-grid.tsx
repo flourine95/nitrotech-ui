@@ -32,7 +32,7 @@ export function AssetGrid({ assets, selected, active, onToggle, onSelect }: Asse
             aria-pressed={isActive}
             onKeyDown={(e) => e.key === 'Enter' && onSelect(a)}
             className={cn(
-              'group relative aspect-square cursor-pointer overflow-hidden rounded-md transition-all duration-150',
+              'group relative aspect-square cursor-pointer overflow-hidden rounded-lg transition-all duration-150',
               isActive ? 'ring-2 ring-ring ring-offset-2'
                 : isSel ? 'ring-2 ring-ring/60 ring-offset-1'
                 : 'hover:ring-2 hover:ring-border hover:ring-offset-1',
