@@ -1,11 +1,6 @@
 'use client';
 import { memo, type ReactNode } from 'react';
-import {
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-} from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -103,7 +98,7 @@ function PaginationFooter({
   onPageSizeChange: (s: number) => void;
 }) {
   return (
-    <div className="flex flex-col-reverse items-center justify-between gap-4 border-t px-4 py-3 text-sm text-muted-foreground sm:flex-row">
+    <div className="flex flex-col gap-3 border-t px-4 py-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
       <p className="flex-1 whitespace-nowrap">
         {selectedCount > 0 ? (
           <span>
@@ -114,14 +109,14 @@ function PaginationFooter({
         )}
       </p>
 
-      <div className="flex flex-col-reverse items-center gap-4 sm:flex-row sm:gap-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-6">
         <div className="flex items-center gap-2">
           <span className="whitespace-nowrap">Mỗi trang</span>
           <Select
             value={String(pageSize)}
             onValueChange={(v) => onPageSizeChange(Number(v))}
           >
-            <SelectTrigger className="h-8 w-16">
+            <SelectTrigger className="h-9 w-20 rounded-xl">
               <SelectValue />
             </SelectTrigger>
             <SelectContent position="popper" side="top" sideOffset={4}>
@@ -134,42 +129,28 @@ function PaginationFooter({
           </Select>
         </div>
 
-        <div className="flex items-center justify-center whitespace-nowrap">
+        <div className="flex h-9 min-w-28 items-center justify-center rounded-xl border border-primary bg-primary px-3 font-medium text-primary-foreground whitespace-nowrap">
           Trang {currentPage + 1} / {totalPages}
         </div>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
           <Button
-            variant="outline" size="icon" className="hidden size-8 lg:flex"
-            onClick={() => onPageChange(0)}
-            disabled={currentPage === 0}
-            aria-label="Trang đầu"
-          >
-            <ChevronsLeft />
-          </Button>
-          <Button
-            variant="outline" size="icon" className="size-8"
+            variant="outline"
+            className="h-9 rounded-xl px-3 shadow-none"
             onClick={() => onPageChange(currentPage - 1)}
             disabled={currentPage === 0}
-            aria-label="Trang trước"
           >
-            <ChevronLeft />
+            <ChevronLeft data-icon="inline-start" />
+            Trước
           </Button>
           <Button
-            variant="outline" size="icon" className="size-8"
+            variant="outline"
+            className="h-9 rounded-xl px-3 shadow-none"
             onClick={() => onPageChange(currentPage + 1)}
             disabled={currentPage >= totalPages - 1}
-            aria-label="Trang sau"
           >
-            <ChevronRight />
-          </Button>
-          <Button
-            variant="outline" size="icon" className="hidden size-8 lg:flex"
-            onClick={() => onPageChange(totalPages - 1)}
-            disabled={currentPage >= totalPages - 1}
-            aria-label="Trang cuối"
-          >
-            <ChevronsRight />
+            Sau
+            <ChevronRight data-icon="inline-end" />
           </Button>
         </div>
       </div>
@@ -211,7 +192,7 @@ export const DataTable = memo(function DataTable<T>({
   const selectedCount = selectedIds?.size ?? 0;
 
   return (
-    <div className="rounded-md border">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-xl border bg-card">
       {loading ? (
         <SkeletonRows cols={colCount} rows={pageSize} />
       ) : isError ? (
@@ -227,12 +208,7 @@ export const DataTable = memo(function DataTable<T>({
           {emptyDescription && <div className="mt-1 text-xs">{emptyDescription}</div>}
         </div>
       ) : (
-        <div
-          className={cn(
-            'transition-opacity duration-150',
-            isFetching && 'pointer-events-none opacity-50',
-          )}
-        >
+        <div className={cn('min-h-0 flex-1 overflow-auto', isFetching && 'pointer-events-none')}>
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">

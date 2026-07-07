@@ -1,56 +1,76 @@
 'use client';
 
-import { useDeferredValue, useMemo, useState, useTransition } from 'react';
+import { useDeferredValue, useEffect, useMemo, useState, useTransition } from 'react';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { parseAsInteger, parseAsString, useQueryState } from 'nuqs';
 import {
-  Activity,
   Check,
   ChevronLeft,
   ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
   Copy,
-  Eye,
-  RefreshCw,
+  FileText,
   Search,
+  Settings2,
   X,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { Badge } from '@/components/ui/badge';
+import { MultipleSortPopover } from '@/components/dashboard/multiple-sort-popover';
+import { PageSizeDropdown } from '@/components/dashboard/page-size-dropdown';
+import { StatusChip, type StatusChipTone } from '@/components/dashboard/status-chip';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-} from '@/components/ui/pagination';
+import { Pagination, PaginationContent, PaginationItem } from '@/components/ui/pagination';
 import { Separator } from '@/components/ui/separator';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { usePagination } from '@/hooks/use-pagination';
+import { useSimplePagination } from '@/hooks/use-simple-pagination';
 import { useCopy } from '@/hooks/use-copy';
-import { cn } from '@/lib/utils';
-import { ApiException } from '@/lib/api/client';
+import { getFriendlyErrorMessage } from '@/lib/utils/errors';
 import { getAuditLogs, type AuditLogEntry } from '@/lib/api/admin/audit-logs';
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
+const SORT_FIELDS = [
+  { value: 'createdAt', label: 'Thời gian' },
+  { value: 'id', label: 'ID sự kiện' },
+];
+const SORT_LABELS = {
+  trigger: (count: number) => `Sắp xếp (${count})`,
+  title: 'Tiêu chí sắp xếp',
+  fieldPlaceholder: 'Chọn cột',
+  descending: 'Giảm dần',
+  ascending: 'Tăng dần',
+  addRule: 'Thêm tiêu chí',
+  reset: 'Đặt lại',
+  moveUp: 'Lên',
+  moveDown: 'Xuống',
+  removeRule: 'Xóa tiêu chí',
+};
 
 const ACTION_LABELS: Record<string, string> = {
+  ROLE_UPDATED: 'Cập nhật vai trò',
   ROLE_PERMISSION_UPDATED: 'Cập nhật quyền vai trò',
   USER_ROLE_UPDATED: 'Cập nhật vai trò người dùng',
   SHIPMENT_CREATED: 'Tạo vận đơn',
+  SHIPMENT_SIMULATION_EVENT: 'Giả lập vận chuyển',
   SHIPMENT_WEBHOOK_RECEIVED: 'Nhận webhook vận đơn',
   ORDER_STATUS_UPDATED: 'Cập nhật trạng thái đơn hàng',
   ORDER_CANCELLED: 'Hủy đơn hàng',
   PRODUCT_CREATED: 'Tạo sản phẩm',
   PRODUCT_UPDATED: 'Cập nhật sản phẩm',
   PRODUCT_DELETED: 'Xóa sản phẩm',
+  USER_STATUS_UPDATED: 'Cập nhật trạng thái thành viên',
+  USER_DELETED: 'Xóa thành viên',
+  USER_RESTORED: 'Khôi phục thành viên',
 };
 
 const RESOURCE_LABELS: Record<string, string> = {
@@ -75,10 +95,6 @@ const dateTimeFormatter = new Intl.DateTimeFormat('vi-VN', {
   month: '2-digit',
   year: 'numeric',
 });
-
-function errorMessage(error: unknown) {
-  return error instanceof ApiException ? error.error.message : 'Có lỗi xảy ra';
-}
 
 function actionLabel(action: string) {
   return ACTION_LABELS[action] ?? action;
@@ -116,10 +132,10 @@ function compactJson(value: Record<string, unknown> | null) {
   return JSON.stringify(value, null, 2);
 }
 
-function outcomeVariant(outcome: string): 'default' | 'secondary' | 'outline' | 'destructive' {
-  if (outcome === 'SUCCESS') return 'secondary';
-  if (outcome === 'DENIED' || outcome === 'FAILED') return 'destructive';
-  return 'outline';
+function outcomeTone(outcome: string): StatusChipTone {
+  if (outcome === 'SUCCESS') return 'success';
+  if (outcome === 'DENIED' || outcome === 'FAILED') return 'danger';
+  return 'default';
 }
 
 function getLogSummary(log: AuditLogEntry): string {
@@ -135,6 +151,17 @@ function getLogSummary(log: AuditLogEntry): string {
       const targetEmail = log.metadata?.targetEmail ?? '';
       return `Cập nhật vai trò của thành viên ${targetEmail ? `'${targetEmail}'` : `ID ${log.resourceId}`}.`;
     }
+    case 'USER_STATUS_UPDATED': {
+      const fromStatus = log.beforeData?.status ?? '';
+      const toStatus = log.afterData?.status ?? '';
+      return `Cập nhật trạng thái thành viên ${resourceIdStr}${fromStatus ? ` từ '${fromStatus}'` : ''}${toStatus ? ` sang '${toStatus}'` : ''}.`;
+    }
+    case 'USER_DELETED': {
+      return `Xóa thành viên ${resourceIdStr}.`;
+    }
+    case 'USER_RESTORED': {
+      return `Khôi phục thành viên ${resourceIdStr}.`;
+    }
     case 'SHIPMENT_CREATED': {
       const orderId = log.metadata?.orderId ?? '';
       const carrier = log.metadata?.carrier ?? '';
@@ -144,6 +171,11 @@ function getLogSummary(log: AuditLogEntry): string {
       const orderId = log.metadata?.orderId ?? '';
       const status = log.metadata?.status ?? '';
       return `Nhận webhook cập nhật trạng thái vận đơn ${resourceIdStr}${orderId ? ` (Đơn hàng #${orderId})` : ''}${status ? ` - Trạng thái: ${status}` : ''}.`;
+    }
+    case 'SHIPMENT_SIMULATION_EVENT': {
+      const orderId = log.metadata?.orderId ?? '';
+      const status = log.metadata?.status ?? '';
+      return `Giả lập sự kiện vận đơn ${resourceIdStr}${orderId ? ` cho đơn hàng #${orderId}` : ''}${status ? `: ${status}` : ''}.`;
     }
     case 'ORDER_STATUS_UPDATED': {
       const fromStatus = log.beforeData?.status ?? '';
@@ -178,6 +210,7 @@ const ShortenedCorrelationId = ({ id }: { id: string }) => {
       <Button
         variant="ghost"
         size="icon"
+        aria-label="Sao chép mã truy vết"
         className="h-6 w-6 shrink-0 text-muted-foreground hover:text-foreground"
         onClick={() => {
           copy(id, id);
@@ -189,6 +222,39 @@ const ShortenedCorrelationId = ({ id }: { id: string }) => {
     </div>
   );
 };
+
+function FilterMenu({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: Array<{ value: string; label: string }>;
+  onChange: (value: string) => void;
+}) {
+  const selected = options.find((option) => option.value === value)?.label ?? label;
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" className="h-9 justify-between rounded-xl shadow-none">
+          <span className="truncate">{selected}</span>
+          <Settings2 data-icon="inline-end" className="text-muted-foreground" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" sideOffset={6} className="w-(--radix-dropdown-menu-trigger-width) min-w-[180px]">
+        <DropdownMenuRadioGroup value={value} onValueChange={onChange}>
+          {options.map((option) => (
+            <DropdownMenuRadioItem key={option.value} value={option.value}>
+              {option.label}
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 export default function AuditLogsPage() {
   const [actor, setActor] = useQueryState('actor', parseAsString.withDefault(''));
@@ -204,7 +270,7 @@ export default function AuditLogsPage() {
 
   const [selectedLog, setSelectedLog] = useState<AuditLogEntry | null>(null);
 
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
   const deferredActor = useDeferredValue(actor);
   const deferredCorrelationId = useDeferredValue(correlationId);
   const deferredResourceId = useDeferredValue(resourceId);
@@ -264,37 +330,85 @@ export default function AuditLogsPage() {
     }
     return Object.keys(OUTCOME_LABELS);
   }, [facets]);
+  const actionOptions = useMemo(
+    () => [
+      { value: 'all', label: 'Tất cả hành động' },
+      ...actionsList.map((value) => ({ value, label: ACTION_LABELS[value] ?? value })),
+    ],
+    [actionsList],
+  );
+  const resourceTypeOptions = useMemo(
+    () => [
+      { value: 'all', label: 'Tất cả đối tượng' },
+      ...resourceTypesList.map((value) => ({ value, label: RESOURCE_LABELS[value] ?? value })),
+    ],
+    [resourceTypesList],
+  );
+  const outcomeOptions = useMemo(
+    () => [
+      { value: 'all', label: 'Tất cả kết quả' },
+      ...outcomesList.map((value) => ({ value, label: OUTCOME_LABELS[value] ?? value })),
+    ],
+    [outcomesList],
+  );
 
   const totalElements = meta?.totalElements ?? 0;
   const totalPages = meta?.totalPages ?? 0;
+  const hasActiveFilters =
+    Boolean(actor.trim()) ||
+    Boolean(correlationId.trim()) ||
+    Boolean(resourceId.trim()) ||
+    action !== 'all' ||
+    resourceType !== 'all' ||
+    outcome !== 'all';
 
-  const { pages, showLeftEllipsis, showRightEllipsis } = usePagination({
-    currentPage: currentPage + 1,
-    totalPages,
-    paginationItemsToDisplay: 5,
-  });
+  const pagination = useSimplePagination({ currentPage, totalPages });
 
-  if (auditQuery.isError) {
-    toast.error(errorMessage(auditQuery.error));
-  }
+  useEffect(() => {
+    if (auditQuery.isError) {
+      toast.error(getFriendlyErrorMessage(auditQuery.error, 'Không thể tải nhật ký hoạt động'));
+    }
+  }, [auditQuery.error, auditQuery.isError]);
+
+  useEffect(() => {
+    if (currentPage < 0) {
+      void setCurrentPage(0);
+      return;
+    }
+    if (!PAGE_SIZE_OPTIONS.includes(pageSize)) {
+      void setPageSize(20);
+      void setCurrentPage(0);
+      return;
+    }
+    if (totalPages > 0 && currentPage >= totalPages) {
+      void setCurrentPage(totalPages - 1);
+    }
+  }, [currentPage, pageSize, setCurrentPage, setPageSize, totalPages]);
 
   const from = totalElements === 0 ? 0 : currentPage * pageSize + 1;
   const to = Math.min((currentPage + 1) * pageSize, totalElements);
+  const clearFilters = () => {
+    startTransition(() => {
+      void setActor('');
+      void setCorrelationId('');
+      void setResourceId('');
+      void setAction('all');
+      void setResourceType('all');
+      void setOutcome('all');
+      void setCurrentPage(0);
+    });
+  };
 
   return (
     <div className="flex flex-col gap-4">
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
+      <div>
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Nhật ký hoạt động</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {meta ? `${meta.totalElements} sự kiện` : 'Theo dõi nhật ký hoạt động hệ thống và các thay đổi dữ liệu'}
           </p>
         </div>
-        <Button variant="outline" size="sm" className="h-9" onClick={() => auditQuery.refetch()}>
-          <RefreshCw className="mr-1.5 h-4 w-4" />
-          Làm mới
-        </Button>
       </div>
 
       {/* Toolbar: searches + dropdown filters */}
@@ -314,8 +428,8 @@ export default function AuditLogsPage() {
                   void setCurrentPage(0);
                 });
               }}
-              placeholder="Tìm theo tác nhân (email hoặc ID)..."
-              className="h-9 pl-9 pr-8"
+              placeholder="Tìm theo tác nhân (tên, email hoặc ID)..."
+              className="h-9 rounded-xl pl-9 pr-8"
             />
             {actor && (
               <Button
@@ -349,7 +463,7 @@ export default function AuditLogsPage() {
                 });
               }}
               placeholder="Tìm theo mã truy vết (correlation_id)..."
-              className="h-9 pl-9 pr-8"
+              className="h-9 rounded-xl pl-9 pr-8"
             />
             {correlationId && (
               <Button
@@ -383,7 +497,7 @@ export default function AuditLogsPage() {
                 });
               }}
               placeholder="Tìm theo ID đối tượng (resource_id)..."
-              className="h-9 pl-9 pr-8"
+              className="h-9 rounded-xl pl-9 pr-8"
             />
             {resourceId && (
               <Button
@@ -404,103 +518,69 @@ export default function AuditLogsPage() {
           </div>
         </div>
 
-        {/* Row 2: Select Filters */}
+        {/* Row 2: Dropdown filters */}
         <div className="flex flex-wrap items-center gap-2">
-          <Select
+          <FilterMenu
+            label="Hành động"
             value={action}
-            onValueChange={(val) => {
+            options={actionOptions}
+            onChange={(val) => {
               startTransition(() => {
                 void setAction(val);
                 void setCurrentPage(0);
               });
             }}
-          >
-            <SelectTrigger className="h-9 w-[190px]">
-              <SelectValue placeholder="Tất cả hành động" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tất cả hành động</SelectItem>
-              {actionsList.map((value) => (
-                <SelectItem key={value} value={value}>
-                  {ACTION_LABELS[value] ?? value}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          />
 
-          <Select
+          <FilterMenu
+            label="Đối tượng"
             value={resourceType}
-            onValueChange={(val) => {
+            options={resourceTypeOptions}
+            onChange={(val) => {
               startTransition(() => {
                 void setResourceType(val);
                 void setCurrentPage(0);
               });
             }}
-          >
-            <SelectTrigger className="h-9 w-[170px]">
-              <SelectValue placeholder="Tất cả đối tượng" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tất cả đối tượng</SelectItem>
-              {resourceTypesList.map((value) => (
-                <SelectItem key={value} value={value}>
-                  {RESOURCE_LABELS[value] ?? value}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          />
 
-          <Select
+          <FilterMenu
+            label="Kết quả"
             value={outcome}
-            onValueChange={(val) => {
+            options={outcomeOptions}
+            onChange={(val) => {
               startTransition(() => {
                 void setOutcome(val);
                 void setCurrentPage(0);
               });
             }}
-          >
-            <SelectTrigger className="h-9 w-[150px]">
-              <SelectValue placeholder="Tất cả kết quả" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tất cả kết quả</SelectItem>
-              {outcomesList.map((value) => (
-                <SelectItem key={value} value={value}>
-                  {OUTCOME_LABELS[value] ?? value}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          />
 
-          <Select
+          <MultipleSortPopover
             value={`${sortBy},${sortDir}`}
-            onValueChange={(val) => {
+            fields={SORT_FIELDS}
+            labels={SORT_LABELS}
+            className="h-9 w-fit rounded-xl"
+            onChange={(val) => {
               const [by, dir] = val.split(',');
               startTransition(() => {
                 void setSortBy(by);
-                void setSortDir(dir);
+                void setSortDir(dir === 'asc' ? 'asc' : 'desc');
                 void setCurrentPage(0);
               });
             }}
-          >
-            <SelectTrigger className="h-9 w-[185px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="createdAt,desc">Thời gian: Mới nhất</SelectItem>
-              <SelectItem value="createdAt,asc">Thời gian: Cũ nhất</SelectItem>
-            </SelectContent>
-          </Select>
+          />
+          {hasActiveFilters && (
+            <Button variant="ghost" className="h-9 shrink-0 rounded-xl" onClick={clearFilters}>
+              <X data-icon="inline-start" />
+              Xóa lọc
+            </Button>
+          )}
         </div>
       </div>
 
       {/* Bảng nhật ký */}
-      <div
-        className={cn(
-          'rounded-md border bg-card transition-opacity duration-150',
-          (auditQuery.isFetching && !auditQuery.isLoading) || isPending ? 'opacity-60' : 'opacity-100',
-        )}
-      >
+      <div className="overflow-x-auto rounded-md border bg-card [scrollbar-gutter:stable]">
         <Table>
           <TableHeader>
             <TableRow>
@@ -545,8 +625,16 @@ export default function AuditLogsPage() {
               logs.map((log) => (
                 <TableRow
                   key={log.id}
-                  className="align-top cursor-pointer hover:bg-muted/50"
+                  role="button"
+                  tabIndex={0}
+                  className="align-top cursor-pointer hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:outline-none"
                   onClick={() => setSelectedLog(log)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      setSelectedLog(log);
+                    }
+                  }}
                 >
                   {/* Thời gian */}
                   <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
@@ -584,9 +672,9 @@ export default function AuditLogsPage() {
                   {/* Kết quả */}
                   <TableCell>
                     <div className="flex flex-col items-start gap-1">
-                      <Badge variant={outcomeVariant(log.outcome)} className="text-xs">
+                      <StatusChip tone={outcomeTone(log.outcome)}>
                         {outcomeLabel(log.outcome)}
-                      </Badge>
+                      </StatusChip>
                       <p className="font-mono text-[10px] text-muted-foreground self-center w-full text-left pl-1">
                         {log.outcome}
                       </p>
@@ -594,7 +682,7 @@ export default function AuditLogsPage() {
                   </TableCell>
 
                   {/* Tóm tắt */}
-                  <TableCell className="text-sm text-foreground max-w-[280px] truncate" title={getLogSummary(log)}>
+                  <TableCell className="max-w-[420px] truncate text-sm text-foreground" title={getLogSummary(log)}>
                     {getLogSummary(log)}
                   </TableCell>
 
@@ -606,9 +694,27 @@ export default function AuditLogsPage() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
-                  <Activity className="mx-auto mb-2 h-8 w-8 opacity-40" />
-                  Không tìm thấy nhật ký tương ứng.
+                <TableCell colSpan={7} className="h-[320px] text-center">
+                  <div className="mx-auto flex max-w-md flex-col items-center gap-3 px-4">
+                    <div className="flex size-11 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                      <FileText className="size-5" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium text-foreground">
+                        {hasActiveFilters ? 'Không tìm thấy nhật ký phù hợp' : 'Chưa có nhật ký hoạt động'}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {hasActiveFilters
+                          ? 'Bộ lọc hiện tại không khớp với dữ liệu nào. Hãy thử nới điều kiện tìm kiếm.'
+                          : 'Hệ thống sẽ tự động ghi lại các hành động của thành viên tại đây.'}
+                      </p>
+                    </div>
+                    {hasActiveFilters && (
+                      <Button variant="outline" size="sm" onClick={clearFilters}>
+                        Xóa bộ lọc
+                      </Button>
+                    )}
+                  </div>
                 </TableCell>
               </TableRow>
             )}
@@ -616,7 +722,7 @@ export default function AuditLogsPage() {
         </Table>
 
         {/* Footer */}
-        {!auditQuery.isLoading && !auditQuery.isError && (
+        {!auditQuery.isLoading && !auditQuery.isError && totalElements > 0 && (
           <div className="flex flex-col gap-3 border-t px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
               <p className="text-sm whitespace-nowrap text-muted-foreground">
@@ -625,85 +731,57 @@ export default function AuditLogsPage() {
               <Separator orientation="vertical" className="h-4" />
               <div className="flex items-center gap-2">
                 <span className="text-sm whitespace-nowrap text-muted-foreground">Mỗi trang</span>
-                <Select
-                  value={String(pageSize)}
-                  onValueChange={(v) => {
+                <PageSizeDropdown
+                  value={pageSize}
+                  options={PAGE_SIZE_OPTIONS}
+                  onChange={(value) => {
                     startTransition(() => {
-                      void setPageSize(Number(v));
+                      void setPageSize(value);
                       void setCurrentPage(0);
                     });
                   }}
-                >
-                  <SelectTrigger className="h-8 w-16">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PAGE_SIZE_OPTIONS.map((s) => (
-                      <SelectItem key={s} value={String(s)}>
-                        {s}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                />
               </div>
             </div>
 
             {totalPages > 1 && (
-              <Pagination>
+              <Pagination className="mx-0! ml-auto w-auto justify-end">
                 <PaginationContent>
                   <PaginationItem>
-                    <Button
-                      variant="ghost"
-                      size="sm"
+                    <button
+                      type="button"
+                      className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-2.5 text-sm font-medium text-foreground disabled:pointer-events-none disabled:opacity-50"
                       onClick={() =>
                         startTransition(() => {
-                          void setCurrentPage(Math.max(0, currentPage - 1));
+                          void setCurrentPage(pagination.previousPage);
                         })
                       }
-                      disabled={currentPage === 0}
+                      disabled={!pagination.canGoPrevious}
                     >
-                      <ChevronLeft className="h-4 w-4 mr-1" /> Trước
-                    </Button>
+                      <ChevronLeft className="size-4" /> Trước
+                    </button>
                   </PaginationItem>
-                  {showLeftEllipsis && (
-                    <PaginationItem>
-                      <PaginationEllipsis />
-                    </PaginationItem>
-                  )}
-                  {pages.map((page) => (
-                    <PaginationItem key={page}>
-                      <Button
-                        size="icon"
-                        className="h-9 w-9"
-                        variant={page === currentPage + 1 ? 'default' : 'outline'}
-                        onClick={() =>
-                          startTransition(() => {
-                            void setCurrentPage(page - 1);
-                          })
-                        }
-                      >
-                        {page}
-                      </Button>
-                    </PaginationItem>
-                  ))}
-                  {showRightEllipsis && (
-                    <PaginationItem>
-                      <PaginationEllipsis />
-                    </PaginationItem>
-                  )}
                   <PaginationItem>
-                    <Button
-                      variant="ghost"
-                      size="sm"
+                    <span
+                      aria-current="page"
+                      className="inline-flex h-8 min-w-24 items-center justify-center rounded-lg border border-primary bg-primary px-3 text-sm font-medium text-primary-foreground"
+                    >
+                      Trang {pagination.currentPageLabel} / {pagination.totalPages}
+                    </span>
+                  </PaginationItem>
+                  <PaginationItem>
+                    <button
+                      type="button"
+                      className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-2.5 text-sm font-medium text-foreground disabled:pointer-events-none disabled:opacity-50"
                       onClick={() =>
                         startTransition(() => {
-                          void setCurrentPage(Math.min(totalPages - 1, currentPage + 1));
+                          void setCurrentPage(pagination.nextPage);
                         })
                       }
-                      disabled={currentPage >= totalPages - 1}
+                      disabled={!pagination.canGoNext}
                     >
-                      Sau <ChevronRight className="h-4 w-4 ml-1" />
-                    </Button>
+                      Sau <ChevronRight className="size-4" />
+                    </button>
                   </PaginationItem>
                 </PaginationContent>
               </Pagination>
@@ -763,7 +841,7 @@ export default function AuditLogsPage() {
                     <div className="grid grid-cols-[140px_1fr] items-start gap-2 text-sm border-b pb-3">
                       <span className="font-medium text-muted-foreground">Kết quả:</span>
                       <div className="flex items-center gap-2">
-                        <Badge variant={outcomeVariant(selectedLog.outcome)}>{outcomeLabel(selectedLog.outcome)}</Badge>
+                        <StatusChip tone={outcomeTone(selectedLog.outcome)}>{outcomeLabel(selectedLog.outcome)}</StatusChip>
                         <span className="font-mono text-xs text-muted-foreground">({selectedLog.outcome})</span>
                       </div>
                     </div>
@@ -778,6 +856,7 @@ export default function AuditLogsPage() {
                         <Button
                           variant="ghost"
                           size="icon"
+                          aria-label="Sao chép mã truy vết"
                           className="h-6 w-6 text-muted-foreground hover:text-foreground"
                           onClick={() => {
                             navigator.clipboard.writeText(selectedLog.correlationId);

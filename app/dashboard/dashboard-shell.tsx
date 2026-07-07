@@ -100,6 +100,8 @@ export function DashboardShell({
   const pathname = usePathname();
   const router = useRouter();
   const { notifications, unreadCount, markAllAsRead, markAsRead } = useNotifications();
+  const isFixedViewportPage =
+    pathname === '/dashboard/orders' || pathname === '/dashboard/users' || pathname === '/dashboard/brands';
 
   const displayName = user?.name ?? 'Admin';
   const displayEmail = user?.email ?? 'admin@nitrotech.vn';
@@ -124,6 +126,7 @@ export function DashboardShell({
 
   return (
     <SidebarProvider
+      className={isFixedViewportPage ? 'h-svh overflow-hidden' : undefined}
       style={
         {
           '--sidebar-width': '15rem',
@@ -238,9 +241,9 @@ export function DashboardShell({
         <SidebarRail />
       </Sidebar>
 
-      <SidebarInset>
+      <SidebarInset className={isFixedViewportPage ? 'min-h-0 overflow-hidden' : undefined}>
         {/* Header */}
-        <header className="sticky top-0 z-40 border-b bg-card">
+        <header className="sticky top-0 z-40 shrink-0 border-b bg-card">
           <div className="flex h-14 items-center justify-between gap-4 px-4 sm:px-6">
             <div className="flex items-center gap-4">
               <SidebarTrigger className="size-8 [&_svg]:!size-5" />
@@ -394,7 +397,15 @@ export function DashboardShell({
           </div>
         </header>
 
-        <main className="flex-1 p-4 lg:p-5 2xl:p-6">{children}</main>
+        <main
+          className={
+            isFixedViewportPage
+              ? 'min-h-0 flex-1 overflow-hidden p-4 lg:p-5 2xl:p-6'
+              : 'flex-1 p-4 lg:p-5 2xl:p-6'
+          }
+        >
+          {children}
+        </main>
       </SidebarInset>
     </SidebarProvider>
   );

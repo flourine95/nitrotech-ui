@@ -1,6 +1,6 @@
 'use client';
 
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { DateRange } from 'react-day-picker';
 import { toast } from 'sonner';
@@ -49,6 +49,7 @@ import {
   type AdminPaymentMethod,
 } from '@/lib/api/admin/orders';
 import { cn } from '@/lib/utils';
+import { getFriendlyErrorMessage } from '@/lib/utils/errors';
 import { formatVnd } from '@/lib/utils/formatting';
 import { DateRangePicker } from './date-range-picker';
 import {
@@ -289,7 +290,6 @@ export default function DashboardOrdersPage() {
     amountRange,
     datePopoverOpen,
     draftRange,
-    isPending,
     sortRules,
     createdFrom,
     createdTo,
@@ -401,9 +401,7 @@ export default function DashboardOrdersPage() {
       toast.success('Đã cập nhật trạng thái đơn');
       await refreshOrderQueries();
     },
-    onError: (error) => {
-      toast.error(error instanceof Error ? error.message : 'Không thể cập nhật trạng thái');
-    },
+    onError: (error) => toast.error(getFriendlyErrorMessage(error, 'Không thể cập nhật trạng thái')),
     onSettled: () => setPendingActionOrderId(null),
   });
 
@@ -414,25 +412,32 @@ export default function DashboardOrdersPage() {
       toast.success('Đã tạo vận đơn');
       await refreshOrderQueries();
     },
-    onError: (error) => {
-      toast.error(error instanceof Error ? error.message : 'Không thể tạo vận đơn');
-    },
+    onError: (error) => toast.error(getFriendlyErrorMessage(error, 'Không thể tạo vận đơn')),
     onSettled: () => setPendingActionOrderId(null),
   });
+
+  const [displayOrdersPage, setDisplayOrdersPage] = useState(ordersQuery.data);
+
+  useEffect(() => {
+    if (!ordersQuery.data || ordersQuery.isFetching) return;
+    const id = window.setTimeout(() => setDisplayOrdersPage(ordersQuery.data), 0);
+    return () => window.clearTimeout(id);
+  }, [ordersQuery.data, ordersQuery.isFetching]);
 
   const statusOptions = facetsQuery.data?.statuses ?? EMPTY_FILTER_OPTIONS;
   const paymentOptions = facetsQuery.data?.paymentMethods ?? EMPTY_FILTER_OPTIONS;
   const allStatusCount = facetsQuery.data?.total ?? 0;
-  const orders = ordersQuery.data?.data ?? EMPTY_ORDERS;
-  const meta = ordersQuery.data?.meta;
+  const orders = displayOrdersPage?.data ?? ordersQuery.data?.data ?? EMPTY_ORDERS;
+  const meta = displayOrdersPage?.meta ?? ordersQuery.data?.meta;
+  const displayPage = meta?.page ?? currentPage;
   const totalPages = meta?.totalPages ?? 0;
   const totalElements = meta?.totalElements ?? 0;
-  const shownFrom = totalElements > 0 ? currentPage * pageSize + 1 : 0;
-  const shownTo = Math.min((currentPage + 1) * pageSize, totalElements);
+  const shownFrom = totalElements > 0 ? displayPage * pageSize + 1 : 0;
+  const shownTo = Math.min((displayPage + 1) * pageSize, totalElements);
   const totalAmount = orders.reduce((sum, order) => sum + Number(order.finalAmount), 0);
   const isInitialOrdersLoading = ordersQuery.isLoading;
   const currentSortValue = sortParam;
-  const pagination = useSimplePagination({ currentPage, totalPages });
+  const pagination = useSimplePagination({ currentPage: displayPage, totalPages });
   const statusFilterOptions = useMemo(
     () => [{ value: ALL, label: 'Tất cả', count: allStatusCount }, ...statusOptions],
     [allStatusCount, statusOptions],
@@ -471,7 +476,7 @@ export default function DashboardOrdersPage() {
   }, [setAmountRange]);
 
   function exportCurrentPage() {
-    exportOrdersPage(orders, currentPage);
+    exportOrdersPage(orders, displayPage);
   }
 
   const handleStatusChange = useCallback((order: AdminOrderListItem, status: NextOrderStatus) => {
@@ -501,7 +506,7 @@ export default function DashboardOrdersPage() {
 
   return (
     <>
-    <div className="flex h-[calc(100dvh-6.5rem)] w-full max-w-none flex-col gap-3 overflow-hidden">
+    <div className="-m-4 flex h-[calc(100dvh-3.5rem)] w-auto max-w-none flex-col gap-3 overflow-hidden p-4 lg:-m-5 lg:p-5 2xl:-m-6 2xl:p-6">
       <section className="flex flex-col gap-3 border-b border-dashed border-border/70 pb-2.5 lg:flex-row lg:items-center lg:justify-between 2xl:pb-3">
         <div className="flex items-start gap-3">
           <div className="flex size-10 items-center justify-center rounded-xl border bg-card 2xl:size-11">
@@ -588,10 +593,7 @@ export default function DashboardOrdersPage() {
           </section>
 
           <div
-            className={cn(
-              'mt-2.5 flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto pr-0 transition-opacity duration-150 2xl:mt-3 2xl:gap-3',
-              (ordersQuery.isFetching && !ordersQuery.isLoading) || isPending ? 'opacity-60' : 'opacity-100',
-            )}
+            className="mt-2.5 flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto pr-0 2xl:mt-3 2xl:gap-3"
           >
             {ordersQuery.isError ? (
               <div className="flex flex-1 flex-col items-center justify-center rounded-xl border bg-card py-16 text-muted-foreground">
@@ -646,9 +648,10 @@ export default function DashboardOrdersPage() {
                 <Pagination className="mx-0! ml-auto w-auto justify-end">
                   <PaginationContent>
                     <PaginationItem>
-                      <button
+                      <Button
                         type="button"
-                        className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-2.5 text-sm font-medium text-foreground disabled:pointer-events-none disabled:opacity-50"
+                        variant="outline"
+                        className="h-9 rounded-xl px-3 shadow-none"
                         disabled={!pagination.canGoPrevious}
                         onClick={() =>
                           startTransition(() => {
@@ -656,22 +659,23 @@ export default function DashboardOrdersPage() {
                           })
                         }
                       >
-                        <ChevronLeftIcon className="size-4" />
+                        <ChevronLeftIcon data-icon="inline-start" />
                         Trước
-                      </button>
+                      </Button>
                     </PaginationItem>
                     <PaginationItem>
                       <span
                         aria-current="page"
-                        className="inline-flex h-8 min-w-24 items-center justify-center rounded-lg border border-primary bg-primary px-3 text-sm font-medium text-primary-foreground"
+                        className="inline-flex h-9 min-w-28 items-center justify-center rounded-xl border border-primary bg-primary px-3 text-sm font-medium text-primary-foreground"
                       >
                         Trang {pagination.currentPageLabel} / {pagination.totalPages}
                       </span>
                     </PaginationItem>
                     <PaginationItem>
-                      <button
+                      <Button
                         type="button"
-                        className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-2.5 text-sm font-medium text-foreground disabled:pointer-events-none disabled:opacity-50"
+                        variant="outline"
+                        className="h-9 rounded-xl px-3 shadow-none"
                         disabled={!pagination.canGoNext}
                         onClick={() =>
                           startTransition(() => {
@@ -680,8 +684,8 @@ export default function DashboardOrdersPage() {
                         }
                       >
                         Sau
-                        <ChevronRightIcon className="size-4" />
-                      </button>
+                        <ChevronRightIcon data-icon="inline-end" />
+                      </Button>
                     </PaginationItem>
                   </PaginationContent>
                 </Pagination>

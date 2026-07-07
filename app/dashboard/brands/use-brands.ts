@@ -3,7 +3,7 @@ import { useCallback } from 'react';
 import { toast } from 'sonner';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useQueryState, parseAsInteger, parseAsString } from 'nuqs';
-import type { SortRule } from '@/components/data-table-toolbar';
+import type { SortRule } from '@/components/dashboard/multiple-sort-popover';
 import { toastApiError } from '@/lib/utils/errors';
 import {
   type Brand,
@@ -123,6 +123,7 @@ export function useBrands() {
     brands: data?.content ?? [],
     totalElements: data?.totalElements ?? 0,
     totalPages: data?.totalPages ?? 0,
+    displayPage: data?.number ?? page,
     // state
     isLoading,
     isFetching,

@@ -39,6 +39,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
+import { getFriendlyErrorMessage } from '@/lib/utils/errors';
 import {
   createAdminOrderShipment,
   getAdminOrder,
@@ -118,9 +119,7 @@ export default function OrderDetailPage() {
         queryClient.invalidateQueries({ queryKey: ['admin-order-facets'] }),
       ]);
     },
-    onError: (error) => {
-      toast.error(error instanceof Error ? error.message : 'Không thể tạo vận đơn');
-    },
+    onError: (error) => toast.error(getFriendlyErrorMessage(error, 'Không thể tạo vận đơn')),
   });
 
   const updateStatusMutation = useMutation({
@@ -143,9 +142,7 @@ export default function OrderDetailPage() {
         queryClient.invalidateQueries({ queryKey: ['admin-order-facets'] }),
       ]);
     },
-    onError: (error) => {
-      toast.error(error instanceof Error ? error.message : 'Không thể cập nhật trạng thái');
-    },
+    onError: (error) => toast.error(getFriendlyErrorMessage(error, 'Không thể cập nhật trạng thái')),
   });
 
   const simulateShipmentMutation = useMutation({
@@ -165,9 +162,7 @@ export default function OrderDetailPage() {
         queryClient.invalidateQueries({ queryKey: ['admin-order-facets'] }),
       ]);
     },
-    onError: (error) => {
-      toast.error(error instanceof Error ? error.message : 'Không thể giả lập vận chuyển');
-    },
+    onError: (error) => toast.error(getFriendlyErrorMessage(error, 'Không thể giả lập vận chuyển')),
   });
 
   if (orderQuery.isLoading) return <DetailSkeleton />;

@@ -5,8 +5,6 @@ import {
   ArrowDownUp,
   ArrowUp,
   Check,
-  CirclePlus,
-  CircleX,
   Plus,
   Search,
   Settings2,
@@ -15,6 +13,7 @@ import {
 } from 'lucide-react';
 import type { DateRange } from 'react-day-picker';
 import { Button } from '@/components/ui/button';
+import { DashboardFilterDropdown } from '@/components/dashboard/filter-dropdown';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -84,156 +83,14 @@ interface DataTableToolbarProps {
 }
 
 function FilterChipButton({ filter }: { filter: FilterChip }) {
-  const hasSelection = filter.selected.length > 0;
-  const [search, setSearch] = useState('');
-  const [open, setOpen] = useState(false);
-
-  const visible = filter.options.filter(
-    (o) => !search || o.label.toLowerCase().includes(search.toLowerCase()),
-  );
-
-  function toggle(value: string) {
-    const next = filter.selected.includes(value)
-      ? filter.selected.filter((v) => v !== value)
-      : [...filter.selected, value];
-    filter.onChange(next);
-  }
-
+  const allValue = '__all';
   return (
-    <Popover
-      open={open}
-      onOpenChange={(v) => {
-        setOpen(v);
-        if (!v) setSearch('');
-      }}
-    >
-      <PopoverTrigger asChild>
-        <div
-          role="button"
-          tabIndex={0}
-          aria-haspopup="dialog"
-          aria-expanded={open}
-          onClick={() => setOpen(true)}
-          onKeyDown={(e) => e.key === 'Enter' && setOpen(true)}
-          className={cn(
-            'inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-md border border-dashed bg-background px-3 text-sm font-normal shadow-xs select-none',
-            'hover:bg-accent hover:text-accent-foreground',
-            'focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none',
-            'transition-colors',
-          )}
-        >
-          {hasSelection ? (
-            <span
-              role="button"
-              tabIndex={-1}
-              aria-label={`Xóa bộ lọc ${filter.label}`}
-              onClick={(e) => {
-                e.stopPropagation();
-                filter.onChange([]);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.stopPropagation();
-                  filter.onChange([]);
-                }
-              }}
-              className="rounded opacity-60 hover:opacity-100 [&_svg]:size-3.5"
-            >
-              <CircleX />
-            </span>
-          ) : (
-            <CirclePlus className="size-3.5 text-muted-foreground" />
-          )}
-
-          {filter.label}
-
-          {hasSelection && (
-            <>
-              <div className="h-3.5 w-px bg-border" />
-              {filter.selected.length > 2 ? (
-                <Badge
-                  variant="secondary"
-                  className="h-4.5 rounded-sm px-1 text-[10px] font-normal"
-                >
-                  {filter.selected.length} đã chọn
-                </Badge>
-              ) : (
-                filter.selected.map((val) => {
-                  const opt = filter.options.find((o) => o.value === val);
-                  return (
-                    <Badge
-                      key={val}
-                      variant="secondary"
-                      className="h-4.5 rounded-sm px-1.5 text-[10px] font-normal"
-                    >
-                      {opt?.label ?? val}
-                    </Badge>
-                  );
-                })
-              )}
-            </>
-          )}
-        </div>
-      </PopoverTrigger>
-      <PopoverContent align="start" className="w-52 p-0">
-        <div className="flex h-9 items-center gap-2 border-b px-3">
-          <Search className="size-3.5 shrink-0 opacity-50" />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder={filter.label}
-            className="flex h-full w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-          />
-        </div>
-        <div className="max-h-60 overflow-y-auto p-1">
-          {visible.length === 0 ? (
-            <p className="py-6 text-center text-xs text-muted-foreground">Không tìm thấy</p>
-          ) : (
-            visible.map((opt) => {
-              const active = filter.selected.includes(opt.value);
-              return (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => toggle(opt.value)}
-                  className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent"
-                >
-                  <span
-                    className={cn(
-                      'flex size-4 shrink-0 items-center justify-center rounded-sm border',
-                      active ? 'border-primary bg-primary text-primary-foreground' : 'border-input',
-                    )}
-                  >
-                    {active && <Check className="size-3" />}
-                  </span>
-                  {opt.icon && <span className="text-muted-foreground">{opt.icon}</span>}
-                  <span className="flex-1 truncate text-left">{opt.label}</span>
-                  {opt.count !== undefined && (
-                    <span className="ml-auto font-mono text-xs text-muted-foreground">
-                      {opt.count}
-                    </span>
-                  )}
-                </button>
-              );
-            })
-          )}
-        </div>
-        {hasSelection && (
-          <>
-            <div className="h-px bg-border" />
-            <div className="p-1">
-              <button
-                type="button"
-                onClick={() => filter.onChange([])}
-                className="flex w-full items-center justify-center rounded-sm px-2 py-1.5 text-xs text-muted-foreground hover:bg-accent"
-              >
-                Xóa bộ lọc
-              </button>
-            </div>
-          </>
-        )}
-      </PopoverContent>
-    </Popover>
+    <DashboardFilterDropdown
+      label={filter.label}
+      value={filter.selected[0] ?? allValue}
+      options={[{ value: allValue, label: `Tất cả ${filter.label.toLowerCase()}` }, ...filter.options]}
+      onChange={(value) => filter.onChange(value === allValue ? [] : [value])}
+    />
   );
 }
 
@@ -279,8 +136,8 @@ function SortButton({
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="h-8 gap-1.5 font-normal">
-          <ArrowDownUp className="size-3.5 text-muted-foreground" />
+        <Button variant="outline" className="h-9 rounded-xl px-3 gap-1.5 font-normal shadow-none">
+          <ArrowDownUp data-icon="inline-start" className="text-muted-foreground" />
           Sắp xếp
           {hasRules && (
             <Badge
@@ -328,7 +185,7 @@ function SortButton({
                   </div>
 
                   <Select value={rule.field} onValueChange={(v) => updateField(i, v)}>
-                    <SelectTrigger size="sm" className="h-8 flex-1 rounded font-normal">
+                    <SelectTrigger className="h-9 flex-1 rounded-xl font-normal">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent position="popper" sideOffset={4} className="z-200">
@@ -348,7 +205,7 @@ function SortButton({
                     value={rule.direction}
                     onValueChange={(v) => updateDirection(i, v as 'asc' | 'desc')}
                   >
-                    <SelectTrigger size="sm" className="h-8 w-28 shrink-0 rounded">
+                    <SelectTrigger className="h-9 w-28 shrink-0 rounded-xl">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent position="popper" sideOffset={4} className="z-200">
@@ -360,7 +217,7 @@ function SortButton({
                   <Button
                     variant="outline"
                     size="icon"
-                    className="size-8 shrink-0 rounded"
+                    className="size-8 shrink-0 rounded-lg"
                     onClick={() => removeRule(i)}
                     aria-label="Xóa tiêu chí"
                   >
@@ -374,19 +231,17 @@ function SortButton({
 
         <div className="flex items-center gap-2">
           <Button
-            size="sm"
-            className="h-8 gap-1.5 rounded"
+            className="h-9 gap-1.5 rounded-xl px-3"
             onClick={addRule}
             disabled={rules.length >= options.length || rules.length >= maxRules}
           >
-            <Plus className="size-4" />
+            <Plus data-icon="inline-start" />
             Thêm tiêu chí
           </Button>
           {hasRules && (
             <Button
               variant="outline"
-              size="sm"
-              className="h-8 rounded"
+              className="h-9 rounded-xl px-3"
               onClick={() => onChange([])}
             >
               Đặt lại
@@ -411,11 +266,10 @@ function ViewButton({
       <PopoverTrigger asChild>
         <Button
           variant="outline"
-          size="sm"
-          className="h-8 gap-1.5 font-normal"
+          className="h-9 rounded-xl px-3 gap-1.5 font-normal shadow-none"
           aria-label="Toggle columns"
         >
-          <Settings2 className="size-3.5 text-muted-foreground" />
+          <Settings2 data-icon="inline-start" className="text-muted-foreground" />
           Hiển thị cột
           {hiddenCount > 0 && (
             <Badge
@@ -497,7 +351,7 @@ export const DataTableToolbar = memo(function DataTableToolbar({
     (sortRules?.length ?? 0) > 0;
 
   return (
-    <div className="flex w-full items-center justify-between gap-2">
+    <div className="flex w-full flex-col gap-2 xl:flex-row xl:items-center xl:justify-between">
       <div className="flex flex-1 flex-wrap items-center gap-2">
         <div className="relative">
           <Search className="absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -506,7 +360,7 @@ export const DataTableToolbar = memo(function DataTableToolbar({
             placeholder={searchPlaceholder}
             value={inputVal}
             onChange={(e) => handleChange(e.target.value)}
-            className="h-8 w-48 pr-8 pl-8 text-sm lg:w-64"
+            className="h-9 w-56 rounded-xl pr-8 pl-9 text-sm lg:w-72"
           />
           {inputVal && (
             <button
@@ -536,11 +390,10 @@ export const DataTableToolbar = memo(function DataTableToolbar({
         {hasActiveFilters && onResetFilters && (
           <Button
             variant="outline"
-            size="sm"
             onClick={onResetFilters}
-            className="h-8 gap-1.5 border-dashed font-normal"
+            className="h-9 rounded-xl gap-1.5 border-dashed px-3 font-normal"
           >
-            <X className="size-3.5" />
+            <X data-icon="inline-start" />
             Reset
           </Button>
         )}
