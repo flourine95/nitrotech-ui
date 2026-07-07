@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { CheckCircle2, ChevronLeft, Clipboard, Clock3, Loader2, RefreshCw } from 'lucide-react';
+import { CheckCircle2, ChevronLeft, Clipboard, Clock3, Loader2, RefreshCw, Truck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCartStore } from '@/stores/cart-store';
-import { createOrder, getOrder, initiateOrderPayment } from '@/lib/api/orders';
+import { createOrder, getOrder, initiateOrderPayment, quoteShippingFee } from '@/lib/api/orders';
 import { createAddress, getAddresses } from '@/lib/api/addresses';
 import type { CreateOrderData } from '@/schemas/order';
 import type { Order, ShippingAddress } from '@/types/order';
@@ -42,6 +42,8 @@ export default function CheckoutPage() {
   const [failedPaymentOrderId, setFailedPaymentOrderId] = useState<number | null>(null);
 
   const [shippingAddress, setShippingAddress] = useState<ShippingAddress | null>(null);
+  const [shippingFee, setShippingFee] = useState<number | null>(null);
+  const [isQuotingShipping, setIsQuotingShipping] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cod');
   const [promotionCode, setPromotionCode] = useState('');
   const [note, setNote] = useState('');
@@ -90,6 +92,33 @@ export default function CheckoutPage() {
       router.push('/cart');
     }
   }, [cart, cartLoading, orderCompleted, router]);
+
+  useEffect(() => {
+    if (!shippingAddress || !cart?.items.length || orderCompleted) {
+      setShippingFee(null);
+      return;
+    }
+
+    let cancelled = false;
+    setShippingFee(null);
+    setIsQuotingShipping(true);
+
+    void quoteShippingFee(shippingAddress)
+      .then((fee) => {
+        if (!cancelled) setShippingFee(Number(fee));
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        toast.error(getFriendlyErrorMessage(error, 'Không thể tính phí vận chuyển'));
+      })
+      .finally(() => {
+        if (!cancelled) setIsQuotingShipping(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [cart?.items.length, orderCompleted, shippingAddress]);
 
   const handleShippingSubmit = (
     address: ShippingAddress,
@@ -296,6 +325,41 @@ export default function CheckoutPage() {
 
                 <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                   <div className="mb-4 flex items-center justify-between gap-4">
+                    <h2 className="text-lg font-semibold text-slate-950">Đơn vị vận chuyển</h2>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-full"
+                      onClick={() => setCurrentStep('shipping')}
+                    >
+                      Đổi địa chỉ
+                    </Button>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-4 rounded-2xl border border-primary/30 bg-primary/5 px-4 py-3">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-white text-primary">
+                        <Truck className="size-5" />
+                      </span>
+                      <div className="min-w-0">
+                        <p className="font-semibold text-slate-950">GHTK - Giao hàng tiêu chuẩn</p>
+                        <p className="text-sm text-slate-500">Tính phí theo địa chỉ giao hàng</p>
+                      </div>
+                    </div>
+                    <div className="shrink-0 text-right text-sm font-semibold text-slate-950">
+                      {isQuotingShipping
+                        ? 'Đang tính...'
+                        : shippingFee === 0
+                          ? 'Miễn phí'
+                          : shippingFee !== null
+                            ? `${shippingFee.toLocaleString('vi-VN')} ₫`
+                            : 'Chưa có phí'}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                  <div className="mb-4 flex items-center justify-between gap-4">
                     <h2 className="text-lg font-semibold text-slate-950">Phương thức thanh toán</h2>
                     <Button
                       variant="outline"
@@ -363,7 +427,7 @@ export default function CheckoutPage() {
                     className="w-full rounded-full sm:w-48"
                     size="lg"
                     onClick={handlePlaceOrder}
-                    disabled={isSubmitting || failedPaymentOrderId !== null}
+                    disabled={isSubmitting || isQuotingShipping || failedPaymentOrderId !== null}
                   >
                     {isSubmitting ? (
                       <>
@@ -382,6 +446,8 @@ export default function CheckoutPage() {
           <div className="w-full lg:max-w-[360px]">
             <OrderSummary
               cart={cart}
+              shippingFee={shippingFee}
+              isShippingFeeLoading={isQuotingShipping}
               promotionCode={promotionCode}
               onPromotionCodeChange={setPromotionCode}
             />

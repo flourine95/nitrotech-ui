@@ -74,6 +74,7 @@ import {
 } from '@/lib/api/admin/categories';
 import { categorySchema, type CategoryFormData } from '@/schemas/categories';
 import { Label } from '@/components/ui/label';
+import { toastApiError } from '@/lib/utils/errors';
 
 // Helper function hoisted outside component to enable proper memoization
 function getFlatCategoryList(
@@ -485,24 +486,7 @@ export default function DashboardCategoriesPage() {
       toast.success('Đã xóa danh mục');
       setDeleteTarget(null);
     },
-    onError: (error: unknown) => {
-      const err = error as { error?: { code?: string; message?: string } };
-      const code = err?.error?.code;
-      
-      switch (code) {
-        case 'CATEGORY_NOT_FOUND':
-          toast.error('Danh mục không tồn tại');
-          break;
-        case 'CATEGORY_HAS_CHILDREN':
-          toast.error('Không thể xóa danh mục có danh mục con. Vui lòng xóa hoặc di chuyển danh mục con trước.');
-          break;
-        case 'CATEGORY_HAS_PRODUCTS':
-          toast.error('Không thể xóa danh mục đang có sản phẩm');
-          break;
-        default:
-          toast.error(err?.error?.message || 'Xóa danh mục thất bại');
-      }
-    },
+    onError: (error: unknown) => toastApiError(error, 'Xóa danh mục thất bại'),
   });
 
   const restoreMutation = useMutation({
@@ -512,18 +496,7 @@ export default function DashboardCategoriesPage() {
       toast.success('Đã khôi phục danh mục');
       setRestoreTarget(null);
     },
-    onError: (error: unknown) => {
-      const err = error as { error?: { code?: string; message?: string } };
-      const code = err?.error?.code;
-      
-      switch (code) {
-        case 'CATEGORY_SLUG_CONFLICT':
-          toast.error('Không thể khôi phục: slug đã được sử dụng bởi danh mục khác');
-          break;
-        default:
-          toast.error(err?.error?.message || 'Khôi phục thất bại');
-      }
-    },
+    onError: (error: unknown) => toastApiError(error, 'Khôi phục thất bại'),
   });
 
   const hardDeleteMutation = useMutation({
@@ -533,21 +506,7 @@ export default function DashboardCategoriesPage() {
       toast.success('Đã xóa vĩnh viễn');
       setHardDeleteTarget(null);
     },
-    onError: (error: unknown) => {
-      const err = error as { error?: { code?: string; message?: string } };
-      const code = err?.error?.code;
-      
-      switch (code) {
-        case 'CATEGORY_HAS_CHILDREN':
-          toast.error('Không thể xóa vĩnh viễn danh mục có danh mục con');
-          break;
-        case 'CATEGORY_HAS_PRODUCTS':
-          toast.error('Không thể xóa vĩnh viễn danh mục đang có sản phẩm');
-          break;
-        default:
-          toast.error(err?.error?.message || 'Xóa vĩnh viễn thất bại');
-      }
-    },
+    onError: (error: unknown) => toastApiError(error, 'Xóa vĩnh viễn thất bại'),
   });
 
   const toggleActiveMutation = useMutation({
@@ -582,11 +541,11 @@ export default function DashboardCategoriesPage() {
       void queryClient.invalidateQueries({ queryKey: ['categories', 'tree'] });
       toast.success('Đã cập nhật trạng thái');
     },
-    onError: (_, __, context) => {
+    onError: (error, __, context) => {
       if (context?.previousData) {
         queryClient.setQueryData(['categories', 'tree'], context.previousData);
       }
-      toast.error('Cập nhật thất bại');
+      toastApiError(error, 'Cập nhật thất bại');
     },
   });
 
@@ -596,15 +555,7 @@ export default function DashboardCategoriesPage() {
       void queryClient.invalidateQueries({ queryKey: ['categories', 'tree'] });
       toast.success('Đã di chuyển lên');
     },
-    onError: (error: unknown) => {
-      const err = error as { error?: { message?: string; code?: string }; message?: string };
-      const message = err?.error?.message || err?.message || '';
-      if (err?.error?.code === 'ALREADY_FIRST') {
-        toast.error('Danh mục đã ở vị trí đầu tiên');
-      } else {
-        toast.error(`Di chuyển thất bại: ${message || 'Unknown error'}`);
-      }
-    },
+    onError: (error: unknown) => toastApiError(error, 'Di chuyển thất bại'),
   });
 
   const moveDownMutation = useMutation({
@@ -613,15 +564,7 @@ export default function DashboardCategoriesPage() {
       void queryClient.invalidateQueries({ queryKey: ['categories', 'tree'] });
       toast.success('Đã di chuyển xuống');
     },
-    onError: (error: unknown) => {
-      const err = error as { error?: { message?: string; code?: string }; message?: string };
-      const message = err?.error?.message || err?.message || '';
-      if (err?.error?.code === 'ALREADY_LAST') {
-        toast.error('Danh mục đã ở vị trí cuối cùng');
-      } else {
-        toast.error(`Di chuyển thất bại: ${message || 'Unknown error'}`);
-      }
-    },
+    onError: (error: unknown) => toastApiError(error, 'Di chuyển thất bại'),
   });
 
   const createMutation = useMutation({
@@ -635,17 +578,10 @@ export default function DashboardCategoriesPage() {
       const err = error as { error?: { code?: string; message?: string } };
       const code = err?.error?.code;
       
-      switch (code) {
-        case 'CATEGORY_SLUG_EXISTS':
-          form.setError('slug', { message: 'Slug này đã được sử dụng' });
-          toast.error('Slug đã tồn tại, vui lòng chọn slug khác');
-          break;
-        case 'CATEGORY_NOT_FOUND':
-          toast.error('Danh mục cha không tồn tại');
-          break;
-        default:
-          toast.error(err?.error?.message || 'Tạo danh mục thất bại');
+      if (code === 'CATEGORY_SLUG_EXISTS') {
+        form.setError('slug', { message: 'Slug này đã được sử dụng' });
       }
+      toastApiError(error, 'Tạo danh mục thất bại');
     },
   });
 
@@ -661,20 +597,10 @@ export default function DashboardCategoriesPage() {
       const err = error as { error?: { code?: string; message?: string } };
       const code = err?.error?.code;
       
-      switch (code) {
-        case 'CATEGORY_SLUG_EXISTS':
-          form.setError('slug', { message: 'Slug này đã được sử dụng' });
-          toast.error('Slug đã tồn tại, vui lòng chọn slug khác');
-          break;
-        case 'CATEGORY_NOT_FOUND':
-          toast.error('Danh mục không tồn tại');
-          break;
-        case 'CATEGORY_CIRCULAR_REF':
-          toast.error('Không thể tạo tham chiếu vòng (danh mục không thể là cha của chính nó)');
-          break;
-        default:
-          toast.error(err?.error?.message || 'Cập nhật danh mục thất bại');
+      if (code === 'CATEGORY_SLUG_EXISTS') {
+        form.setError('slug', { message: 'Slug này đã được sử dụng' });
       }
+      toastApiError(error, 'Cập nhật danh mục thất bại');
     },
   });
 
@@ -686,24 +612,7 @@ export default function DashboardCategoriesPage() {
       toast.success('Đã di chuyển danh mục');
       closeChangeParentDialog();
     },
-    onError: (error: unknown) => {
-      const err = error as { error?: { code?: string; message?: string } };
-      const code = err?.error?.code;
-      
-      switch (code) {
-        case 'CATEGORY_NOT_FOUND':
-          toast.error('Danh mục hoặc danh mục cha không tồn tại');
-          break;
-        case 'CATEGORY_CIRCULAR_REF':
-          toast.error('Không thể di chuyển danh mục vào danh mục con của chính nó');
-          break;
-        case 'INVALID_AFTER_ID':
-          toast.error('Vị trí đích không hợp lệ');
-          break;
-        default:
-          toast.error(err?.error?.message || 'Di chuyển thất bại');
-      }
-    },
+    onError: (error: unknown) => toastApiError(error, 'Di chuyển thất bại'),
   });
 
   const handleToggleActive = useCallback(

@@ -51,7 +51,7 @@ export function UploadZone({ folder, onUploaded }: Props) {
       aria-label="Khu vực tải ảnh lên"
       onKeyDown={(e) => e.key === 'Enter' && !uploading && inputRef.current?.click()}
       className={cn(
-        'relative flex cursor-pointer flex-col items-center justify-center gap-3 rounded-md border-2 border-dashed py-10 transition-all duration-200',
+        'relative flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed py-10 transition-all duration-200',
         dragging ? 'border-ring bg-accent' : 'border-border bg-muted/30 hover:border-ring/50 hover:bg-muted/50',
         uploading && 'pointer-events-none',
       )}

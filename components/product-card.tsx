@@ -24,7 +24,8 @@ interface ProductCardProps {
   thumbnail?: string | null;
   reviews?: number;
   specs?: string[];
-  onAddToCart?: (product: { slug: string; name: string }) => void;
+  addToCartDisabled?: boolean;
+  onAddToCart?: (product: { slug: string; name: string }) => void | Promise<void>;
   onAddToWishlist?: (product: { slug: string; name: string }) => void;
 }
 
@@ -41,6 +42,7 @@ export function ProductCard({
   thumbnail,
   reviews,
   specs,
+  addToCartDisabled = false,
   onAddToCart,
   onAddToWishlist,
 }: ProductCardProps) {
@@ -150,6 +152,7 @@ export function ProductCard({
           </div>
           <Button
             onClick={handleAddToCart}
+            disabled={addToCartDisabled}
             size="sm"
             className="h-9 rounded-full bg-slate-800 px-4 hover:bg-slate-700"
           >

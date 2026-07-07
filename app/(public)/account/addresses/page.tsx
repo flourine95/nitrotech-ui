@@ -43,6 +43,7 @@ import {
 } from '@/lib/api/locations';
 import { addressSchema, type AddressFormData } from '@/schemas/address';
 import type { Address } from '@/types/address';
+import { toastApiError } from '@/lib/utils/errors';
 
 export default function AddressesPage() {
   const queryClient = useQueryClient();
@@ -62,7 +63,7 @@ export default function AddressesPage() {
       toast.success('Đã xóa địa chỉ');
       void refreshAddresses();
     },
-    onError: () => toast.error('Xóa địa chỉ thất bại'),
+    onError: (error) => toastApiError(error, 'Xóa địa chỉ thất bại'),
   });
 
   const defaultMutation = useMutation({
@@ -71,7 +72,7 @@ export default function AddressesPage() {
       toast.success('Đã đặt làm mặc định');
       void refreshAddresses();
     },
-    onError: () => toast.error('Cập nhật địa chỉ mặc định thất bại'),
+    onError: (error) => toastApiError(error, 'Cập nhật địa chỉ mặc định thất bại'),
   });
 
   function openCreateDialog() {
@@ -236,7 +237,8 @@ function AddressDialog({
       toast.success(address ? 'Đã cập nhật địa chỉ' : 'Đã thêm địa chỉ');
       onSaved();
     },
-    onError: () => toast.error(address ? 'Cập nhật địa chỉ thất bại' : 'Thêm địa chỉ thất bại'),
+    onError: (error) =>
+      toastApiError(error, address ? 'Cập nhật địa chỉ thất bại' : 'Thêm địa chỉ thất bại'),
   });
 
   useEffect(() => {

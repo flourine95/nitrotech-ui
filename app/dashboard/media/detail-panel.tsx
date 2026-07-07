@@ -28,7 +28,7 @@ export function DetailPanel({ asset, onClose }: Props) {
   const { copied, copy } = useCopy();
 
   return (
-    <aside className="flex w-72 shrink-0 flex-col overflow-hidden rounded-md border bg-card">
+    <aside className="flex w-72 shrink-0 flex-col overflow-hidden rounded-xl border bg-card">
       {/* Preview */}
       <div className="relative bg-[repeating-conic-gradient(hsl(var(--muted))_0%_25%,hsl(var(--background))_0%_50%)] bg-[length:16px_16px]">
         <img src={asset.secure_url} alt={asset.display_name} className="h-52 w-full object-contain" />

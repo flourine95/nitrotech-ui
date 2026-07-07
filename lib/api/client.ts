@@ -26,7 +26,7 @@ function isApiError(value: unknown): value is ApiError {
 }
 
 function redirectToLogin(path: string) {
-  if (typeof window === 'undefined' || !path.startsWith('/api/admin/')) return;
+  if (typeof window === 'undefined' || !path.startsWith('/api/') || isPublicApiPath(path)) return;
 
   const from = `${window.location.pathname}${window.location.search}`;
   window.location.assign(`/login?from=${encodeURIComponent(from)}`);
@@ -94,3 +94,4 @@ export interface ApiResult<T, F = unknown> {
   meta?: PageMeta;
   facets?: F;
 }
+import { isPublicApiPath } from '@/lib/auth/routes';

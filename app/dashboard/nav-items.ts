@@ -4,7 +4,6 @@ import {
   ShoppingCartIcon,
   UsersIcon,
   TrendingUpIcon,
-  WarehouseIcon,
   TagIcon,
   FolderIcon,
   ImageIcon,
@@ -28,7 +27,6 @@ export const mainNavItems: NavItem[] = [
   { label: 'Đơn hàng', href: '/dashboard/orders', icon: ShoppingCartIcon, badge: 12 },
   { label: 'Tài khoản', href: '/dashboard/users', icon: UsersIcon },
   { label: 'Doanh thu', href: '/dashboard/revenue', icon: TrendingUpIcon },
-  { label: 'Kho hàng', href: '/dashboard/inventory', icon: WarehouseIcon },
 ];
 
 export const catalogNavItems: NavItem[] = [

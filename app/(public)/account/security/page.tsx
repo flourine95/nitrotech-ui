@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { changePasswordSchema, type ChangePasswordInput } from '@/schemas/auth';
 import { changePassword, logoutAll } from '@/lib/api/auth';
 import { ApiException } from '@/lib/api/client';
+import { toastApiError } from '@/lib/utils/errors';
 
 export default function SecurityPage() {
   const router = useRouter();
@@ -45,8 +46,10 @@ export default function SecurityPage() {
             setError(f as keyof ChangePasswordInput, { message: msg }),
           );
         } else {
-          toast.error(e.error.message);
+          toastApiError(e, 'Đổi mật khẩu thất bại');
         }
+      } else {
+        toastApiError(e, 'Đổi mật khẩu thất bại');
       }
     }
   }
@@ -56,8 +59,8 @@ export default function SecurityPage() {
       await logoutAll();
       toast.success('Đã đăng xuất tất cả thiết bị');
       router.push('/login');
-    } catch {
-      toast.error('Có lỗi xảy ra');
+    } catch (error) {
+      toastApiError(error, 'Có lỗi xảy ra');
     }
   }
 

@@ -1,222 +1,108 @@
 'use client';
+
 import Link from 'next/link';
+import type { ReactNode } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Clock3, DollarSign, PackageCheck, ShoppingBag } from 'lucide-react';
 import {
-  LineChart,
-  Line,
-  BarChart,
   Bar,
+  BarChart,
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
 } from 'recharts';
-import { getAllProducts } from '@/lib/data/products';
-
-const revenueData = [
-  { month: 'T1', revenue: 45000000, orders: 120 },
-  { month: 'T2', revenue: 52000000, orders: 145 },
-  { month: 'T3', revenue: 48000000, orders: 132 },
-  { month: 'T4', revenue: 61000000, orders: 168 },
-  { month: 'T5', revenue: 55000000, orders: 151 },
-  { month: 'T6', revenue: 67000000, orders: 189 },
-];
-
-const topProducts = [
-  { name: 'MacBook Pro M4', sold: 45, revenue: 1934550000 },
-  { name: 'RTX 4080 Super', sold: 38, revenue: 855000000 },
-  { name: 'ASUS ROG Strix G16', sold: 32, revenue: 1151680000 },
-  { name: 'Samsung 990 Pro 2TB', sold: 156, revenue: 513240000 },
-  { name: 'Intel Core i9-14900K', sold: 67, revenue: 602330000 },
-];
-
-const recentOrders = [
-  {
-    id: '#ORD-2401',
-    customer: 'Nguyễn Văn A',
-    product: 'MacBook Pro M4',
-    amount: '42.990.000₫',
-    status: 'Đang giao',
-    time: '5 phút trước',
-  },
-  {
-    id: '#ORD-2400',
-    customer: 'Trần Thị B',
-    product: 'RTX 4080 Super',
-    amount: '22.500.000₫',
-    status: 'Đã xác nhận',
-    time: '12 phút trước',
-  },
-  {
-    id: '#ORD-2399',
-    customer: 'Lê Văn C',
-    product: 'Samsung 990 Pro 2TB',
-    amount: '3.290.000₫',
-    status: 'Hoàn thành',
-    time: '28 phút trước',
-  },
-  {
-    id: '#ORD-2398',
-    customer: 'Phạm Thị D',
-    product: 'LG UltraGear 27"',
-    amount: '12.990.000₫',
-    status: 'Đang giao',
-    time: '1 giờ trước',
-  },
-];
-
-const statusColors: Record<string, string> = {
-  'Đang giao': 'bg-primary/10 text-primary',
-  'Đã xác nhận': 'bg-amber-100 text-amber-700',
-  'Hoàn thành': 'bg-green-100 text-green-700',
-};
+import {
+  getDashboardAnalytics,
+  type DashboardAnalytics,
+} from './dashboard-analytics';
+import { StatusChip } from '@/components/dashboard/status-chip';
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { formatCurrency, formatRelativeTime } from '@/lib/utils/formatting';
+import { orderStatusConfig } from './orders/order-display';
 
 export default function DashboardPage() {
-  const products = getAllProducts();
-  const totalProducts = products.length;
-  const inStock = products.filter((p) => p.inStock).length;
-  const lowStock = products.filter((p) => p.stockCount < 10).length;
+  const { data, isError, isLoading } = useQuery({
+    queryKey: ['dashboard-analytics'],
+    queryFn: getDashboardAnalytics,
+    staleTime: 60_000,
+  });
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
-      {/* Header */}
+    <div className="w-full space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Tổng quan</h1>
-        <p className="mt-1 text-sm text-slate-500">Chào mừng trở lại, Admin</p>
+        <h1 className="text-2xl font-bold text-foreground">Tổng quan</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {data ? `Dữ liệu thật từ ${data.fetchedOrders} đơn hàng gần nhất` : 'Đang tải dữ liệu'}
+        </p>
       </div>
 
-      {/* Stats */}
+      {isError ? (
+        <div className="rounded-xl border border-destructive/25 bg-destructive/10 p-4 text-sm font-medium text-destructive">
+          Không thể tải dữ liệu tổng quan.
+        </div>
+      ) : isLoading || !data ? (
+        <DashboardLoading />
+      ) : (
+        <DashboardContent data={data} />
+      )}
+    </div>
+  );
+}
+
+function DashboardContent({ data }: { data: DashboardAnalytics }) {
+  return (
+    <>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-2xl border border-slate-200 bg-white p-5">
-          <div className="mb-3 flex items-center justify-between">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-              <svg
-                viewBox="0 0 24 24"
-                className="h-5 w-5 text-primary"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                aria-hidden="true"
-              >
-                <line x1="12" y1="1" x2="12" y2="23" />
-                <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
-              </svg>
-            </div>
-            <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-600">
-              +12.5%
-            </span>
-          </div>
-          <div className="text-2xl font-bold text-slate-900">328M₫</div>
-          <div className="mt-1 text-sm text-slate-500">Doanh thu tháng này</div>
-        </div>
-
-        <div className="rounded-2xl border border-slate-200 bg-white p-5">
-          <div className="mb-3 flex items-center justify-between">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100">
-              <svg
-                viewBox="0 0 24 24"
-                className="h-5 w-5 text-amber-600"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                aria-hidden="true"
-              >
-                <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
-                <line x1="3" y1="6" x2="21" y2="6" />
-                <path d="M16 10a4 4 0 01-8 0" />
-              </svg>
-            </div>
-            <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-600">
-              +8.2%
-            </span>
-          </div>
-          <div className="text-2xl font-bold text-slate-900">905</div>
-          <div className="mt-1 text-sm text-slate-500">Đơn hàng tháng này</div>
-        </div>
-
-        <div className="rounded-2xl border border-slate-200 bg-white p-5">
-          <div className="mb-3 flex items-center justify-between">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-100">
-              <svg
-                viewBox="0 0 24 24"
-                className="h-5 w-5 text-green-600"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                aria-hidden="true"
-              >
-                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
-                <circle cx="9" cy="7" r="4" />
-                <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />
-              </svg>
-            </div>
-            <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-600">
-              +15.3%
-            </span>
-          </div>
-          <div className="text-2xl font-bold text-slate-900">1,247</div>
-          <div className="mt-1 text-sm text-slate-500">Khách hàng mới</div>
-        </div>
-
-        <div className="rounded-2xl border border-slate-200 bg-white p-5">
-          <div className="mb-3 flex items-center justify-between">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-100">
-              <svg
-                viewBox="0 0 24 24"
-                className="h-5 w-5 text-rose-600"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                aria-hidden="true"
-              >
-                <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
-                <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
-                <line x1="12" y1="22.08" x2="12" y2="12" />
-              </svg>
-            </div>
-            <span className="rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-600">
-              {lowStock} thấp
-            </span>
-          </div>
-          <div className="text-2xl font-bold text-slate-900">{totalProducts}</div>
-          <div className="mt-1 text-sm text-slate-500">Sản phẩm ({inStock} còn hàng)</div>
-        </div>
+        <StatCard
+          tone="blue"
+          icon={<DollarSign className="size-5" aria-hidden="true" />}
+          label="Doanh thu tháng này"
+          value={formatCurrency(data.currentMonthRevenue)}
+          hint="Đơn đã xác nhận trở lên"
+        />
+        <StatCard
+          tone="amber"
+          icon={<ShoppingBag className="size-5" aria-hidden="true" />}
+          label="Đơn hàng tháng này"
+          value={data.currentMonthOrders.toLocaleString('vi-VN')}
+          hint={`${data.totalOrders.toLocaleString('vi-VN')} đơn tổng cộng`}
+        />
+        <StatCard
+          tone="green"
+          icon={<PackageCheck className="size-5" aria-hidden="true" />}
+          label="Đã giao"
+          value={data.deliveredOrders.toLocaleString('vi-VN')}
+          hint="Đơn hoàn tất giao hàng"
+        />
+        <StatCard
+          tone="rose"
+          icon={<Clock3 className="size-5" aria-hidden="true" />}
+          label="Chờ xử lý"
+          value={data.pendingOrders.toLocaleString('vi-VN')}
+          hint="Cần admin kiểm tra"
+        />
       </div>
 
-      {/* Charts */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Revenue chart */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-6">
-          <div className="mb-6 flex items-center justify-between">
-            <div>
-              <h2 className="text-base font-bold text-slate-900">Doanh thu 6 tháng</h2>
-              <p className="mt-0.5 text-sm text-slate-500">Theo tháng</p>
-            </div>
-            <select className="cursor-pointer rounded-lg border-0 bg-slate-100 px-3 py-1.5 text-sm text-slate-700 outline-none">
-              <option>2024</option>
-              <option>2023</option>
-            </select>
-          </div>
+        <ChartCard title="Doanh thu 6 tháng" description="Theo đơn đã xác nhận trở lên">
           <ResponsiveContainer width="100%" height={240}>
-            <LineChart data={revenueData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#64748b' }} />
-              <YAxis
-                tick={{ fontSize: 12, fill: '#64748b' }}
-                tickFormatter={(v) => `${v / 1000000}M`}
-              />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: '#fff',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '12px',
-                  fontSize: '12px',
-                }}
-                formatter={(value) => {
-                  const numValue = typeof value === 'number' ? value : 0;
-                  return [`${(numValue / 1000000).toFixed(1)}M₫`, 'Doanh thu'];
-                }}
-              />
+            <LineChart data={data.monthly}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+              <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+              <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `${Number(v) / 1000000}M`} />
+              <Tooltip content={<ChartTooltip label="Doanh thu" formatter={formatCurrency} />} />
               <Line
                 type="monotone"
                 dataKey="revenue"
@@ -226,116 +112,184 @@ export default function DashboardPage() {
               />
             </LineChart>
           </ResponsiveContainer>
-        </div>
+        </ChartCard>
 
-        {/* Orders chart */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-6">
-          <div className="mb-6 flex items-center justify-between">
-            <div>
-              <h2 className="text-base font-bold text-slate-900">Đơn hàng 6 tháng</h2>
-              <p className="mt-0.5 text-sm text-slate-500">Theo tháng</p>
-            </div>
-            <select className="cursor-pointer rounded-lg border-0 bg-slate-100 px-3 py-1.5 text-sm text-slate-700 outline-none">
-              <option>2024</option>
-              <option>2023</option>
-            </select>
-          </div>
+        <ChartCard title="Đơn hàng 6 tháng" description="Theo tháng tạo đơn">
           <ResponsiveContainer width="100%" height={240}>
-            <BarChart data={revenueData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#64748b' }} />
-              <YAxis tick={{ fontSize: 12, fill: '#64748b' }} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: '#fff',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '12px',
-                  fontSize: '12px',
-                }}
-                formatter={(value) => {
-                  const numValue = typeof value === 'number' ? value : 0;
-                  return [numValue, 'Đơn hàng'];
-                }}
-              />
-              <Bar dataKey="orders" fill="#f59e0b" radius={[8, 8, 0, 0]} />
+            <BarChart data={data.monthly}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+              <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+              <YAxis tick={{ fontSize: 12 }} />
+              <Tooltip content={<ChartTooltip label="Đơn hàng" />} />
+              <Bar dataKey="orders" fill="#f59e0b" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
-        </div>
+        </ChartCard>
       </div>
 
-      {/* Tables */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Top products */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-6">
-          <div className="mb-5 flex items-center justify-between">
-            <h2 className="text-base font-bold text-slate-900">Sản phẩm bán chạy</h2>
-            <Link
-              href="/dashboard/products"
-              className="cursor-pointer text-sm font-medium text-primary hover:text-primary"
-            >
-              Xem tất cả
-            </Link>
-          </div>
-          <div className="space-y-3">
-            {topProducts.map((p, i) => (
-              <div
-                key={i}
-                className="flex cursor-pointer items-center gap-3 rounded-xl p-3 transition-colors hover:bg-slate-50"
-              >
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-xs font-bold text-slate-600">
-                  #{i + 1}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-semibold text-slate-900">{p.name}</div>
-                  <div className="text-xs text-slate-500">{p.sold} đã bán</div>
-                </div>
-                <div className="text-right text-sm font-bold text-slate-900">
-                  {(p.revenue / 1000000).toFixed(0)}M₫
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Recent orders */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-6">
-          <div className="mb-5 flex items-center justify-between">
-            <h2 className="text-base font-bold text-slate-900">Đơn hàng gần đây</h2>
-            <Link
-              href="/dashboard/orders"
-              className="cursor-pointer text-sm font-medium text-primary hover:text-primary"
-            >
-              Xem tất cả
-            </Link>
-          </div>
-          <div className="space-y-3">
-            {recentOrders.map((o) => (
-              <div
-                key={o.id}
-                className="flex cursor-pointer items-start gap-3 rounded-xl p-3 transition-colors hover:bg-slate-50"
-              >
-                <div className="min-w-0 flex-1">
-                  <div className="mb-1 flex items-center gap-2">
-                    <span className="text-sm font-semibold text-slate-900">{o.id}</span>
+        <Card>
+          <CardHeader>
+            <CardTitle>Trạng thái đơn hàng</CardTitle>
+            <CardAction>
+              <Link href="/dashboard/orders" className="text-sm font-medium text-primary">
+              Xem đơn
+              </Link>
+            </CardAction>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {data.statusBreakdown.map((item) => (
+              <div key={item.name} className="rounded-lg p-2.5 transition-colors hover:bg-muted/40">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
                     <span
-                      className={`rounded-full px-2 py-0.5 text-xs font-semibold ${statusColors[o.status]}`}
-                    >
-                      {o.status}
-                    </span>
+                      className="size-2 rounded-full"
+                      style={{ backgroundColor: item.color }}
+                      aria-hidden="true"
+                    />
+                    <span className="text-sm font-medium text-foreground">{item.name}</span>
                   </div>
-                  <div className="truncate text-xs text-slate-500">
-                    {o.customer} • {o.product}
-                  </div>
-                  <div className="mt-1 text-xs text-slate-400">{o.time}</div>
+                  <span className="text-sm font-semibold text-foreground">{item.value} đơn</span>
                 </div>
-                <div className="shrink-0 text-right text-sm font-bold text-slate-900">
-                  {o.amount}
+                <div className="mt-2 h-1.5 rounded-full bg-muted">
+                  <div
+                    className="h-1.5 rounded-full"
+                    style={{ width: `${item.percent}%`, backgroundColor: item.color }}
+                  />
                 </div>
               </div>
             ))}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Đơn hàng gần đây</CardTitle>
+            <CardAction>
+              <Link href="/dashboard/orders" className="text-sm font-medium text-primary">
+              Xem tất cả
+              </Link>
+            </CardAction>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {data.recentOrders.map((order) => (
+              <Link
+                key={order.id}
+                href={`/dashboard/orders/${order.id}`}
+                className="flex items-start gap-3 rounded-lg p-2.5 transition-colors hover:bg-muted/40"
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="mb-1 flex flex-wrap items-center gap-2">
+                    <span className="text-sm font-semibold text-foreground">
+                      {order.orderCode}
+                    </span>
+                    <StatusChip tone={orderStatusConfig[order.status].tone}>
+                      {orderStatusConfig[order.status].label}
+                    </StatusChip>
+                  </div>
+                  <div className="truncate text-xs text-muted-foreground">
+                    {order.receiver ?? order.email ?? 'Khách hàng'} • {order.itemCount} sản phẩm
+                  </div>
+                  <div className="mt-1 text-xs text-muted-foreground/80">
+                    {formatRelativeTime(order.createdAt)}
+                  </div>
+                </div>
+                <div className="shrink-0 text-right text-sm font-semibold text-foreground">
+                  {formatCurrency(order.finalAmount)}
+                </div>
+              </Link>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+    </>
+  );
+}
+
+function StatCard({
+  label,
+  value,
+  hint,
+  tone,
+  icon,
+}: {
+  label: string;
+  value: string;
+  hint: string;
+  tone: 'blue' | 'amber' | 'green' | 'rose';
+  icon: ReactNode;
+}) {
+  const toneClass = {
+    blue: 'bg-primary/10 text-primary',
+    amber: 'bg-amber-100 text-amber-600',
+    green: 'bg-green-100 text-green-600',
+    rose: 'bg-rose-100 text-rose-600',
+  }[tone];
+
+  return (
+    <Card size="sm">
+      <CardContent>
+        <div className="mb-3 flex items-center justify-between">
+          <div className={`flex size-9 items-center justify-center rounded-lg ${toneClass}`}>
+            {icon}
           </div>
         </div>
-      </div>
+        <div className="text-2xl font-semibold tracking-tight text-foreground">{value}</div>
+        <div className="mt-1 text-sm text-muted-foreground">{label}</div>
+        <div className="mt-2 text-xs text-muted-foreground/80">{hint}</div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ChartCard({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description: string;
+  children: ReactNode;
+}) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+      <CardContent>{children}</CardContent>
+    </Card>
+  );
+}
+
+function DashboardLoading() {
+  return (
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {Array.from({ length: 4 }).map((_, index) => (
+        <Skeleton key={index} className="h-32 rounded-xl" />
+      ))}
+    </div>
+  );
+}
+
+function ChartTooltip({
+  active,
+  payload,
+  label,
+  formatter,
+}: {
+  active?: boolean;
+  payload?: Array<{ value?: number }>;
+  label: string;
+  formatter?: (value: number) => string;
+}) {
+  if (!active || !payload?.length) return null;
+  const value = Number(payload[0].value ?? 0);
+
+  return (
+    <div className="rounded-lg border bg-popover px-3 py-2 text-xs shadow-sm">
+      <div className="font-medium text-foreground">{formatter ? formatter(value) : value}</div>
+      <div className="text-muted-foreground">{label}</div>
     </div>
   );
 }

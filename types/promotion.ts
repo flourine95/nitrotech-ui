@@ -19,11 +19,7 @@ export interface Promotion {
 export interface PromotionValidationResult {
   code: string;
   description: string | null;
-  discountType: DiscountType;
-  discountValue: number;
   discountAmount: number;
-  minOrderAmount: number;
-  finalAmount: number;
 }
 
 export interface PromotionValidationResponse {

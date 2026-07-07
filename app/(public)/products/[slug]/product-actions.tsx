@@ -274,7 +274,7 @@ function buildVariantOptions(variants: ProductVariant[]) {
   return keys.map((key) => ({
     key,
     values: Array.from(new Set(variants.map((variant) => variant.attributes?.[key]).filter(Boolean))),
-  }));
+  })).filter((option) => option.values.length > 0);
 }
 
 function findVariantByAttributes(variants: ProductVariant[], selectedAttributes: Record<string, string>) {

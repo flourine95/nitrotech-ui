@@ -19,7 +19,9 @@ async function fetchFormData() {
   const cats: Category[] = Array.isArray(catsJson.data)
     ? catsJson.data
     : ((catsJson.data as Page<Category>).content ?? []);
-  const brands: Brand[] = (brandsJson.data as Page<Brand>).content ?? [];
+  const brands: Brand[] = Array.isArray(brandsJson.data)
+    ? brandsJson.data
+    : ((brandsJson.data as Page<Brand>).content ?? []);
 
   return { categories: cats, brands };
 }

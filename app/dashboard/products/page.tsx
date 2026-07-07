@@ -19,7 +19,7 @@ import {
 } from '@/lib/api/admin/products';
 import { getCategories, type Category } from '@/lib/api/admin/categories';
 import { getAdminBrands, type Brand } from '@/lib/api/admin/brands';
-import { ApiException } from '@/lib/api/client';
+import { toastApiError } from '@/lib/utils/errors';
 import { Button } from '@/components/ui/button';
 import { useCallback, useMemo, useState, startTransition } from 'react';
 import { useTableSelection } from '@/hooks/use-table-selection';
@@ -215,7 +215,7 @@ export default function DashboardProductsPage() {
         },
       });
     },
-    onError: () => toast.error('Cập nhật thất bại'),
+    onError: (error) => toastApiError(error, 'Cập nhật thất bại'),
   });
 
   const deleteMutation = useMutation({
@@ -225,9 +225,7 @@ export default function DashboardProductsPage() {
       toast.success('Đã xóa sản phẩm');
       setDeleteTarget(null);
     },
-    onError: (e) => {
-      if (!(e instanceof ApiException)) toast.error('Xóa thất bại');
-    },
+    onError: (error) => toastApiError(error, 'Xóa thất bại'),
   });
 
   const restoreMutation = useMutation({
@@ -237,7 +235,7 @@ export default function DashboardProductsPage() {
       toast.success('Đã khôi phục sản phẩm');
       setRestoreTarget(null);
     },
-    onError: () => toast.error('Khôi phục thất bại'),
+    onError: (error) => toastApiError(error, 'Khôi phục thất bại'),
   });
 
   const hardDeleteMutation = useMutation({
@@ -247,7 +245,7 @@ export default function DashboardProductsPage() {
       toast.success('Đã xóa vĩnh viễn');
       setHardDeleteTarget(null);
     },
-    onError: () => toast.error('Xóa vĩnh viễn thất bại'),
+    onError: (error) => toastApiError(error, 'Xóa vĩnh viễn thất bại'),
   });
 
   const onSearchChange = useCallback(
@@ -294,45 +292,65 @@ export default function DashboardProductsPage() {
   // ── Bulk actions ───────────────────────────────────────────────────────────
 
   async function handleBulkShow() {
-    const ids = [...selectedIds];
-    const r = await bulkUpdateActive(ids, true);
-    toast.success(`Đã hiển thị ${r.success} sản phẩm${r.failed ? `, ${r.failed} thất bại` : ''}`);
-    void queryClient.invalidateQueries({ queryKey: ['products'] });
-    clearSelection();
+    try {
+      const ids = [...selectedIds];
+      const r = await bulkUpdateActive(ids, true);
+      toast.success(`Đã hiển thị ${r.success} sản phẩm${r.failed ? `, ${r.failed} thất bại` : ''}`);
+      void queryClient.invalidateQueries({ queryKey: ['products'] });
+      clearSelection();
+    } catch (error) {
+      toastApiError(error, 'Cập nhật sản phẩm thất bại');
+    }
   }
 
   async function handleBulkHide() {
-    const ids = [...selectedIds];
-    const r = await bulkUpdateActive(ids, false);
-    toast.success(`Đã ẩn ${r.success} sản phẩm${r.failed ? `, ${r.failed} thất bại` : ''}`);
-    void queryClient.invalidateQueries({ queryKey: ['products'] });
-    clearSelection();
+    try {
+      const ids = [...selectedIds];
+      const r = await bulkUpdateActive(ids, false);
+      toast.success(`Đã ẩn ${r.success} sản phẩm${r.failed ? `, ${r.failed} thất bại` : ''}`);
+      void queryClient.invalidateQueries({ queryKey: ['products'] });
+      clearSelection();
+    } catch (error) {
+      toastApiError(error, 'Cập nhật sản phẩm thất bại');
+    }
   }
 
   async function handleBulkDelete() {
-    const ids = [...selectedIds];
-    const r = await bulkDeleteProducts(ids);
-    toast.success(`Đã xóa ${r.success} sản phẩm${r.failed ? `, ${r.failed} thất bại` : ''}`);
-    void queryClient.invalidateQueries({ queryKey: ['products'] });
-    clearSelection();
+    try {
+      const ids = [...selectedIds];
+      const r = await bulkDeleteProducts(ids);
+      toast.success(`Đã xóa ${r.success} sản phẩm${r.failed ? `, ${r.failed} thất bại` : ''}`);
+      void queryClient.invalidateQueries({ queryKey: ['products'] });
+      clearSelection();
+    } catch (error) {
+      toastApiError(error, 'Xóa sản phẩm thất bại');
+    }
   }
 
   async function handleBulkRestore() {
-    const ids = [...selectedIds];
-    const r = await bulkRestoreProducts(ids);
-    toast.success(`Đã khôi phục ${r.success} sản phẩm${r.failed ? `, ${r.failed} thất bại` : ''}`);
-    void queryClient.invalidateQueries({ queryKey: ['products'] });
-    clearSelection();
+    try {
+      const ids = [...selectedIds];
+      const r = await bulkRestoreProducts(ids);
+      toast.success(`Đã khôi phục ${r.success} sản phẩm${r.failed ? `, ${r.failed} thất bại` : ''}`);
+      void queryClient.invalidateQueries({ queryKey: ['products'] });
+      clearSelection();
+    } catch (error) {
+      toastApiError(error, 'Khôi phục sản phẩm thất bại');
+    }
   }
 
   async function handleBulkHardDelete() {
-    const ids = [...selectedIds];
-    const r = await bulkHardDeleteProducts(ids);
-    toast.success(
-      `Đã xóa vĩnh viễn ${r.success} sản phẩm${r.failed ? `, ${r.failed} thất bại` : ''}`,
-    );
-    void queryClient.invalidateQueries({ queryKey: ['products'] });
-    clearSelection();
+    try {
+      const ids = [...selectedIds];
+      const r = await bulkHardDeleteProducts(ids);
+      toast.success(
+        `Đã xóa vĩnh viễn ${r.success} sản phẩm${r.failed ? `, ${r.failed} thất bại` : ''}`,
+      );
+      void queryClient.invalidateQueries({ queryKey: ['products'] });
+      clearSelection();
+    } catch (error) {
+      toastApiError(error, 'Xóa vĩnh viễn sản phẩm thất bại');
+    }
   }
 
   // ── Export ─────────────────────────────────────────────────────────────────
@@ -359,8 +377,8 @@ export default function DashboardProductsPage() {
       });
       downloadCSV(productsToCSV(data.content), `products-export-${Date.now()}.csv`);
       toast.success(`Đã xuất ${data.content.length} sản phẩm`);
-    } catch {
-      toast.error('Xuất thất bại');
+    } catch (error) {
+      toastApiError(error, 'Xuất thất bại');
     } finally {
       setExportLoading(false);
     }

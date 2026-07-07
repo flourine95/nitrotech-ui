@@ -4,22 +4,23 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeft,
   Ellipsis,
   Package,
   Pencil,
   Plus,
+  Save,
   Trash2,
   AlertTriangle,
-  TrendingDown,
 } from 'lucide-react';
 import type { Product, ProductVariant } from '@/lib/api/admin/products';
-import { deleteProduct, updateProduct } from '@/lib/api/admin/products';
+import { deleteProduct, setVariantInventory } from '@/lib/api/admin/products';
+import { getAuditLogs, type AuditLogEntry } from '@/lib/api/admin/audit-logs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
+import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   DropdownMenu,
@@ -39,23 +40,17 @@ import {
   AlertDialogMedia,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { formatPrice } from '../utils';
+import { formatViDateTime } from '@/lib/utils/formatting';
 import { VariantFormSheet } from './variant-form-sheet';
 
 interface ProductDetailClientProps {
   product: Product;
 }
 
-// Mock data for features not yet in backend
-const mockStock = [
-  { warehouse: 'Kho Hà Nội', quantity: 150, status: 'in-stock' },
-  { warehouse: 'Kho TP.HCM', quantity: 85, status: 'in-stock' },
-  { warehouse: 'Kho Đà Nẵng', quantity: 12, status: 'low' },
-];
-
 export function ProductDetailClient({ product }: ProductDetailClientProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const [variants, setVariants] = useState(product.variants ?? []);
   const [activeTab, setActiveTab] = useState('overview');
   const [deleteTarget, setDeleteTarget] = useState(false);
   const [showVariantForm, setShowVariantForm] = useState(false);
@@ -64,15 +59,6 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
     product.thumbnail ?? (product.images && product.images[0]) ?? '',
   );
 
-  const toggleActiveMutation = useMutation({
-    mutationFn: () => updateProduct(product.id, { active: !product.active }),
-    onSuccess: (updated) => {
-      void queryClient.invalidateQueries({ queryKey: ['products'] });
-      toast.success(updated.active ? 'Đã hiển thị' : 'Đã ẩn');
-    },
-    onError: () => toast.error('Cập nhật thất bại'),
-  });
-
   const deleteMutation = useMutation({
     mutationFn: () => deleteProduct(product.id),
     onSuccess: () => {
@@ -80,6 +66,18 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
       router.push('/dashboard/products');
     },
     onError: () => toast.error('Xóa thất bại'),
+  });
+
+  const auditQuery = useQuery({
+    queryKey: ['audit-logs', 'product', product.id],
+    queryFn: () =>
+      getAuditLogs({
+        resourceType: 'PRODUCT',
+        resourceId: String(product.id),
+        sortBy: 'createdAt',
+        sortDir: 'desc',
+        size: 20,
+      }),
   });
 
   function handleAddVariant() {
@@ -102,9 +100,35 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
     ...(product.images ?? []).filter((img) => img !== product.thumbnail),
   ].filter(Boolean) as string[];
 
-  const totalStock = mockStock.reduce((sum, s) => sum + s.quantity, 0);
-  const lowStockCount = product.variants?.filter((v) => v.active).length ?? 0;
-  const avgStock = product.variantCount > 0 ? Math.round(totalStock / product.variantCount) : 0;
+  const totalStock = variants.reduce((sum, v) => sum + (v.stockQuantity ?? 0), 0);
+  const lowStockCount = variants.filter((v) => v.lowStock).length;
+  const avgStock = variants.length > 0 ? Math.round(totalStock / variants.length) : 0;
+
+  function updateVariantInventory(variantId: number, quantity: number, lowStockThreshold: number) {
+    setVariants((current) =>
+      current.map((variant) =>
+        variant.id === variantId
+          ? {
+              ...variant,
+              stockQuantity: quantity,
+              lowStockThreshold,
+              inStock: quantity > 0,
+              lowStock: quantity <= lowStockThreshold,
+            }
+          : variant,
+      ),
+    );
+  }
+
+  function handleVariantSaved(saved: ProductVariant) {
+    setVariants((current) =>
+      current.some((variant) => variant.id === saved.id)
+        ? current.map((variant) => (variant.id === saved.id ? saved : variant))
+        : [...current, saved],
+    );
+    void queryClient.invalidateQueries({ queryKey: ['audit-logs', 'product', product.id] });
+    router.refresh();
+  }
 
   return (
     <div className="flex min-w-0 flex-col">
@@ -276,7 +300,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                     </p>
                     <p className="mt-3 text-3xl font-semibold tracking-tight">{totalStock}</p>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      Trên {product.variantCount} biến thể
+                      Trên {variants.length} biến thể
                     </p>
                   </div>
                 </div>
@@ -308,9 +332,9 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                 </div>
               </div>
 
-              {product.variants && product.variants.length > 0 ? (
+              {variants.length > 0 ? (
                 <div className="space-y-3">
-                  {product.variants.map((variant, idx) => (
+                  {variants.map((variant, idx) => (
                     <button
                       key={variant.id}
                       type="button"
@@ -352,8 +376,10 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                               <span>{variant.sku}</span>
                               <span>•</span>
                               <span className={variant.active ? '' : 'text-rose-600'}>
-                                {variant.active ? 'Còn hàng' : 'Hết hàng'}
+                                {variant.active ? 'Đang hiển thị' : 'Đang ẩn'}
                               </span>
+                              <span>•</span>
+                              <span>{stockLabel(variant)}</span>
                             </div>
                           </div>
                         </div>
@@ -392,12 +418,12 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
 
         {/* Inventory Tab */}
         <TabsContent value="inventory" className="mt-0 pt-6">
-          <InventoryTab product={product} />
+          <InventoryTab variants={variants} onSaved={updateVariantInventory} />
         </TabsContent>
 
         {/* Activity Tab */}
         <TabsContent value="activity" className="mt-0 pt-6">
-          <ActivityTab product={product} />
+          <ActivityTab logs={auditQuery.data?.data ?? []} isLoading={auditQuery.isLoading} />
         </TabsContent>
       </Tabs>
 
@@ -430,8 +456,10 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
 
       {/* Variant form sheet */}
       <VariantFormSheet
+        key={editingVariant?.id ?? 'new'}
         open={showVariantForm}
         onClose={handleCloseVariantForm}
+        onSaved={handleVariantSaved}
         productId={product.id}
         productName={product.name}
         variant={editingVariant}
@@ -442,56 +470,106 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
 
 // ── Inventory Tab ─────────────────────────────────────────────────────────────
 
-const MOCK_WAREHOUSES = ['Kho Hà Nội', 'Kho TP.HCM', 'Kho Đà Nẵng'];
+const DEFAULT_LOW_STOCK_THRESHOLD = 5;
 
-const MOCK_INVENTORY: Record<string, Record<string, number>> = {
-  'Đen - 128GB': { 'Kho Hà Nội': 42, 'Kho TP.HCM': 28, 'Kho Đà Nẵng': 5 },
-  'Đen - 256GB': { 'Kho Hà Nội': 18, 'Kho TP.HCM': 11, 'Kho Đà Nẵng': 2 },
-  'Trắng - 128GB': { 'Kho Hà Nội': 35, 'Kho TP.HCM': 22, 'Kho Đà Nẵng': 8 },
-  'Trắng - 256GB': { 'Kho Hà Nội': 9, 'Kho TP.HCM': 4, 'Kho Đà Nẵng': 0 },
-};
+function stockLabel(variant: ProductVariant) {
+  if (variant.stockQuantity == null) return 'Chưa nhập tồn kho';
+  if (variant.stockQuantity <= 0) return 'Hết hàng';
+  if (variant.lowStock) return `Sắp hết (${variant.stockQuantity})`;
+  return `Còn ${variant.stockQuantity}`;
+}
 
-const LOW_THRESHOLD = 10;
-
-function stockLevel(qty: number): 'out' | 'low' | 'ok' {
+function stockLevel(qty: number, threshold: number): 'out' | 'low' | 'ok' {
   if (qty === 0) return 'out';
-  if (qty <= LOW_THRESHOLD) return 'low';
+  if (qty <= threshold) return 'low';
   return 'ok';
 }
 
-function StockBadge({ qty }: { qty: number }) {
-  const level = stockLevel(qty);
+function StockBadge({ qty, threshold }: { qty: number; threshold: number }) {
+  const level = stockLevel(qty, threshold);
   if (level === 'out')
     return <span className="text-xs font-medium text-destructive">Hết hàng</span>;
   if (level === 'low') return <span className="text-xs font-medium text-amber-600">{qty}</span>;
   return <span className="text-sm tabular-nums">{qty}</span>;
 }
 
-function InventoryTab({ product }: { product: Product }) {
-  const variants = product.variants ?? [];
+function InventoryTab({
+  variants,
+  onSaved,
+}: {
+  variants: ProductVariant[];
+  onSaved: (variantId: number, quantity: number, lowStockThreshold: number) => void;
+}) {
+  const queryClient = useQueryClient();
+  const [drafts, setDrafts] = useState(() =>
+    Object.fromEntries(
+      variants.map((variant) => [
+        variant.id,
+        {
+          quantity: String(variant.stockQuantity ?? 0),
+          lowStockThreshold: String(variant.lowStockThreshold ?? DEFAULT_LOW_STOCK_THRESHOLD),
+        },
+      ]),
+    ),
+  );
 
-  // Use real variant names if available, else fall back to mock keys
-  const rows =
-    variants.length > 0
-      ? variants.map((v) => ({
-          name: v.name,
-          data: MOCK_INVENTORY[v.name] ?? { 'Kho Hà Nội': 0, 'Kho TP.HCM': 0, 'Kho Đà Nẵng': 0 },
-        }))
-      : Object.entries(MOCK_INVENTORY).map(([name, data]) => ({ name, data }));
+  const saveMutation = useMutation({
+    mutationFn: ({
+      variantId,
+      quantity,
+      lowStockThreshold,
+    }: {
+      variantId: number;
+      quantity: number;
+      lowStockThreshold?: number;
+    }) => setVariantInventory(variantId, { quantity, lowStockThreshold }),
+    onSuccess: (data) => {
+      onSaved(data.variantId, data.quantity, data.lowStockThreshold);
+      void queryClient.invalidateQueries({ queryKey: ['products'] });
+      toast.success('Đã cập nhật tồn kho');
+    },
+    onError: () => toast.error('Cập nhật tồn kho thất bại'),
+  });
 
-  const totals = MOCK_WAREHOUSES.reduce<Record<string, number>>((acc, wh) => {
-    acc[wh] = rows.reduce((s, r) => s + (r.data[wh] ?? 0), 0);
-    return acc;
-  }, {});
-  const grandTotal = Object.values(totals).reduce((s, v) => s + v, 0);
+  function updateDraft(variantId: number, key: 'quantity' | 'lowStockThreshold', value: string) {
+    setDrafts((current) => ({
+      ...current,
+      [variantId]: {
+        quantity: current[variantId]?.quantity ?? '0',
+        lowStockThreshold:
+          current[variantId]?.lowStockThreshold ?? String(DEFAULT_LOW_STOCK_THRESHOLD),
+        [key]: value,
+      },
+    }));
+  }
 
-  const lowCount = rows.filter((r) =>
-    MOCK_WAREHOUSES.some((wh) => stockLevel(r.data[wh] ?? 0) !== 'ok'),
-  ).length;
+  function save(variant: ProductVariant) {
+    const draft = drafts[variant.id];
+    const quantity = Number(draft?.quantity ?? 0);
+    const lowStockThreshold = Number(draft?.lowStockThreshold ?? DEFAULT_LOW_STOCK_THRESHOLD);
+    if (!Number.isInteger(quantity) || quantity < 0) {
+      toast.error('Số lượng không hợp lệ');
+      return;
+    }
+    if (!Number.isInteger(lowStockThreshold) || lowStockThreshold < 0) {
+      toast.error('Ngưỡng cảnh báo không hợp lệ');
+      return;
+    }
+    saveMutation.mutate({
+      variantId: variant.id,
+      quantity,
+      lowStockThreshold:
+        lowStockThreshold === (variant.lowStockThreshold ?? DEFAULT_LOW_STOCK_THRESHOLD)
+          ? undefined
+          : lowStockThreshold,
+    });
+  }
+
+  const totalStock = variants.reduce((sum, variant) => sum + (variant.stockQuantity ?? 0), 0);
+  const lowCount = variants.filter((variant) => variant.lowStock).length;
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Summary strip */}
       {lowCount > 0 && (
         <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
           <AlertTriangle className="size-4 shrink-0 text-amber-500" />
@@ -499,177 +577,164 @@ function InventoryTab({ product }: { product: Product }) {
         </div>
       )}
 
-      {/* Inventory grid */}
       <div className="overflow-x-auto rounded-lg border">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b bg-muted/40">
               <th className="px-4 py-3 text-left font-medium text-muted-foreground">Biến thể</th>
-              {MOCK_WAREHOUSES.map((wh) => (
-                <th key={wh} className="px-4 py-3 text-right font-medium text-muted-foreground">
-                  {wh}
-                </th>
-              ))}
-              <th className="px-4 py-3 text-right font-medium text-muted-foreground">Tổng</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">SKU</th>
+              <th className="px-4 py-3 text-right font-medium text-muted-foreground">
+                Tồn hiện tại
+              </th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Số lượng</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+                Ngưỡng cảnh báo
+              </th>
+              <th className="px-4 py-3" />
             </tr>
           </thead>
           <tbody className="divide-y">
-            {rows.map((row) => {
-              const rowTotal = MOCK_WAREHOUSES.reduce((s, wh) => s + (row.data[wh] ?? 0), 0);
-              const hasIssue = MOCK_WAREHOUSES.some((wh) => stockLevel(row.data[wh] ?? 0) !== 'ok');
+            {variants.map((variant) => {
+              const qty = variant.stockQuantity ?? 0;
+              const threshold = variant.lowStockThreshold ?? DEFAULT_LOW_STOCK_THRESHOLD;
+              const hasIssue = stockLevel(qty, threshold) !== 'ok';
+              const draft = drafts[variant.id] ?? {
+                quantity: String(qty),
+                lowStockThreshold: String(threshold),
+              };
               return (
-                <tr key={row.name} className={hasIssue ? 'bg-amber-50/40' : ''}>
-                  <td className="px-4 py-3 font-medium">{row.name}</td>
-                  {MOCK_WAREHOUSES.map((wh) => (
-                    <td key={wh} className="px-4 py-3 text-right">
-                      <StockBadge qty={row.data[wh] ?? 0} />
-                    </td>
-                  ))}
-                  <td className="px-4 py-3 text-right font-medium tabular-nums">{rowTotal}</td>
+                <tr key={variant.id} className={hasIssue ? 'bg-amber-50/40' : ''}>
+                  <td className="px-4 py-3 font-medium">{variant.name}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
+                    {variant.sku}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <StockBadge qty={qty} threshold={threshold} />
+                  </td>
+                  <td className="px-4 py-3">
+                    <Input
+                      type="number"
+                      min={0}
+                      step={1}
+                      value={draft.quantity}
+                      onChange={(event) => updateDraft(variant.id, 'quantity', event.target.value)}
+                      className="h-9 w-28"
+                    />
+                  </td>
+                  <td className="px-4 py-3">
+                    <Input
+                      type="number"
+                      min={0}
+                      step={1}
+                      value={draft.lowStockThreshold}
+                      onChange={(event) =>
+                        updateDraft(variant.id, 'lowStockThreshold', event.target.value)
+                      }
+                      className="h-9 w-28"
+                    />
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => save(variant)}
+                      disabled={saveMutation.isPending}
+                    >
+                      <Save className="h-4 w-4" />
+                      Lưu
+                    </Button>
+                  </td>
                 </tr>
               );
             })}
           </tbody>
           <tfoot>
             <tr className="border-t bg-muted/20">
-              <td className="px-4 py-3 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                Tổng kho
+              <td
+                className="px-4 py-3 text-xs font-semibold tracking-wide text-muted-foreground uppercase"
+                colSpan={2}
+              >
+                Tổng tồn kho
               </td>
-              {MOCK_WAREHOUSES.map((wh) => (
-                <td key={wh} className="px-4 py-3 text-right font-semibold tabular-nums">
-                  {totals[wh]}
-                </td>
-              ))}
-              <td className="px-4 py-3 text-right font-semibold tabular-nums">{grandTotal}</td>
+              <td className="px-4 py-3 text-right font-semibold tabular-nums">{totalStock}</td>
+              <td colSpan={3} />
             </tr>
           </tfoot>
         </table>
       </div>
-
-      <p className="text-xs text-muted-foreground">
-        * Dữ liệu kho hàng thực tế sẽ được đồng bộ khi tính năng quản lý kho được triển khai.
-      </p>
     </div>
   );
 }
 
-// ── Activity Tab ──────────────────────────────────────────────────────────────
-
-type ActivityType = 'create' | 'update' | 'price' | 'status' | 'stock' | 'delete';
-
-interface ActivityItem {
-  id: string;
-  type: ActivityType;
-  actor: string;
-  message: string;
-  detail?: string;
-  time: string;
+function auditSummary(log: AuditLogEntry) {
+  if (log.action === 'PRODUCT_CREATED') return 'Tạo sản phẩm';
+  if (log.action === 'PRODUCT_UPDATED') return 'Cập nhật sản phẩm';
+  if (log.action === 'PRODUCT_DELETED') return 'Xóa sản phẩm';
+  if (log.action === 'PRODUCT_VARIANT_CREATED') return 'Thêm biến thể';
+  if (log.action === 'PRODUCT_VARIANT_UPDATED') return 'Cập nhật biến thể';
+  if (log.action === 'PRODUCT_VARIANT_DELETED') return 'Xóa biến thể';
+  if (log.action === 'PRODUCT_INVENTORY_UPDATED') return 'Cập nhật tồn kho';
+  return log.action;
 }
 
-const MOCK_ACTIVITY: ActivityItem[] = [
-  { id: '1', type: 'create', actor: 'Nguyễn Văn A', message: 'Tạo sản phẩm', time: '2 giờ trước' },
-  {
-    id: '2',
-    type: 'update',
-    actor: 'Nguyễn Văn A',
-    message: 'Cập nhật mô tả',
-    time: '2 giờ trước',
-  },
-  {
-    id: '3',
-    type: 'price',
-    actor: 'Trần Thị B',
-    message: 'Thay đổi giá biến thể',
-    detail: 'Đen - 256GB: 28.990.000đ → 27.490.000đ',
-    time: '5 giờ trước',
-  },
-  {
-    id: '4',
-    type: 'status',
-    actor: 'Trần Thị B',
-    message: 'Hiển thị sản phẩm',
-    time: 'Hôm qua, 14:32',
-  },
-  {
-    id: '5',
-    type: 'stock',
-    actor: 'Lê Văn C',
-    message: 'Nhập kho Hà Nội',
-    detail: '+50 Đen - 128GB',
-    time: 'Hôm qua, 09:15',
-  },
-  {
-    id: '6',
-    type: 'update',
-    actor: 'Nguyễn Văn A',
-    message: 'Cập nhật ảnh sản phẩm',
-    time: '3 ngày trước',
-  },
-  {
-    id: '7',
-    type: 'price',
-    actor: 'Trần Thị B',
-    message: 'Thay đổi giá biến thể',
-    detail: 'Trắng - 256GB: 29.990.000đ → 28.990.000đ',
-    time: '5 ngày trước',
-  },
-  {
-    id: '8',
-    type: 'create',
-    actor: 'Nguyễn Văn A',
-    message: 'Thêm biến thể Trắng - 256GB',
-    time: '1 tuần trước',
-  },
-];
+function auditDetail(log: AuditLogEntry) {
+  const sku = typeof log.metadata?.sku === 'string' ? log.metadata.sku : null;
+  const variantId = log.metadata?.variantId;
+  if (log.action === 'PRODUCT_INVENTORY_UPDATED') {
+    const beforeQty = log.beforeData?.quantity;
+    const afterQty = log.afterData?.quantity;
+    return `SKU ${sku ?? variantId ?? '—'}: ${beforeQty ?? '—'} → ${afterQty ?? '—'}`;
+  }
+  if (log.action.startsWith('PRODUCT_VARIANT_')) {
+    const name = typeof log.afterData?.name === 'string'
+      ? log.afterData.name
+      : typeof log.beforeData?.name === 'string'
+        ? log.beforeData.name
+        : null;
+    return [name, sku].filter(Boolean).join(' · ') || null;
+  }
+  const changed = Object.keys(log.afterData ?? {});
+  return changed.length > 0 ? `Thay đổi: ${changed.join(', ')}` : null;
+}
 
-const ACTIVITY_ICON: Record<ActivityType, string> = {
-  create: '✦',
-  update: '✎',
-  price: '₫',
-  status: '◉',
-  stock: '⊕',
-  delete: '✕',
-};
+function ActivityTab({ logs, isLoading }: { logs: AuditLogEntry[]; isLoading: boolean }) {
+  if (isLoading) {
+    return (
+      <div className="rounded-lg border bg-muted/20 px-4 py-6 text-sm text-muted-foreground">
+        Đang tải lịch sử hoạt động...
+      </div>
+    );
+  }
 
-const ACTIVITY_COLOR: Record<ActivityType, string> = {
-  create: 'bg-green-100 text-green-700',
-  update: 'bg-blue-100 text-blue-700',
-  price: 'bg-amber-100 text-amber-700',
-  status: 'bg-purple-100 text-purple-700',
-  stock: 'bg-cyan-100 text-cyan-700',
-  delete: 'bg-destructive/10 text-destructive',
-};
+  if (logs.length === 0) {
+    return (
+      <div className="rounded-lg border bg-muted/20 px-4 py-6 text-sm text-muted-foreground">
+        Chưa có lịch sử hoạt động cho sản phẩm này.
+      </div>
+    );
+  }
 
-function ActivityTab({ product: _ }: { product: Product }) {
   return (
-    <div className="flex flex-col gap-1">
-      {MOCK_ACTIVITY.map((item, idx) => (
-        <div key={item.id} className="flex gap-3">
-          {/* Timeline line */}
-          <div className="flex flex-col items-center">
-            <span
-              className={`flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${ACTIVITY_COLOR[item.type]}`}
-            >
-              {ACTIVITY_ICON[item.type]}
-            </span>
-            {idx < MOCK_ACTIVITY.length - 1 && <div className="mt-1 w-px flex-1 bg-border" />}
-          </div>
-
-          {/* Content */}
-          <div className={`min-w-0 pb-5 ${idx === MOCK_ACTIVITY.length - 1 ? 'pb-0' : ''}`}>
-            <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
-              <span className="text-sm font-medium">{item.actor}</span>
-              <span className="text-sm text-muted-foreground">{item.message}</span>
+    <div className="grid gap-0">
+      {logs.map((log, index) => {
+        const isLast = index === logs.length - 1;
+        const detail = auditDetail(log);
+        return (
+          <div key={log.id} className="flex gap-3">
+            <div className="flex flex-col items-center">
+              <div className={index === 0 ? 'mt-1.5 size-2 rounded-full bg-foreground' : 'mt-1.5 size-2 rounded-full bg-border'} />
+              {!isLast && <div className="my-1 w-px flex-1 bg-border/60" />}
             </div>
-            {item.detail && <p className="mt-0.5 text-xs text-muted-foreground">{item.detail}</p>}
-            <p className="mt-1 text-xs text-muted-foreground/60">{item.time}</p>
+            <div className={isLast ? 'min-w-0 pb-0' : 'min-w-0 pb-4'}>
+              <p className="text-sm leading-tight font-medium">{auditSummary(log)}</p>
+              {detail && <p className="mt-0.5 text-xs text-muted-foreground">{detail}</p>}
+              <p className="mt-1 text-xs text-muted-foreground">
+                {log.actorEmail ?? log.actorType} · {formatViDateTime(log.createdAt)}
+              </p>
+            </div>
           </div>
-        </div>
-      ))}
-
-      <p className="mt-4 text-xs text-muted-foreground">
-        * Lịch sử hoạt động thực tế sẽ được ghi lại khi tính năng audit log được triển khai.
-      </p>
+        );
+      })}
     </div>
   );
 }
