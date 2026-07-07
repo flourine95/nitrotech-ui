@@ -8,6 +8,8 @@ export interface User {
   avatar: string | null;
   status: string;
   provider: string;
+  roles: string[];
+  permissions: string[];
 }
 
 export type OAuthProvider = 'google' | 'github';
